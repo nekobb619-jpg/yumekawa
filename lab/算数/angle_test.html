@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時計の角度 じっけん＆クイズラボ</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts (Noto Sans JP) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* スライダーなどの見た目調整 */
+    input[type="range"]::-webkit-slider-thumb {
+      background: #3b82f6;
+      border: 2px solid white;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 text-white shadow-md">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">⏰</span>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-wider flex items-center gap-2">
+            時計の角度 じっけん＆クイズラボ
+          </h1>
+          <p class="text-xs text-sky-100">小学4年生 算数「角の大きさと時計」</p>
+        </div>
+      </div>
+      <!-- モード切り替えタブ -->
+      <div class="flex bg-black/20 p-1 rounded-xl w-full sm:w-auto mt-2 sm:mt-0">
+        <button id="tab-exp" onclick="switchTab('exp')" class="flex-1 sm:flex-initial px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 bg-white text-blue-700 shadow">
+          🛠️ じっけんモード
+        </button>
+        <button id="tab-quiz" onclick="switchTab('quiz')" class="flex-1 sm:flex-initial px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 text-white hover:bg-white/10">
+          📝 クイズに挑戦！
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="flex-grow max-w-5xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- 左側：メインの時計キャンバスエリア (12列中7列) -->
+    <div class="lg:col-span-7 flex flex-col bg-white rounded-3xl shadow-sm border border-slate-100 p-4 relative overflow-hidden">
+      <!-- リアルタイム発見・解説テロップ -->
+      <div class="bg-slate-900 text-white px-4 py-2.5 rounded-2xl mb-4 text-sm sm:text-base flex items-center gap-2 shadow-inner">
+        <span class="text-xl shrink-0" id="telop-icon">💡</span>
+        <div id="telop-text" class="font-medium leading-relaxed">
+          針をドラッグするか、下のボタンで時間を合わせて角度の変化を観察しよう！
+        </div>
+      </div>
+
+      <!-- 時計＆分度器描画 Canvasコンテナ -->
+      <div class="relative w-full aspect-square bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 overflow-hidden" id="canvas-container">
+        <canvas id="mainCanvas" class="w-full h-full cursor-pointer touch-none"></canvas>
+
+        <!-- クイズ正解時の花吹雪エフェクト用レイヤー -->
+        <div id="success-overlay" class="absolute inset-0 bg-emerald-500/10 pointer-events-none opacity-0 transition-opacity duration-300 flex flex-col items-center justify-center">
+          <span class="text-7xl animate-bounce">🎉 正解！ 🎉</span>
+        </div>
+      </div>
+
+      <!-- キャンバス下部の補助情報 -->
+      <div class="mt-3 flex justify-between items-center text-xs text-slate-400">
+        <span>※長針・短針・秒針を直接ドラッグして回せるよ！</span>
+        <span id="canvas-status">中心吸着（マグネット）有効</span>
+      </div>
+    </div>
+
+    <!-- 右側：操作パネル / クイズパネル (12列中5列) -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- ----------------- 1. じっけんモード用パネル ----------------- -->
+      <div id="panel-exp" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 flex flex-col gap-5">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span class="text-blue-500">⚙️</span> とけいをうごかす
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">時間と分を合わせて角度の計算をしてみよう</p>
+        </div>
+
+        <!-- デジタル時間・角度表示 -->
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col gap-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="text-xs text-slate-400 block font-bold">現在の時刻</span>
+              <span id="digital-time" class="text-2xl sm:text-3xl font-black tracking-widest text-slate-700">12:00:00</span>
+            </div>
+            <div class="text-right flex flex-col items-end">
+              <span class="text-xs text-slate-400 block font-bold" id="measured-angle-label">小さい方の角</span>
+              <div class="flex items-center gap-1.5">
+                <span id="angle-display" class="text-2xl sm:text-3xl font-black text-blue-600">0°</span>
+                <span id="perfect-badge" class="hidden bg-emerald-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse shrink-0">👏 180°ぴったり！</span>
+              </div>
+            </div>
+          </div>
+          <!-- 180度超え表示用行（トグル連動） -->
+          <div id="big-angle-row" class="hidden border-t border-slate-200/50 pt-2.5 flex justify-between items-center">
+            <span class="text-xs font-bold text-indigo-600">反対側の大きい方の角 (180°以上)</span>
+            <span id="big-angle-display" class="text-xl font-black text-indigo-600">360°</span>
+          </div>
+        </div>
+
+        <!-- 現在の時刻を取得するボタン＆時間微調整ボタン -->
+        <div class="flex flex-col gap-2.5">
+          <!-- 🕒 現在の時刻を取得ボタン -->
+          <button onclick="setCurrentTime()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-3 px-4 rounded-xl text-sm shadow-md shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <span>🕒</span> 今の時刻に合わせる
+          </button>
+          
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="adjustTime(-60)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs sm:text-sm font-bold active:scale-95 transition-all">
+              -1時間
+            </button>
+            <button onclick="adjustTime(-10)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs sm:text-sm font-bold active:scale-95 transition-all">
+              -10分
+            </button>
+            <button onclick="adjustTime(10)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs sm:text-sm font-bold active:scale-95 transition-all">
+              +10分
+            </button>
+            <button onclick="adjustTime(60)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs sm:text-sm font-bold active:scale-95 transition-all">
+              +1時間
+            </button>
+          </div>
+          <!-- 秒針稼働時の微調整ボタン -->
+          <div id="second-adjust-buttons" class="hidden grid grid-cols-2 gap-2">
+            <button onclick="adjustTime(-1/60)" class="bg-rose-50 hover:bg-rose-100 text-rose-700 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all">
+              －1秒
+            </button>
+            <button onclick="adjustTime(1/60)" class="bg-rose-50 hover:bg-rose-100 text-rose-700 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all">
+              ＋1秒
+            </button>
+          </div>
+        </div>
+
+        <!-- スライダー操作 -->
+        <div class="flex flex-col gap-3">
+          <div>
+            <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>じかん（短針）</span>
+              <span id="slider-h-text" class="text-blue-600">12時</span>
+            </div>
+            <input type="range" id="slider-h" min="1" max="12" value="12" oninput="onHourSlider(this.value)"
+              class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>ふん（長針）</span>
+              <span id="slider-m-text" class="text-blue-600">00分</span>
+            </div>
+            <input type="range" id="slider-m" min="0" max="59" value="0" oninput="onMinSlider(this.value)"
+              class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+          </div>
+          <!-- 秒スライダー（秒針表示時のみ） -->
+          <div id="second-slider-container" class="hidden">
+            <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>びょう（秒針）</span>
+              <span id="slider-s-text" class="text-rose-600">00秒</span>
+            </div>
+            <input type="range" id="slider-s" min="0" max="59" value="0" oninput="onSecSlider(this.value)"
+              class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 測定ペア選択（秒針表示時のみ） -->
+        <div id="measure-pair-container" class="hidden bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col gap-1.5">
+          <span class="text-xs font-bold text-slate-500 block">📐 角度をはかるペア：</span>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button id="pair-hm" onclick="setMeasurePair('hour-minute')" class="py-2 px-1 rounded-xl text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 transition-all">
+              短針 と 長針
+            </button>
+            <button id="pair-ms" onclick="setMeasurePair('minute-second')" class="py-2 px-1 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">
+              長針 と 秒針
+            </button>
+            <button id="pair-hs" onclick="setMeasurePair('hour-second')" class="py-2 px-1 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">
+              短針 と 秒針
+            </button>
+          </div>
+        </div>
+
+        <!-- 各種トグルスイッチ（180度 & 秒針 & 逆まわり秒針） -->
+        <div class="flex flex-col gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- 180度超え理解トグル -->
+            <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-3 flex justify-between items-center transition-all duration-300">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🔄</span>
+                <div>
+                  <span class="text-xs font-bold text-slate-700 block">反対側の角もみる</span>
+                  <span class="text-[10px] text-indigo-600 block leading-tight">180°超の角をぬり分け</span>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-big-angle" onchange="onToggleBigAngle(this.checked)" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+
+            <!-- 秒針お試しモードトグル -->
+            <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-3 flex justify-between items-center transition-all duration-300">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">⏱️</span>
+                <div>
+                  <span class="text-xs font-bold text-slate-700 block">秒針をだす</span>
+                  <span class="text-[10px] text-rose-600 block leading-tight">自動で動く実験モード</span>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-second-hand" onchange="onToggleSecondHand(this.checked)" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 秒針の反時計回り（逆回り）トグル：秒針表示時のみスライド表示 -->
+          <div id="reverse-second-container" class="hidden bg-amber-50/50 border border-amber-200 rounded-2xl p-3 flex justify-between items-center transition-all duration-300">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">↩️</span>
+              <div>
+                <span class="text-xs font-bold text-slate-700 block">秒針を左まわり（反時計）にする</span>
+                <span class="text-[10px] text-amber-600 block leading-tight">秒針がふつうとは逆回転で進みます</span>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="toggle-reverse-second" onchange="onToggleReverseSecond(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 分度器ツール -->
+        <div class="border-t border-slate-100 pt-4 flex flex-col gap-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+              <span>📏</span> 実験ツール「かさねる分度器」
+            </h3>
+            <!-- 自動運転ボタン（秒針表示時のみ出現） -->
+            <button id="btn-tick" onclick="toggleClockTicking()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-xl text-xs active:scale-95 transition-all">
+              ▶️ 時計をうごかす
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-protractor" onclick="toggleProtractor()" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md shadow-sky-100 active:scale-95 transition-all">
+              分度器をだす
+            </button>
+            <button onclick="resetProtractor()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-4 rounded-xl text-sm active:scale-95 transition-all">
+              リセット
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            ※分度器が出たら、中心をつかんで時計に重ねよう！上部の回転用丸ノブ(⚪︎)をドラッグするとくるくる回るよ。中心に近づけるとピタッと吸着するよ。
+          </p>
+        </div>
+
+        <!-- 確かめ計算の式表示（小学校4年生向けに優しく） -->
+        <div class="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 flex flex-col gap-2 text-xs sm:text-sm text-slate-700">
+          <div class="font-bold text-blue-800 flex items-center gap-1">
+            <span>🧮</span> 角度の計算のひみつ
+          </div>
+          <div class="grid grid-cols-1 gap-1">
+            <div>• <strong class="text-blue-600">長針</strong>の進む角：<span id="calc-long-text">0分 × 6° ＝ 0°</span></div>
+            <div>• <strong class="text-rose-600">短針</strong>の進む角：<span id="calc-short-text">12時 × 30° ＝ 360°</span></div>
+            <div id="calc-sec-row" class="hidden">• <strong class="text-emerald-600">秒針</strong>の進む角：<span id="calc-sec-text">0秒 × 6° ＝ 0°</span></div>
+            <div class="text-blue-900 font-semibold border-t border-blue-200/50 mt-1 pt-1">
+              • はかっている角（小さい方）：
+              <div class="mt-0.5 text-slate-600 font-normal">
+                小さい方の角: <span id="calc-small-angle" class="font-bold text-blue-700">0°</span> /
+                大きい方の角: <span id="calc-big-angle" class="font-bold text-indigo-700">0°</span>
+              </div>
+              <div class="text-[11px] text-slate-500 font-normal mt-1 leading-relaxed">
+                ※二つの角を足すと、時計一周分の <strong>360°</strong> になるよ！秒針を使うと、好きな時間でピッタリ180度を作ることができるよ！
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ----------------- 2. クイズモード用パネル ----------------- -->
+      <div id="panel-quiz" class="hidden bg-white rounded-3xl shadow-sm border border-slate-100 p-5 flex flex-col gap-4">
+        <!-- クイズ進行状況 -->
+        <div class="flex justify-between items-center">
+          <span class="bg-amber-100 text-amber-800 text-xs font-black px-3 py-1.5 rounded-full" id="quiz-badge">
+            第 1 問 / 全 10 問
+          </span>
+          <div class="flex gap-1 text-sm text-amber-500 font-black">
+            <span id="quiz-score-stars">⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐</span>
+          </div>
+        </div>
+
+        <!-- クイズ問題文 -->
+        <div class="bg-amber-50/50 border border-amber-200/70 rounded-2xl p-4 min-h-[90px] flex items-center">
+          <p id="quiz-question" class="text-sm sm:text-base font-bold text-slate-800 leading-relaxed">
+            問題文がここに表示されます。
+          </p>
+        </div>
+
+        <!-- クイズ解答エリア -->
+        <div class="flex flex-col gap-3">
+          <label class="text-xs font-black text-slate-400 block">答えを入力してね</label>
+          <div class="flex gap-2">
+            <div class="relative flex-grow">
+              <input type="text" id="quiz-input" readonly placeholder="何度？"
+                class="w-full text-center text-2xl font-black text-slate-700 bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 focus:outline-none focus:border-amber-400 placeholder:text-slate-300">
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-500">度</span>
+            </div>
+            <button onclick="checkQuizAnswer()" class="bg-amber-500 hover:bg-amber-600 text-white font-black px-6 py-4 rounded-2xl text-md shadow-lg shadow-amber-100 active:scale-95 transition-all">
+              答えあわせ！
+            </button>
+          </div>
+        </div>
+
+        <!-- テンキー (子供が押しやすい親切設計) -->
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="pressQuizKey('1')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">1</button>
+          <button onclick="pressQuizKey('2')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">2</button>
+          <button onclick="pressQuizKey('3')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">3</button>
+          <button onclick="pressQuizKey('4')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">4</button>
+          <button onclick="pressQuizKey('5')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">5</button>
+          <button onclick="pressQuizKey('6')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">6</button>
+          <button onclick="pressQuizKey('7')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">7</button>
+          <button onclick="pressQuizKey('8')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">8</button>
+          <button onclick="pressQuizKey('9')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">9</button>
+          <button onclick="pressQuizKey('.')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">.</button>
+          <button onclick="pressQuizKey('0')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">0</button>
+          <button onclick="pressQuizKey('C')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 py-3 rounded-xl font-black text-lg active:scale-95 transition-all">けす</button>
+        </div>
+
+        <!-- アシスト＆解説エリア (ポップアップの代わり) -->
+        <div id="quiz-feedback-box" class="hidden rounded-2xl p-4 border flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span id="feedback-result-icon" class="text-2xl">🤖</span>
+            <span id="feedback-result-title" class="font-bold text-base">解説</span>
+          </div>
+          <p id="feedback-result-text" class="text-xs sm:text-sm leading-relaxed text-slate-600">
+            ここに解説が入ります。
+          </p>
+          <button id="btn-next-quiz" onclick="nextQuiz()" class="mt-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-xl text-sm text-center transition-all">
+            次の問題へ ➔
+          </button>
+        </div>
+
+        <!-- ギブアップ、問題スキップボタン -->
+        <div class="flex justify-between items-center gap-2 border-t border-slate-100 pt-3">
+          <button onclick="setQuizTime()" class="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
+            🔍 じっけん時計と連動して測ってみる
+          </button>
+          <button onclick="skipQuiz()" class="text-xs text-slate-400 hover:text-slate-600">
+            この問題をパスする
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="bg-slate-800 text-slate-400 text-center py-4 text-xs border-t border-slate-700">
+    <div class="max-w-5xl mx-auto px-4">
+      時計の角度 じっけん＆クイズラボ &copy; 2026. すべてのボタンがPC・タブレット・スマホでスムーズに動きます。
+    </div>
+  </footer>
+
+  <!-- ----------------- JavaScript ----------------- -->
+  <script>
+    // --- 状態管理オブジェクト ---
+    const state = {
+      tab: 'exp', // 'exp' (実験) | 'quiz' (クイズ)
+      hour: 12,   // 1〜12
+      minute: 0,  // 0〜59
+      second: 0,  // 0〜59 (秒針お試しモード用)
+      showBigAngle: false, // 180度を超える反対側の角を描画するかどうか
+      showSecondHand: false, // 秒針を表示するかどうか
+      isReverseSecond: false, // 秒針を反時計回り（左回り）にするかどうか
+      measurePair: 'hour-minute', // 測定対象: 'hour-minute' | 'minute-second' | 'hour-second'
+      isTicking: false, // 時計の自動運転フラグ
+      tickIntervalId: null, // タイマーのID
+      
+      // 分度器（プロトラクター）オブジェクト
+      protractor: {
+        visible: false,
+        x: 0,        // キャンバス内の中心座標
+        y: 0,
+        angle: 0,    // 回転角度（ラジアン）
+        radius: 130, // 半径 (直径260)
+        isDragging: false,
+        isRotating: false,
+        dragStartX: 0,
+        dragStartY: 0,
+        baseAngle: 0
+      },
+
+      // 針のドラッグ状態
+      draggedHand: 'none', // 'none' | 'hour' | 'minute' | 'second'
+
+      // クイズデータ (180度超えの問題も学習指導要領に合わせて配置)
+      quiz: [
+        { q: "3時ちょうど のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？", h: 3, m: 0, s: 0, ans: 90, comment: "12時から3時までは、1時間30度ずつのカタマリが3つ分あるので、30 × 3 ＝ 90度（直角）になります。" },
+        { q: "6時ちょうど のとき、長針と短針がつくる角度は何度でしょう？", h: 6, m: 0, s: 0, ans: 180, comment: "時計の針がちょうど真っ直ぐ反対側を向きます。30度 × 6つ分で180度になります。この180度を基準に、角度がさらに広がると「180度をこえる大きな角」になります。" },
+        { q: "1時ちょうど のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？", h: 1, m: 0, s: 0, ans: 30, comment: "時計の数字の「1つ分」の間隔は、360度を12等分した 30度 になります。これがすべての基本です！" },
+        { q: "8時ちょうど のとき、長針と短針がつくる【大きい方の角度（180度より大きな角）】は何度でしょう？", h: 8, m: 0, s: 0, ans: 240, comment: "8時のとき、内側の小さい方の角は120度（30度×4）です。時計の1まわりは360度なので、反対側の大きい方の角は 360 － 120 ＝ 240度になります！" },
+        { q: "3時30分 のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？（4年生の超重要ポイント！）", h: 3, m: 30, s: 0, ans: 75, comment: "30分経ったとき、長針は「6」を指しますが、短針は「3」と「4」のちょうど真ん中まで動いています！3から6までの90度から、短針が進んだ15度を引くので、90 － 15 ＝ 75度になります。" },
+        { q: "12時20分 のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？", h: 12, m: 20, s: 0, ans: 110, comment: "長針は20分進むので「4（120度）」を指します。短針は20分間で「20 × 0.5度 ＝ 10度」だけ12から進むため、120 － 10 ＝ 110度になります。" },
+        { q: "10時ちょうど のとき、長針と短針がつくる【大きい方の角度（180度より大きな角）】は何度でしょう？", h: 10, m: 0, s: 0, ans: 300, comment: "10時のとき、小さい方の角は60度（30度×2つ分）です。大きい方の角は、時計一周（360度）から小さい方の角を引いて、360 － 60 ＝ 300度になります！" },
+        { q: "8時20分 のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？", h: 8, m: 20, s: 0, ans: 130, comment: "長針は「4（120度）」です。短針は8時から20分進んで「240度 ＋ 20 × 0.5度 ＝ 250度」にいます。その差は 250 － 120 ＝ 130度になります。" },
+        { q: "10時10分 のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？", h: 10, m: 10, s: 0, ans: 115, comment: "10時10分は、長針が「2（60度）」を指し、短針は10時から10分進んだ「300度 ＋ 5度 ＝ 305度」にいます。差は 305 － 60 ＝ 245度（大きい方）。小さい方は 360 － 245 ＝ 115度になります。左右対称に見えて少しズレるのが面白いですね！" },
+        { q: "11時58分 のとき、長針と短針がつくる「小さい方の角度」は何度でしょう？（超難問！）", h: 11, m: 58, s: 0, ans: 11, comment: "長針は58分なので「58 × 6 ＝ 348度」です。短針は11時から58分進んでいるので「330 ＋ 58 × 0.5 ＝ 359度」です。その差は 359 － 348 ＝ 11度になります！" }
+      ],
+      quizIndex: 0,
+      quizAnswered: false,
+      quizInput: "",
+      quizStars: [null, null, null, null, null, null, null, null, null, null] // true=正解, false=不正解
+    };
+
+    // DOM要素の保持
+    let canvas, ctx;
+    let canvasWidth = 500;
+    let canvasHeight = 500;
+    let clockCenter = { x: 250, y: 250 };
+    let clockRadius = 180;
+
+    // --- 起動時の初期化 ---
+    window.onload = function() {
+      canvas = document.getElementById('mainCanvas');
+      ctx = canvas.getContext('2d');
+
+      // 画面解像度とキャンバスのサイズ調整
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // 分度器の初期位置を時計の中心にセット
+      state.protractor.x = clockCenter.x;
+      state.protractor.y = clockCenter.y + 40; // 少しずらしておく
+
+      // イベントリスナーの登録（マウス＆タッチ兼用）
+      setupEvents();
+
+      // 初期描画
+      updateAppUI();
+      draw();
+    };
+
+    // キャンバスのリサイズ処理
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      const rect = container.getBoundingClientRect();
+      
+      // デバイスピクセル比に対応した鮮明な描画
+      const dpr = window.devicePixelRatio || 1;
+      
+      // ロード直後やコンテナ非表示で rect.width が 0 になるバグへの対策（安全フォールバック）
+      let width = rect.width || 500;
+      if (width < 100) width = 500; 
+
+      canvasWidth = width;
+      canvasHeight = width; // 正方形維持
+      
+      canvas.width = canvasWidth * dpr;
+      canvas.height = canvasHeight * dpr;
+      ctx.scale(dpr, dpr);
+
+      // 基準点のアップデート
+      clockCenter = { x: canvasWidth / 2, y: canvasHeight / 2 };
+      clockRadius = canvasWidth * 0.38;
+
+      // 分度器が範囲外に行かないように調整
+      if (!state.protractor.visible) {
+        state.protractor.x = clockCenter.x;
+        state.protractor.y = clockCenter.y + 30;
+      }
+
+      draw();
+    }
+
+    // --- タブ切り替え ---
+    function switchTab(tabName) {
+      stopTickingIfRunning(); // タブ切り替え時は自動運転をストップ
+      state.tab = tabName;
+      
+      const btnExp = document.getElementById('tab-exp');
+      const btnQuiz = document.getElementById('tab-quiz');
+      const panelExp = document.getElementById('panel-exp');
+      const panelQuiz = document.getElementById('panel-quiz');
+
+      if (tabName === 'exp') {
+        btnExp.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 bg-white text-blue-700 shadow";
+        btnQuiz.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 text-white hover:bg-white/10";
+        panelExp.classList.remove('hidden');
+        panelQuiz.classList.add('hidden');
+        setTelop("💡 針をドラッグするか、下のボタンで時間を合わせて角度の変化を観察しよう！", "💡");
+      } else {
+        btnQuiz.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 bg-white text-amber-700 shadow";
+        btnExp.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 text-white hover:bg-white/10";
+        panelQuiz.classList.remove('hidden');
+        panelExp.classList.add('hidden');
+        
+        // クイズモード時は強制的に秒針を非表示に
+        if (state.showSecondHand) {
+          document.getElementById('toggle-second-hand').checked = false;
+          onToggleSecondHand(false);
+        }
+
+        // クイズ初期設定
+        initQuiz();
+      }
+      draw();
+    }
+
+    // --- テロップの設定 ---
+    function setTelop(text, icon = "💡") {
+      document.getElementById('telop-icon').innerText = icon;
+      document.getElementById('telop-text').innerText = text;
+    }
+
+    // --- 現在の時刻を取得してセットする機能 ---
+    function setCurrentTime() {
+      // 動作中なら一度タイマーをストップ
+      stopTickingIfRunning();
+
+      const now = new Date();
+      let h = now.getHours();
+      let m = now.getMinutes();
+      let s = now.getSeconds();
+
+      // 24時間制から12時間制に変換
+      h = h % 12;
+      if (h === 0) h = 12;
+
+      state.hour = h;
+      state.minute = m;
+      state.second = s;
+
+      updateAppUI();
+      draw();
+
+      const padM = String(m).padStart(2, '0');
+      const padS = String(s).padStart(2, '0');
+      setTelop(`🕒 デバイスの現在の時刻「${h}時${padM}分${padS}秒」を時計にピタッと合わせたよ！`, "🕒");
+    }
+
+    // --- 時間の増減調整 ---
+    function adjustTime(diffMinutes) {
+      // 自動運転中なら停止する
+      stopTickingIfRunning();
+
+      let currentTotalSeconds = state.hour * 3600 + state.minute * 60 + state.second;
+      currentTotalSeconds += Math.round(diffMinutes * 60);
+
+      // 12時間（43200秒）周期に丸める
+      if (currentTotalSeconds < 0) {
+        currentTotalSeconds += 43200;
+      }
+      currentTotalSeconds %= 43200;
+
+      let h = Math.floor(currentTotalSeconds / 3600);
+      let remainingSeconds = currentTotalSeconds % 3600;
+      let m = Math.floor(remainingSeconds / 60);
+      let s = remainingSeconds % 60;
+      
+      if (h === 0) h = 12;
+
+      state.hour = h;
+      state.minute = m;
+      state.second = s;
+
+      updateAppUI();
+      draw();
+    }
+
+    // スライダー操作イベント
+    function onHourSlider(val) {
+      stopTickingIfRunning();
+      state.hour = parseInt(val);
+      updateAppUI();
+      draw();
+    }
+
+    // 分スライダー操作イベント
+    function onMinSlider(val) {
+      stopTickingIfRunning();
+      state.minute = parseInt(val);
+      updateAppUI();
+      draw();
+    }
+
+    // 秒スライダー操作イベント
+    function onSecSlider(val) {
+      stopTickingIfRunning();
+      state.second = parseInt(val);
+      updateAppUI();
+      draw();
+    }
+
+    // --- 自動運転（チクタク）機能のオンオフ ---
+    function toggleClockTicking() {
+      state.isTicking = !state.isTicking;
+      const btn = document.getElementById('btn-tick');
+      if (state.isTicking) {
+        btn.innerText = "⏸️ ストップ";
+        btn.className = "bg-rose-500 hover:bg-rose-600 text-white font-bold py-1.5 px-3 rounded-xl text-xs active:scale-95 transition-all";
+        state.tickIntervalId = setInterval(() => {
+          state.second++;
+          if (state.second >= 60) {
+            state.second = 0;
+            state.minute++;
+            if (state.minute >= 60) {
+              state.minute = 0;
+              state.hour++;
+              if (state.hour > 12) {
+                state.hour = 1;
+              }
+            }
+          }
+          updateAppUI();
+          draw();
+        }, 1000);
+      } else {
+        btn.innerText = "▶️ 時計をうごかす";
+        btn.className = "bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-xl text-xs active:scale-95 transition-all";
+        if (state.tickIntervalId) {
+          clearInterval(state.tickIntervalId);
+          state.tickIntervalId = null;
+        }
+      }
+    }
+
+    // 操作が入ったときに自動運転を停止する安全ガード
+    function stopTickingIfRunning() {
+      if (state.isTicking) {
+        toggleClockTicking();
+      }
+    }
+
+    // --- 180度超え表示トグルイベント ---
+    function onToggleBigAngle(checked) {
+      state.showBigAngle = checked;
+      const row = document.getElementById('big-angle-row');
+      if (checked) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+      updateAppUI();
+      draw();
+    }
+
+    // --- 秒針表示トグルイベント（秒針お試しモード） ---
+    function onToggleSecondHand(checked) {
+      stopTickingIfRunning();
+      state.showSecondHand = checked;
+
+      const secSliderContainer = document.getElementById('second-slider-container');
+      const secAdjustButtons = document.getElementById('second-adjust-buttons');
+      const measurePairContainer = document.getElementById('measure-pair-container');
+      const calcSecRow = document.getElementById('calc-sec-row');
+      const tickBtn = document.getElementById('btn-tick');
+      const reverseSecContainer = document.getElementById('reverse-second-container');
+
+      if (checked) {
+        secSliderContainer.classList.remove('hidden');
+        secAdjustButtons.classList.remove('hidden');
+        measurePairContainer.classList.remove('hidden');
+        calcSecRow.classList.remove('hidden');
+        tickBtn.classList.remove('hidden');
+        reverseSecContainer.classList.remove('hidden');
+        // デフォルトを 'hour-minute' にリセット
+        setMeasurePair('hour-minute');
+      } else {
+        secSliderContainer.classList.add('hidden');
+        secAdjustButtons.classList.add('hidden');
+        measurePairContainer.classList.add('hidden');
+        calcSecRow.classList.add('hidden');
+        tickBtn.classList.add('hidden');
+        reverseSecContainer.classList.add('hidden');
+        state.second = 0; // 秒をリセット
+        state.isReverseSecond = false; // 反時計回りもリセット
+        document.getElementById('toggle-reverse-second').checked = false;
+        setMeasurePair('hour-minute');
+      }
+      updateAppUI();
+      draw();
+    }
+
+    // --- 秒針反時計回りモード切替 ---
+    function onToggleReverseSecond(checked) {
+      stopTickingIfRunning();
+      state.isReverseSecond = checked;
+      updateAppUI();
+      draw();
+    }
+
+    // --- 測定するペアの切り替え ---
+    function setMeasurePair(pairName) {
+      state.measurePair = pairName;
+
+      const btnHM = document.getElementById('pair-hm');
+      const btnMS = document.getElementById('pair-ms');
+      const btnHS = document.getElementById('pair-hs');
+
+      // ボタンのクラスをリセット
+      const unselectedClass = "py-2 px-1 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all";
+      btnHM.className = unselectedClass;
+      btnMS.className = unselectedClass;
+      btnHS.className = unselectedClass;
+
+      const labelText = document.getElementById('measured-angle-label');
+
+      if (pairName === 'hour-minute') {
+        btnHM.className = "py-2 px-1 rounded-xl text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 transition-all";
+        labelText.innerText = "小さい方の角 (短針と長針)";
+      } else if (pairName === 'minute-second') {
+        btnMS.className = "py-2 px-1 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all";
+        labelText.innerText = "小さい方の角 (長針と秒針)";
+      } else if (pairName === 'hour-second') {
+        btnHS.className = "py-2 px-1 rounded-xl text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 transition-all";
+        labelText.innerText = "小さい方の角 (短針と秒針)";
+      }
+
+      updateAppUI();
+      draw();
+    }
+
+    // --- UIの連動アップデート ---
+    function updateAppUI() {
+      // 1. デジタル表示
+      const padM = String(state.minute).padStart(2, '0');
+      const padS = String(state.second).padStart(2, '0');
+      
+      const digitalTimeEl = document.getElementById('digital-time');
+      if (state.showSecondHand) {
+        digitalTimeEl.innerText = `${state.hour}:${padM}:${padS}`;
+      } else {
+        digitalTimeEl.innerText = `${state.hour}:${padM}`;
+      }
+
+      // 2. スライダー位置の反映
+      document.getElementById('slider-h').value = state.hour;
+      document.getElementById('slider-h-text').innerText = `${state.hour}時`;
+      document.getElementById('slider-m').value = state.minute;
+      document.getElementById('slider-m-text').innerText = `${padM}分`;
+      
+      if (state.showSecondHand) {
+        document.getElementById('slider-s').value = state.second;
+        document.getElementById('slider-s-text').innerText = `${padS}秒`;
+      }
+
+      // 3. 角度計算（秒針考慮の連続移動）
+      // 秒針：通常は1秒で6度進む。反時計回り（左回り）の時は (360 - 6 * 秒) とする。
+      let secondAngle = state.second * 6;
+      if (state.showSecondHand && state.isReverseSecond) {
+        secondAngle = (360 - (state.second * 6)) % 360;
+      }
+
+      // 長針は1分で6度進み、さらに1秒で0.1度進む
+      const longAngle = state.minute * 6 + state.second * 0.1; 
+      // 短針は1時間で30度進み、さらに1分で0.5度、1秒で0.00833度進む
+      let shortAngle = (state.hour % 12) * 30 + state.minute * 0.5 + state.second * (0.5 / 60);
+
+      // はかる対象のペアに合わせて角度差を算出
+      let targetAngle1 = shortAngle;
+      let targetAngle2 = longAngle;
+
+      if (state.showSecondHand) {
+        if (state.measurePair === 'minute-second') {
+          targetAngle1 = longAngle;
+          targetAngle2 = secondAngle;
+        } else if (state.measurePair === 'hour-second') {
+          targetAngle1 = shortAngle;
+          targetAngle2 = secondAngle;
+        }
+      }
+
+      let diff = Math.abs(targetAngle1 - targetAngle2);
+      let smallAngle = Math.min(diff, 360 - diff);
+      let bigAngle = 360 - smallAngle;
+
+      // 角度表示の更新
+      document.getElementById('angle-display').innerText = `${smallAngle.toFixed(1).replace('.0', '')}°`;
+      document.getElementById('big-angle-display').innerText = `${bigAngle.toFixed(1).replace('.0', '')}°`;
+
+      // 180度ぴったりバッジの検出（許容誤差0.1度）
+      const perfectBadge = document.getElementById('perfect-badge');
+      if (Math.abs(smallAngle - 180) < 0.1) {
+        perfectBadge.classList.remove('hidden');
+      } else {
+        perfectBadge.classList.add('hidden');
+      }
+
+      // 4. 計算式の表示
+      document.getElementById('calc-long-text').innerText = `${state.minute}分 ＋ ${state.second}秒 × 0.1° ＝ ${longAngle.toFixed(1).replace('.0', '')}°`;
+      document.getElementById('calc-short-text').innerText = `(${state.hour === 12 ? 0 : state.hour}時 × 30°) ＋ (${state.minute}分 × 0.5°) ＋ (${state.second}秒 × 0.0083°) ＝ ${shortAngle.toFixed(1).replace('.0', '')}°`;
+      
+      if (state.showSecondHand) {
+        if (state.isReverseSecond) {
+          // 反時計回り用の解説表示
+          document.getElementById('calc-sec-text').innerText = `${state.second}秒 × (－6°) ＝ －${(state.second * 6)}° (左まわりに進むよ！現在:${secondAngle}°)`;
+        } else {
+          document.getElementById('calc-sec-text').innerText = `${state.second}秒 × 6° ＝ ${secondAngle}°`;
+        }
+      }
+
+      document.getElementById('calc-big-angle').innerText = `${bigAngle.toFixed(1).replace('.0', '')}°`;
+      document.getElementById('calc-small-angle').innerText = `${smallAngle.toFixed(1).replace('.0', '')}°`;
+
+      // 実験モード用テロップ
+      if (state.tab === 'exp') {
+        let comment = "";
+        if (state.showSecondHand) {
+          let pairText = "短針と長針";
+          if (state.measurePair === 'minute-second') pairText = "長針と秒針";
+          if (state.measurePair === 'hour-second') pairText = "短針と秒針";
+
+          if (state.isReverseSecond) {
+            comment = `↩️ 秒針左まわり（反時計）モード！ [${pairText}] の角度「${smallAngle.toFixed(1).replace('.0', '')}°」を測定中。秒針が左側へ回っていくよ！`;
+          } else {
+            comment = `⏱️ 秒針お試しモード中！ [${pairText}] の角度「${smallAngle.toFixed(1).replace('.0', '')}°」を測定中。`;
+          }
+
+          if (Math.abs(smallAngle - 180) < 0.1) {
+            comment += ` 🎉すごい！ぴったり180度（平角）になったね！`;
+          } else {
+            comment += ` 秒スライダーや微調整ボタンを押して、色々な180度を見つけてみよう！`;
+          }
+        } else {
+          if (state.minute === 0) {
+            comment = `${state.hour}時ちょうどだね！長針は真っ直ぐ「12」、短針は「${state.hour}」を指して、綺麗な「${smallAngle}°」が作れるよ。`;
+          } else {
+            comment = `長針が進むと、短針も少しずつ（1分間に0.5度）動くのがポイントだよ！今のズレは「${(state.minute * 0.5).toFixed(1).replace('.0', '')}°」だよ。`;
+          }
+          if (state.showBigAngle && bigAngle > 180) {
+            comment += ` 🔄反対側の大きな角「${bigAngle.toFixed(1).replace('.0', '')}°」は、一周の360度から小さい方の角を引くと計算できるよ！`;
+          }
+        }
+        setTelop(comment, "⚙️");
+      }
+    }
+
+    // --- 分度器の操作 ---
+    function toggleProtractor() {
+      state.protractor.visible = !state.protractor.visible;
+      const btn = document.getElementById('btn-protractor');
+      if (state.protractor.visible) {
+        btn.innerText = "分度器をしまう";
+        btn.className = "flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md shadow-rose-100 active:scale-95 transition-all";
+        
+        // 表示時に使いやすい位置（時計の下あたり）にリセット
+        state.protractor.x = clockCenter.x;
+        state.protractor.y = clockCenter.y + 40;
+        state.protractor.angle = 0;
+      } else {
+        btn.innerText = "分度器をだす";
+        btn.className = "flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md shadow-sky-100 active:scale-95 transition-all";
+      }
+      draw();
+    }
+
+    function resetProtractor() {
+      state.protractor.x = clockCenter.x;
+      state.protractor.y = clockCenter.y + 40;
+      state.protractor.angle = 0;
+      draw();
+    }
+
+    // --- クイズモードロジック ---
+    function initQuiz() {
+      state.quizAnswered = false;
+      state.quizInput = "";
+      document.getElementById('quiz-input').value = "";
+      document.getElementById('quiz-feedback-box').classList.add('hidden');
+
+      const q = state.quiz[state.quizIndex];
+      document.getElementById('quiz-badge').innerText = `第 ${state.quizIndex + 1} 問 / 全 ${state.quiz.length} 問`;
+      document.getElementById('quiz-question').innerText = q.q;
+
+      // 星（進行状況）の更新
+      let starStr = "";
+      for (let i = 0; i < 10; i++) {
+        if (state.quizStars[i] === null) {
+          starStr += "⭐"; // 未挑戦
+        } else if (state.quizStars[i] === true) {
+          starStr += "🟢"; // 正解
+        } else {
+          starStr += "❌"; // 不正解
+        }
+      }
+      document.getElementById('quiz-score-stars').innerText = starStr;
+
+      // クイズ開始時に、時計をわざとズレた初期値にして、自分で合わせさせる仕掛け
+      // ただし第1問は3時近くにする
+      if (state.quizIndex === 0) {
+        state.hour = 12;
+        state.minute = 0;
+        state.second = 0;
+      } else {
+        // それ以外の時は適当なランダム時間
+        state.hour = Math.floor(Math.random() * 12) + 1;
+        state.minute = Math.floor(Math.random() * 12) * 5;
+        state.second = 0;
+      }
+      
+      updateAppUI();
+      setTelop(`📝 第${state.quizIndex + 1}問に挑戦中！ じっけん時計を動かしてヒントを探してもいいよ。`, "📝");
+    }
+
+    // クイズ用テンキー
+    function pressQuizKey(key) {
+      if (state.quizAnswered) return; // 解答後は押せない
+
+      if (key === 'C') {
+        state.quizInput = "";
+      } else if (key === '.') {
+        if (!state.quizInput.includes('.')) {
+          state.quizInput += ".";
+        }
+      } else {
+        // 桁数制限（3桁まで）
+        if (state.quizInput.replace('.', '').length < 3) {
+          state.quizInput += key;
+        }
+      }
+      document.getElementById('quiz-input').value = state.quizInput;
+    }
+
+    // 答え合わせ
+    function checkQuizAnswer() {
+      if (state.quizAnswered) return;
+      if (!state.quizInput) {
+        setTelop("⚠️ まずは上のテンキーで角度（数字）を入力してね！", "⚠️");
+        return;
+      }
+
+      const q = state.quiz[state.quizIndex];
+      const userAnswer = parseFloat(state.quizInput);
+
+      state.quizAnswered = true;
+      const feedbackBox = document.getElementById('quiz-feedback-box');
+      const feedbackIcon = document.getElementById('feedback-result-icon');
+      const feedbackTitle = document.getElementById('feedback-result-title');
+      const feedbackText = document.getElementById('feedback-result-text');
+      const nextBtn = document.getElementById('btn-next-quiz');
+      const overlay = document.getElementById('success-overlay');
+
+      feedbackBox.classList.remove('hidden');
+
+      if (userAnswer === q.ans) {
+        // 正解！
+        state.quizStars[state.quizIndex] = true;
+        feedbackBox.className = "rounded-2xl p-4 border border-emerald-200 bg-emerald-50/50 flex flex-col gap-2";
+        feedbackIcon.innerText = "🎉";
+        feedbackTitle.innerText = "大正解！ピタゴラス！";
+        feedbackTitle.className = "font-black text-emerald-800 text-lg";
+        feedbackText.innerText = q.comment;
+
+        // 正解お祝いエフェクト
+        overlay.classList.remove('opacity-0');
+        setTimeout(() => {
+          overlay.classList.add('opacity-0');
+        }, 1500);
+
+        setTelop("🎉 すばらしい！大正解です。角度のひみつが分かってきたね！", "🎉");
+      } else {
+        // 不正解...
+        state.quizStars[state.quizIndex] = false;
+        feedbackBox.className = "rounded-2xl p-4 border border-rose-200 bg-rose-50/50 flex flex-col gap-2";
+        feedbackIcon.innerText = "🤖";
+        feedbackTitle.innerText = "ざんねん！おしい！";
+        feedbackTitle.className = "font-black text-rose-800 text-lg";
+        feedbackText.innerText = `答えは「${q.ans}度」だよ。 ${q.comment}`;
+        
+        setTelop("💡 大丈夫！解説を読んで、時計を動かして確かめてみよう。", "🤖");
+      }
+
+      if (state.quizIndex === state.quiz.length - 1) {
+        nextBtn.innerText = "全問クリア！結果発表";
+      } else {
+        nextBtn.innerText = "次の問題へ ➔";
+      }
+
+      // 星（進行状況）の再更新
+      let starStr = "";
+      for (let i = 0; i < 10; i++) {
+        if (state.quizStars[i] === null) {
+          starStr += "⭐";
+        } else if (state.quizStars[i] === true) {
+          starStr += "🟢";
+        } else {
+          starStr += "❌";
+        }
+      }
+      document.getElementById('quiz-score-stars').innerText = starStr;
+    }
+
+    // 次のクイズへ
+    function nextQuiz() {
+      if (state.quizIndex === state.quiz.length - 1) {
+        // 最終問題終了
+        const correctCount = state.quizStars.filter(s => s === true).length;
+        alert(`【クイズ結果発表】
+10問中 ${correctCount} 問正解しました！
+よくがんばったね！時計マスターに一歩近づいたよ！`);
+        // リセットして最初に戻る
+        state.quizIndex = 0;
+        state.quizStars = [null, null, null, null, null, null, null, null, null, null];
+      } else {
+        state.quizIndex++;
+      }
+      initQuiz();
+      draw();
+    }
+
+    // 問題スキップ
+    function skipQuiz() {
+      if (state.quizIndex < state.quiz.length - 1) {
+        state.quizIndex++;
+        initQuiz();
+        draw();
+      } else {
+        alert("最後の問題だからパスできないよ。答えあわせしてみてね！");
+      }
+    }
+
+    // じっけん時計とクイズ時間の連動
+    function setQuizTime() {
+      const q = state.quiz[state.quizIndex];
+      state.hour = q.h;
+      state.minute = q.m;
+      state.second = q.s || 0;
+      updateAppUI();
+      draw();
+      setTelop(`💡 クイズの問題時間「${q.h}時${String(q.m).padStart(2, '0')}分」をセットしたよ。分度器で角度を測ってみよう！`);
+    }
+
+    // --- 描画処理 (Canvas) ---
+    function draw() {
+      // 画面のクリア
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // 1. 時計盤の描画（一番後ろ）
+      drawClockFace();
+
+      // 2. 角度ゲージ（針に挟まれた扇形）の描画
+      drawAngleSector();
+
+      // 3. 角度テキストラベルの描画
+      drawAngleLabels();
+
+      // 4. 時計の針（短針・長針・秒針）の描画
+      drawClockHands();
+
+      // 5. 分度器の描画（一番手前、表示中のみ）
+      if (state.protractor.visible) {
+        drawProtractorOverlay();
+      }
+    }
+
+    // 1. 時計盤の描画
+    function drawClockFace() {
+      const cx = clockCenter.x;
+      const cy = clockCenter.y;
+      const r = clockRadius;
+
+      // 外枠のシャドウと本体
+      ctx.save();
+      ctx.shadowColor = "rgba(15, 23, 42, 0.08)";
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 6;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 金属調の内枠
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 5分刻み（時間）の目盛りと数字
+      for (let i = 0; i < 60; i++) {
+        const angle = (i * 6) * Math.PI / 180 - Math.PI / 2;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        if (i % 5 === 0) {
+          // 時間の太い目盛り
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx + cos * (r - 14), cy + sin * (r - 14));
+          ctx.lineTo(cx + cos * (r - 4), cy + sin * (r - 4));
+          ctx.stroke();
+
+          // 文字（1〜12）
+          const num = i / 5 === 0 ? 12 : i / 5;
+          ctx.fillStyle = "#1e293b";
+          ctx.font = "bold 20px 'Noto Sans JP'";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          // 少し内側に配置
+          const textX = cx + cos * (r - 35);
+          const textY = cy + sin * (r - 35);
+          ctx.fillText(num, textX, textY);
+        } else {
+          // 分の細かい目盛り
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx + cos * (r - 8), cy + sin * (r - 8));
+          ctx.lineTo(cx + cos * (r - 4), cy + sin * (r - 4));
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 2. 角度を可視化する扇形 (測定対象に合わせて動く)
+    function drawAngleSector() {
+      const cx = clockCenter.x;
+      const cy = clockCenter.y;
+      
+      const r = Math.max(10, clockRadius * 0.75);
+
+      // 【秒針お試しモード】逆回転時は角度の計算方向を反転させるため、単に秒角度を描画用の基準にする
+      const secondAngle = state.second * 6;
+      const longAngle = state.minute * 6 + state.second * 0.1;
+      const shortAngle = (state.hour % 12) * 30 + state.minute * 0.5 + state.second * (0.5 / 60);
+
+      // 測定対象ペアに従って角度を決定
+      let deg1 = shortAngle;
+      let deg2 = longAngle;
+
+      if (state.showSecondHand) {
+        if (state.measurePair === 'minute-second') {
+          deg1 = longAngle;
+          deg2 = secondAngle;
+        } else if (state.measurePair === 'hour-second') {
+          deg1 = shortAngle;
+          deg2 = secondAngle;
+        }
+      }
+
+      // ラジアンに変換 (時計の0時は -Math.PI / 2)
+      const rad1 = (deg1 - 90) * Math.PI / 180;
+      const rad2 = (deg2 - 90) * Math.PI / 180;
+
+      // どちらの向きが「小さい角度」か判定
+      let diff = (shortAngle - longAngle + 360) % 360;
+      if (state.showSecondHand) {
+        if (state.measurePair === 'minute-second') {
+          diff = (longAngle - secondAngle + 360) % 360;
+        } else if (state.measurePair === 'hour-second') {
+          diff = (shortAngle - secondAngle + 360) % 360;
+        }
+      }
+      
+      let counterClockwise = false;
+      if (diff > 180) {
+        counterClockwise = true;
+      }
+
+      ctx.save();
+      // 小さい方の角（半透明な黄色）
+      ctx.fillStyle = "rgba(245, 158, 11, 0.25)";
+      ctx.strokeStyle = "rgba(245, 158, 11, 0.6)";
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r * 0.8, rad1, rad2, counterClockwise);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 反対側の角（180度を超える大きい方の角）を色分け
+      if (state.showBigAngle) {
+        ctx.fillStyle = "rgba(99, 102, 241, 0.15)";
+        ctx.strokeStyle = "rgba(99, 102, 241, 0.5)";
+        ctx.lineWidth = 2.0;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r * 0.95, rad1, rad2, !counterClockwise);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 3. 角度ラベル（文字）を扇形の中央にスマート描画
+    function drawAngleLabels() {
+      const cx = clockCenter.x;
+      const cy = clockCenter.y;
+
+      // 秒針が逆回り（反時計まわり）のとき、秒針自体の角度位置は 360 - secondAngle になる
+      let secondAngle = state.second * 6;
+      if (state.showSecondHand && state.isReverseSecond) {
+        secondAngle = (360 - secondAngle) % 360;
+      }
+      const longAngle = state.minute * 6 + state.second * 0.1;
+      const shortAngle = (state.hour % 12) * 30 + state.minute * 0.5 + state.second * (0.5 / 60);
+
+      let deg1 = shortAngle;
+      let deg2 = longAngle;
+      let colorClass = "#b45309"; // 茶色
+
+      if (state.showSecondHand) {
+        if (state.measurePair === 'minute-second') {
+          deg1 = longAngle;
+          deg2 = secondAngle;
+          colorClass = "#047857"; // 緑
+        } else if (state.measurePair === 'hour-second') {
+          deg1 = shortAngle;
+          deg2 = secondAngle;
+          colorClass = "#be123c"; // 濃いピンク
+        }
+      }
+
+      const rad1 = (deg1 - 90) * Math.PI / 180;
+      const rad2 = (deg2 - 90) * Math.PI / 180;
+
+      let diff = (deg2 - deg1 + 360) % 360;
+      let smallAngle = Math.min(diff, 360 - diff);
+      let bigAngle = 360 - smallAngle;
+
+      let smallMidRad;
+      if (diff <= 180) {
+        smallMidRad = rad1 + (diff / 2) * Math.PI / 180;
+      } else {
+        smallMidRad = rad2 + ((360 - diff) / 2) * Math.PI / 180;
+      }
+      
+      let bigMidRad = smallMidRad + Math.PI;
+
+      // 小さい方の角度ラベル
+      const rSmall = clockRadius * 0.45;
+      ctx.save();
+      ctx.fillStyle = colorClass;
+      ctx.font = "bold 15px 'Noto Sans JP'";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+      ctx.shadowBlur = 6;
+      ctx.fillText(`${smallAngle.toFixed(1).replace('.0', '')}°`, cx + Math.cos(smallMidRad) * rSmall, cy + Math.sin(smallMidRad) * rSmall);
+      ctx.restore();
+
+      // 大きい方の角度ラベル（トグルONの時のみ）
+      if (state.showBigAngle && bigAngle > 0) {
+        const rBig = clockRadius * 0.72;
+        ctx.save();
+        ctx.fillStyle = "#4338ca"; // 濃いインディゴブルー
+        ctx.font = "bold 15px 'Noto Sans JP'";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(`${bigAngle.toFixed(1).replace('.0', '')}°`, cx + Math.cos(bigMidRad) * rBig, cy + Math.sin(bigMidRad) * rBig);
+        ctx.restore();
+      }
+    }
+
+    // 4. 短針・長針・秒針の描画
+    function drawClockHands() {
+      const cx = clockCenter.x;
+      const cy = clockCenter.y;
+      const r = clockRadius;
+
+      // 秒針の描画角度決定
+      let secondAngleDeg = state.second * 6;
+      if (state.showSecondHand && state.isReverseSecond) {
+        secondAngleDeg = 360 - secondAngleDeg; // 逆回転描画
+      }
+
+      const secondAngleRad = (secondAngleDeg - 90) * Math.PI / 180;
+      const longAngleRad = ((state.minute * 6 + state.second * 0.1) - 90) * Math.PI / 180;
+      const shortAngleRad = (((state.hour % 12) * 30 + state.minute * 0.5 + state.second * (0.5 / 60)) - 90) * Math.PI / 180;
+
+      // --- 短針 (赤・太め) ---
+      ctx.save();
+      ctx.shadowColor = "rgba(239, 68, 68, 0.3)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx - Math.cos(shortAngleRad) * 15, cy - Math.sin(shortAngleRad) * 15);
+      ctx.lineTo(cx + Math.cos(shortAngleRad) * (r * 0.55), cy + Math.sin(shortAngleRad) * (r * 0.55));
+      ctx.stroke();
+
+      ctx.fillStyle = "#b91c1c";
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(shortAngleRad) * (r * 0.55), cy + Math.sin(shortAngleRad) * (r * 0.55), 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // --- 長針 (青・細長) ---
+      ctx.save();
+      ctx.shadowColor = "rgba(59, 130, 246, 0.3)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.strokeStyle = "#3b82f6";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx - Math.cos(longAngleRad) * 20, cy - Math.sin(longAngleRad) * 20);
+      ctx.lineTo(cx + Math.cos(longAngleRad) * (r * 0.82), cy + Math.sin(longAngleRad) * (r * 0.82));
+      ctx.stroke();
+
+      ctx.fillStyle = "#1d4ed8";
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(longAngleRad) * (r * 0.82), cy + Math.sin(longAngleRad) * (r * 0.82), 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // --- 秒針 (ピンク・細、お試しモード時のみ) ---
+      if (state.showSecondHand) {
+        ctx.save();
+        ctx.shadowColor = "rgba(244, 63, 94, 0.4)";
+        ctx.shadowBlur = 3;
+        ctx.strokeStyle = "#f43f5e"; // rose-500
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        // 中心から後ろに少しはみ出す
+        ctx.moveTo(cx - Math.cos(secondAngleRad) * 25, cy - Math.sin(secondAngleRad) * 25);
+        ctx.lineTo(cx + Math.cos(secondAngleRad) * (r * 0.88), cy + Math.sin(secondAngleRad) * (r * 0.88));
+        ctx.stroke();
+
+        // お尻の丸飾り
+        ctx.fillStyle = "#f43f5e";
+        ctx.beginPath();
+        ctx.arc(cx - Math.cos(secondAngleRad) * 20, cy - Math.sin(secondAngleRad) * 20, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ドラッグ用先端マーカー
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(secondAngleRad) * (r * 0.88), cy + Math.sin(secondAngleRad) * (r * 0.88), 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // --- 中心部のピン ---
+      ctx.save();
+      ctx.fillStyle = "#334155";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 5. 重ねられる透明な「分度器」の描画
+    function drawProtractorOverlay() {
+      const p = state.protractor;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+
+      // 分度器本体（半透明スカイブルー）
+      ctx.fillStyle = "rgba(14, 165, 233, 0.22)"; // クリアな半透明
+      ctx.strokeStyle = "rgba(2, 132, 199, 0.7)";
+      ctx.lineWidth = 2;
+
+      // 半円のパス
+      ctx.beginPath();
+      ctx.arc(0, 0, p.radius, Math.PI, 0, false); // 上半分の半円
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 中央の小さな半円
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, Math.PI, 0, false);
+      ctx.closePath();
+      ctx.stroke();
+
+      // 中心を示す赤い十字線
+      ctx.strokeStyle = "rgba(220, 38, 38, 0.7)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+      ctx.moveTo(0, -10); ctx.lineTo(0, 5);
+      ctx.stroke();
+
+      // 分度器の目盛り
+      ctx.strokeStyle = "rgba(2, 132, 199, 0.8)";
+      ctx.fillStyle = "#0369a1";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let d = 0; d <= 180; d += 1) {
+        const rad = (d - 180) * Math.PI / 180; // 180度 left端から右端へ
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        let tickLen = 5;
+        ctx.lineWidth = 0.5;
+
+        if (d % 10 === 0) {
+          tickLen = 14;
+          ctx.lineWidth = 1.5;
+
+          // 度数の数字描画（10度おき）
+          ctx.font = "9px 'Noto Sans JP'";
+          // 内側目盛り（右回りと左回り）
+          const distNum1 = p.radius - 22;
+          ctx.fillText(String(180 - d), cos * distNum1, sin * distNum1);
+          
+          const distNum2 = p.radius - 32;
+          ctx.fillText(String(d), cos * distNum2, sin * distNum2);
+        } else if (d % 5 === 0) {
+          tickLen = 9;
+          ctx.lineWidth = 1.0;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(cos * (p.radius - tickLen), sin * (p.radius - tickLen));
+        ctx.lineTo(cos * p.radius, sin * p.radius);
+        ctx.stroke();
+      }
+
+      // --- 回転ハンドル（分度器の上部にくっつく丸ノブ） ---
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#0284c7";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      // 分度器の真上（-90度方向）の少し外側に配置
+      ctx.arc(0, -p.radius - 18, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // つまみマーク
+      ctx.fillStyle = "#0284c7";
+      ctx.beginPath();
+      ctx.arc(0, -p.radius - 18, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+
+    // --- マウス・タッチ操作イベントの設定 ---
+    function setupEvents() {
+      // 共通座標取得
+      function getEventPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX = 0, clientY = 0;
+        
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+        
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      // 1. タップ・クリック開始
+      function onStart(e) {
+        const pos = getEventPos(e);
+        
+        // 分度器が出ている場合、分度器のクリックを優先
+        if (state.protractor.visible) {
+          const p = state.protractor;
+          
+          // (a) 回転ハンドルとの距離判定
+          const handleDist = p.radius + 18;
+          const handleGlobalX = p.x + Math.cos(p.angle - Math.PI/2) * handleDist;
+          const handleGlobalY = p.y + Math.sin(p.angle - Math.PI/2) * handleDist;
+          
+          const dxHandle = pos.x - handleGlobalX;
+          const dyHandle = pos.y - handleGlobalY;
+          const distToHandle = Math.sqrt(dxHandle*dxHandle + dyHandle*dyHandle);
+
+          if (distToHandle < 20) {
+            e.preventDefault();
+            p.isRotating = true;
+            const dx = pos.x - p.x;
+            const dy = pos.y - p.y;
+            p.baseAngle = Math.atan2(dy, dx) - p.angle;
+            return;
+          }
+
+          // (b) 分度器本体との距離判定 (ドラッグ移動)
+          const dxBody = pos.x - p.x;
+          const dyBody = pos.y - p.y;
+          const distToBody = Math.sqrt(dxBody*dxBody + dyBody*dyBody);
+
+          if (distToBody < p.radius) {
+            const localY = -dxBody * Math.sin(p.angle) + dyBody * Math.cos(p.angle);
+            if (localY <= 10) {
+              e.preventDefault();
+              p.isDragging = true;
+              p.dragStartX = pos.x - p.x;
+              p.dragStartY = pos.y - p.y;
+              return;
+            }
+          }
+        }
+
+        // 2. 時計の針のドラッグ判定
+        const cx = clockCenter.x;
+        const cy = clockCenter.y;
+        const dx = pos.x - cx;
+        const dy = pos.y - cy;
+        const distToCenter = Math.sqrt(dx*dx + dy*dy);
+
+        if (distToCenter > 15 && distToCenter < clockRadius + 15) {
+          e.preventDefault();
+          
+          // 各針の目標角度（時計盤 12時方向が0基準）
+          const clickAngleDeg = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
+
+          // 現在の針の角度（逆回りモード対応）
+          let secondAngleDeg = state.second * 6;
+          if (state.showSecondHand && state.isReverseSecond) {
+            secondAngleDeg = (360 - secondAngleDeg) % 360;
+          }
+
+          const longAngleDeg = (state.minute * 6 + state.second * 0.1) % 360;
+          const shortAngleDeg = ((state.hour % 12) * 30 + state.minute * 0.5 + state.second * (0.5 / 60)) % 360;
+
+          // 各々の距離を計算して最も近い針を検出
+          const diffLong = Math.min(Math.abs(clickAngleDeg - longAngleDeg), 360 - Math.abs(clickAngleDeg - longAngleDeg));
+          const diffShort = Math.min(Math.abs(clickAngleDeg - shortAngleDeg), 360 - Math.abs(clickAngleDeg - shortAngleDeg));
+          const diffSecond = Math.min(Math.abs(clickAngleDeg - secondAngleDeg), 360 - Math.abs(clickAngleDeg - secondAngleDeg));
+
+          let targetHands = [
+            { name: 'minute', diff: diffLong },
+            { name: 'hour', diff: diffShort }
+          ];
+
+          if (state.showSecondHand) {
+            targetHands.push({ name: 'second', diff: diffSecond });
+          }
+
+          targetHands.sort((a, b) => a.diff - b.diff);
+
+          if (targetHands[0].diff < 20) {
+            stopTickingIfRunning(); // ドラッグしたら自動運転停止
+            state.draggedHand = targetHands[0].name;
+          }
+        }
+      }
+
+      // 2. 移動中 (ドラッグ)
+      function onMove(e) {
+        const pos = getEventPos(e);
+        let redrawNeeded = false;
+
+        // (a) 分度器の回転
+        if (state.protractor.isRotating) {
+          e.preventDefault();
+          const p = state.protractor;
+          const dx = pos.x - p.x;
+          const dy = pos.y - p.y;
+          p.angle = Math.atan2(dy, dx) - p.baseAngle;
+          redrawNeeded = true;
+        }
+        // (b) 分度器の移動
+        else if (state.protractor.isDragging) {
+          e.preventDefault();
+          const p = state.protractor;
+          p.x = pos.x - p.dragStartX;
+          p.y = pos.y - p.dragStartY;
+
+          // マグネット吸着機能
+          const dxCenter = p.x - clockCenter.x;
+          const dyCenter = p.y - clockCenter.y;
+          const distToClockCenter = Math.sqrt(dxCenter*dxCenter + dyCenter*dyCenter);
+
+          if (distToClockCenter < 22) {
+            p.x = clockCenter.x;
+            p.y = clockCenter.y;
+            document.getElementById('canvas-status').innerHTML = "<span class='text-emerald-500 font-bold'>✨ 時計の中心にピタッと合体中！</span>";
+          } else {
+            document.getElementById('canvas-status').innerText = "中心吸着（マグネット）有効";
+          }
+          redrawNeeded = true;
+        }
+        // (c) 時計の針ドラッグ
+        else if (state.draggedHand !== 'none') {
+          e.preventDefault();
+          const cx = clockCenter.x;
+          const cy = clockCenter.y;
+          const dx = pos.x - cx;
+          const dy = pos.y - cy;
+          
+          const angleDeg = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
+
+          if (state.draggedHand === 'minute') {
+            const rawMinute = angleDeg / 6;
+            state.minute = Math.round(rawMinute) % 60;
+          } else if (state.draggedHand === 'hour') {
+            let rawHour = angleDeg / 30;
+            if (rawHour < 0.5) rawHour += 12;
+            let h = Math.floor(rawHour);
+            if (h === 0) h = 12;
+            state.hour = h;
+
+            const fraction = rawHour - Math.floor(rawHour);
+            state.minute = Math.round(fraction * 60) % 60;
+          } else if (state.draggedHand === 'second') {
+            // 秒針ドラッグ：逆回りモードのときは逆算も反時計回りにする
+            if (state.isReverseSecond) {
+              state.second = Math.round((360 - angleDeg) % 360 / 6) % 60;
+            } else {
+              state.second = Math.round(angleDeg / 6) % 60;
+            }
+          }
+          
+          updateAppUI();
+          redrawNeeded = true;
+        }
+
+        if (redrawNeeded) {
+          draw();
+        }
+      }
+
+      // 3. ドラッグ終了
+      function onEnd(e) {
+        state.protractor.isDragging = false;
+        state.protractor.isRotating = false;
+        state.draggedHand = 'none';
+        draw();
+      }
+
+      // キャンバスにイベントを割り当てる（ブラウザ標準）
+      canvas.addEventListener('mousedown', onStart, { passive: false });
+      canvas.addEventListener('mousemove', onMove, { passive: false });
+      window.addEventListener('mouseup', onEnd);
+
+      // タッチイベント対応
+      canvas.addEventListener('touchstart', onStart, { passive: false });
+      canvas.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd);
+    }
+  </script>
+</body>
+</html>

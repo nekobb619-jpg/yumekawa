@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>熟語入れ替えパズル（ゆめかわ錬金術ラボ）</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&family=Zen+Maru+Gothic:wght@500;700&display=swap');
+
+        :root {
+            --bg-color: #fce4ec;
+            --primary-color: #e1bee7;
+            --secondary-color: #b3e5fc;
+            --text-color: #6a1b9a;
+            --panel-bg: #ffffff;
+            --panel-glow: #f48fb1;
+            --gem-color1: #ffb7b2;
+            --gem-color2: #e2f0cb;
+            --gem-color3: #b5ead7;
+            --gem-color4: #c7ceea;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Zen Maru Gothic', 'Varela Round', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color), var(--primary-color), var(--secondary-color));
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ヘッダー */
+        header {
+            text-align: center;
+            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #8e24aa;
+            text-shadow: 1px 1px 2px #fff;
+        }
+
+        p.instruction {
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
+            color: #5c2018;
+            font-weight: bold;
+        }
+
+        .stage-info {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d81b60;
+            margin-top: 5px;
+            text-shadow: 0 0 5px #fff;
+        }
+
+        /* ゲームエリア */
+        .game-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .magic-circle {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border: 4px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: spin 20s linear infinite;
+            pointer-events: none;
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        .magic-inner {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(225, 190, 231, 0.8);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: spin-reverse 15s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
+
+        /* スロットとパネル */
+        .board {
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 5;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .slot {
+            width: 70px;
+            height: 70px;
+            border: 2px dotted rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .slot:nth-child(2) { margin-right: 20px; } /* 2つの熟語を分ける隙間 */
+
+        .panel {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: var(--panel-bg);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #4a148c;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1), inset 0 -4px 0 rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+            touch-action: manipulation;
+        }
+
+        .panel.selected {
+            transform: scale(1.15) translateY(-5px);
+            box-shadow: 0 10px 20px var(--panel-glow), 0 0 20px var(--panel-glow);
+            border: 2px solid #ff80ab;
+            color: #c2185b;
+            z-index: 10;
+        }
+
+        .panel.success {
+            animation: success-glow 1s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes success-glow {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2) rotate(10deg); filter: brightness(1.5); background: #fff9c4; border-radius: 50% 15px; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* コレクションボックス */
+        .collection-box {
+            height: 150px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            border-top: 3px solid #fff;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .collection-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #7b1fa2;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .gems-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            overflow-y: auto;
+        }
+
+        .gem {
+            padding: 5px 12px;
+            background: linear-gradient(135deg, var(--gem-color3), var(--gem-color4));
+            border-radius: 20px;
+            color: #333;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 2px 5px rgba(255,255,255,0.8);
+            border: 1px solid #fff;
+            animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gem::before {
+            content: '💎';
+            font-size: 0.9rem;
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* オーバーレイ・クリア画面 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .clear-title {
+            font-size: 2.5rem;
+            color: #ff4081;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* ロック用の見えないレイヤー */
+        #blocker {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 50;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>💎 ゆめかわ錬金術ラボ 💎</h1>
+        <p class="instruction">文字を入れ替えて、正しい熟語の宝石を完成させよう！</p>
+        <div class="stage-info" id="stage-display">ステージ 1 / 5</div>
+    </header>
+
+    <div class="game-area">
+        <div class="magic-circle">
+            <div class="magic-inner"></div>
+        </div>
+        <div class="board" id="board">
+            </div>
+        <div id="blocker"></div>
+    </div>
+
+    <div class="collection-box">
+        <div class="collection-title">✨ 熟語コレクションボックス ✨</div>
+        <div class="gems-container" id="gems-container">
+            </div>
+    </div>
+
+    <div class="overlay" id="clear-overlay">
+        <div class="clear-title">🎉 伝説の<br>熟語錬金術師・認定！ 🎉</div>
+        <p style="font-size: 1.2rem; font-weight: bold; color: #7b1fa2;">すべての宝石を集めきったね！</p>
+    </div>
+
+    <script>
+        // --- データ設定 ---
+        // 小学4年生レベルの漢字を中心に構成
+        const stageData = [
+            { words: ["天気", "学校"] },
+            { words: ["算数", "理科"] },
+            { words: ["読書", "時計"] },
+            { words: ["音楽", "図工"] },
+            { words: ["友情", "勇気"] }
+        ];
+
+        let currentStage = 0;
+        let panels = [];
+        let slots = [];
+        let selectedIndex = null;
+        let isAnimating = false;
+
+        const boardEl = document.getElementById('board');
+        const gemsContainer = document.getElementById('gems-container');
+        const stageDisplay = document.getElementById('stage-display');
+        const blocker = document.getElementById('blocker');
+
+        // --- 効果音（Web Audio API） ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playMagicSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [1046.50, 1318.51, 1567.98, 2093.00]; // C6, E6, G6, C7
+            const now = audioCtx.currentTime;
+            notes.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0, now + i * 0.1);
+                gain.gain.linearRampToValueAtTime(0.3, now + i * 0.1 + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.1);
+                osc.stop(now + i * 0.1 + 0.4);
+            });
+        }
+
+        function playSwapSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playClearSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98]; 
+            const now = audioCtx.currentTime;
+            notes.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0, now + i * 0.15);
+                gain.gain.linearRampToValueAtTime(0.1, now + i * 0.15 + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.15);
+                osc.stop(now + i * 0.15 + 0.5);
+            });
+        }
+
+        // --- ゲームロジック ---
+
+        function initStage() {
+            boardEl.innerHTML = '';
+            panels = [];
+            slots = [];
+            selectedIndex = null;
+            isAnimating = false;
+            blocker.style.display = 'none';
+
+            stageDisplay.innerText = `ステージ ${currentStage + 1} / 5`;
+
+            const currentData = stageData[currentStage];
+            const chars = (currentData.words[0] + currentData.words[1]).split('');
+            
+            // シャッフル（最初から正解の並びにならないようにする）
+            let shuffled;
+            let isSolved = true;
+            while(isSolved) {
+                shuffled = [...chars].sort(() => Math.random() - 0.5);
+                const w1 = shuffled[0] + shuffled[1];
+                const w2 = shuffled[2] + shuffled[3];
+                if (!currentData.words.includes(w1) || !currentData.words.includes(w2)) {
+                    isSolved = false;
+                }
+            }
+
+            // スロットとパネルの生成
+            for (let i = 0; i < 4; i++) {
+                // スロット（背景の枠）
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                boardEl.appendChild(slot);
+                slots.push(slot);
+
+                // パネル（動く文字）
+                const panel = document.createElement('div');
+                panel.className = 'panel';
+                panel.innerText = shuffled[i];
+                panel.dataset.index = i;
+                
+                // タップ/クリックイベント
+                panel.addEventListener('click', () => handlePanelClick(i));
+                
+                boardEl.appendChild(panel);
+                panels.push(panel);
+            }
+
+            // 少し遅延させて位置を計算（DOMレンダリング待ち）
+            setTimeout(updatePanelPositions, 50);
+            window.addEventListener('resize', updatePanelPositions);
+        }
+
+        function updatePanelPositions() {
+            panels.forEach((panel, i) => {
+                const slotRect = slots[i].getBoundingClientRect();
+                const boardRect = boardEl.getBoundingClientRect();
+                panel.style.left = `${slotRect.left - boardRect.left}px`;
+                panel.style.top = `${slotRect.top - boardRect.top}px`;
+                panel.dataset.index = i;
+            });
+        }
+
+        function handlePanelClick(index) {
+            if (isAnimating) return;
+
+            const targetIndex = panels.findIndex(p => p.dataset.index == index);
+
+            if (selectedIndex === null) {
+                // 1つ目の選択
+                selectedIndex = targetIndex;
+                panels[selectedIndex].classList.add('selected');
+                playSwapSound();
+            } else {
+                if (selectedIndex === targetIndex) {
+                    // キャンセル
+                    panels[selectedIndex].classList.remove('selected');
+                    selectedIndex = null;
+                    return;
+                }
+                
+                // 2つ目の選択 -> スワップ実行
+                isAnimating = true;
+                panels[selectedIndex].classList.remove('selected');
+                
+                // データ上の位置を入れ替え
+                const tempIndex = panels[selectedIndex].dataset.index;
+                panels[selectedIndex].dataset.index = panels[targetIndex].dataset.index;
+                panels[targetIndex].dataset.index = tempIndex;
+
+                playSwapSound();
+                updatePanelPositions();
+
+                // アニメーション完了を待ってから判定
+                setTimeout(() => {
+                    checkWin();
+                    selectedIndex = null;
+                    isAnimating = false;
+                }, 350);
+            }
+        }
+
+        function checkWin() {
+            // 現在の並び順通りにパネルをソート
+            const sortedPanels = [...panels].sort((a, b) => a.dataset.index - b.dataset.index);
+            const w1 = sortedPanels[0].innerText + sortedPanels[1].innerText;
+            const w2 = sortedPanels[2].innerText + sortedPanels[3].innerText;
+            
+            const targetWords = stageData[currentStage].words;
+
+            if (targetWords.includes(w1) && targetWords.includes(w2) && w1 !== w2) {
+                // 正解！
+                blocker.style.display = 'block'; // タップ無効化
+                playMagicSound();
+
+                // 宝石化アニメーション
+                sortedPanels.forEach(p => p.classList.add('success'));
+
+                setTimeout(() => {
+                    addGemToCollection(w1);
+                    addGemToCollection(w2);
+                    
+                    currentStage++;
+                    if (currentStage >= stageData.length) {
+                        showClearScreen();
+                    } else {
+                        initStage();
+                    }
+                }, 1000); // 演出を待つ
+            }
+        }
+
+        function addGemToCollection(word) {
+            const gem = document.createElement('div');
+            gem.className = 'gem';
+            gem.innerText = word;
+            
+            // 色をランダムに
+            const colors = ['var(--gem-color1)', 'var(--gem-color2)', 'var(--gem-color3)', 'var(--gem-color4)', '#e1bee7'];
+            const bg1 = colors[Math.floor(Math.random() * colors.length)];
+            const bg2 = colors[Math.floor(Math.random() * colors.length)];
+            gem.style.background = `linear-gradient(135deg, ${bg1}, ${bg2})`;
+            
+            gemsContainer.appendChild(gem);
+        }
+
+        function showClearScreen() {
+            playClearSound();
+            const overlay = document.getElementById('clear-overlay');
+            overlay.classList.add('active');
+
+            // キラキラパーティクルを降らせる
+            for (let i = 0; i < 50; i++) {
+                createParticle();
+            }
+
+            // 親アプリへクリア信号を送信
+            setTimeout(() => {
+                try {
+                    window.parent.postMessage({ status: 'CLEAR' }, '*');
+                } catch (e) {
+                    console.log('PostMessage Error', e);
+                }
+            }, 1000);
+        }
+
+        function createParticle() {
+            const symbols = ['🌟', '💎', '✨', '🌸'];
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            p.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            p.style.animationDelay = Math.random() * 1 + 's';
+            
+            document.getElementById('clear-overlay').appendChild(p);
+        }
+
+        // --- 初期起動 ---
+        // 最初のタップでAudioContextを有効化するためのダミーリスナー
+        document.body.addEventListener('click', function unlockAudio() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            document.body.removeEventListener('click', unlockAudio);
+        });
+
+        window.onload = initStage;
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR空間3Dレーダーラボ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap');
+
+        :root {
+            --color-pink: #ffb7b2;
+            --color-purple: #e2bbfd;
+            --color-blue: #b5e8ee;
+            --text-color: #553c64;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #000;
+            color: var(--text-color);
+        }
+
+        /* 背景カメラ映像 */
+        #bg-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+
+        /* UIオーバーレイ */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* 妖精のメッセージ */
+        #fairy-message {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 4px solid var(--color-purple);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(226, 187, 253, 0.5);
+            pointer-events: auto;
+        }
+        .fairy-icon {
+            font-size: 40px;
+            margin-right: 15px;
+            animation: float 2s ease-in-out infinite;
+        }
+        .fairy-text {
+            font-size: 16px;
+            line-height: 1.4;
+            font-weight: bold;
+        }
+
+        /* レーダー数値表示 */
+        #radar {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 3px solid var(--color-blue);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .val-plus { color: #ff6b81; }
+        .val-minus { color: #3742fa; }
+        .val-zero { color: #2ed573; }
+
+        /* 分度器UI */
+        #protractor {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 250px;
+            height: 250px;
+            transform: translate(-50%, -50%);
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: none;
+            box-sizing: border-box;
+        }
+        .p-line-h, .p-line-v {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7);
+        }
+        .p-line-h { top: 50%; left: 0; width: 100%; height: 2px; transform: translateY(-50%); }
+        .p-line-v { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
+        .p-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ターゲットマーカー（宝箱） */
+        #target-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 60px;
+            cursor: pointer;
+            pointer-events: auto;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+            animation: pulse 1s infinite alternate;
+        }
+        .target-label {
+            font-size: 14px;
+            background: #ff4757;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            margin-top: -10px;
+            white-space: nowrap;
+        }
+
+        /* トグルボタン */
+        #btn-protractor {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: var(--color-blue);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: var(--text-color);
+            box-shadow: 0 4px 0 #82b9c2;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        #btn-protractor:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* 画面全体のフルスクリーンモーダル（スタート・クリア） */
+        .fullscreen-modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--color-pink), var(--color-purple));
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .fullscreen-modal h1, .fullscreen-modal h2 {
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .fullscreen-modal p {
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            max-width: 400px;
+        }
+        .modal-btn {
+            background: #fff;
+            color: var(--text-color);
+            border: 4px solid var(--color-blue);
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 5px 0 var(--color-blue);
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .modal-btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+        .btn-ex { border-color: #ff4757; box-shadow: 0 5px 0 #ff4757; color: #ff4757; }
+
+        /* パーティクル用キャンバス */
+        #confetti {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <video id="bg-video" autoplay playsinline muted></video>
+    <canvas id="confetti"></canvas>
+
+    <div id="ui-layer" style="display: none;">
+        <div id="fairy-message">
+            <div class="fairy-icon">🧚‍♀️</div>
+            <div class="fairy-text" id="message-text"></div>
+        </div>
+
+        <div id="radar">
+            <div>左右: <span id="val-yaw">0</span>°</div>
+            <div>上下: <span id="val-pitch">0</span>°</div>
+        </div>
+
+        <div id="protractor">
+            <div class="p-line-h"></div>
+            <div class="p-line-v"></div>
+            <div class="p-center"></div>
+        </div>
+
+        <button id="btn-protractor">📐 分度器 ON</button>
+
+        <div id="target-box">
+            <span id="target-emoji">🎁</span>
+            <div class="target-label">タップしてゲット！</div>
+        </div>
+    </div>
+
+    <div id="start-screen" class="fullscreen-modal">
+        <h1>AR空間<br>3Dレーダーラボ</h1>
+        <p>スマホをまっすぐ前に持って、<br>ボタンを押してね！<br>（そこが基準の「0度」になるよ）</p>
+        <button id="btn-start" class="modal-btn">🚀 0度をセットしてスタート！</button>
+    </div>
+
+    <div id="clear-screen" class="fullscreen-modal" style="display: none;">
+        <h2>🎉 全ステージクリア！ 🎉</h2>
+        <p>マイナスの世界も、立体的な空間も<br>バッチリ理解できたね！</p>
+        <button id="btn-return" class="modal-btn">✨ 完璧！アプリに戻る（通信）</button>
+        <button id="btn-retry" class="modal-btn">🔄 もう一度最初からやる</button>
+        <button id="btn-ex" class="modal-btn btn-ex">🔥 上級：真後ろ（-180度）の試練！</button>
+    </div>
+
+    <script>
+        // DOM要素
+        const video = document.getElementById('bg-video');
+        const startScreen = document.getElementById('start-screen');
+        const clearScreen = document.getElementById('clear-screen');
+        const uiLayer = document.getElementById('ui-layer');
+        const messageText = document.getElementById('message-text');
+        const valYaw = document.getElementById('val-yaw');
+        const valPitch = document.getElementById('val-pitch');
+        const targetBox = document.getElementById('target-box');
+        const targetEmoji = document.getElementById('target-emoji');
+        const protractor = document.getElementById('protractor');
+        const btnProtractor = document.getElementById('btn-protractor');
+
+        // 状態変数
+        let isStarted = false;
+        let baseAlpha = 0, baseBeta = 0;
+        let currentYaw = 0, currentPitch = 0;
+        let currentStage = 1;
+        let isSimulating = false; // PC用シミュレーション
+
+        // ステージデータ
+        const stages = {
+            1: {
+                text: "【ステージ1】<br>右に+90度向くと宝箱があるよ！じゃあ、左の『-90度』の方向には何があるかな？",
+                targetYaw: -90, targetPitch: 0, emoji: "💎"
+            },
+            2: {
+                text: "【ステージ2】<br>地面とピッタリ平行な『水平（0度）』のまま、足元の『直角（-90度）』を探してみて！",
+                targetYaw: 0, targetPitch: -90, emoji: "👑"
+            },
+            3: {
+                text: "【ステージ3：合わせワザ！】<br>『右に+45度』向いてから、『上に+60度』見上げた空の中に、幻の宝が浮いているよ！",
+                targetYaw: 45, targetPitch: 60, emoji: "🏆"
+            },
+            4: {
+                text: "【EXステージ】<br>『右から回って+180度』と『左から回って-180度』を探してみて！不思議なことが起きるかも…？",
+                targetYaw: 180, targetPitch: 0, emoji: "🔥" // yaw180と-180は同じ
+            }
+        };
+
+        // 角度を-180〜180に正規化
+        function normalizeAngle(angle) {
+            let a = angle % 360;
+            if (a > 180) a -= 360;
+            if (a < -180) a += 360;
+            return a;
+        }
+
+        // 数値の色付けとフォーマット
+        function formatAngle(angle) {
+            const rounded = Math.round(angle);
+            if (rounded > 0) return `<span class="val-plus">+${rounded}</span>`;
+            if (rounded < 0) return `<span class="val-minus">${rounded}</span>`;
+            return `<span class="val-zero">0</span>`;
+        }
+
+        // カメラの起動
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.warn("カメラが起動できませんでした（PC等）", err);
+            }
+        }
+
+        // スタートボタン処理
+        document.getElementById('btn-start').addEventListener('click', async () => {
+            // iOS向けのDeviceOrientation許可リクエスト
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert('ジャイロセンサーの許可が必要です。');
+                        return;
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            // センサーが動かない環境（PC等）のためのシミュレーション判定
+            let hasSensor = false;
+            const checkSensor = (e) => {
+                if (e.alpha !== null) hasSensor = true;
+                window.removeEventListener('deviceorientation', checkSensor);
+            };
+            window.addEventListener('deviceorientation', checkSensor);
+
+            setTimeout(() => {
+                if (!hasSensor) {
+                    isSimulating = true;
+                    // PCではマウスで角度をシミュレート
+                    window.addEventListener('mousemove', (e) => {
+                        if (!isStarted) return;
+                        // 画面中央を0として、左右上下で角度を擬似的に作る
+                        const hw = window.innerWidth / 2;
+                        const hh = window.innerHeight / 2;
+                        currentYaw = ((e.clientX - hw) / hw) * 180; // -180 to 180
+                        currentPitch = -((e.clientY - hh) / hh) * 90; // -90 to 90
+                        updateUI();
+                    });
+                }
+            }, 500);
+
+            // 基準値をリセットフラグ
+            window.addEventListener('deviceorientation', handleOrientation);
+            
+            startCamera();
+            startScreen.style.display = 'none';
+            uiLayer.style.display = 'block';
+            loadStage(1);
+            
+            // 最初の1回目のデータで基準をセットする仕組み
+            setTimeout(() => { isStarted = true; }, 100);
+        });
+
+        // センサーの処理
+        let isFirstData = true;
+        function handleOrientation(event) {
+            if (!event.alpha || isSimulating) return;
+
+            if (isFirstData) {
+                baseAlpha = event.alpha;
+                baseBeta = event.beta;
+                isFirstData = false;
+            }
+
+            // 右回りがプラスになるように計算 (一般的なWeb挙動に合わせる)
+            let diffAlpha = normalizeAngle(baseAlpha - event.alpha);
+            let diffBeta = normalizeAngle(baseBeta - event.beta);
+
+            // 簡易的な上下角（端末を立てた状態からの変化）
+            currentYaw = diffAlpha;
+            currentPitch = diffBeta; 
+
+            if (isStarted) updateUI();
+        }
+
+        // 毎フレームのUI更新
+        function updateUI() {
+            valYaw.innerHTML = formatAngle(currentYaw);
+            valPitch.innerHTML = formatAngle(currentPitch);
+
+            const stage = stages[currentStage];
+            if (!stage) return;
+
+            // ターゲットとの差分
+            let diffY = normalizeAngle(stage.targetYaw - currentYaw);
+            let diffP = stage.targetPitch - currentPitch; // Pitchは-90〜90なので単純減算
+
+            // EXステージの特殊判定（真後ろは180でも-180でもOK）
+            if (currentStage === 4) {
+                if (Math.abs(currentYaw) >= 165) diffY = 0; // ±15度の遊び
+            }
+
+            // 画面上のピクセル位置（1度 = 約15pxとして計算）
+            const pxPerDegree = 15;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            const targetX = centerX + (diffY * pxPerDegree);
+            const targetY = centerY - (diffP * pxPerDegree); // 上が+なので画面上方向は-Y
+
+            // 画面内（または周辺）にターゲットが入ったら表示
+            if (Math.abs(diffY) < 30 && Math.abs(diffP) < 30) {
+                targetBox.style.display = 'flex';
+                // 画面中央を基準に移動
+                targetBox.style.transform = `translate(-50%, -50%) translate(${diffY * pxPerDegree}px, ${-diffP * pxPerDegree}px)`;
+            } else {
+                targetBox.style.display = 'none';
+            }
+        }
+
+        // ステージ読み込み
+        function loadStage(stageNum) {
+            currentStage = stageNum;
+            const stage = stages[currentStage];
+            messageText.innerHTML = stage.text;
+            targetEmoji.innerHTML = stage.emoji;
+            targetBox.style.display = 'none';
+        }
+
+        // 宝箱タップでクリア
+        targetBox.addEventListener('click', () => {
+            targetBox.style.display = 'none';
+            if (currentStage === 4) {
+                messageText.innerHTML = "大正解！実は『+180度』と『-180度』は同じ場所だったんだ！すごいね！";
+                setTimeout(() => showClearScreen(true), 3000);
+            } else if (currentStage < 3) {
+                fireConfetti();
+                loadStage(currentStage + 1);
+            } else {
+                showClearScreen(false);
+            }
+        });
+
+        // 分度器トグル
+        let isProtractorOn = false;
+        btnProtractor.addEventListener('click', () => {
+            isProtractorOn = !isProtractorOn;
+            protractor.style.display = isProtractorOn ? 'block' : 'none';
+            btnProtractor.innerHTML = isProtractorOn ? '📐 分度器 OFF' : '📐 分度器 ON';
+        });
+
+        // クリア画面表示
+        function showClearScreen(isExClear) {
+            uiLayer.style.display = 'none';
+            clearScreen.style.display = 'flex';
+            fireConfetti(true);
+            if (isExClear) {
+                document.getElementById('btn-ex').style.display = 'none';
+                clearScreen.querySelector('h2').innerText = "🔥 完全制覇！おめでとう！ 🔥";
+            }
+        }
+
+        // ボタン：アプリに戻る
+        document.getElementById('btn-return').addEventListener('click', () => {
+            // 親ウィンドウに通信を送る
+            window.parent.postMessage({ status: 'CLEAR' }, '*');
+            alert("親アプリに「CLEAR」信号を送りました！");
+        });
+
+        // ボタン：リトライ
+        document.getElementById('btn-retry').addEventListener('click', () => {
+            clearScreen.style.display = 'none';
+            uiLayer.style.display = 'block';
+            isFirstData = true; // 基準を再セット
+            loadStage(1);
+        });
+
+        // ボタン：EXステージ
+        document.getElementById('btn-ex').addEventListener('click', () => {
+            clearScreen.style.display = 'none';
+            uiLayer.style.display = 'block';
+            loadStage(4);
+        });
+
+        // お祝いの紙吹雪＆宝物エフェクト
+        function fireConfetti(isMassive = false) {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const emojis = ['✨', '💎', '👑', '💖', '🌟'];
+            const count = isMassive ? 100 : 30;
+
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * (isMassive ? 20 : 10),
+                    vy: (Math.random() - 0.5) * (isMassive ? 20 : 10) - 5,
+                    emoji: emojis[Math.floor(Math.random() * emojis.length)],
+                    size: Math.random() * 20 + 20,
+                    life: 1.0
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.5; // 重力
+                        p.life -= 0.02;
+                        ctx.font = `${p.size}px sans-serif`;
+                        ctx.globalAlpha = Math.max(0, p.life);
+                        ctx.fillText(p.emoji, p.x, p.y);
+                    }
+                });
+                if (alive) requestAnimationFrame(render);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            render();
+        }
+    </script>
+</body>
+</html>

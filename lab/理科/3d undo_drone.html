@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D物理シミュレーター - 坂道とマテリアルラボ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js (3D描画エンジン) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Cannon.js (物理演算エンジン) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; user-select: none; overflow-x: hidden; }
+    
+    #canvas-container {
+      cursor: grab;
+      touch-action: none;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; outline: none; background: #cbd5e1;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 3px solid #64748b;
+    }
+    #slider-pitch::-webkit-slider-thumb { border-color: #f43f5e; }
+    #slider-roll::-webkit-slider-thumb { border-color: #3b82f6; }
+    
+    /* カメラ位置スライダー */
+    #slider-cam-x::-webkit-slider-thumb { border-color: #10b981; } /* 緑 */
+    #slider-cam-y::-webkit-slider-thumb { border-color: #8b5cf6; } /* 紫 */
+    #slider-cam-z::-webkit-slider-thumb { border-color: #3b82f6; } /* 青 */
+    
+    /* カスタムマテリアル用 */
+    #slider-friction::-webkit-slider-thumb { border-color: #8b5cf6; }
+    #slider-restitution::-webkit-slider-thumb { border-color: #f59e0b; }
+
+    /* 初期状態セットアップ用 */
+    .slider-init::-webkit-slider-thumb { border-color: #0ea5e9; } /* teal */
+
+    .radio-card:checked + div {
+      border-color: currentColor;
+      background-color: currentColor;
+      color: white;
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col" onload="initApp()">
+
+  <header class="bg-slate-900 text-white shadow-md p-3 sm:p-4 border-b-4 border-amber-500 z-10 relative">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🍎</span>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black tracking-wide">3D物理シミュレーター</h1>
+          <p class="text-[10px] sm:text-xs text-amber-200">重力・摩擦・反発と「転がるカメラ」の実験室</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-6xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    
+    <!-- 左側：3Dプレビューエリア (12列中7列) -->
+    <div class="lg:col-span-7 flex flex-col gap-3 relative">
+      
+      <div class="bg-white text-slate-700 text-sm p-3 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-2">
+        <span class="text-xl" id="tip-icon">💡</span>
+        <span id="game-tip" class="font-bold leading-tight">床の角度や素材を変えて、モノを落としてみよう！</span>
+      </div>
+
+      <!-- 🌟 メインキャンバス -->
+      <div class="relative w-full flex-grow bg-slate-800 rounded-3xl overflow-hidden shadow-md border-4 border-slate-900 min-h-[400px]" id="canvas-container">
+        
+        <!-- 床の角度インジケーター -->
+        <div class="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-xl backdrop-blur-md z-10 flex flex-col gap-1 border border-white/20">
+          <div class="text-[10px] font-bold text-slate-300">🏔️ 床の角度</div>
+          <div class="flex justify-between gap-3 text-sm font-mono font-black">
+            <span class="text-rose-400">X: <span id="hud-pitch">15°</span></span>
+            <span class="text-blue-400">Z: <span id="hud-roll">0°</span></span>
+          </div>
+        </div>
+
+        <!-- WASD操作ガイド（ドローンモード時のみ表示） -->
+        <div id="drone-guide" class="hidden absolute bottom-4 left-4 bg-black/70 text-white p-3 rounded-xl backdrop-blur-md z-10 flex flex-col gap-2 border border-white/20 pointer-events-none">
+          <div class="text-xs font-bold text-emerald-400 mb-1">🚁 ドローン操作ガイド</div>
+          <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px] font-black">
+            <div></div><div class="bg-slate-700 rounded py-1 border-b-2 border-slate-900">W<br>前</div><div></div>
+            <div class="bg-slate-700 rounded py-1 border-b-2 border-slate-900">A<br>左</div><div class="bg-slate-700 rounded py-1 border-b-2 border-slate-900">S<br>後</div><div class="bg-slate-700 rounded py-1 border-b-2 border-slate-900">D<br>右</div>
+          </div>
+          <div class="flex gap-2 text-center font-mono text-[10px] font-black mt-1">
+            <div class="flex-1 bg-slate-700 rounded py-1 border-b-2 border-slate-900">Q (上昇)</div>
+            <div class="flex-1 bg-slate-700 rounded py-1 border-b-2 border-slate-900">E (下降)</div>
+          </div>
+          <div class="text-[10px] text-slate-300 text-center mt-1">画面ドラッグで視点移動</div>
+        </div>
+
+        <canvas id="mainCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+        
+        <div id="label-main" class="absolute top-3 left-3 bg-black/70 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm pointer-events-none font-bold shadow flex items-center gap-1.5 transition-all z-10">
+          🎥 オートカメラ（ドラッグで回転・ホイールでズーム）
+        </div>
+      </div>
+
+      <!-- 🌟 ドローンカメラ操作トグル -->
+      <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 flex justify-between items-center transition-all duration-300 shadow-sm">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🚁</span>
+          <div>
+            <span class="text-sm font-black text-emerald-800 block">ドローンカメラを自分で操作する</span>
+            <span class="text-[10px] text-emerald-600 block leading-tight">WASDキーで移動、画面ドラッグで見回せます</span>
+          </div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="toggle-drone" onchange="toggleDroneMode(this.checked)" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+        </label>
+      </div>
+
+    </div>
+
+    <!-- 右側：コントロールパネル (12列中5列) -->
+    <div class="lg:col-span-5 flex flex-col gap-3 h-full pb-4 overflow-y-auto pr-1">
+      
+      <!-- 1. 坂道の角度（床の傾き） -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+          <h3 class="font-black text-slate-700 flex items-center gap-1.5">
+            <span>🏔️</span> 坂道の角度（床をかたむける）
+          </h3>
+          <button onclick="resetFloorAngle()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1.5 px-3 rounded-xl text-xs active:scale-95 transition-all flex items-center gap-1 shadow-sm">
+            <span>🔄</span> 平らにする
+          </button>
+        </div>
+        <div class="flex flex-col gap-4">
+          <div>
+            <div class="flex justify-between text-xs font-bold text-rose-700 mb-1">
+              <span>🔴 たてに傾ける (Pitch)</span>
+              <span id="val-pitch" class="font-mono text-rose-600 text-sm">15°</span>
+            </div>
+            <input type="range" id="slider-pitch" min="-45" max="45" value="15" oninput="updateFloor()">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-bold text-blue-700 mb-1">
+              <span>🔵 よこに傾ける (Roll)</span>
+              <span id="val-roll" class="font-mono text-blue-600 text-sm">0°</span>
+            </div>
+            <input type="range" id="slider-roll" min="-45" max="45" value="0" oninput="updateFloor()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 🌟【新設】モノの初期状態（高さ・角度） -->
+      <div class="bg-sky-50 border-2 border-sky-200 rounded-3xl p-4 shadow-sm">
+        <h3 class="font-black text-sky-800 flex items-center gap-1.5 border-b border-sky-200 pb-2 mb-3 text-sm">
+          <span>🎯</span> 落とす前の準備（高さ・角度）
+        </h3>
+        <div class="flex flex-col gap-3">
+          <!-- 高さ -->
+          <div>
+            <div class="flex justify-between text-xs font-bold text-sky-700 mb-1">
+              <span>⬆️ 落とす高さ (Y座標)</span>
+              <span id="val-init-y" class="font-mono text-sky-600">300</span>
+            </div>
+            <input type="range" id="slider-init-y" min="50" max="2000" value="300" class="slider-init bg-sky-200">
+          </div>
+          <!-- 初期角度 X -->
+          <div>
+            <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+              <span>初期の傾き (X軸)</span>
+              <span id="val-init-rot-x" class="font-mono">0°</span>
+            </div>
+            <input type="range" id="slider-init-rot-x" min="0" max="360" value="0" class="slider-init bg-slate-200" oninput="updateInitRotText()">
+          </div>
+          <!-- 初期角度 Z -->
+          <div>
+            <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+              <span>初期の傾き (Z軸)</span>
+              <span id="val-init-rot-z" class="font-mono">0°</span>
+            </div>
+            <input type="range" id="slider-init-rot-z" min="0" max="360" value="0" class="slider-init bg-slate-200" oninput="updateInitRotText()">
+          </div>
+        </div>
+      </div>
+
+      <!-- コースの形（コブの追加） -->
+      <div class="bg-orange-50 border-2 border-orange-200 rounded-3xl p-4 shadow-sm">
+        <h3 class="font-black text-orange-800 flex items-center gap-1.5 border-b border-orange-200 pb-2 mb-3 text-sm">
+          <span>🛤️</span> コースの形（凸凹・障害物）
+        </h3>
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <label class="cursor-pointer text-slate-500">
+            <input type="radio" name="courseType" value="flat" class="radio-card hidden" checked onchange="changeCourse()">
+            <div class="py-2.5 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              🟦 平らな床
+            </div>
+          </label>
+          <label class="cursor-pointer text-orange-600">
+            <input type="radio" name="courseType" value="bumps" class="radio-card hidden" onchange="changeCourse()">
+            <div class="py-2.5 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              🟠 コブだらけのコース
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 床の素材を変える -->
+      <div class="bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-4 shadow-sm">
+        <h3 class="font-black text-emerald-800 flex items-center gap-1.5 border-b border-emerald-200 pb-2 mb-3 text-sm">
+          <span>🟩</span> 床の素材を変身させる
+        </h3>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <label class="cursor-pointer text-cyan-600">
+            <input type="radio" name="floorMaterial" value="ice" class="radio-card hidden" onchange="changeFloorMaterial()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              🧊 氷（滑る）
+            </div>
+          </label>
+          <label class="cursor-pointer text-amber-700">
+            <input type="radio" name="floorMaterial" value="wood" class="radio-card hidden" checked onchange="changeFloorMaterial()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              🪵 木（ふつう）
+            </div>
+          </label>
+          <label class="cursor-pointer text-rose-600">
+            <input type="radio" name="floorMaterial" value="rubber" class="radio-card hidden" onchange="changeFloorMaterial()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              🏀 ゴム（弾む）
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- モノのマテリアル変更 -->
+      <div class="bg-slate-50 border border-slate-200 rounded-3xl p-4 shadow-sm">
+        <h3 class="font-black text-slate-700 flex items-center gap-1.5 border-b border-slate-200 pb-2 mb-3 text-sm">
+          <span>🧪</span> モノの素材を変身させる
+        </h3>
+        <div class="grid grid-cols-4 gap-1.5 text-center mb-3">
+          <label class="cursor-pointer text-cyan-500">
+            <input type="radio" name="material" value="ice" class="radio-card hidden" onchange="applyMaterialPreset()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-black text-xs bg-white transition-all shadow-sm">
+              <span class="text-lg block mb-0.5">🧊</span>氷
+            </div>
+          </label>
+          <label class="cursor-pointer text-amber-600">
+            <input type="radio" name="material" value="wood" class="radio-card hidden" checked onchange="applyMaterialPreset()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-black text-xs bg-white transition-all shadow-sm">
+              <span class="text-lg block mb-0.5">🪵</span>木
+            </div>
+          </label>
+          <label class="cursor-pointer text-rose-500">
+            <input type="radio" name="material" value="rubber" class="radio-card hidden" onchange="applyMaterialPreset()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-black text-xs bg-white transition-all shadow-sm">
+              <span class="text-lg block mb-0.5">🏀</span>ゴム
+            </div>
+          </label>
+          <label class="cursor-pointer text-violet-600">
+            <input type="radio" name="material" value="custom" class="radio-card hidden" onchange="applyMaterialPreset()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-black text-xs bg-white transition-all shadow-sm">
+              <span class="text-lg block mb-0.5">⚙️</span>つくる
+            </div>
+          </label>
+        </div>
+
+        <div id="custom-material-panel" class="bg-violet-50 border border-violet-200 rounded-2xl p-3 flex flex-col gap-3 opacity-50 pointer-events-none transition-all duration-300">
+          <div>
+            <div class="flex justify-between text-xs font-bold text-violet-800 mb-1">
+              <span>🧲 摩擦力（すべりにくさ）</span>
+              <span id="val-friction" class="font-mono text-violet-600">0.3</span>
+            </div>
+            <input type="range" id="slider-friction" min="0" max="1.0" step="0.05" value="0.3" oninput="updateCustomMaterial()">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-bold text-orange-700 mb-1">
+              <span>🥎 反発力（はねる高さ）</span>
+              <span id="val-restitution" class="font-mono text-orange-600">0.2</span>
+            </div>
+            <input type="range" id="slider-restitution" min="0" max="1.5" step="0.05" value="0.2" oninput="updateCustomMaterial()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 落とすモノの種類 -->
+      <div class="bg-slate-50 border border-slate-200 rounded-3xl p-4 shadow-sm">
+        <h3 class="font-black text-slate-700 flex items-center gap-1.5 border-b border-slate-200 pb-2 mb-3 text-sm">
+          <span>📦</span> 落とすモノ（形状）
+        </h3>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <label class="cursor-pointer text-indigo-500">
+            <input type="radio" name="itemShape" value="ball" class="radio-card hidden" checked onchange="spawnObjects()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              大ボール(1個)
+            </div>
+          </label>
+          <label class="cursor-pointer text-emerald-600">
+            <input type="radio" name="itemShape" value="box" class="radio-card hidden" onchange="spawnObjects()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              キューブ(1個)
+            </div>
+          </label>
+          <label class="cursor-pointer text-blue-500">
+            <input type="radio" name="itemShape" value="liquid" class="radio-card hidden" onchange="spawnObjects()">
+            <div class="py-2 rounded-xl border-2 border-slate-200 font-bold text-xs bg-white transition-all shadow-sm">
+              液体(小玉80個)
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button onclick="spawnObjects()" class="mt-2 w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black py-4 sm:py-5 rounded-3xl text-lg shadow-lg shadow-orange-200 active:scale-95 transition-all flex justify-center items-center gap-2">
+        <span>🚀</span> 上空から落とす！
+      </button>
+
+    </div>
+  </main>
+
+  <script>
+    // --- グローバル変数 ---
+    let scene, renderer;
+    let autoCamera, droneCamera; // オート追従カメラとドローン手動カメラ
+    let baseCameraZ = 600; 
+    
+    // 物理エンジン
+    let world;
+    let groundBody;
+    let groundMesh;
+    let physicsObjects = []; 
+    
+    // モード管理
+    let isDroneMode = false;
+    let currentCourse = 'flat'; 
+    
+    // マテリアル関連
+    let matIce, matWood, matRubber, matCustom;
+    let activeContactMaterial; 
+
+    // --- 🎥 オートカメラ操作用変数 ---
+    let autoCameraRadius = 800;
+    let autoCameraTheta = 0; // 横回転
+    let autoCameraPhi = Math.PI / 3; // 縦回転（0が真上）
+
+    // --- 🚁 ドローン操作用変数 ---
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    // ドローンの回転角度（Yaw/Pitch）
+    let droneYaw = 0;
+    let dronePitch = -Math.PI / 8; // 最初は少し下を向く
+    // キー入力状態
+    const keys = { w: false, a: false, s: false, d: false, q: false, e: false };
+    const droneSpeed = 15;
+
+    function initApp() {
+      const canvas = document.getElementById('mainCanvas');
+      
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f172a); 
+      scene.fog = new THREE.FogExp2(0x0f172a, 0.0005);
+      
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true; 
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      // 🎥 オートカメラ（従来のObserverCamera相当）
+      autoCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 5000);
+      autoCamera.rotation.order = 'YXZ'; 
+      autoCamera.position.set(0, 300, baseCameraZ);
+      autoCamera.lookAt(0, 0, 0);
+
+      // 🚁 ドローンカメラ
+      droneCamera = new THREE.PerspectiveCamera(60, 1, 0.1, 5000); 
+      droneCamera.rotation.order = 'YXZ';
+      droneCamera.position.set(0, 400, 800); // 初期位置
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(200, 800, 200);
+      dirLight.castShadow = true;
+      dirLight.shadow.camera.left = -600;
+      dirLight.shadow.camera.right = 600;
+      dirLight.shadow.camera.top = 600;
+      dirLight.shadow.camera.bottom = -600;
+      dirLight.shadow.camera.far = 2500;
+      scene.add(dirLight);
+
+      world = new CANNON.World();
+      world.gravity.set(0, -200, 0); 
+      world.broadphase = new CANNON.NaiveBroadphase();
+      world.solver.iterations = 10;
+
+      matIce = new CANNON.Material('ice');
+      matWood = new CANNON.Material('wood');
+      matRubber = new CANNON.Material('rubber');
+      matCustom = new CANNON.Material('custom'); 
+
+      createFloor();
+
+      window.addEventListener('resize', onWindowResize, false);
+      onWindowResize();
+      
+      setupControls();
+      
+      updateFloor();
+      changeFloorMaterial();
+      applyMaterialPreset(); 
+
+      animate();
+    }
+
+    // --- 🎮 操作系セットアップ ---
+    function setupControls() {
+      const container = document.getElementById('canvas-container');
+      
+      // マウス/タッチ (ドラッグでドローンの視点移動、またはオブジェクトへの干渉など)
+      container.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove); 
+      window.addEventListener('mouseup', onPointerUp);
+      container.addEventListener('mouseleave', onPointerUp);
+      container.addEventListener('touchstart', onPointerDown, { passive: false });
+      container.addEventListener('touchmove', onPointerMove, { passive: false });
+      window.addEventListener('touchend', onPointerUp);
+      container.addEventListener('touchcancel', onPointerUp);
+
+      // キーボード (WASD QE)
+      window.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        if (keys.hasOwnProperty(key)) keys[key] = true;
+      });
+      window.addEventListener('keyup', (e) => {
+        const key = e.key.toLowerCase();
+        if (keys.hasOwnProperty(key)) keys[key] = false;
+      });
+
+      // マウスホイール (ズーム)
+      container.addEventListener('wheel', onMouseWheel, { passive: false });
+    }
+
+    function onPointerDown(e) {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      previousMousePosition = { x: clientX, y: clientY };
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      e.preventDefault(); 
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaX = clientX - previousMousePosition.x;
+      const deltaY = clientY - previousMousePosition.y;
+      previousMousePosition = { x: clientX, y: clientY };
+
+      if (isDroneMode) {
+        // ドローンカメラの首振り
+        droneYaw -= deltaX * 0.005;
+        dronePitch -= deltaY * 0.005;
+        dronePitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, dronePitch));
+      } else {
+        // オートカメラのクルクル回転（オービット操作）
+        autoCameraTheta -= deltaX * 0.01;
+        autoCameraPhi -= deltaY * 0.01;
+        autoCameraPhi = Math.max(0.1, Math.min(Math.PI/2 - 0.01, autoCameraPhi)); // 真上と真横の制限
+      }
+    }
+
+    function onPointerUp(e) { isDragging = false; }
+
+    function onMouseWheel(e) {
+      e.preventDefault();
+      if (!isDroneMode) {
+        // ホイールでズームイン・アウト
+        autoCameraRadius += e.deltaY * 1.5;
+        autoCameraRadius = Math.max(150, Math.min(4000, autoCameraRadius));
+      }
+    }
+
+    // --- ドローンモード切り替え ---
+    function toggleDroneMode(checked) {
+      isDroneMode = checked;
+      const lblMain = document.getElementById('label-main');
+      const guide = document.getElementById('drone-guide');
+
+      if(isDroneMode) {
+        lblMain.innerHTML = "🚁 ドローンカメラ (WASD操作)";
+        guide.classList.remove('hidden');
+        // ドローンの初期の向きをセット
+        droneCamera.rotation.set(dronePitch, droneYaw, 0);
+      } else {
+        lblMain.innerHTML = "🎥 オートカメラ（ドラッグで回転・ホイールでズーム）";
+        guide.classList.add('hidden');
+        // キー入力をリセット
+        for(let k in keys) keys[k] = false;
+      }
+      onWindowResize(); // 描画更新のため
+    }
+
+    // --- 初期設定のUI更新 ---
+    function updateInitRotText() {
+      document.getElementById('val-init-y').innerText = document.getElementById('slider-init-y').value;
+      document.getElementById('val-init-rot-x').innerText = `${document.getElementById('slider-init-rot-x').value}°`;
+      document.getElementById('val-init-rot-z').innerText = `${document.getElementById('slider-init-rot-z').value}°`;
+    }
+
+    function resetFloorAngle() {
+      document.getElementById('slider-pitch').value = 0;
+      document.getElementById('slider-roll').value = 0;
+      updateFloor();
+    }
+
+    // --- カメラの位置操作（新設） ---
+    function updateCameraPos() {
+      const cx = parseFloat(document.getElementById('slider-cam-x').value);
+      const cy = parseFloat(document.getElementById('slider-cam-y').value);
+      const cz = parseFloat(document.getElementById('slider-cam-z').value);
+      
+      document.getElementById('val-cam-x').innerText = cx;
+      document.getElementById('val-cam-y').innerText = cy;
+      document.getElementById('val-cam-z').innerText = cz;
+
+      observerCamera.position.set(cx, cy, cz);
+    }
+
+
+    // --- 床の素材（マテリアル）を変更する ---
+    function changeFloorMaterial() {
+      const floorMatName = document.querySelector('input[name="floorMaterial"]:checked').value;
+      
+      let cannonMat;
+      let threeColor;
+
+      if (floorMatName === 'ice') {
+        cannonMat = matIce;
+        threeColor = 0xbae6fd; 
+      } else if (floorMatName === 'rubber') {
+        cannonMat = matRubber;
+        threeColor = 0xfecdd3; 
+      } else {
+        cannonMat = matWood;
+        threeColor = 0x475569; 
+      }
+
+      if (groundBody) groundBody.material = cannonMat;
+      if (groundMesh) groundMesh.material.color.setHex(threeColor);
+
+      if (currentCourse === 'bumps' && groundMesh) {
+        groundMesh.children.forEach(child => {
+          if (child.isMesh && child.geometry.type === 'SphereGeometry') {
+            let bumpColor = 0xf59e0b; 
+            if (floorMatName === 'ice') bumpColor = 0x38bdf8;
+            else if (floorMatName === 'rubber') bumpColor = 0xe11d48;
+            child.material.color.setHex(bumpColor);
+          }
+        });
+      }
+
+      updateContactMaterials();
+    }
+
+    function changeCourse() {
+      currentCourse = document.querySelector('input[name="courseType"]:checked').value;
+      createFloor();
+      updateFloor();
+      changeFloorMaterial(); 
+      spawnObjects(); 
+
+      const tText = document.getElementById('game-tip');
+      if (currentCourse === 'bumps') {
+        tText.innerText = "💥 コブだらけのコース！ピンボールみたいに予測不能に跳ね返るよ！";
+      } else {
+        tText.innerText = "床の角度や素材を変えて、モノを落としてみよう！";
+      }
+    }
+
+    function createFloor() {
+      if (groundBody) world.removeBody(groundBody);
+      if (groundMesh) scene.remove(groundMesh);
+
+      groundBody = new CANNON.Body({ mass: 0 }); 
+      const groundShape = new CANNON.Box(new CANNON.Vec3(500, 10, 500)); 
+      groundBody.addShape(groundShape);
+
+      const groundGeo = new THREE.BoxGeometry(1000, 20, 1000);
+      const groundMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+      groundMesh = new THREE.Mesh(groundGeo, groundMat);
+      groundMesh.receiveShadow = true;
+      
+      const grid = new THREE.GridHelper(1000, 50, 0x94a3b8, 0x64748b);
+      grid.position.y = 10.1;
+      groundMesh.add(grid);
+
+      if (currentCourse === 'bumps') {
+        const bumpCount = 40;
+        for(let i=0; i<bumpCount; i++) {
+          let r = 15 + Math.random() * 35;
+          const bumpGeo = new THREE.SphereGeometry(r, 16, 16);
+          const bumpMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.6 }); 
+          const bumpShape = new CANNON.Sphere(r);
+          
+          let x = (Math.random() - 0.5) * 900;
+          let z = (Math.random() - 0.5) * 900;
+          
+          if (Math.abs(x) < 120 && Math.abs(z) < 120) {
+              x += (x > 0 ? 150 : -150);
+              z += (z > 0 ? 150 : -150);
+          }
+          const yOffset = 10; 
+          groundBody.addShape(bumpShape, new CANNON.Vec3(x, yOffset, z));
+          
+          const bumpMesh = new THREE.Mesh(bumpGeo, bumpMat);
+          bumpMesh.position.set(x, yOffset, z);
+          bumpMesh.castShadow = true;
+          bumpMesh.receiveShadow = true;
+          groundMesh.add(bumpMesh);
+        }
+      }
+
+      world.addBody(groundBody);
+      scene.add(groundMesh);
+    }
+
+    function updateFloor() {
+      const pitch = parseFloat(document.getElementById('slider-pitch').value);
+      const roll = parseFloat(document.getElementById('slider-roll').value);
+      
+      document.getElementById('val-pitch').innerText = `${pitch}°`;
+      document.getElementById('val-roll').innerText = `${roll}°`;
+      document.getElementById('hud-pitch').innerText = `${pitch}°`;
+      document.getElementById('hud-roll').innerText = `${roll}°`;
+
+      const qPitch = new CANNON.Quaternion();
+      qPitch.setFromAxisAngle(new CANNON.Vec3(1,0,0), THREE.MathUtils.degToRad(pitch));
+      
+      const qRoll = new CANNON.Quaternion();
+      qRoll.setFromAxisAngle(new CANNON.Vec3(0,0,1), THREE.MathUtils.degToRad(roll));
+      
+      groundBody.quaternion = qRoll.mult(qPitch);
+    }
+
+    function applyMaterialPreset() {
+      const materialName = document.querySelector('input[name="material"]:checked').value;
+      const customPanel = document.getElementById('custom-material-panel');
+      const fSlider = document.getElementById('slider-friction');
+      const rSlider = document.getElementById('slider-restitution');
+
+      if (materialName === 'ice') {
+        customPanel.classList.add('opacity-50', 'pointer-events-none');
+        fSlider.value = 0.0; rSlider.value = 0.1;
+      } else if (materialName === 'wood') {
+        customPanel.classList.add('opacity-50', 'pointer-events-none');
+        fSlider.value = 0.3; rSlider.value = 0.2;
+      } else if (materialName === 'rubber') {
+        customPanel.classList.add('opacity-50', 'pointer-events-none');
+        fSlider.value = 0.8; rSlider.value = 0.95;
+      } else if (materialName === 'custom') {
+        customPanel.classList.remove('opacity-50', 'pointer-events-none');
+      }
+      
+      document.getElementById('val-friction').innerText = parseFloat(fSlider.value).toFixed(2);
+      document.getElementById('val-restitution').innerText = parseFloat(rSlider.value).toFixed(2);
+
+      updateCustomMaterial(); 
+    }
+
+    function updateContactMaterials() {
+      const friction = parseFloat(document.getElementById('slider-friction').value);
+      const restitution = parseFloat(document.getElementById('slider-restitution').value);
+
+      world.contactmaterials = [];
+
+      const floorMatName = document.querySelector('input[name="floorMaterial"]:checked').value;
+      let floorCannonMat;
+      let floorFric = 0.3, floorRest = 0.2;
+
+      if (floorMatName === 'ice') {
+        floorCannonMat = matIce; floorFric = 0.0; floorRest = 0.1;
+      } else if (floorMatName === 'rubber') {
+        floorCannonMat = matRubber; floorFric = 0.8; floorRest = 0.95;
+      } else {
+        floorCannonMat = matWood; floorFric = 0.3; floorRest = 0.2;
+      }
+
+      const finalFriction = friction * floorFric * 3; 
+      const finalRestitution = (restitution + floorRest) / 2;
+
+      const contact = new CANNON.ContactMaterial(matCustom, floorCannonMat, { 
+        friction: finalFriction, 
+        restitution: finalRestitution 
+      });
+      world.addContactMaterial(contact);
+    }
+
+    function updateCustomMaterial() {
+      const materialName = document.querySelector('input[name="material"]:checked').value;
+      const friction = parseFloat(document.getElementById('slider-friction').value);
+      const restitution = parseFloat(document.getElementById('slider-restitution').value);
+
+      document.getElementById('val-friction').innerText = friction.toFixed(2);
+      document.getElementById('val-restitution').innerText = restitution.toFixed(2);
+
+      updateContactMaterials();
+
+      const tIcon = document.getElementById('tip-icon');
+      const tText = document.getElementById('game-tip');
+      
+      if (materialName === 'custom') {
+        tIcon.innerText = "⚙️";
+        tText.innerText = `摩擦と反発を変えたよ！床の素材との組み合わせで動きが変わるよ。`;
+      }
+
+      spawnObjects(); 
+    }
+
+    function spawnObjects() {
+      physicsObjects.forEach(obj => {
+        world.removeBody(obj.body);
+        scene.remove(obj.mesh);
+      });
+      physicsObjects = [];
+
+      const materialName = document.querySelector('input[name="material"]:checked').value;
+      const itemShape = document.querySelector('input[name="itemShape"]:checked').value;
+
+      // 初期の高さと角度を取得
+      const startY = parseFloat(document.getElementById('slider-init-y').value);
+      const initRotX = THREE.MathUtils.degToRad(parseFloat(document.getElementById('slider-init-rot-x').value));
+      const initRotZ = THREE.MathUtils.degToRad(parseFloat(document.getElementById('slider-init-rot-z').value));
+      
+      // Quaternionに変換
+      const startQuat = new CANNON.Quaternion();
+      startQuat.setFromEuler(initRotX, 0, initRotZ, 'YXZ');
+
+      let currentMat = matCustom; 
+      let meshColor, meshRoughness;
+
+      if (materialName === 'ice') {
+        meshColor = 0x67e8f9; meshRoughness = 0.1; 
+      } else if (materialName === 'wood') {
+        meshColor = 0xd97706; meshRoughness = 0.9; 
+      } else if (materialName === 'rubber') {
+        meshColor = 0xf43f5e; meshRoughness = 0.5; 
+      } else {
+        meshColor = 0x8b5cf6; meshRoughness = 0.5;
+      }
+
+      if (itemShape === 'ball') {
+        const radius = 30;
+        const geo = new THREE.SphereGeometry(radius, 16, 16);
+        const mat = new THREE.MeshStandardMaterial({ color: meshColor, roughness: meshRoughness });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.castShadow = true;
+        
+        const wireGeo = new THREE.WireframeGeometry(geo);
+        const wireMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+        mesh.add(new THREE.LineSegments(wireGeo, wireMat));
+        scene.add(mesh);
+
+        const shape = new CANNON.Sphere(radius);
+        const body = new CANNON.Body({ mass: 10, material: currentMat });
+        body.addShape(shape);
+        // 位置と初期角度をセット（ランダム要素を少し減らして意図した動きを作りやすく）
+        body.position.set((Math.random() - 0.5) * 10, startY, (Math.random() - 0.5) * 10);
+        body.quaternion.copy(startQuat);
+        world.addBody(body);
+
+        physicsObjects.push({ mesh, body });
+
+      } else if (itemShape === 'box') {
+        const size = 50;
+        const geo = new THREE.BoxGeometry(size, size, size);
+        const mat = new THREE.MeshStandardMaterial({ color: meshColor, roughness: meshRoughness });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.castShadow = true;
+
+        const edges = new THREE.EdgesGeometry(geo);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
+        mesh.add(line);
+        scene.add(mesh);
+
+        const shape = new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
+        const body = new CANNON.Body({ mass: 10, material: currentMat });
+        body.addShape(shape);
+        body.position.set((Math.random() - 0.5) * 10, startY, (Math.random() - 0.5) * 10);
+        body.quaternion.copy(startQuat);
+        world.addBody(body);
+
+        physicsObjects.push({ mesh, body });
+
+      } else if (itemShape === 'liquid') {
+        const radius = 8;
+        const geo = new THREE.SphereGeometry(radius, 12, 12);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.2 });
+
+        for (let i = 0; i < 80; i++) {
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.castShadow = true;
+          scene.add(mesh);
+
+          const shape = new CANNON.Sphere(radius);
+          const body = new CANNON.Body({ mass: 1, material: currentMat });
+          body.addShape(shape);
+          
+          body.position.set(
+            (Math.random() - 0.5) * 100,
+            startY + i * 15 + Math.random() * 50,
+            (Math.random() - 0.5) * 100
+          );
+          world.addBody(body);
+
+          physicsObjects.push({ mesh, body });
+        }
+      }
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('canvas-container');
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const aspect = w / h;
+
+      autoCamera.aspect = aspect;
+      autoCamera.updateProjectionMatrix();
+
+      droneCamera.aspect = aspect;
+      droneCamera.updateProjectionMatrix();
+
+      const dpr = window.devicePixelRatio || 1;
+      renderer.setSize(w, h, false);
+      renderer.setPixelRatio(dpr);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // --- 物理演算の更新 ---
+      world.step(1 / 60);
+
+      groundMesh.position.copy(groundBody.position);
+      groundMesh.quaternion.copy(groundBody.quaternion);
+
+      for (let i = 0; i < physicsObjects.length; i++) {
+        const obj = physicsObjects[i];
+        obj.mesh.position.copy(obj.body.position);
+        obj.mesh.quaternion.copy(obj.body.quaternion);
+        
+        // 奈落処理（無限ループ用）
+        if (obj.body.position.y < -1500 || Math.abs(obj.body.position.x) > 1200 || Math.abs(obj.body.position.z) > 1200) {
+          const startY = parseFloat(document.getElementById('slider-init-y').value);
+          obj.body.position.set( (Math.random()-0.5)*50, startY + Math.random()*100, (Math.random()-0.5)*50 );
+          obj.body.velocity.set(0,0,0);
+          obj.body.angularVelocity.set(0,0,0);
+          
+          const initRotX = THREE.MathUtils.degToRad(parseFloat(document.getElementById('slider-init-rot-x').value));
+          const initRotZ = THREE.MathUtils.degToRad(parseFloat(document.getElementById('slider-init-rot-z').value));
+          obj.body.quaternion.setFromEuler(initRotX, 0, initRotZ, 'YXZ');
+        }
+      }
+
+      // --- カメラの制御 ---
+      if (isDroneMode) {
+        // 🚁 ドローンカメラの操作処理 (WASD)
+        
+        // カメラの向いている方向（前）と右ベクトルを取得
+        const dir = new THREE.Vector3();
+        droneCamera.getWorldDirection(dir);
+        dir.y = 0; // 水平移動のみにする
+        dir.normalize();
+        
+        const right = new THREE.Vector3();
+        right.crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+
+        // キー入力に基づく移動ベクトルの計算
+        const move = new THREE.Vector3(0, 0, 0);
+        if (keys.w) move.add(dir);
+        if (keys.s) move.sub(dir);
+        if (keys.d) move.add(right);
+        if (keys.a) move.sub(right);
+        
+        // 上下(QE)
+        if (keys.q) move.y += 1;
+        if (keys.e) move.y -= 1;
+
+        if (move.lengthSq() > 0) {
+          move.normalize().multiplyScalar(droneSpeed);
+          droneCamera.position.add(move);
+        }
+
+        // 視点（ドラッグ）の適用
+        droneCamera.rotation.set(dronePitch, droneYaw, 0);
+
+      } else {
+        // 🎥 オートカメラ（対象の周りをクルクル回る）
+        let targetPos = new THREE.Vector3(0, 0, 0);
+        if (physicsObjects.length > 0) {
+          targetPos = physicsObjects[0].mesh.position;
+        }
+
+        // 極座標（半径・角度）からカメラの位置オフセットを計算
+        const offset = new THREE.Vector3(
+          autoCameraRadius * Math.sin(autoCameraPhi) * Math.sin(autoCameraTheta),
+          autoCameraRadius * Math.cos(autoCameraPhi),
+          autoCameraRadius * Math.sin(autoCameraPhi) * Math.cos(autoCameraTheta)
+        );
+        
+        // 滑らかに追従させる（Lerp）
+        const idealPos = targetPos.clone().add(offset);
+        autoCamera.position.lerp(idealPos, 0.15);
+        autoCamera.lookAt(targetPos);
+      }
+
+      // --- レンダリング ---
+      const activeCamera = isDroneMode ? droneCamera : autoCamera;
+      renderer.render(scene, activeCamera);
+    }
+  </script>
+</body>
+</html>

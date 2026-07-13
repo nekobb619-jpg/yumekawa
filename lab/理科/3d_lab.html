@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3Dブロック角度＆視界ラボ - プログラミングの角度</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 本格3Dエンジン Three.js を読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; user-select: none; }
+    
+    /* 🌟 キャンバスをドラッグできることをカーソルで示す */
+    #canvas-container {
+      cursor: grab;
+      touch-action: none; /* スマホでのスワイプ時の余計なスクロールを防止 */
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    /* スライダーの基本デザイン */
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 6px; border-radius: 4px; outline: none; background: #cbd5e1;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 3px solid #64748b;
+    }
+    /* 色分けスライダーつまみ */
+    #slider-yaw::-webkit-slider-thumb { border-color: #10b981; } /* 緑 */
+    #slider-pitch::-webkit-slider-thumb { border-color: #f43f5e; } /* 赤 */
+    #slider-roll::-webkit-slider-thumb { border-color: #3b82f6; } /* 青 */
+    #slider-scale::-webkit-slider-thumb { border-color: #f59e0b; } /* オレンジ */
+    .slider-pos::-webkit-slider-thumb { border-color: #64748b; } /* スレート */
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col" onload="init3D()">
+
+  <header class="bg-slate-900 text-white shadow-md p-3 sm:p-4 border-b-4 border-emerald-500 z-10 relative">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🧊</span>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black tracking-wide">3Dブロック 視界シンクロ・ラボ</h1>
+          <p class="text-[10px] sm:text-xs text-slate-400">自分の動き（外）と視界（中）を同時にシミュレーション！</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-6xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    
+    <!-- 左側：3Dプレビューエリア (12列中7列) -->
+    <div class="lg:col-span-7 flex flex-col gap-3">
+      
+      <!-- テロップ -->
+      <div class="bg-white text-slate-700 text-sm p-3 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-2">
+        <span class="text-xl">👆</span>
+        <span id="game-tip" class="font-bold">画面を直接ドラッグするか、スライダーを動かしてみよう！</span>
+      </div>
+
+      <!-- 🌟 タッチ操作のモード切り替え -->
+      <div class="flex items-center gap-2 bg-slate-200/60 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+        <span class="text-xs font-bold text-slate-500 pl-2 hidden sm:inline">画面タッチで：</span>
+        <button id="btn-drag-rotate" onclick="setDragMode('rotate')" class="flex-1 py-1.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-sm transition-all">
+          🔄 まわす
+        </button>
+        <button id="btn-drag-move" onclick="setDragMode('move')" class="flex-1 py-1.5 rounded-xl text-sm font-bold bg-transparent text-slate-500 hover:bg-white hover:shadow-sm transition-all">
+          🚶 いどう
+        </button>
+      </div>
+
+      <!-- 🌟 メインの2画面（ワイプ）キャンバス -->
+      <div class="relative w-full aspect-square bg-slate-800 rounded-3xl overflow-hidden shadow-md border-4 border-slate-900" id="canvas-container">
+        <!-- 3D描画先 -->
+        <canvas id="mainCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+        
+        <!-- メイン画面用ラベル -->
+        <div id="label-main" class="absolute top-3 left-3 bg-black/70 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm pointer-events-none font-bold shadow flex items-center gap-1.5 transition-all">
+          🎥 客観視点（外から見た姿）
+        </div>
+        
+        <!-- メイン画面用クロスヘア（主観視点の時のみ表示） -->
+        <div id="crosshair-main" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50 text-3xl font-light pointer-events-none">
+          +
+        </div>
+
+        <!-- ワイプ（小窓）の枠線・装飾 -->
+        <div id="wipe-frame" class="absolute bottom-4 left-4 w-[35%] h-[35%] border-2 border-white/40 rounded-xl shadow-2xl pointer-events-none transition-all flex flex-col justify-end overflow-hidden">
+          <div class="absolute inset-0 ring-1 ring-inset ring-black/50 rounded-xl"></div>
+          
+          <!-- ワイプ画面用クロスヘア（主観視点の時のみ表示） -->
+          <div id="crosshair-wipe" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50 text-xl font-light pointer-events-none">
+            +
+          </div>
+          
+          <!-- ワイプ画面用ラベル -->
+          <div id="label-wipe" class="absolute bottom-1.5 left-1.5 bg-black/70 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold flex items-center gap-1">
+            👁️ 主観視点（自分の視界）
+          </div>
+        </div>
+      </div>
+
+      <!-- 視点切り替え＆形変更 -->
+      <div class="flex gap-2">
+        <button onclick="toggleCameraView()" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-black py-3 rounded-2xl text-sm shadow-md active:scale-95 transition-all flex justify-center items-center gap-2">
+          <span>🔄</span> 視点を入れ替える
+        </button>
+        <button id="btn-cube" onclick="setShapeType('cube')" class="w-12 bg-slate-800 text-white rounded-2xl text-lg shadow-md hover:bg-slate-700 active:scale-95 transition-all">📦</button>
+        <button id="btn-sphere" onclick="setShapeType('sphere')" class="w-12 bg-white text-slate-600 border border-slate-200 rounded-2xl text-lg shadow-sm hover:bg-slate-50 active:scale-95 transition-all">⚽</button>
+        <button id="btn-pyramid" onclick="setShapeType('pyramid')" class="w-12 bg-white text-slate-600 border border-slate-200 rounded-2xl text-lg shadow-sm hover:bg-slate-50 active:scale-95 transition-all">🔺</button>
+      </div>
+    </div>
+
+    <!-- 右側：コントロールパネル (12列中5列) -->
+    <div class="lg:col-span-5 flex flex-col gap-3 h-full pb-4">
+      
+      <!-- 1. 移動パネル -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm transition-all duration-300" id="panel-move">
+        <h3 class="font-black text-slate-700 flex items-center gap-1.5 border-b border-slate-100 pb-2 mb-3">
+          <span>🚶‍♂️</span> 移動（ポジション / Position）
+        </h3>
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+            <span class="w-12">左右(X)</span>
+            <input type="range" id="slider-pos-x" min="-300" max="300" value="0" class="slider-pos flex-grow" oninput="updateScene()">
+            <span id="val-pos-x" class="w-10 text-right font-mono">0</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+            <span class="w-12" id="label-pos-y">上下(Y)</span>
+            <input type="range" id="slider-pos-y" min="-100" max="300" value="0" class="slider-pos flex-grow" oninput="updateScene()">
+            <span id="val-pos-y" class="w-10 text-right font-mono">0</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+            <span class="w-12" id="label-pos-z">前後(Z)</span>
+            <input type="range" id="slider-pos-z" min="-300" max="300" value="0" class="slider-pos flex-grow" oninput="updateScene()">
+            <span id="val-pos-z" class="w-10 text-right font-mono">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 回転パネル -->
+      <div class="bg-slate-50 border border-slate-200 rounded-3xl p-4 shadow-sm transition-all duration-300 ring-2 ring-blue-400" id="panel-rotate">
+        <h3 class="font-black text-slate-700 flex items-center gap-1.5 border-b border-slate-200 pb-2 mb-3">
+          <span>🔄</span> 回転（向き / Rotation）
+        </h3>
+        <div class="flex flex-col gap-4">
+          <!-- ヨー (Y軸) -->
+          <div>
+            <div class="flex justify-between text-xs font-bold text-emerald-700 mb-1">
+              <span>🟢 横を向く (Yaw / Y軸)</span>
+              <span id="val-yaw" class="font-mono text-emerald-600 text-sm">0°</span>
+            </div>
+            <input type="range" id="slider-yaw" min="-180" max="180" value="0" oninput="updateScene()">
+          </div>
+          <!-- ピッチ (X軸) -->
+          <div>
+            <div class="flex justify-between text-xs font-bold text-rose-700 mb-1">
+              <span>🔴 上下を向く (Pitch / X軸)</span>
+              <span id="val-pitch" class="font-mono text-rose-600 text-sm">0°</span>
+            </div>
+            <input type="range" id="slider-pitch" min="-90" max="90" value="0" oninput="updateScene()">
+          </div>
+          <!-- ロール (Z軸) -->
+          <div>
+            <div class="flex justify-between text-xs font-bold text-blue-700 mb-1">
+              <span>🔵 首をかしげる (Roll / Z軸)</span>
+              <span id="val-roll" class="font-mono text-blue-600 text-sm">0°</span>
+            </div>
+            <input type="range" id="slider-roll" min="-180" max="180" value="0" oninput="updateScene()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 大きさパネル -->
+      <div class="bg-amber-50/50 border border-amber-200 rounded-3xl p-4 shadow-sm flex items-center gap-3">
+        <h3 class="font-black text-amber-800 flex items-center gap-1.5 w-1/3 text-sm">
+          <span>📏</span> 大きさ
+        </h3>
+        <input type="range" id="slider-scale" min="0.5" max="3.0" step="0.1" value="1.0" class="flex-grow" oninput="updateScene()">
+        <span id="val-scale" class="w-12 text-right font-mono font-bold text-amber-700 text-sm">1.0倍</span>
+      </div>
+
+      <button onclick="resetAngles()" class="bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-2.5 rounded-2xl text-sm active:scale-95 transition-all mt-1">
+        🗑️ すべてリセットする
+      </button>
+
+      <!-- コード変換表示 -->
+      <div class="bg-slate-800 text-white rounded-3xl p-4 flex flex-col gap-2 mt-auto shadow-lg">
+        <div class="text-[11px] text-emerald-400 font-bold">▼ マイクラのテレポートコマンド</div>
+        <code class="font-mono text-xs block bg-black/50 p-2 rounded-lg border border-slate-700 break-all" id="mc-code">
+          /tp @p 0 0 0 0 0
+        </code>
+        
+        <div class="text-[11px] text-blue-400 font-bold mt-1">▼ Roblox(Lua) のプログラム</div>
+        <code class="font-mono text-[10px] block bg-black/50 p-2 rounded-lg border border-slate-700 break-all" id="rbx-code">
+          part.CFrame = CFrame.new(0, 0, 0)<br>&nbsp;&nbsp;* CFrame.Angles(0, 0, 0)
+        </code>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // --- Three.js グローバル変数 ---
+    let scene, renderer;
+    let observerCamera; // 客観視点カメラ（外から追従）
+    let fpsCamera;      // 主観視点カメラ（ブロックの目）
+    
+    let currentObject; // プレイヤーのブロック
+    let currentShape = 'cube';
+    
+    // モード管理
+    let isMainFPS = false; // true: メインがFPS, false: メインが客観
+    let dragMode = 'rotate'; // 'rotate' | 'move'
+    
+    // マテリアル群
+    let matFront, matRight, matBack, matLeft, matTop, matBottom, matSphere;
+
+    // --- 初期化処理 ---
+    function init3D() {
+      const container = document.getElementById('canvas-container');
+      const canvas = document.getElementById('mainCanvas');
+      
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x1e293b, 0.002); // 遠くをぼかす演出
+      
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      // --- カメラ作成 ---
+      observerCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 2000);
+      observerCamera.rotation.order = 'YXZ'; 
+
+      fpsCamera = new THREE.PerspectiveCamera(70, 1, 0.1, 2000);
+      fpsCamera.rotation.order = 'YXZ';
+
+      // --- ライト ---
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(200, 300, 100);
+      scene.add(dirLight);
+
+      // --- 景色（風景）の作成 ---
+      createLandscape();
+
+      // --- プレイヤーオブジェクトの作成 ---
+      initMaterials();
+      create3DObject();
+
+      // ウィンドウリサイズハンドラ
+      window.addEventListener('resize', onWindowResize, false);
+      onWindowResize(); // 初期サイズ適用
+      
+      // 🌟 ドラッグ操作のセットアップ
+      setupDragControls();
+
+      // 初期状態のUI更新と描画開始
+      updateScene();
+      animate();
+    }
+
+    // --- 🌟 タッチ操作モードの切り替え ---
+    function setDragMode(mode) {
+      dragMode = mode;
+      const btnRot = document.getElementById('btn-drag-rotate');
+      const btnMov = document.getElementById('btn-drag-move');
+      const panelRot = document.getElementById('panel-rotate');
+      const panelMov = document.getElementById('panel-move');
+
+      if (mode === 'rotate') {
+        btnRot.className = "flex-1 py-1.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-sm transition-all";
+        btnMov.className = "flex-1 py-1.5 rounded-xl text-sm font-bold bg-transparent text-slate-500 hover:bg-white hover:shadow-sm transition-all";
+        panelRot.classList.add('ring-2', 'ring-blue-400');
+        panelMov.classList.remove('ring-2', 'ring-emerald-400');
+      } else {
+        btnMov.className = "flex-1 py-1.5 rounded-xl text-sm font-bold bg-emerald-600 text-white shadow-sm transition-all";
+        btnRot.className = "flex-1 py-1.5 rounded-xl text-sm font-bold bg-transparent text-slate-500 hover:bg-white hover:shadow-sm transition-all";
+        panelMov.classList.add('ring-2', 'ring-emerald-400');
+        panelRot.classList.remove('ring-2', 'ring-blue-400');
+      }
+    }
+
+    // --- 🌟 画像を直接ドラッグして回す/移動する機能 ---
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    function setupDragControls() {
+      const container = document.getElementById('canvas-container');
+
+      // PC (マウス操作)
+      container.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove); 
+      window.addEventListener('mouseup', onPointerUp);
+      container.addEventListener('mouseleave', onPointerUp);
+
+      // スマホ/タブレット (タッチ操作)
+      container.addEventListener('touchstart', onPointerDown, { passive: false });
+      container.addEventListener('touchmove', onPointerMove, { passive: false });
+      window.addEventListener('touchend', onPointerUp);
+      container.addEventListener('touchcancel', onPointerUp);
+    }
+
+    function onPointerDown(e) {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      previousMousePosition = { x: clientX, y: clientY };
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      e.preventDefault(); // スマホの画面スクロールを止める
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const deltaX = clientX - previousMousePosition.x;
+      const deltaY = clientY - previousMousePosition.y;
+
+      previousMousePosition = { x: clientX, y: clientY };
+
+      if (dragMode === 'rotate') {
+        // --- まわす（回転）モード ---
+        let yaw = parseFloat(document.getElementById('slider-yaw').value);
+        let pitch = parseFloat(document.getElementById('slider-pitch').value);
+
+        yaw += deltaX * 0.4;
+        pitch += deltaY * 0.4;
+
+        if (yaw > 180) yaw -= 360;
+        if (yaw < -180) yaw += 360;
+        pitch = Math.max(-90, Math.min(90, pitch));
+
+        document.getElementById('slider-yaw').value = yaw;
+        document.getElementById('slider-pitch').value = pitch;
+
+      } else if (dragMode === 'move') {
+        // --- いどう（移動）モード ---
+        let px = parseFloat(document.getElementById('slider-pos-x').value);
+        
+        if (isMainFPS) {
+          // 👁️ 主観視点（FPS）のとき：上下ドラッグで前後（Z軸）に進む
+          let pz = parseFloat(document.getElementById('slider-pos-z').value);
+          px += deltaX * 0.8;
+          pz += deltaY * 0.8; // 下ドラッグ(正)で手前(Z+)に下がる
+          
+          px = Math.max(-300, Math.min(300, px));
+          pz = Math.max(-300, Math.min(300, pz));
+          
+          document.getElementById('slider-pos-x').value = px;
+          document.getElementById('slider-pos-z').value = pz;
+        } else {
+          // 🎥 客観視点のとき：上下ドラッグで上下（Y軸）に移動する
+          let py = parseFloat(document.getElementById('slider-pos-y').value);
+          px += deltaX * 0.8;
+          py -= deltaY * 0.8; // 上ドラッグ(負)で上(Y+)に上がる
+          
+          px = Math.max(-300, Math.min(300, px));
+          py = Math.max(-100, Math.min(300, py));
+          
+          document.getElementById('slider-pos-x').value = px;
+          document.getElementById('slider-pos-y').value = py;
+        }
+      }
+
+      // スライダーの値を画面に反映
+      updateScene();
+    }
+
+    function onPointerUp(e) {
+      isDragging = false;
+    }
+
+    // --- 景色（風景）を自動生成 ---
+    function createLandscape() {
+      const gridHelper = new THREE.GridHelper(1000, 40, 0x10b981, 0x334155);
+      gridHelper.position.y = -80; 
+      scene.add(gridHelper);
+
+      const targetGeo = new THREE.OctahedronGeometry(30, 0);
+      const targetMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1d4ed8 });
+      const targetMesh = new THREE.Mesh(targetGeo, targetMat);
+      targetMesh.position.set(0, 0, -400); 
+      scene.add(targetMesh);
+
+      const boxGeo = new THREE.BoxGeometry(20, 160, 20);
+      const boxMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+      
+      for(let i = 0; i < 40; i++) {
+        const mesh = new THREE.Mesh(boxGeo, boxMat);
+        const rx = (Math.random() - 0.5) * 800;
+        const rz = (Math.random() - 0.5) * 800;
+        if(Math.abs(rx) < 100 && Math.abs(rz) < 100) continue;
+        mesh.position.set(rx, 0, rz);
+        scene.add(mesh);
+      }
+    }
+
+    // --- マテリアル（顔・色）生成 ---
+    function initMaterials() {
+      const texFront = createFaceTexture();
+      matFront = new THREE.MeshStandardMaterial({ map: texFront });
+      matRight = new THREE.MeshStandardMaterial({ color: 0xfde047 }); 
+      matBack = new THREE.MeshStandardMaterial({ color: 0xd1d5db });  
+      matLeft = new THREE.MeshStandardMaterial({ color: 0x93c5fd });  
+      matTop = new THREE.MeshStandardMaterial({ color: 0x86efac });   
+      matBottom = new THREE.MeshStandardMaterial({ color: 0xa1a1aa });
+      matSphere = new THREE.MeshStandardMaterial({ map: texFront });
+    }
+
+    function createFaceTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fca5a5'; ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#1f2937';
+      ctx.beginPath(); ctx.arc(160, 200, 40, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(352, 200, 40, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(216, 320, 80, 40);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // --- プレイヤー（立体オブジェクト）の生成 ---
+    function create3DObject() {
+      if (currentObject) {
+        currentObject.remove(fpsCamera);
+        scene.remove(currentObject);
+      }
+
+      currentObject = new THREE.Group();
+      currentObject.rotation.order = 'YXZ';
+
+      let mesh;
+      if (currentShape === 'cube') {
+        const geo = new THREE.BoxGeometry(80, 80, 80);
+        const mats = [matRight, matLeft, matTop, matBottom, matFront, matBack];
+        mesh = new THREE.Mesh(geo, mats);
+      } else if (currentShape === 'sphere') {
+        const geo = new THREE.SphereGeometry(50, 32, 32);
+        mesh = new THREE.Mesh(geo, matSphere);
+        mesh.rotation.y = -Math.PI / 2; 
+      } else if (currentShape === 'pyramid') {
+        const geo = new THREE.CylinderGeometry(0, 60, 90, 3);
+        mesh = new THREE.Mesh(geo, matSphere);
+        mesh.rotation.y = Math.PI;
+        mesh.position.y = -10;
+      }
+
+      currentObject.add(mesh);
+      
+      addArrow(currentObject, new THREE.Vector3(1, 0, 0), 0xef4444); 
+      addArrow(currentObject, new THREE.Vector3(0, 1, 0), 0x22c55e); 
+      addArrow(currentObject, new THREE.Vector3(0, 0, 1), 0x3b82f6); 
+      addRotationRings(currentObject);
+
+      // FPSカメラを顔にセット
+      fpsCamera.position.set(0, 10, 45); 
+      fpsCamera.rotation.y = Math.PI; 
+      currentObject.add(fpsCamera);
+
+      scene.add(currentObject);
+      updateScene(); 
+    }
+
+    function addArrow(obj, dir, color) {
+      const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), 110, color, 25, 15);
+      obj.add(arrow);
+    }
+
+    function addRotationRings(obj) {
+      const tube = 1.2;
+      const geoX = new THREE.TorusGeometry(85, tube, 8, 64);
+      const ringX = new THREE.Mesh(geoX, new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.5 }));
+      ringX.rotation.y = Math.PI / 2;
+      obj.add(ringX);
+
+      const geoY = new THREE.TorusGeometry(95, tube, 8, 64);
+      const ringY = new THREE.Mesh(geoY, new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.5 }));
+      ringY.rotation.x = Math.PI / 2;
+      obj.add(ringY);
+
+      const geoZ = new THREE.TorusGeometry(105, tube, 8, 64);
+      const ringZ = new THREE.Mesh(geoZ, new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.5 }));
+      obj.add(ringZ);
+    }
+
+    // --- メイン・ワイプの画面入れ替え ---
+    function toggleCameraView() {
+      isMainFPS = !isMainFPS;
+      
+      const lblMain = document.getElementById('label-main');
+      const lblWipe = document.getElementById('label-wipe');
+      const crossMain = document.getElementById('crosshair-main');
+      const crossWipe = document.getElementById('crosshair-wipe');
+
+      if(isMainFPS) {
+        lblMain.innerHTML = "👁️ 主観視点（自分の視界）";
+        lblWipe.innerHTML = "🎥 客観視点（外からの姿）";
+        crossMain.classList.remove('hidden');
+        crossWipe.classList.add('hidden');
+      } else {
+        lblMain.innerHTML = "🎥 客観視点（外からの姿）";
+        lblWipe.innerHTML = "👁️ 主観視点（自分の視界）";
+        crossMain.classList.add('hidden');
+        crossWipe.classList.remove('hidden');
+      }
+      
+      updateScene();
+    }
+
+    // --- スライダー操作・UI更新 ---
+    function updateScene() {
+      if (!currentObject) return;
+
+      const px = parseFloat(document.getElementById('slider-pos-x').value);
+      const py = parseFloat(document.getElementById('slider-pos-y').value);
+      const pz = parseFloat(document.getElementById('slider-pos-z').value);
+
+      const yaw = parseFloat(document.getElementById('slider-yaw').value);   
+      const pitch = parseFloat(document.getElementById('slider-pitch').value); 
+      const roll = parseFloat(document.getElementById('slider-roll').value);  
+      
+      const scale = parseFloat(document.getElementById('slider-scale').value); 
+
+      document.getElementById('val-pos-x').innerText = px.toFixed(0);
+      document.getElementById('val-pos-y').innerText = py.toFixed(0);
+      document.getElementById('val-pos-z').innerText = pz.toFixed(0);
+
+      document.getElementById('val-yaw').innerText = `${yaw.toFixed(0)}°`;
+      document.getElementById('val-pitch').innerText = `${pitch.toFixed(0)}°`;
+      document.getElementById('val-roll').innerText = `${roll.toFixed(0)}°`;
+      document.getElementById('val-scale').innerText = `${scale.toFixed(1)}倍`;
+
+      // UIパネルのハイライト（主観視点時は「前後Z」がハイライト）
+      if (isMainFPS) {
+        document.getElementById('label-pos-y').classList.remove('text-emerald-600', 'bg-emerald-100', 'px-1', 'rounded');
+        document.getElementById('label-pos-z').classList.add('text-emerald-600', 'bg-emerald-100', 'px-1', 'rounded');
+      } else {
+        document.getElementById('label-pos-y').classList.add('text-emerald-600', 'bg-emerald-100', 'px-1', 'rounded');
+        document.getElementById('label-pos-z').classList.remove('text-emerald-600', 'bg-emerald-100', 'px-1', 'rounded');
+      }
+
+      // プレイヤーオブジェクトへの適用
+      currentObject.position.set(px, py, pz);
+      currentObject.rotation.set(
+        THREE.MathUtils.degToRad(-pitch), 
+        THREE.MathUtils.degToRad(-yaw),   
+        THREE.MathUtils.degToRad(-roll)   
+      );
+      currentObject.scale.set(scale, scale, scale);
+
+      // コマンドコード生成
+      document.getElementById('mc-code').innerHTML = `/tp @p ${px.toFixed(0)} ${py.toFixed(0)} ${pz.toFixed(0)} ${yaw.toFixed(0)} ${-pitch.toFixed(0)}`;
+      document.getElementById('rbx-code').innerHTML = `part.CFrame = CFrame.new(${px.toFixed(0)}, ${py.toFixed(0)}, ${pz.toFixed(0)})<br>&nbsp;&nbsp;* CFrame.Angles(math.rad(${-pitch.toFixed(0)}), math.rad(${yaw.toFixed(0)}), math.rad(${roll.toFixed(0)}))`;
+
+      // テロップの更新
+      let tip = "画面を直接ドラッグするか、右側のスライダーを動かしてみよう！";
+      if (dragMode === 'move') {
+        if (isMainFPS) tip = "🚶 上下になぞると『前・後ろ』、左右になぞると『右・左』に移動するよ！";
+        else tip = "🚶 上下になぞると『上・下』、左右になぞると『右・左』に移動するよ！";
+      } else {
+        if (Math.abs(pitch) > 80) tip = "🔴 X軸（赤）が90度！主観視点だと「真上」や「真下」を向いているよ。";
+        else if (Math.abs(yaw) >= 170) tip = "🟢 Y軸（緑）が約180度！後ろを振り向いたから、景色が逆方向になったね。";
+        else if (Math.abs(roll) > 170) tip = "🔵 Z軸（青）が180度！主観視点を見ると、世界が逆さまにひっくり返っている！";
+      }
+      document.getElementById('game-tip').innerText = tip;
+    }
+
+    function setShapeType(shape) {
+      currentShape = shape;
+      const buttons = ['cube', 'sphere', 'pyramid'];
+      buttons.forEach(b => {
+        const el = document.getElementById(`btn-${b}`);
+        if (b === shape) el.className = "w-12 bg-slate-800 text-white rounded-2xl text-lg shadow-md hover:bg-slate-700 active:scale-95 transition-all";
+        else el.className = "w-12 bg-white text-slate-600 border border-slate-200 rounded-2xl text-lg shadow-sm hover:bg-slate-50 active:scale-95 transition-all";
+      });
+      create3DObject();
+    }
+
+    function resetAngles() {
+      document.getElementById('slider-pos-x').value = 0;
+      document.getElementById('slider-pos-y').value = 0;
+      document.getElementById('slider-pos-z').value = 0;
+      
+      document.getElementById('slider-yaw').value = 0;
+      document.getElementById('slider-pitch').value = 0;
+      document.getElementById('slider-roll').value = 0;
+      
+      document.getElementById('slider-scale').value = 1.0;
+      updateScene();
+    }
+
+    // --- 画面リサイズ対応 ---
+    function onWindowResize() {
+      const container = document.getElementById('canvas-container');
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const aspect = w / h;
+
+      observerCamera.aspect = aspect;
+      observerCamera.updateProjectionMatrix();
+
+      fpsCamera.aspect = aspect;
+      fpsCamera.updateProjectionMatrix();
+
+      const dpr = window.devicePixelRatio || 1;
+      renderer.setSize(w, h, false);
+      renderer.setPixelRatio(dpr);
+    }
+
+    // --- レンダリング・アニメーションループ ---
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      if (!currentObject) return;
+
+      const container = document.getElementById('canvas-container');
+      const dpr = renderer.getPixelRatio();
+      
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+      
+      const physW = Math.floor(cw * dpr);
+      const physH = Math.floor(ch * dpr);
+
+      // 客観カメラ（Observer）の追従処理
+      const offset = new THREE.Vector3(150, 150, 200);
+      observerCamera.position.copy(currentObject.position).add(offset);
+      observerCamera.lookAt(currentObject.position);
+
+      renderer.setScissorTest(true);
+
+      // 【1】 メイン画面の描画
+      const mainCam = isMainFPS ? fpsCamera : observerCamera;
+      renderer.setViewport(0, 0, physW, physH);
+      renderer.setScissor(0, 0, physW, physH);
+      renderer.setClearColor(0x1e293b); 
+      currentObject.visible = !isMainFPS; 
+      renderer.render(scene, mainCam);
+
+      // 【2】 ワイプ（小窓）画面の描画
+      const wipeCam = isMainFPS ? observerCamera : fpsCamera;
+      const wipeW = Math.floor(cw * 0.35 * dpr);
+      const wipeH = Math.floor(ch * 0.35 * dpr);
+      const wipeX = Math.floor(16 * dpr);
+      const wipeY = Math.floor(16 * dpr);
+
+      renderer.setViewport(wipeX, wipeY, wipeW, wipeH);
+      renderer.setScissor(wipeX, wipeY, wipeW, wipeH);
+      renderer.setClearColor(0x0f172a); 
+      
+      currentObject.visible = isMainFPS; 
+      renderer.render(scene, wipeCam);
+
+      renderer.setScissorTest(false);
+    }
+  </script>
+</body>
+</html>
