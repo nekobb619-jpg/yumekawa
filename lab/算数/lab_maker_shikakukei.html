@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>四角形へんしんラボ＆メーカー 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --soft:#7a6985; --lav:#b19cd9; --lavl:#eaddf7; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; --blue:#6f8dff; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#f3e8ff,#ffe4f2 55%,#e6fbf4);min-height:100vh;padding:14px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .lvbar{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+  .lvpick{border:none;padding:8px 12px;border-radius:999px;font-family:inherit;font-weight:900;font-size:12.5px;cursor:pointer;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .lvpick.on{background:var(--gold);color:#fff;box-shadow:0 3px 0 #b45309;}
+  .steps{display:flex;gap:6px;margin-bottom:12px;}
+  .step{flex:1;text-align:center;font-size:11px;font-weight:900;padding:8px 4px;border-radius:999px;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .step.on{background:var(--lav);color:#fff;box-shadow:none;}
+  .card{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 0 rgba(74,59,82,.08);margin-bottom:12px;}
+  .screen{display:none;} .screen.on{display:block;animation:fade .3s;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h2{font-size:17px;margin:0 0 8px;}
+  .niko{display:flex;gap:8px;align-items:flex-start;margin:10px 0;}
+  .niko .face{font-size:30px;}
+  .bubble{background:#fff4fb;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;flex:1;}
+  .bubble b{color:var(--pink);}
+  canvas{display:block;margin:8px auto;background:#fbf7ff;border-radius:12px;border:2px solid #eee;}
+  .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0;}
+  .stepper{display:inline-flex;align-items:center;gap:6px;background:#f6f0ff;border-radius:12px;padding:4px;}
+  .stepper button{border:none;width:32px;height:32px;border-radius:9px;background:var(--lav);color:#fff;font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 3px 0 #8a5cf0;}
+  .stepper button:active{transform:translateY(2px);box-shadow:none;}
+  .stepper .num{min-width:44px;text-align:center;font-weight:900;font-size:15px;}
+  .btn{border:none;border-radius:14px;padding:13px;font-family:inherit;font-weight:900;font-size:15px;color:#fff;cursor:pointer;width:100%;}
+  .btn.go{background:linear-gradient(180deg,#b98cff,#8a5cf0);box-shadow:0 5px 0 #6f3fd6;}
+  .btn.gold{background:linear-gradient(180deg,#ffca5e,#f59e0b);box-shadow:0 5px 0 #b45309;}
+  .btn:active{transform:translateY(3px);box-shadow:none;}
+  .btn.ghost{background:#eee;color:var(--soft);box-shadow:0 4px 0 #ddd;}
+  .btn:disabled{opacity:.5;}
+  .tag{display:inline-block;background:#fef9c3;color:#a16207;font-weight:900;font-size:12px;padding:4px 10px;border-radius:999px;}
+  .badge{display:inline-block;font-weight:900;font-size:15px;padding:6px 14px;border-radius:999px;background:#f1ecff;color:var(--lav);}
+  .badge.perp{background:#dbeafe;color:#1d4ed8;} .badge.parallel{background:#dcfce7;color:#15803d;} .badge.cross{background:#f1f5f9;color:#94a3b8;}
+  .shapes{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap;}
+  .chip{font-size:12px;font-weight:900;padding:5px 10px;border-radius:999px;background:#f1f5f9;color:#94a3b8;border:2px dashed #cbd5e1;}
+  .chip.found{background:#dcfce7;color:#15803d;border-style:solid;border-color:#86efac;}
+  .rulecard{background:linear-gradient(135deg,#fff7d6,#ffe9f5);border:2px dashed #ffbf5e;border-radius:16px;padding:14px;text-align:center;font-weight:900;font-size:14px;color:#b45309;}
+  .maketabs{display:flex;gap:6px;margin-bottom:10px;}
+  .maketab{flex:1;text-align:center;padding:9px;border-radius:12px;background:#f1ecff;font-weight:900;font-size:13px;cursor:pointer;color:var(--soft);}
+  .maketab.on{background:var(--pink);color:#fff;}
+  .prob{background:#f8fafc;border:2px solid #e6def7;border-radius:12px;padding:12px;font-weight:900;font-size:14px;text-align:center;margin:8px 0;}
+  .choice{width:100%;text-align:left;background:#fff;border:2px solid var(--lavl);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:700;font-size:13px;margin-bottom:6px;cursor:pointer;}
+  .choice.ok{border-color:var(--mint);background:#effffb;} .choice.ng{border-color:#fca5a5;background:#fee2e2;}
+  .score{text-align:center;font-weight:900;color:var(--pink);margin-top:6px;}
+  .small{font-size:11px;color:var(--soft);font-weight:700;}
+  .hint{font-size:11.5px;color:#a16207;font-weight:700;background:#fff7d6;border-radius:10px;padding:6px 10px;margin-top:6px;text-align:center;}
+  .pickrow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0;}
+  .pickbtn{border:2px solid var(--lavl);background:#fff;border-radius:12px;padding:8px 10px;font-family:inherit;font-weight:900;font-size:12.5px;color:var(--ink);cursor:pointer;}
+  .pickbtn.sel{background:var(--lav);color:#fff;border-color:var(--lav);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lvbar" id="lvbar">
+    <button class="lvpick" data-l="1" onclick="setLevel(1)">① すいちょく・へいこう</button>
+    <button class="lvpick" data-l="2" onclick="setLevel(2)">② 四角形の仲間分け</button>
+  </div>
+  <div class="steps">
+    <div class="step on" id="st1">① 実験</div>
+    <div class="step" id="st2">② ひらめき</div>
+    <div class="step" id="st3">③ 問題メーカー</div>
+  </div>
+
+  <!-- ① 実験 -->
+  <div class="screen on" id="scr1">
+    <div class="card lv1" id="lv1exp">
+      <h2>📐 すいちょく・へいこう はっけんラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="l1bubble"></div></div>
+      <canvas id="cv1" width="336" height="220"></canvas>
+      <div class="row"><span class="badge" id="l1badge">－</span></div>
+      <div class="row">
+        <span class="small">線Bの かたむき：</span>
+        <div class="stepper"><button onclick="rotateB(-5)">－</button><span class="num" id="thetaNum">30°</span><button onclick="rotateB(5)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">線Bの 高さ：</span>
+        <div class="stepper"><button onclick="moveB(-20)">－</button><span class="num" id="offsetNum">70</span><button onclick="moveB(20)">＋</button></div>
+      </div>
+      <div class="shapes" id="l1chips"></div>
+      <div class="row"><button class="btn go" id="l1next" onclick="go(2)" disabled>「垂直」と「平行」を 見つけたら つぎへ →</button></div>
+    </div>
+    <div class="card lv2" id="lv2exp" style="display:none">
+      <h2>🔷 四角形へんしんラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="l2bubble"></div></div>
+      <canvas id="cv2" width="336" height="220"></canvas>
+      <div class="row"><span class="badge" id="l2badge">－</span></div>
+      <div class="row">
+        <span class="small">上の辺の 長さ：</span>
+        <div class="stepper"><button onclick="chg2('topLen',-10)">－</button><span class="num" id="topLenNum">100</span><button onclick="chg2('topLen',10)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">高さ：</span>
+        <div class="stepper"><button onclick="chg2('topH',-10)">－</button><span class="num" id="topHNum">80</span><button onclick="chg2('topH',10)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">上の辺の ずれ：</span>
+        <div class="stepper"><button onclick="chg2('skew',-10)">－</button><span class="num" id="skewNum">30</span><button onclick="chg2('skew',10)">＋</button></div>
+      </div>
+      <div class="shapes" id="l2chips"></div>
+      <div class="hint" id="l2hint"></div>
+      <div class="row"><button class="btn go" id="l2next" onclick="go(2)" disabled>5この 仲間を ぜんぶ 見つけたら つぎへ →</button></div>
+    </div>
+  </div>
+
+  <!-- ② ひらめき -->
+  <div class="screen" id="scr2">
+    <div class="card">
+      <h2>💡 ひらめき</h2>
+      <div class="rulecard" id="ruleCard"></div>
+      <div class="niko" style="margin-top:12px;"><div class="face">🦄</div><div class="bubble" id="l3insight"></div></div>
+      <div class="row"><button class="btn gold" onclick="go(3)">🛠️ 問題メーカーへ →</button></div>
+      <div class="row"><button class="btn ghost" style="max-width:160px" onclick="go(1)">← 実験に もどる</button></div>
+    </div>
+  </div>
+
+  <!-- ③ メーカー -->
+  <div class="screen" id="scr3">
+    <div class="card">
+      <h2>🛠️ 問題メーカー <span class="tag">作った問題：<span id="madeN">0</span></span></h2>
+
+      <div class="lv1" id="lv1make">
+        <div class="maketabs">
+          <div class="maketab on" id="tabN1" onclick="switchTab(1,'N')">🟢 通常問題</div>
+          <div class="maketab" id="tabT1" onclick="switchTab(1,'T')">🔴 ワナ問題</div>
+        </div>
+        <div id="mkN1">
+          <div class="small">2本の直線が この角度で 交わるとき、関係は？ という問題を つくろう。</div>
+          <div class="row">
+            角度 <div class="stepper"><button onclick="chgAngle(-15)">－</button><span class="num" id="pAngle">90</span>°<button onclick="chgAngle(15)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeNormal1()">🦄 ニコに 出す！</button></div>
+          <div id="nResult1"></div>
+        </div>
+        <div id="mkT1" style="display:none;">
+          <div class="small">出題者に なって、ニコを ひっかけよう！ 「90度に すごく近い」けど ぴったりじゃない角度を えらぼう。</div>
+          <div class="row">
+            角度 <div class="stepper"><button onclick="chgTrapAngle(-2)">－</button><span class="num" id="tAngle">88</span>°<button onclick="chgTrapAngle(2)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeTrap1()">🕳️ ワナを 発動！</button></div>
+          <div id="tResult1"></div>
+        </div>
+      </div>
+
+      <div class="lv2" id="lv2make" style="display:none">
+        <div class="maketabs">
+          <div class="maketab on" id="tabN2" onclick="switchTab(2,'N')">🟢 通常問題</div>
+          <div class="maketab" id="tabT2" onclick="switchTab(2,'T')">🔴 ワナ問題</div>
+        </div>
+        <div id="mkN2">
+          <div class="small">仲間の 中から 1つ えらんで、「これは 何という 四角形？」の 問題を つくろう。</div>
+          <div class="pickrow" id="shapePick"></div>
+          <div class="row"><button class="btn go" onclick="makeNormal2()">🦄 ニコに 出す！</button></div>
+          <div id="nResult2"></div>
+        </div>
+        <div id="mkT2" style="display:none;">
+          <div class="small">出題者に なって、ニコを ひっかけよう！ 上の辺の 長さは 100（そろえたまま）で、「ずれ」を 少しだけ つけてみよう。</div>
+          <div class="row">
+            ずれ <div class="stepper"><button onclick="chgTrapSkew(-10)">－</button><span class="num" id="tSkew">10</span><button onclick="chgTrapSkew(10)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeTrap2()">🕳️ ワナを 発動！</button></div>
+          <div id="tResult2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function qparam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+  var LV = parseInt(qparam("level")||"1",10); if(!(LV===1||LV===2)) LV=1;
+  var made=0;
+  var TOL=4;
+
+  /* ===================== レベル1：すいちょく・へいこう ===================== */
+  var cv1=document.getElementById("cv1"), ctx1=cv1.getContext("2d");
+  var thetaB=30, offsetY=70, found1={};
+
+  function classify1(theta, oy){
+    var t=((theta%180)+180)%180;
+    if(t<=TOL || t>=180-TOL){
+      if(Math.abs(oy-110)<3) return {type:"same", label:"同じ直線"};
+      return {type:"parallel", label:"平行"};
+    }
+    if(Math.abs(t-90)<=TOL) return {type:"perp", label:"垂直"};
+    return {type:"cross", label:"ただ 交わっているだけ"};
+  }
+
+  function drawInfiniteLine(ctx, theta, cx, cy, color){
+    var rad=theta*Math.PI/180, dx=Math.cos(rad), dy=Math.sin(rad), L=420;
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(cx-dx*L, cy-dy*L); ctx.lineTo(cx+dx*L, cy+dy*L); ctx.stroke();
+    ctx.restore();
+    var l2=55;
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=4; ctx.lineCap="round"; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(cx-dx*l2, cy-dy*l2); ctx.lineTo(cx+dx*l2, cy+dy*l2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function render1(){
+    ctx1.clearRect(0,0,cv1.width,cv1.height);
+    drawInfiniteLine(ctx1, 0, 168, 110, "#8a5cf0");
+    drawInfiniteLine(ctx1, thetaB, 168, offsetY, "#ff7fc4");
+    var cls=classify1(thetaB, offsetY);
+    if(cls.type==="perp"){
+      var rad=thetaB*Math.PI/180, s=Math.sin(rad);
+      var tParam=(110-offsetY)/s, ix=168+Math.cos(rad)*tParam, iy=110;
+      ctx1.save(); ctx1.strokeStyle="#1d4ed8"; ctx1.lineWidth=2;
+      ctx1.strokeRect(ix-7, iy-7, 14, 14);
+      ctx1.restore();
+    }
+    document.getElementById("thetaNum").textContent=thetaB+"°";
+    document.getElementById("offsetNum").textContent=offsetY;
+    var badge=document.getElementById("l1badge");
+    badge.textContent=cls.label; badge.className="badge "+cls.type;
+    var b=document.getElementById("l1bubble");
+    if(cls.type==="perp") b.innerHTML="交わる 角が <b>90度</b>！ この2本の 直線は「<b>垂直</b>」だよ。しるしの 四角□が めじるし。";
+    else if(cls.type==="parallel") b.innerHTML="どこまで のばしても 交わらないね！ この2本の 直線は「<b>平行</b>」だよ。";
+    else if(cls.type==="same") b.innerHTML="これは 重なって 同じ 直線に なっちゃった。高さを 変えてみよう。";
+    else b.innerHTML="交わっているけど、90度でも ないし 平行でも ない。「ただ 交わっているだけ」の 形だよ。";
+    if(cls.type==="perp") found1.perp=true;
+    if(cls.type==="parallel") found1.parallel=true;
+    renderChips1();
+    var nx=document.getElementById("l1next");
+    nx.disabled=!(found1.perp && found1.parallel);
+    if(nx.disabled===false) nx.textContent="見つけた！ つぎへ →";
+  }
+  function renderChips1(){
+    var z=document.getElementById("l1chips"); z.innerHTML="";
+    [["perp","垂直"],["parallel","平行"]].forEach(function(p){
+      var el=document.createElement("div"); el.className="chip"+(found1[p[0]]?" found":"");
+      el.textContent=(found1[p[0]]?"✓ ":"")+p[1]; z.appendChild(el);
+    });
+  }
+  window.rotateB=function(d){ thetaB=Math.max(0,Math.min(175, thetaB+d)); render1(); };
+  window.moveB=function(d){ offsetY=Math.max(40,Math.min(180, offsetY+d)); render1(); };
+  window._setAngle=function(v){ thetaB=v; render1(); };
+  window._setOffset=function(v){ offsetY=v; render1(); };
+  window._state1=function(){ var c=classify1(thetaB,offsetY); return {theta:thetaB, offsetY:offsetY, cls:c.type, foundPerp:!!found1.perp, foundParallel:!!found1.parallel}; };
+  window.classify1=classify1;
+
+  /* ===================== レベル2：四角形の仲間分け ===================== */
+  var cv2=document.getElementById("cv2"), ctx2=cv2.getContext("2d");
+  var BASE=100, topLen=100, topH=80, skew=30, found2={};
+  var SHAPE_ORDER=["台形","平行四辺形","ひし形","長方形","正方形"];
+  var SHAPE_HINT={
+    "台形":"上の辺の長さ を 100いがい（例：140）に してみよう",
+    "平行四辺形":"上の辺の長さ を 100 に そろえて、ずれ を 0いがい（例：30）に してみよう",
+    "ひし形":"上の辺の長さ を 100、ずれ を 60、高さ を 80 に してみよう",
+    "長方形":"上の辺の長さ を 100、ずれ を 0、高さ を すきな数（例：60）に してみよう",
+    "正方形":"上の辺の長さ を 100、ずれ を 0、高さ を 100 に してみよう"
+  };
+
+  function classify2(baseLen, tLen, tH, sk){
+    var legLen=Math.sqrt(sk*sk + tH*tH);
+    var parallelogram=(tLen===baseLen);
+    if(!parallelogram) return {name:"台形", why:"上の辺と下の辺だけが 平行"};
+    var rightAngle=(sk===0);
+    var allEqual=(Math.round(legLen)===baseLen);
+    if(rightAngle && allEqual) return {name:"正方形", why:"2組の辺が平行・4辺の長さが同じ・かどが ぜんぶ 直角"};
+    if(rightAngle) return {name:"長方形", why:"2組の辺が平行・かどが ぜんぶ 直角"};
+    if(allEqual) return {name:"ひし形", why:"2組の辺が平行・4辺の長さが ぜんぶ 同じ"};
+    return {name:"平行四辺形", why:"2組の辺が それぞれ 平行"};
+  }
+
+  function drawQuad(ctx, baseLen, tLen, tH, sk, color){
+    var cx=cv2.width/2, baseY=170;
+    var B0x=cx-baseLen/2, B1x=cx+baseLen/2;
+    var T0x=B0x+sk, T1x=T0x+tLen, topY=baseY-tH;
+    ctx.clearRect(0,0,cv2.width,cv2.height);
+    ctx.beginPath();
+    ctx.moveTo(B0x, baseY); ctx.lineTo(B1x, baseY); ctx.lineTo(T1x, topY); ctx.lineTo(T0x, topY); ctx.closePath();
+    ctx.fillStyle="#eaddf7"; ctx.fill();
+    ctx.strokeStyle=color; ctx.lineWidth=3; ctx.lineJoin="round"; ctx.stroke();
+    ctx.fillStyle="#4a3b52"; ctx.font="bold 11px sans-serif";
+    ctx.fillText("下の辺", cx-16, baseY+16);
+  }
+
+  function render2(){
+    drawQuad(ctx2, BASE, topLen, topH, skew, "#8a5cf0");
+    var cls=classify2(BASE, topLen, topH, skew);
+    document.getElementById("topLenNum").textContent=topLen;
+    document.getElementById("topHNum").textContent=topH;
+    document.getElementById("skewNum").textContent=skew;
+    var badge=document.getElementById("l2badge");
+    badge.textContent=cls.name; badge.className="badge";
+    document.getElementById("l2bubble").innerHTML="いまの 形は「<b>"+cls.name+"</b>」。"+cls.why+"だからだよ。";
+    found2[cls.name]=true;
+    renderChips2();
+    var missing=SHAPE_ORDER.filter(function(s){return !found2[s];});
+    var hintEl=document.getElementById("l2hint");
+    hintEl.textContent = missing.length ? ("つぎに ためす ヒント：「"+missing[0]+"」→ "+SHAPE_HINT[missing[0]]) : "5この 仲間、ぜんぶ 見つけたよ！";
+    var nx=document.getElementById("l2next");
+    nx.disabled = missing.length>0;
+    if(!nx.disabled) nx.textContent="ぜんぶ 見つけた！ つぎへ →";
+  }
+  function renderChips2(){
+    var z=document.getElementById("l2chips"); z.innerHTML="";
+    SHAPE_ORDER.forEach(function(s){
+      var el=document.createElement("div"); el.className="chip"+(found2[s]?" found":"");
+      el.textContent=(found2[s]?"✓ ":"")+s; z.appendChild(el);
+    });
+  }
+  window.chg2=function(k,d){
+    if(k==="topLen") topLen=Math.max(40,Math.min(180, topLen+d));
+    if(k==="topH") topH=Math.max(40,Math.min(120, topH+d));
+    if(k==="skew") skew=Math.max(-70,Math.min(70, skew+d));
+    render2();
+  };
+  window._setParams=function(tLen,tH,sk){ topLen=tLen; topH=tH; skew=sk; render2(); };
+  window._state2=function(){ var c=classify2(BASE,topLen,topH,skew); return {topLen:topLen, topH:topH, skew:skew, name:c.name, found:Object.keys(found2).slice()}; };
+  window.classify2=classify2;
+
+  /* ===================== 共通：ステップ切り替え ===================== */
+  window.go=function(n){
+    [1,2,3].forEach(function(i){ document.getElementById("scr"+i).classList.toggle("on", i===n); document.getElementById("st"+i).classList.toggle("on", i===n); });
+  };
+  window.setLevel=function(l){
+    LV=l;
+    document.querySelectorAll(".lvpick").forEach(function(b){ b.classList.toggle("on", Number(b.dataset.l)===l); });
+    document.querySelectorAll(".lv1").forEach(function(el){ el.style.display = (l===1)?"":"none"; });
+    document.querySelectorAll(".lv2").forEach(function(el){ el.style.display = (l===2)?"":"none"; });
+    if(l===1){
+      document.getElementById("ruleCard").innerHTML="2本の直線が 交わる 角が <span style=\"color:#1d4ed8;\">90度</span> なら「垂直」。<br>どこまで のばしても <span style=\"color:#15803d;\">交わらない</span> なら「平行」。";
+      document.getElementById("l3insight").innerHTML="三角定規や 分度器で「ぴったり90度か」を たしかめる。見た目だけで きめないのが コツだよ！";
+    } else {
+      document.getElementById("ruleCard").innerHTML="上の辺の長さ が 下の辺と <span style=\"color:#1d4ed8;\">同じ</span> なら、2組とも 平行＝「平行四辺形の 仲間」。<br>そこに 直角・辺の長さ が そろうと 長方形・ひし形・正方形 に なる。";
+      document.getElementById("l3insight").innerHTML="台形・平行四辺形・ひし形・長方形・正方形は バラバラじゃなくて、みんな「辺の 平行・長さ・角度」の 組み合わせで つながっているんだよ。";
+    }
+    go(1);
+    render1(); render2();
+    renderShapePick();
+  };
+
+  /* ===================== 問題メーカー：レベル1 ===================== */
+  var pAngle=90, tAngle=88;
+  window.chgAngle=function(d){ pAngle=Math.max(0,Math.min(175,pAngle+d)); document.getElementById("pAngle").textContent=pAngle; };
+  window.chgTrapAngle=function(d){ tAngle=Math.max(80,Math.min(100,tAngle+d)); if(tAngle===90) tAngle+=d>0?1:-1; document.getElementById("tAngle").textContent=tAngle; };
+  window.makeNormal1=function(){
+    var cls=classify1(pAngle, 70);
+    var box=document.getElementById("nResult1");
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>2本の直線が '+pAngle+'度で 交わっています。この2本の 関係は？</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">答えは「<b>'+cls.label+'</b>」！ '+(cls.type==="perp"?"ぴったり90度だから垂直だね。":(cls.type==="parallel"?"0度や180度＝同じ向きだから平行だね。":"90度でも平行でもない、ふつうの交わり方だよ。"))+'</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true,1)">角度を 正しく はかって、垂直・平行を 見分けられるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,1)">大きい数が 読めるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,1)">絵が じょうずに かけるか</button>';
+  };
+  window.makeTrap1=function(){
+    var box=document.getElementById("tResult1");
+    box.innerHTML=''
+      +'<div class="prob">きみの ワナ：<br>「2本の直線が '+tAngle+'度で 交わっています。垂直と 言える？」</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">えっ、ほとんど 直角に 見える…！ でも '+tAngle+'度は <b>90度ぴったりじゃない</b>から、垂直とは 言えないよ！ ひっかかった〜😵</div></div>'
+      +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true,1)">見た目が 近くても、ぴったり90度か たしかめないと 垂直と 言えないと 見ぬけるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,1)">90に近い数の 計算が できるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,1)">直線が まっすぐ 引けるか</button>';
+  };
+  window.pickA=function(el,ok,lv){
+    el.parentNode.querySelectorAll(".choice").forEach(function(b){b.disabled=true;});
+    if(ok){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made; el.insertAdjacentHTML("afterend",'<div class="score">🎉 ねらいバッチリ！ 問題 完成！</div>'); }
+    else { el.classList.add("ng"); el.insertAdjacentHTML("afterend",'<div class="small" style="color:#ef4444;">見た目じゃなくて「ぴったり かどうか」を たしかめる力が ねらいだよ。</div>'); }
+  };
+
+  /* ===================== 問題メーカー：レベル2 ===================== */
+  var pickedShape="台形";
+  function renderShapePick(){
+    var z=document.getElementById("shapePick"); if(!z) return; z.innerHTML="";
+    SHAPE_ORDER.forEach(function(s){
+      var b=document.createElement("button"); b.className="pickbtn"+(s===pickedShape?" sel":"");
+      b.textContent=s; b.onclick=function(){ pickedShape=s; renderShapePick(); };
+      z.appendChild(b);
+    });
+  }
+  var SHAPE_PARAM={
+    "台形":[140,80,30], "平行四辺形":[100,80,30], "ひし形":[100,80,60], "長方形":[100,60,0], "正方形":[100,100,0]
+  };
+  window.makeNormal2=function(){
+    var p=SHAPE_PARAM[pickedShape];
+    var box=document.getElementById("nResult2");
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>この 四角形は 何？</div>'
+      +'<canvas id="mkCv2" width="220" height="140"></canvas>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">答えは「<b>'+pickedShape+'</b>」！ '+classify2(BASE,p[0],p[1],p[2]).why+'だからだよ。</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true,2)">辺の 平行・長さ・角度から、四角形の 名前を 見分けられるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,2)">色を 塗るのが じょうずか</button>'
+      +'<button class="choice" onclick="pickA(this,false,2)">四角形を 手で 早く 書けるか</button>';
+    var mc=document.getElementById("mkCv2"), mx=mc.getContext("2d");
+    var cx=mc.width/2, baseY=110, baseLen=70, tLen=Math.round(p[0]*0.7), tH=Math.round(p[1]*0.7), sk=Math.round(p[2]*0.7);
+    var B0x=cx-baseLen/2, B1x=cx+baseLen/2, T0x=B0x+sk, T1x=T0x+tLen, topY=baseY-tH;
+    mx.beginPath(); mx.moveTo(B0x,baseY); mx.lineTo(B1x,baseY); mx.lineTo(T1x,topY); mx.lineTo(T0x,topY); mx.closePath();
+    mx.fillStyle="#ffe4f2"; mx.fill(); mx.strokeStyle="#ff7fc4"; mx.lineWidth=3; mx.stroke();
+  };
+  window.chgTrapSkew=function(d){
+    var v=Number(document.getElementById("tSkew").textContent)+d;
+    v=Math.max(10,Math.min(70,v));
+    document.getElementById("tSkew").textContent=v;
+  };
+  window.makeTrap2=function(){
+    var sk=Number(document.getElementById("tSkew").textContent);
+    var box=document.getElementById("tResult2");
+    var cls=classify2(BASE,100,80,sk);
+    box.innerHTML=''
+      +'<div class="prob">きみの ワナ：<br>「上の辺も100、パッと見 長方形っぽい 四角形。これは 長方形と 言える？」</div>'
+      +'<canvas id="tCv2" width="220" height="140"></canvas>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">形は 長方形っぽい…でも かどを はかると 90度ぴったりじゃない（ずれ='+sk+'）！ 正しくは「<b>'+cls.name+'</b>」。長さや形が 近くても、キチンと 角度を 確かめないと！ ひっかかった〜😵</div></div>'
+      +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true,2)">見た目が 長方形っぽくても、かどが ぴったり直角か たしかめないと 決めつけられないと 見ぬけるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,2)">四角形を きれいに 塗れるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,2)">100という 数字が 読めるか</button>';
+    var tc=document.getElementById("tCv2"), tx=tc.getContext("2d");
+    var cx=tc.width/2, baseY=110, baseLen=70, tLen=70, tH=56, skk=Math.round(sk*0.7);
+    var B0x=cx-baseLen/2, B1x=cx+baseLen/2, T0x=B0x+skk, T1x=T0x+tLen, topY=baseY-tH;
+    tx.beginPath(); tx.moveTo(B0x,baseY); tx.lineTo(B1x,baseY); tx.lineTo(T1x,topY); tx.lineTo(T0x,topY); tx.closePath();
+    tx.fillStyle="#dbeafe"; tx.fill(); tx.strokeStyle="#1d4ed8"; tx.lineWidth=3; tx.stroke();
+  };
+
+  window.switchTab=function(lv,t){
+    document.getElementById("tabN"+lv).classList.toggle("on", t==='N');
+    document.getElementById("tabT"+lv).classList.toggle("on", t==='T');
+    document.getElementById("mkN"+lv).style.display=t==='N'?'block':'none';
+    document.getElementById("mkT"+lv).style.display=t==='T'?'block':'none';
+  };
+
+  window._made=function(){ return made; };
+  window._level=function(){ return LV; };
+
+  setLevel(LV);
+})();
+</script>
+</body>
+</html>

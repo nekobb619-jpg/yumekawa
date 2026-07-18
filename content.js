@@ -102,6 +102,24 @@
     },
     {
       subject: "算数",
+      category: "図形（垂直・平行と四角形）4年",
+      id: "算数/図形/suichoku_heikou01",
+      name: "垂直と平行（すいちょくとへいこう）",
+      reward: 10, showCount: 5, video_url: "",
+      // ★すいちょく・へいこう はっけんラボ（線をかたむけて発見）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=1"
+    },
+    {
+      subject: "算数",
+      category: "図形（垂直・平行と四角形）4年",
+      id: "算数/図形/shikakukei_bunrui01",
+      name: "四角形の仲間分け（台形・平行四辺形・ひし形）",
+      reward: 10, showCount: 5, video_url: "",
+      // ★四角形へんしんラボ（頂点をうごかして仲間分けを発見）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=2"
+    },
+    {
+      subject: "算数",
       category: "小数（4年）",
       id: "算数/小数/shosu01",
       name: "小数のしくみと計算",
@@ -505,6 +523,80 @@
         hint:"面積を 2つに 分けて 考える 見方だね。",
         job_title:"🎯 ねらいを 見ぬいた！",
         job_desc:"ねらいは『分配のきまり（分けても 面積は 同じ）』が わかるか。面積の 見方は、こんなに 深くまで つながるんだ！" }
+    ],
+
+    "算数/図形/suichoku_heikou01": [
+      { q:"2本の直線が 交わって できる 角が 90度の とき、この2本の直線の関係を 何という？",
+        a:["垂直（すいちょく）","平行（へいこう）","対角（たいかく）","直角三角形"], c:0,
+        hint:"三角定規の かどの 形と 同じだよ。",
+        speech_text:"すいちょくって どんな かんけい？",
+        job_title:"垂直 はじめの一歩！",
+        job_desc:"2本の直線が 交わって できる角が 90度の とき、この2本は「垂直」だよ。三角定規の かどが ちょうど 90度だね。" },
+
+      { q:"下の 図を 見てね。かどに 小さい四角の しるしが ついているよ。この2本の直線の関係は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);var cx=canvas.width/2,cy=canvas.height/2;ctx.strokeStyle='#8a5cf0';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(cx-100,cy);ctx.lineTo(cx+100,cy);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-70);ctx.lineTo(cx,cy+70);ctx.stroke();ctx.strokeStyle='#1d4ed8';ctx.lineWidth=2;ctx.strokeRect(cx,cy-14,14,14);",
+        a:["垂直","平行","ただ 交わっているだけ","わからない"], c:0,
+        hint:"かどに ついている 小さい四角の しるしは「ここが 90度ですよ」の めじるしだよ。",
+        job_title:"しるしを 見つけた！",
+        job_desc:"小さい四角の しるしは「ここが 90度ですよ」の めじるし。だから この2本は 垂直だね。" },
+
+      { q:"どこまで のばしても 交わらない 2本の直線の関係を 何という？",
+        a:["平行（へいこう）","垂直（すいちょく）","対称（たいしょう）","直線"], c:0,
+        hint:"電車の レールを 思い出そう。ずっと 交わらないね。",
+        job_title:"平行 マスター！",
+        job_desc:"どこまで のばしても 交わらない 2本の直線は「平行」。電車の レールみたいな 関係だよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[ { name:"ニコ", icon:"🦄", msg:"『三角定規を 2まい 使って、まっすぐな 線に 平行な 線を 引きましょう』って 先生が 言ってたよ！<br>この もんだいは <b>なにが できると OK</b>かな？" } ],
+        a:["三角定規を 使って 平行な線を 正しく 引けるか","絵を きれいに かけるか","定規で まっすぐ 線が 引けるか","色を ぬれるか"], c:0,
+        hint:"『平行な 線を 引く』が ポイントだね。",
+        speech_text:"この もんだいの ねらいは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"ねらいは『三角定規を 使って 平行な線を 正しく 引けるか』。三角定規を 組み合わせると、ずれずに 平行な線が 引けるんだ。" },
+
+      { q:"交わって できる 角が 90度の とき、この2本の直線の関係を 漢字2文字で 書こう。",
+        type:"text_input", correct_answers:["垂直","すいちょく"],
+        hint:"『すい〇〇』。三角定規の かどと 同じ 角度だよ。",
+        rescue_hint:"90度の 交わりは『垂直』。漢字だと『垂直』と 書くよ。",
+        job_title:"図形の きほん マスター！",
+        job_desc:"90度で 交わる 2本の直線は『垂直』。垂直と 平行、この2つが 四角形の 仲間分けにも つながっていくよ！" }
+    ],
+
+    "算数/図形/shikakukei_bunrui01": [
+      { q:"向かい合う 1組の辺だけが 平行な 四角形を 何という？",
+        a:["台形（だいけい）","平行四辺形（へいこうしへんけい）","ひし形","長方形"], c:0,
+        hint:"『1組だけ』が ポイントだよ。",
+        speech_text:"1組だけ へいこうな しかくけいは？",
+        job_title:"台形 はじめの一歩！",
+        job_desc:"向かい合う 1組の辺だけが 平行な 四角形は『台形』。もう1組の辺は 平行じゃなくても いいんだ。" },
+
+      { q:"向かい合う 2組の辺が どちらも 平行な 四角形を 何という？",
+        a:["平行四辺形（へいこうしへんけい）","台形","ひし形だけ","長方形だけ"], c:0,
+        hint:"『2組とも』 平行なのが ポイント。",
+        job_title:"平行四辺形 わかった！",
+        job_desc:"向かい合う 2組の辺が どちらも 平行な 四角形は『平行四辺形』。ひし形や 長方形も、じつは 平行四辺形の 仲間だよ。" },
+
+      { q:"下の図を 見てね。4つの辺に 同じ長さの しるし（ー）が ついているよ。この 四角形は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);var cx=canvas.width/2,cy=canvas.height/2;var pts=[[cx,cy-70],[cx+55,cy],[cx,cy+70],[cx-55,cy]];ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(var i=1;i<4;i++){ctx.lineTo(pts[i][0],pts[i][1]);}ctx.closePath();ctx.fillStyle='#eaddf7';ctx.fill();ctx.strokeStyle='#8a5cf0';ctx.lineWidth=3;ctx.stroke();ctx.strokeStyle='#4a3b52';ctx.lineWidth=2;for(var j=0;j<4;j++){var a=pts[j],b=pts[(j+1)%4];var mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;var dx=b[0]-a[0],dy=b[1]-a[1];var len=Math.sqrt(dx*dx+dy*dy);var nx=-dy/len*5,ny=dx/len*5;ctx.beginPath();ctx.moveTo(mx-nx,my-ny);ctx.lineTo(mx+nx,my+ny);ctx.stroke();}",
+        a:["ひし形","台形","ただの四角形","長方形"], c:0,
+        hint:"4つの辺の 長さが ぜんぶ 同じ しるしが ついているね。",
+        job_title:"ひし形 発見！",
+        job_desc:"4つの辺の 長さが ぜんぶ 等しい 四角形は『ひし形』。トランプの ◆マークの 形だよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[ { name:"ニコ", icon:"🦄", msg:"『この四角形、辺の長さを はかったら 4つとも 同じだったよ！ じゃあ ひし形だね！』<br>でも 社長、ちょっと待って。<b>ほかに たしかめること</b>は ないかな？" } ],
+        a:["向かい合う辺が ちゃんと 平行に なっているかも たしかめる","色を たしかめる","大きさを はかりなおす","なにも たしかめなくて いい"], c:0,
+        hint:"ひし形は『辺の長さが同じ』だけじゃなく『2組の辺が平行』も 必要だよ。",
+        speech_text:"ほかに たしかめることは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"辺の長さが 同じだけじゃ、じつは まだ ひし形と 言いきれない。向かい合う辺が 平行かどうかも 合わせて たしかめるのが、正しい 見分け方だよ。" },
+
+      { q:"4つの辺の長さが すべて 等しく、2組の辺が 平行な 四角形を 何という？ 漢字とひらがなで 書こう。",
+        type:"text_input", correct_answers:["ひし形","ひしがた"],
+        hint:"トランプの ◆マークの 形だよ。",
+        rescue_hint:"辺の長さが 全部同じ 四角形は『ひし形』だよ。",
+        job_title:"四角形の 仲間分け マスター！",
+        job_desc:"台形・平行四辺形・ひし形・長方形・正方形は、辺の 平行や 長さ、角度の 組み合わせで つながっているよ。仲間分けが できると、図形の 見え方が グッと 広がるね！" }
     ],
 
     "算数/小数/shosu01": [
