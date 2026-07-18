@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AR角度 宝さがしレーダー 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --lav:#b19cd9; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);}
+  #bg{position:fixed;inset:0;background:linear-gradient(160deg,#1b1230,#3a2456 60%,#5a2a6e);z-index:0;}
+  #cam{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0.9;}
+  #veil{position:fixed;inset:0;background:radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 30%, rgba(30,15,45,.45) 100%);z-index:1;}
+  /* スタート画面 */
+  #start{position:fixed;inset:0;z-index:20;background:linear-gradient(160deg,#2b1a45,#4a2a66);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;color:#fff;}
+  #start h1{font-size:24px;margin:0 0 6px;}
+  #start p{font-size:13px;opacity:.9;line-height:1.7;max-width:320px;}
+  #startBtn{margin-top:20px;border:none;border-radius:16px;padding:16px 24px;font-family:inherit;font-weight:900;font-size:17px;color:#fff;background:linear-gradient(180deg,#ffb64d,#f59e0b);box-shadow:0 6px 0 #b45309;cursor:pointer;}
+  #startBtn:active{transform:translateY(4px);box-shadow:none;}
+  /* HUD */
+  #hud{position:fixed;inset:0;z-index:5;display:none;}
+  #task{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.94);border-radius:16px;padding:10px 16px;box-shadow:0 6px 16px rgba(0,0,0,.3);text-align:center;max-width:92%;}
+  #task .big{font-size:19px;font-weight:900;color:var(--pink);}
+  #task .small{font-size:11px;color:#7a6985;font-weight:700;margin-top:2px;}
+  #gems{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.9);border-radius:12px;padding:6px 10px;font-weight:900;font-size:12px;box-shadow:0 4px 10px rgba(0,0,0,.25);}
+  /* レーダー（分度器ダイヤル） */
+  #radarWrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;}
+  #radar{width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.14);border:3px solid rgba(255,255,255,.7);position:relative;box-shadow:0 0 30px rgba(255,255,255,.25),inset 0 0 30px rgba(0,0,0,.25);}
+  .tick{position:absolute;top:50%;left:50%;width:2px;height:130px;transform-origin:top center;}
+  .tick i{display:block;width:2px;height:10px;background:rgba(255,255,255,.7);margin:0 auto;}
+  .tick.major i{height:16px;width:3px;background:#fff;}
+  .tick span{display:block;color:#fff;font-size:9px;font-weight:900;text-align:center;margin-top:1px;text-shadow:0 1px 2px #000;}
+  /* 針（今の向き） */
+  #needle{position:absolute;top:50%;left:50%;width:6px;height:118px;transform-origin:bottom center;transform:translate(-50%,-100%) rotate(0deg);z-index:6;}
+  #needle .n{width:6px;height:118px;background:linear-gradient(180deg,#ff5fa2,#ff7fc4);border-radius:6px;box-shadow:0 0 10px #ff7fc4;}
+  #needle .tip{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:16px;}
+  /* 宝マーカー（目標角度） */
+  #target{position:absolute;top:50%;left:50%;width:2px;height:126px;transform-origin:bottom center;transform:translate(-50%,-100%) rotate(0deg);z-index:5;}
+  #target .t{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:26px;filter:drop-shadow(0 0 6px #ffd75e);}
+  #center{position:absolute;top:50%;left:50%;width:16px;height:16px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);z-index:7;box-shadow:0 0 8px #fff;}
+  #readout{position:absolute;bottom:-52px;left:50%;transform:translateX(-50%);text-align:center;color:#fff;text-shadow:0 2px 4px #000;white-space:nowrap;}
+  #readout .cur{font-size:30px;font-weight:900;}
+  #readout .tgt{font-size:13px;font-weight:700;opacity:.95;}
+  /* ニコ */
+  #niko{position:fixed;left:12px;bottom:12px;display:flex;gap:8px;align-items:flex-end;z-index:8;max-width:74%;}
+  #niko svg{width:56px;height:56px;flex:0 0 56px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));}
+  #bubble{background:#fff;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:8px 11px;font-size:12.5px;font-weight:700;line-height:1.5;box-shadow:0 6px 14px rgba(0,0,0,.3);}
+  #bubble b{color:var(--pink);}
+  /* 手動フォールバック */
+  #manual{position:fixed;bottom:12px;right:12px;z-index:8;background:rgba(255,255,255,.92);border-radius:12px;padding:8px 10px;box-shadow:0 4px 10px rgba(0,0,0,.25);display:none;text-align:center;}
+  #manual .lab{font-size:10px;font-weight:900;color:#7a6985;margin-bottom:4px;}
+  #manual input{width:150px;}
+  #flash{position:fixed;inset:0;z-index:9;pointer-events:none;background:radial-gradient(circle at 50% 45%, rgba(255,231,94,.55), rgba(255,231,94,0) 60%);opacity:0;transition:opacity .25s;}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<video id="cam" autoplay playsinline muted></video>
+<div id="veil"></div>
+<div id="flash"></div>
+
+<div id="start">
+  <h1>🧭 AR角度 宝さがしレーダー</h1>
+  <p>スマホを 手に もって、体ごと ぐるっと 回ろう！<br>ニコが 教える <b>角度の方向</b>に、宝が かくれているぞ。<br>針を 宝に ぴったり 合わせよう！</p>
+  <p style="font-size:11px;opacity:.75;margin-top:10px;">※「スタート」を おすと、向きセンサー（と できれば カメラ）を つかいます。</p>
+  <button id="startBtn">▶ スタート</button>
+</div>
+
+<div id="hud">
+  <div id="gems">🏆 <span id="gemN">0</span>/5</div>
+  <div id="task"><div class="big" id="taskBig">じゅんび中…</div><div class="small" id="taskSmall"></div></div>
+
+  <div id="radarWrap">
+    <div id="radar">
+      <div id="ticksZone"></div>
+      <div id="target"><div class="t">💎</div></div>
+      <div id="needle"><div class="n"></div><div class="tip">▲</div></div>
+      <div id="center"></div>
+    </div>
+    <div id="readout"><div class="cur"><span id="curDeg">0</span>°</div><div class="tgt">宝の方向： <span id="tgtDeg">0</span>°</div></div>
+  </div>
+
+  <div id="niko">
+    <svg viewBox="0 0 100 100" aria-label="ニコ">
+      <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8fb0"/><stop offset=".5" stop-color="#ffd75e"/><stop offset="1" stop-color="#7bd8ff"/></linearGradient></defs>
+      <circle cx="50" cy="54" r="40" fill="#fff4fb" stroke="#ffd6ec" stroke-width="3"/>
+      <path d="M24 42 q-7 11 4 18 q-11 2 -7 15 q9 4 15 -4" fill="url(#m)"/>
+      <path d="M76 42 q7 11 -4 18 q11 2 7 15 q-9 4 -15 -4" fill="url(#m)"/>
+      <path d="M50 14 l5 20 l-10 0 z" fill="#ffd75e" stroke="#f0b800" stroke-width="1.5"/>
+      <circle cx="41" cy="55" r="4.2" fill="#4b2d63"/><circle cx="61" cy="55" r="4.2" fill="#4b2d63"/>
+      <circle cx="34" cy="63" r="3.6" fill="#ffb3d1"/><circle cx="68" cy="63" r="3.6" fill="#ffb3d1"/>
+      <path d="M45 65 q5 5 10 0" fill="none" stroke="#4b2d63" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <div id="bubble">スタートを おしてね！</div>
+  </div>
+
+  <div id="manual">
+    <div class="lab">センサーが ない時は 手で回す 🔧</div>
+    <input id="manualRange" type="range" min="0" max="359" value="0" oninput="window.setHeadingManual(this.value)">
+  </div>
+</div>
+
+<script>
+(function(){
+  var TOL = 8;                 // ±8度で「発見」
+  var GOAL = 5;                // 宝5こでクリア
+  // お題の角度：三角定規・分度器の特別角＋いくつか自由角
+  var ANGLES = [
+    {deg:45,  note:"三角定規の 直角二等辺（45度）と 同じ！"},
+    {deg:90,  note:"直角（90度）。L字の かどだね。"},
+    {deg:30,  note:"三角定規の 細い かど（30度）。"},
+    {deg:60,  note:"三角定規の 60度の かど。"},
+    {deg:135, note:"直角＋45度 ＝ 135度。"},
+    {deg:120, note:"直角より 大きい 鈍角（120度）。"},
+    {deg:75,  note:"分度器で ていねいに 読む 75度。"},
+    {deg:150, note:"半回転（180度）より 少し 手前、150度。"}
+  ];
+
+  var baseline = null, heading = 0, target = 0, gems = 0, locked = false, sensorSeen = false, started = false;
+
+  function norm(d){ d = d % 360; if(d<0) d+=360; return d; }
+  function angDiff(a,b){ var d = Math.abs(norm(a)-norm(b)) % 360; return d>180 ? 360-d : d; }
+
+  function buildTicks(){
+    var zone = document.getElementById("ticksZone");
+    for(var d=0; d<360; d+=30){
+      var t = document.createElement("div");
+      t.className = "tick major";
+      t.style.transform = "translate(-50%,0) rotate("+d+"deg)";
+      t.innerHTML = '<i></i><span>'+d+'</span>';
+      zone.appendChild(t);
+    }
+    for(var d2=10; d2<360; d2+=10){ if(d2%30===0) continue;
+      var t2 = document.createElement("div"); t2.className="tick";
+      t2.style.transform = "translate(-50%,0) rotate("+d2+"deg)";
+      t2.innerHTML = '<i></i>';
+      document.getElementById("ticksZone").appendChild(t2);
+    }
+  }
+
+  function render(){
+    document.getElementById("needle").style.transform = "translate(-50%,-100%) rotate("+heading+"deg)";
+    document.getElementById("target").style.transform = "translate(-50%,-100%) rotate("+target+"deg)";
+    document.getElementById("curDeg").textContent = Math.round(norm(heading));
+    document.getElementById("tgtDeg").textContent = target;
+  }
+
+  function setHeading(deg){
+    heading = norm(deg);
+    render();
+    checkAlign();
+  }
+  // 手動スライダー用
+  window.setHeadingManual = function(v){ setHeading(Number(v)); };
+  // テスト用
+  window._state = function(){ return { heading:heading, target:target, gems:gems, locked:locked }; };
+  window._setHeading = setHeading;
+
+  function newRound(){
+    locked = false;
+    var pick = ANGLES[Math.floor(Math.random()*ANGLES.length)];
+    target = pick.deg;
+    document.getElementById("taskBig").textContent = "宝は 「"+target+"度」の 方向！";
+    document.getElementById("taskSmall").textContent = "スマホを 回して、針を 💎 に 合わせよう（±"+TOL+"度でOK）";
+    document.getElementById("bubble").innerHTML = "つぎの 宝は <b>"+target+"度</b>！<br>"+pick.note;
+    document.getElementById("target").classList.remove("hit");
+    render();
+  }
+
+  function flash(){ var f=document.getElementById("flash"); f.style.opacity="1"; setTimeout(function(){ f.style.opacity="0"; },250); }
+
+  function checkAlign(){
+    if(locked || !started) return;
+    if(angDiff(heading, target) <= TOL){
+      locked = true; gems = Math.min(GOAL, gems+1);
+      document.getElementById("gemN").textContent = gems;
+      flash();
+      var b = document.getElementById("bubble");
+      if(gems >= GOAL){
+        b.innerHTML = "🏆 たからを 5こ ぜんぶ 見つけた！<br>角度マスター、だいせいこう！";
+        document.getElementById("taskBig").textContent = "クリア！ 🎉";
+        document.getElementById("taskSmall").textContent = "もう一度 あそぶなら 針を うごかしてね";
+        gems = 0; document.getElementById("gemN").textContent = gems;
+        setTimeout(newRound, 2500);
+      } else {
+        b.innerHTML = "🎉 <b>"+target+"度</b>で 宝はっけん！ ナイス！";
+        setTimeout(newRound, 1600);
+      }
+    }
+  }
+
+  function onOrient(e){
+    var a = e.alpha;
+    if(a === null || a === undefined) return;
+    sensorSeen = true;
+    document.getElementById("manual").style.display = "none";
+    if(baseline === null) baseline = a;
+    setHeading(a - baseline);
+  }
+
+  function showManual(){ document.getElementById("manual").style.display = "block"; }
+
+  function startSensors(){
+    // 向きセンサー（iOSは許可が必要）
+    try{
+      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function"){
+        DeviceOrientationEvent.requestPermission().then(function(p){
+          if(p === "granted"){ window.addEventListener("deviceorientation", onOrient); }
+          else { showManual(); }
+        }).catch(function(){ showManual(); });
+      } else if (typeof DeviceOrientationEvent !== "undefined"){
+        window.addEventListener("deviceorientation", onOrient);
+      } else { showManual(); }
+    }catch(err){ showManual(); }
+    // 2秒たっても センサーが 来なければ 手動を出す
+    setTimeout(function(){ if(!sensorSeen) showManual(); }, 2000);
+    // カメラ（できれば背面）。ダメなら背景グラデのまま
+    try{
+      if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+        navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:"environment" } }, audio:false })
+          .then(function(s){ var v=document.getElementById("cam"); v.srcObject=s; v.play(); })
+          .catch(function(){ /* カメラ無しでもOK */ });
+      }
+    }catch(e){}
+  }
+
+  document.getElementById("startBtn").addEventListener("click", function(){
+    document.getElementById("start").style.display = "none";
+    document.getElementById("hud").style.display = "block";
+    started = true;
+    startSensors();
+    newRound();
+  });
+
+  buildTicks();
+})();
+</script>
+</body>
+</html>
