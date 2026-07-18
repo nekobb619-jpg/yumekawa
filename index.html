@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ゆめかわ★学びアドベンチャー LAB Pro</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-
 <style>
   :root {
     --bg-main: #f3ebf7; --panel-bg: #ffffff; --text-main: #4a3b52; --text-soft: #7a6985;
@@ -18,26 +16,22 @@
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--text-main); background: repeating-linear-gradient(var(--lavender-light) 0 1px, transparent 1px 34px), var(--bg-main); min-height: 100vh; padding-bottom: 40px; }
   .container { max-width: 760px; margin: 0 auto; padding: 14px; }
-  
+
   header.top { text-align: center; padding: 10px 0; cursor: pointer; user-select: none; }
   header.top h1 { font-family: 'Yuji Syuku', serif; font-size: 30px; margin: 0; color: var(--text-main); }
   header.top p { margin: 4px 0 0; color: var(--text-soft); font-size: 12px; }
-
   #login-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.9); z-index: 9999; display: none; justify-content: center; align-items: center; padding: 20px; }
   .login-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 340px; padding: 24px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: fadeUp 0.3s ease; }
   .login-input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 16px; font-family: 'Zen Maru Gothic'; }
   .login-btn { width: 100%; padding: 14px; background: var(--gold); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 16px; font-family: 'Zen Maru Gothic'; box-shadow: 0 4px 0 #d97706; cursor: pointer; transition: transform 0.1s; }
   .login-btn:active { transform: translateY(4px); box-shadow: none; }
-
   .status-board { background: var(--panel-bg); border-radius: var(--radius); padding: 12px; box-shadow: var(--card-shadow); display: flex; justify-content: space-around; margin-bottom: 12px; }
   .stat-item { text-align: center; } .stat-label { font-size: 11px; color: var(--text-soft); } .stat-val { font-size: 20px; font-weight: 900; color: var(--text-main); } .stat-val span { font-size: 12px; font-weight: 700; margin-left: 2px; }
   .navi-box { background: linear-gradient(135deg, var(--lavender-light), var(--pastel-pink)); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--card-shadow); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
   .navi-avatar { font-size: 32px; animation: bounce 2s infinite; } .navi-text { font-size: 13px; font-weight: 700; line-height: 1.5; }
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-
   .weak-attack-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fee2e2, #fcd34d); border: 2px solid #ef4444; border-radius: var(--radius); box-shadow: 0 5px 0 #b91c1c; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #991b1b; text-align: center; cursor: pointer; margin-bottom: 14px; display: none; transition: all 0.1s; }
   .weak-attack-banner:active { transform: translateY(3px); box-shadow: 0 2px 0 #b91c1c; }
-
   .treasure-banner { background: linear-gradient(135deg, #e0f2fe, #bae6fd); border: 3px solid #0284c7; border-radius: var(--radius); padding: 16px; text-align: center; margin-bottom: 16px; box-shadow: 0 5px 0 #0369a1; }
   .treasure-banner.hidden-island { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); border-color: #64748b; box-shadow: 0 5px 0 #475569; }
   .treasure-title { font-size: 18px; font-weight: 900; color: #0369a1; margin-bottom: 6px; }
@@ -49,33 +43,27 @@
   .shop-card .icon { font-size: 24px; display: block; margin-bottom: 2px; }
   .shop-card .name { font-size: 11px; font-weight: 900; color: #334155; }
   .shop-card .cost { font-size: 10px; font-weight: 700; color: #0284c7; margin-top: 2px; }
-
   .bag-container { display: flex; justify-content: center; gap: 12px; margin: 10px 0; background: #f1f5f9; padding: 12px; border-radius: 12px; border: 1px dashed #cbd5e1; }
   .bag-slot { width: 50px; height: 50px; background: white; border-radius: 10px; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; position: relative; transition: transform 0.1s; }
   .bag-slot:active { transform: translateY(2px); }
   .bag-slot.empty { filter: grayscale(100%); opacity: 0.6; }
   .item-count { position: absolute; bottom: -6px; right: -6px; background: #ef4444; color: white; font-size: 11px; font-weight: 900; padding: 2px 6px; border-radius: 10px; box-shadow: 0 2px 0 #b91c1c; z-index: 2; }
-
-  nav.subjects { display: flex; justify-content: center; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; } 
-  .tab-btn { flex: 1; min-width: 68px; border: none; cursor: pointer; padding: 8px 2px; font-family: 'Zen Maru Gothic'; font-weight: 700; font-size: 12px; color: var(--text-main); background: var(--panel-bg); border-radius: 12px; box-shadow: var(--card-shadow); text-align: center; } 
-  .tab-btn.active { background: var(--lavender); color: white; transform: translateY(2px); box-shadow: none; } 
+  nav.subjects { display: flex; justify-content: center; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab-btn { flex: 1; min-width: 68px; border: none; cursor: pointer; padding: 8px 2px; font-family: 'Zen Maru Gothic'; font-weight: 700; font-size: 12px; color: var(--text-main); background: var(--panel-bg); border-radius: 12px; box-shadow: var(--card-shadow); text-align: center; }
+  .tab-btn.active { background: var(--lavender); color: white; transform: translateY(2px); box-shadow: none; }
   .panel { display: none; } .panel.active { display: block; animation: fadeUp 0.3s ease; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-  .category-title { font-size: 14px; font-weight: 900; color: var(--lavender); margin: 16px 0 8px 4px; border-left: 4px solid var(--lavender); padding-left: 8px; } 
+  .category-title { font-size: 14px; font-weight: 900; color: var(--lavender); margin: 16px 0 8px 4px; border-left: 4px solid var(--lavender); padding-left: 8px; }
   .stage-card { background: var(--panel-bg); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 4px 0 rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 2px solid transparent; }
-  .stage-card:active { transform: translateY(2px); } 
+  .stage-card:active { transform: translateY(2px); }
   .stage-left { display: flex; align-items: center; gap: 8px; } .stage-icon { font-size: 20px; } .stage-title { font-weight: 700; font-size: 14px; }
-
   .acc-box { background: var(--panel-bg); border-radius: var(--radius); box-shadow: var(--card-shadow); margin-bottom: 12px; overflow: hidden; }
   .acc-head { padding: 14px 16px; font-weight: 900; font-size: 15px; color: var(--text-main); background: var(--lavender-light); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
   .acc-body { padding: 16px; display: none; } .acc-body.open { display: block; }
-
   .flex-row { display: flex; gap: 6px; margin-bottom: 12px; } .btn-sm { flex: 1; padding: 8px; border: none; background: var(--panel-bg); border-radius: 10px; font-family: 'Zen Maru Gothic'; font-weight: 700; font-size: 11px; box-shadow: var(--card-shadow); cursor: pointer; }
-  
+
   .admin-zone { display: none; background: #fee2e2; border: 2px dashed #fca5a5; padding: 12px; border-radius: var(--radius); margin-top: 16px; font-size: 12px; animation: fadeUp 0.3s; }
   .admin-input { padding: 6px; width: 60px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold; }
-
   #briefing-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.8); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; }
   .briefing-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 400px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
   .br-title { font-size: 18px; font-weight: 900; color: #6b21a8; margin-bottom: 8px; }
@@ -87,14 +75,12 @@
   .br-btn.lab { background: #3b82f6; color: white; }
   .br-btn.start { background: var(--gold); color: white; margin-top: 8px; }
   .br-btn.close { background: #e2e8f0; color: var(--text-soft); box-shadow: none; margin-top: 4px; padding: 10px; }
-
   #iframe-modal { position: fixed; inset: 0; background: #fff; z-index: 300; display: none; flex-direction: column; }
   .iframe-header { background: var(--lavender); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
   .iframe-title { color: white; font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 8px; }
   .iframe-close-btn { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-family: 'Zen Maru Gothic'; font-weight: 900; box-shadow: 0 4px 0 #b91c1c; cursor: pointer; }
   .iframe-close-btn:active { transform: translateY(4px); box-shadow: none; }
   #content-iframe { flex: 1; width: 100%; height: 100%; border: none; background: #f8fafc; }
-
   #stamp-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 500; display: none; justify-content: center; align-items: center; padding: 20px; }
   .stamp-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 360px; padding: 24px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: fadeUp 0.3s ease; }
   .stamp-box h2 { margin: 0 0 16px; color: #db2777; font-size: 20px; }
@@ -108,12 +94,11 @@
   .stamp-mark.anim { animation: stampIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
   @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   @keyframes stampIn { 0% { transform: scale(3) rotate(-20deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
-
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
   .q-text { font-size: 14.5px; font-weight: 700; line-height: 1.5; white-space: pre-wrap; margin: 0; }
-  
+
   /* チャット会話劇のスタイル */
   .chat-container { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; background: #f8fafc; padding: 12px; border-radius: 12px; border: 2px dashed #cbd5e1; }
   .chat-msg { display: flex; gap: 8px; align-items: flex-start; }
@@ -122,7 +107,6 @@
   .chat-bubble { background: #ffffff; padding: 10px 14px; border-radius: 14px; font-size: 13.5px; font-weight: 700; color: #334155; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.05); max-width: 85%; }
   .chat-msg.left .chat-bubble { border-top-left-radius: 4px; border: 2px solid #e2e8f0; }
   .chat-msg.right .chat-bubble { background: #dcfce7; border-top-right-radius: 4px; border: 2px solid #bbf7d0; }
-
   /* メディア表示領域（画像やCanvas） */
   #q-media-zone { display: flex; flex-direction: column; gap: 8px; }
   .q-image { max-width: 100%; border-radius: 12px; margin-bottom: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: 2px solid #cbd5e1; display: block; margin-left: auto; margin-right: auto; }
@@ -131,16 +115,15 @@
   .submit-btn { width: 100%; background: var(--lavender); color: white; border: none; padding: 14px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 16px; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #9333ea; transition: all 0.1s; }
   .submit-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #9333ea; }
   .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
   .choice-btn { width: 100%; background: var(--panel-bg); border: 2px solid var(--lavender-light); border-radius: 10px; padding: 10px; text-align: left; font-family: 'Zen Maru Gothic'; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 3px 0 rgba(74, 59, 82, 0.1); margin-bottom: 4px; }
   .choice-btn.wrong { border-color: #fca5a5; background: #fee2e2; color: #ef4444; box-shadow: none; } .choice-btn.correct { border-color: #86efac; background: #dcfce7; color: #15803d; box-shadow: none; }
-  
+
   .hint-lab-box { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
   .lab-code-area { background: #1e293b; color: #a3e635; font-family: 'JetBrains Mono', monospace; padding: 10px; border-radius: 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; margin-bottom: 8px; }
   .lab-input-box { width: 100%; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; border: 2px solid #cbd5e1; border-radius: 8px; text-align: center; margin-bottom: 8px; }
   .lab-run-btn { width: 100%; background: var(--gold); color: white; border: none; padding: 12px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14px; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #d97706; transition: all 0.1s; } .lab-run-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #d97706; }
-  
-  .action-row { display: flex; gap: 8px; flex-shrink: 0; padding: 4px 0 10px 0; width: 100%; } 
+
+  .action-row { display: flex; gap: 8px; flex-shrink: 0; padding: 4px 0 10px 0; width: 100%; }
   .action-btn { flex: 1; border: none; background: #94a3b8; color: white; padding: 16px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 15px; border-radius: 14px; cursor: pointer; box-shadow: 0 5px 0 #64748b; transition: all 0.1s; text-align: center; }
   .action-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #64748b; }
   .action-btn.nav-next { background: linear-gradient(135deg, var(--gold), #f59e0b); color: white; box-shadow: 0 5px 0 #b45309; font-size: 16px; flex: 2; }
@@ -148,7 +131,6 @@
 </style>
 </head>
 <body>
-
 <div id="login-modal">
   <div class="login-box">
     <h2 style="margin-top:0; color:#6b21a8; font-size:20px;">🌟 しゃちょうのなまえ</h2>
@@ -157,56 +139,47 @@
     <button class="login-btn" onclick="window.doLogin()">🚀 クラウドにログイン！</button>
   </div>
 </div>
-
 <div class="container">
   <header class="top" onclick="window.checkSecretTap()">
     <h1>ゆめかわ★学びアドベンチャー LAB Pro</h1>
     <p>ネット連動 ＆ お仕事シミュレーションプラットフォーム</p>
   </header>
-
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 0 4px;">
     <div style="font-weight:900; color:#6b21a8; font-size:14px;">👑 <span id="display-player-name">---</span> 社長</div>
     <button onclick="window.logout()" style="background:#e2e8f0; border:none; padding:6px 10px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow:0 2px 0 #cbd5e1;">🔄 アカウント切替</button>
   </div>
-
   <div class="status-board">
     <div class="stat-item"><div class="stat-label">現在のスコア</div><div class="stat-val" id="pts-val">0<span>pts</span></div></div>
     <div class="stat-item"><div class="stat-label">持ちトークン</div><div class="stat-val" id="q-val">0<span>Q</span></div></div>
     <div class="stat-item"><div class="stat-label">設計図の欠片</div><div class="stat-val" id="kakera-val" style="color:#0284c7;">0<span>🧩</span></div></div>
   </div>
-
   <div class="navi-box">
     <div class="navi-avatar">🤖</div>
     <div class="navi-text" id="navi-say">ハロー社長！データ通信が終わるまで少し待ってね！</div>
   </div>
-
   <div class="flex-row">
     <button class="btn-sm" onclick="window.openStampModal()">💮 ログインスタンプ</button>
     <button class="btn-sm" onclick="window.exchangePtsToQ()">🪙 20pts を 1Q に両替</button>
   </div>
-
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
     <div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">データ通信中...</div>
   </div>
-
   <div id="weak-attack-btn-banner" class="weak-attack-banner" onclick="window.launchWeakAttackLab()">
     💔 苦手撃破ラボに挑戦する！ (あと <span id="weak-count-badge">0</span> 問たまってるぞ) ⚡
   </div>
-
   <div id="treasure-island-container-el" class="treasure-banner">
     <div class="treasure-title" id="treasure-island-title-el">🏝️ 脳科学 ＆ ロジック天秤の「宝島」ショップ</div>
     <div class="treasure-desc" id="treasure-island-desc-el">
       クイズで集めた【🧩欠片】とトークンを両替して、強力なアイテムをクラフトしよう！<br>
       🎒 <b>リュックの容量：全アイテム合計で最大【10個】まで！</b>
     </div>
-    
+
     <div class="bag-container">
       <div id="bag-booster" class="bag-slot empty" onclick="window.useInventoryItem('booster')">🧪<div class="item-count" id="count-booster">0</div></div>
       <div id="bag-analyzer" class="bag-slot empty" onclick="window.useInventoryItem('analyzer')">🔍<div class="item-count" id="count-analyzer">0</div></div>
       <div id="bag-hourglass" class="bag-slot empty" onclick="window.useInventoryItem('hourglass')">⏰<div class="item-count" id="count-hourglass">0</div></div>
     </div>
-
     <div class="item-shop-grid" id="item-shop-grid-el">
       <div class="shop-card" onclick="window.buyShopItem('booster')">
         <span class="icon">🧪</span>
@@ -225,13 +198,10 @@
       </div>
     </div>
   </div>
-
   <nav class="subjects" id="subjects-nav">
     <div style="font-size:12px; color:#94a3b8;">教科データを読み込み中...</div>
   </nav>
-
   <div id="stage-maps-container"></div>
-
   <div class="acc-box" style="margin-top:12px;">
     <div class="acc-head" onclick="window.toggleAcc(this)">💸 ロバックス交換申請所 (お財布安心設計)</div>
     <div class="acc-body" style="text-align:center;">
@@ -240,7 +210,6 @@
       <button class="btn-sm" style="background:var(--lavender-light);" onclick="window.claimRobux(600, 170)">👑 600Q ➔ 170R$ 交換申請</button>
     </div>
   </div>
-
   <div class="admin-zone" id="admin-zone">
     <h4 style="margin:0 0 8px; color:#b91c1c;">👨 お父さん専用コントロール（機密）</h4>
     <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
@@ -254,9 +223,7 @@
       <button class="btn-sm" style="background:#e2e8f0;" onclick="window.closeAdmin()">閉じる</button>
     </div>
   </div>
-
-</div> 
-
+</div>
 <div id="briefing-modal">
   <div class="briefing-box">
     <div class="br-title" id="br-title">ミッション名</div>
@@ -267,7 +234,6 @@
     <button class="br-btn close" onclick="window.closeBriefing()">やめておく</button>
   </div>
 </div>
-
 <div id="iframe-modal">
   <div class="iframe-header">
     <div class="iframe-title"><span>🚀</span> <span id="iframe-title-text">学習・実験ルーム</span></div>
@@ -275,7 +241,6 @@
   </div>
   <iframe id="content-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
-
 <div id="stamp-modal">
   <div class="stamp-box">
     <h2>💮 ログインスタンプ帳</h2>
@@ -284,7 +249,6 @@
     <button class="br-btn close" onclick="window.closeStampModal()">とじる</button>
   </div>
 </div>
-
 <div id="game-screen">
   <div class="game-container">
     <div class="navi-box">
@@ -293,9 +257,9 @@
     </div>
     <div class="q-card" id="scroll-target-card">
       <p class="q-text" id="game-q-text">ここに問題文が入ります。</p>
-      
+
       <div id="q-media-zone"></div>
-      
+
       <hr style="border:0; border-top:1px solid var(--lavender-light); margin:12px 0; flex-shrink:0;">
       <div id="quiz-options-zone"></div>
       <div class="feedback-box" id="feedback-box" style="display:none;">
@@ -313,52 +277,41 @@
     </div>
   </div>
 </div>
-
 <script>
 window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyrlmIMhQVc9ptMvT2WWIXhNcme6l0E6ZQOYT0TV3wD0WIt59BORstHPvhIT1K3_2us/exec";
-window.TREASURE_ISLAND_SPAWN_CHANCE = 0.5; 
-
+window.TREASURE_ISLAND_SPAWN_CHANCE = 0.5;
 window.subjectDictionary = {
   japanese: { label: "📕国語", sub: "読解・漢字" }, math: { label: "📐算数", sub: "計算・実験" },
   science: { label: "🧪理科", sub: "回路・観察" }, society: { label: "🗺️社会", sub: "地図・記号" },
   english: { label: "💬英語", sub: "単語・会話" }, music: { label: "🎵音楽", sub: "リズム・音符" },
   programming: { label: "💻プロ", sub: "変数・ロジック" }
 };
-
 window.globalStageMaster = {};
-
 // 互換性維持のため初期値だけ残します
 window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "" };
-
-window.currentActiveSubject = "japanese"; 
+window.currentActiveSubject = "japanese";
 window.currentQIdx = 0; window.currentStage = null; window.currentQuestions = [];
 window.currentFirstTry = true; window.availableSubjects = [];
-
-window.bonusVideoUsed = false; window.bonusLabUsed = false; window.totalMistakes = 0; 
-window.activeBoostMultiplier = 1.0; 
+window.bonusVideoUsed = false; window.bonusLabUsed = false; window.totalMistakes = 0;
+window.activeBoostMultiplier = 1.0;
 window.tapCount = 0; window.tapTimer = null;
 window.playerId = localStorage.getItem("kids_lab_playerId") || "";
-
 window.weakAttackModeActive = false;
 window.currentWeakQuestionObj = null;
 window.weakInitialCountAtLaunch = 0;
 window.weakEarnedQInSession = 0;
-window.activeItemBuff = null; 
-
-window.currentActiveStageId = ""; 
+window.activeItemBuff = null;
+window.currentActiveStageId = "";
 window.currentActiveStageReward = 10;
 window.currentActiveStageIsReview = false;
 window.currentActiveStageIsMaster = false;
-
 window.currentServerTime = new Date().getTime();
-
 window.updateUI = function() {
   document.getElementById("pts-val").innerHTML = `${window.saveData.pts}<span>pts</span>`;
   document.getElementById("q-val").innerHTML = `${window.saveData.q}<span>Q</span>`;
   let displayKakera = window.saveData.kakera || 0;
   document.getElementById("kakera-val").innerHTML = `${displayKakera}<span>🧩</span>`;
 };
-
 window.updateInventoryUI = function() {
   if(!window.saveData.inventory) window.saveData.inventory = [];
   let counts = { booster: 0, analyzer: 0, hourglass: 0 };
@@ -372,7 +325,6 @@ window.updateInventoryUI = function() {
     }
   });
 };
-
 window.refreshIslandStatusUI = function() {
   const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
   if (window.saveData.islandStatusDate !== todayStr || !window.saveData.islandStatus) {
@@ -397,7 +349,6 @@ window.refreshIslandStatusUI = function() {
     shelf.style.display = "none";
   }
 };
-
 window.refreshWeakBanner = function() {
   const banner = document.getElementById("weak-attack-btn-banner");
   const countBadge = document.getElementById("weak-count-badge");
@@ -409,11 +360,9 @@ window.refreshWeakBanner = function() {
     banner.style.display = "none";
   }
 };
-
-window.closeIframeModal = function() { 
-  document.getElementById("content-iframe").src = ""; document.getElementById("iframe-modal").style.display = "none"; 
+window.closeIframeModal = function() {
+  document.getElementById("content-iframe").src = ""; document.getElementById("iframe-modal").style.display = "none";
 };
-
 window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
   if(!window.GAS_WEBAPP_URL) return;
   const payload = { action: action, playerId: window.playerId, timestamp: new Date().toLocaleString("ja-JP"), currentPts: window.saveData.pts, currentQ: window.saveData.q, currentRobux: window.saveData.robux, ...extraData };
@@ -423,17 +372,16 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
     if (res.timestamp) { window.currentServerTime = new Date(res.timestamp).getTime(); } else { window.currentServerTime = new Date().getTime(); }
     if (action === "LOAD" && res.status === "SUCCESS") {
       let incomingStages = res.stages || []; window.globalStageMaster = {}; let foundSubjects = new Set();
-      const specCont = document.getElementById("special-missions-container"); if(specCont) specCont.innerHTML = ""; 
+      const specCont = document.getElementById("special-missions-container"); if(specCont) specCont.innerHTML = "";
       if (res.mission && res.mission.desc) {
          const mCard = document.createElement("div"); mCard.style = "background: #faf5ff; border-left: 5px solid #d946ef; padding: 10px; border-radius: 8px;";
          mCard.innerHTML = `<div style="font-weight: bold; color: #701a75; margin-bottom: 4px;">👑 【${res.mission.status_text || '特別指令'}】 ${res.mission.desc}</div><div style="font-size:12px; color:#65a30d; font-weight:bold;">🎁 クリア報酬: ${res.mission.rewardQ || 0} Q</div>`; specCont.appendChild(mCard);
       } else { if(specCont) specCont.innerHTML = `<div style="text-align:center; padding:16px; color:#94a3b8; font-size:12px;">今月の特別指令はおやすみ中です.</div>`; }
-      
+
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
       if (window.saveData.lastLoopDate !== todayStr) { window.saveData.lastLoopDate = todayStr; window.saveData.dailyLoopCounts = {}; window.saveGame(); }
-
       incomingStages.forEach(stg => {
-        let sub = String(stg.subject || "japanese").toLowerCase().trim(); let cat = stg.category || "📝 パパ配信ステージ"; 
+        let sub = String(stg.subject || "japanese").toLowerCase().trim(); let cat = stg.category || "📝 パパ配信ステージ";
         if (!window.globalStageMaster[sub]) window.globalStageMaster[sub] = {}; if (!window.globalStageMaster[sub][cat]) window.globalStageMaster[sub][cat] = [];
         window.globalStageMaster[sub][cat].push(stg); foundSubjects.add(sub);
       });
@@ -442,7 +390,6 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
     }
   }).catch(e => { console.error("連動エラー:", e); window.renderSubjectsNav(); window.renderStageMaps(); });
 };
-
 window.performLogin = function(id) {
   const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ クラウドからセーブデータをよみこみ中...";
   document.getElementById("display-player-name").textContent = id;
@@ -462,13 +409,11 @@ window.performLogin = function(id) {
        if(!window.saveData.islandStatusDate) window.saveData.islandStatusDate = "";
        if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
        if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
-
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.syncWithGoogleSpreadsheet("LOAD");
     } else { alert("読み込みエラー: " + res.message); }
   })
   .catch(e => { window.loadGameLocal(); window.syncWithGoogleSpreadsheet("LOAD"); });
 };
-
 window.loadGameLocal = function() {
   const local = localStorage.getItem("kids_lab_v12_pro_" + window.playerId);
   if(local) { try { window.saveData = Object.assign(window.saveData, JSON.parse(local)); } catch(e){} }
@@ -476,17 +421,14 @@ window.loadGameLocal = function() {
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
-
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshIslandStatusUI();
 };
-
-window.saveGame = function() { 
+window.saveGame = function() {
   localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshIslandStatusUI();
   if (window.playerId) {
     fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SAVE", playerId: window.playerId, saveData: window.saveData }) }).catch(e => {});
   }
 };
-
 window.initApp = function() { if (!window.playerId) { document.getElementById("login-modal").style.display = "flex"; } else { window.performLogin(window.playerId); } };
 window.doLogin = function() {
   const input = document.getElementById("player-id-input").value.trim();
@@ -495,33 +437,27 @@ window.doLogin = function() {
   document.getElementById("login-modal").style.display = "none"; window.performLogin(window.playerId);
 };
 window.logout = function() { if(confirm("ログアウトして、別のアカウントに切り替えますか？")) { localStorage.removeItem("kids_lab_playerId"); location.reload(); } };
-
 window.openStampModal = function() {
   window.renderStampCard();
   document.getElementById("stamp-modal").style.display = "flex";
 };
 window.closeStampModal = function() { document.getElementById("stamp-modal").style.display = "none"; };
-
 window.renderStampCard = function() {
   const count = window.saveData.loginStampCount || 0;
-  const sd = new Date(window.currentServerTime); 
+  const sd = new Date(window.currentServerTime);
   const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
   const alreadyStampedToday = (window.saveData.lastStampDate === todayStr);
-
   const grid = document.getElementById("stamp-grid-el"); grid.innerHTML = "";
   for(let i=1; i<=7; i++) {
     const slot = document.createElement("div"); slot.className = "stamp-slot";
     if (i === 7) slot.classList.add("final");
-
     let mark = "";
-    if (i <= count) { slot.classList.add("stamped"); mark = i === 7 ? "👑" : "💮"; } 
+    if (i <= count) { slot.classList.add("stamped"); mark = i === 7 ? "👑" : "💮"; }
     else if (i === count + 1 && !alreadyStampedToday) { slot.classList.add("today"); }
-
-    let rewardText = i === 7 ? "🎁+2Q" : "🪙+1Q"; 
+    let rewardText = i === 7 ? "🎁+2Q" : "🪙+1Q";
     slot.innerHTML = `Day ${i}<br><span style="color:#ef4444; font-size:9px;">${rewardText}</span><span class="stamp-mark" id="stamp-mark-${i}">${mark}</span>`;
     grid.appendChild(slot);
   }
-
   const btn = document.getElementById("stamp-action-btn");
   if (alreadyStampedToday) {
     btn.textContent = "今日のスタンプは獲得済みだよ！"; btn.style.background = "#cbd5e1"; btn.style.boxShadow = "none"; btn.disabled = true;
@@ -529,48 +465,41 @@ window.renderStampCard = function() {
     btn.textContent = "💮 スタンプを押す！"; btn.style.background = "var(--gold)"; btn.style.boxShadow = "0 4px 0 #d97706"; btn.disabled = false;
   }
 };
-
 window.executeStamp = function() {
-  const sd = new Date(window.currentServerTime); 
+  const sd = new Date(window.currentServerTime);
   const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
   if (window.saveData.lastStampDate === todayStr) return;
-
   if (window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   window.saveData.loginStampCount++; window.saveData.lastStampDate = todayStr;
-  
+
   let isComplete = (window.saveData.loginStampCount >= 7);
-  let earnedQ = isComplete ? 2 : 1; 
-
+  let earnedQ = isComplete ? 2 : 1;
   window.saveData.q += earnedQ;
-
   const markEl = document.getElementById(`stamp-mark-${window.saveData.loginStampCount}`);
   if(markEl) { markEl.textContent = isComplete ? "👑" : "💮"; markEl.classList.add("anim"); document.getElementById("stamp-action-btn").disabled = true; }
   window.speakText("やったね", "ja-JP");
-
   setTimeout(() => {
     if (isComplete) {
       alert(`🎉 1週間スタンプコンプリート！\nよくがんばったね！ご褒美ボーナス【＋2Q】をゲットしたぞ！\n明日からまた新しいスタンプ帳がはじまるよ！`);
-      window.saveData.loginStampCount = 0; 
+      window.saveData.loginStampCount = 0;
     } else { alert(`💮 スタンプゲット！【＋1Q】\nあと ${7 - window.saveData.loginStampCount}回 でコンプリートボーナスだよ！`); }
     window.saveGame(); window.closeStampModal();
-  }, 800); 
+  }, 800);
 };
-
 window.buyShopItem = function(itemKey) {
   if (window.saveData.islandStatus !== "open") { alert("🤖 島が霧に包まれているため、今はクラフトできません！"); return; }
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if(window.saveData.inventory.length >= 10) { alert("🤖 【宝島のロボ警告】\nリュックがパンク寸前だ！アイテムは全部で【最大10個】までしか持てないよ！\nどれかを使ってからまたおいで！"); return; }
-  
+
   let qCost = 5; let kCost = 1; let name = "脳内ブースター";
   if(itemKey === 'analyzer') { qCost = 2; kCost = 1; name = "予言のレンズ"; }
   if(itemKey === 'hourglass') { qCost = 3; kCost = 1; name = "時空の砂時計"; }
-  
+
   let currentKakera = window.saveData.kakera || 0;
   if(window.saveData.q < qCost || currentKakera < kCost) { alert(`🤖 【素材不足】\n設計図の欠片🧩 やトークン🪙 が足りないぞ！\n・🪙${qCost}Q と 🧩${kCost}枚 が必要だよ！`); return; }
   window.saveData.q -= qCost; window.saveData.kakera = currentKakera - kCost; window.saveData.inventory.push(itemKey);
   window.speakText("クラフト成功", "ja-JP"); alert(`🏝️ 【宝島クラフト成功！】\n「${name}」を錬成したぞ！\n（現在の持ち物：${window.saveData.inventory.length} / 10個）`); window.saveGame();
 };
-
 window.useInventoryItem = function(itemKey) {
   let counts = { booster: 0, analyzer: 0, hourglass: 0 };
   if(window.saveData.inventory) { window.saveData.inventory.forEach(i => { if(counts[i] !== undefined) counts[i]++; }); }
@@ -581,7 +510,6 @@ window.useInventoryItem = function(itemKey) {
   if(itemKey==='hourglass') desc = "⏰【時空の砂時計】\n同じステージを連続で遊んだ時の「周回ペナルティ」を1回だけ踏み倒して、初期の満点ptsをもらえる砂時計！";
   alert(`💼 ポケットの中のアイテム（残り ${counts[itemKey]}個）：\n\n${desc}\n\n※このアイテムはクイズに挑戦した後に、画面に出てくる青い「✨アイテム使用」ボタンから発発動できるぞ！`);
 };
-
 window.exchangePtsToQ = function() { if(window.saveData.pts < 20) { alert("🪙 20pts必要です。"); return; } window.saveData.pts -= 20; window.saveData.q += 1; window.saveGame(); alert("🪙 両替しました！"); };
 window.claimRobux = function(qCost, rAmt) { if(window.saveData.q < qCost) { alert(`💸 あと ${qCost - window.saveData.q}Q 必要です！`); return; } window.saveData.q -= qCost; window.saveData.robux += rAmt; window.saveGame(); alert("🎟️ 交換申請完了！"); window.syncWithGoogleSpreadsheet("CLAIM", { robux: rAmt, cost: qCost }); };
 window.toggleAcc = function(el) { el.nextElementSibling.classList.toggle("open"); };
@@ -591,23 +519,21 @@ window.adminResetRobux = function() { window.saveData.robux = 0; window.saveGame
 window.adminClearAll = function() { if(confirm("⚠️ クラウドを含む全データを消去して初期化しますか？")) { localStorage.clear(); location.reload(); } };
 window.closeAdmin = function() { document.getElementById("admin-zone").style.display = "none"; };
 window.speakText = function(txt, lang = 'ja-JP') { if (!window.speechSynthesis) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = lang; u.rate = 0.85; window.speechSynthesis.speak(u); };
-
-window.openHybridContent = function(url, title, isCleared) { 
-  if (!url) return; const targetUrl = url.trim(); 
-  const isExternalBlockSite = targetUrl.includes("youtube.com") || targetUrl.includes("youtu.be") || targetUrl.includes("nhk.or.jp") || targetUrl.includes("http://") || targetUrl.includes("https://"); 
-  const isLocalFile = targetUrl.startsWith("./"); 
-  if (isExternalBlockSite && !isLocalFile) { 
-    if (!isCleared) { window.bonusVideoUsed = true; } 
-    alert(`🚀 「${title}」のページを、新しい大きなタブでひらきます！\nしっかりお勉強して戻ってきてね！`); window.open(targetUrl, "_blank"); 
-  } else { 
-    if (!isCleared) { window.bonusLabUsed = true; } 
-    document.getElementById("iframe-title-text").textContent = title; document.getElementById("content-iframe").src = targetUrl; document.getElementById("iframe-modal").style.display = "flex"; 
-  } 
+window.openHybridContent = function(url, title, isCleared) {
+  if (!url) return; const targetUrl = url.trim();
+  const isExternalBlockSite = targetUrl.includes("youtube.com") || targetUrl.includes("youtu.be") || targetUrl.includes("nhk.or.jp") || targetUrl.includes("http://") || targetUrl.includes("https://");
+  const isLocalFile = targetUrl.startsWith("./");
+  if (isExternalBlockSite && !isLocalFile) {
+    if (!isCleared) { window.bonusVideoUsed = true; }
+    alert(`🚀 「${title}」のページを、新しい大きなタブでひらきます！\nしっかりお勉強して戻ってきてね！`); window.open(targetUrl, "_blank");
+  } else {
+    if (!isCleared) { window.bonusLabUsed = true; }
+    document.getElementById("iframe-title-text").textContent = title; document.getElementById("content-iframe").src = targetUrl; document.getElementById("iframe-modal").style.display = "flex";
+  }
 };
-
 window.renderSubjectsNav = function() {
   const nav = document.getElementById("subjects-nav"); if(!nav) return; nav.innerHTML = "";
-  if(window.availableSubjects.length === 0) window.availableSubjects = ["japanese"]; 
+  if(window.availableSubjects.length === 0) window.availableSubjects = ["japanese"];
   if(!window.availableSubjects.includes(window.currentActiveSubject)) window.currentActiveSubject = window.availableSubjects[0];
   window.availableSubjects.forEach(sub => {
     const meta = window.subjectDictionary[sub] || { label: "🌟" + sub.toUpperCase(), sub: "新教科" };
@@ -615,14 +541,12 @@ window.renderSubjectsNav = function() {
     btn.id = `btn-${sub}`; btn.onclick = () => window.switchSubject(sub); btn.innerHTML = `${meta.label}<small>${meta.sub}</small>`; nav.appendChild(btn);
   });
 };
-
 window.switchSubject = function(s) { window.currentActiveSubject = s; document.querySelectorAll('.subjects .tab-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); }); window.renderStageMaps(); };
-
 window.renderStageMaps = function() {
   const container = document.getElementById("stage-maps-container"); if (!container) return; container.innerHTML = "";
   const sub = window.currentActiveSubject; const panel = document.createElement("section"); panel.className = "panel subject-panel active";
   const categories = Object.keys(window.globalStageMaster[sub] || {});
-  
+
   if (categories.length === 0) {
     panel.innerHTML = `<div style="text-align:center; padding:32px 10px; color:var(--text-soft); font-size:14px; font-weight:700;">🌟 この教科のステージは準備中だよ！</div>`;
   } else {
@@ -631,16 +555,14 @@ window.renderStageMaps = function() {
       let rawStages = window.globalStageMaster[sub][cat]; let normalStages = []; let masterStages = [];
       rawStages.forEach(stg => { let isMaster = (window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= 3); if (isMaster) masterStages.push(stg); else normalStages.push(stg); });
       let sortedStages = [...normalStages, ...masterStages];
-
       sortedStages.forEach(stg => {
         const card = document.createElement("div"); card.className = "stage-card";
         const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
         let isReview = false; let isMaster = false;
-        
+
         let stgRewardStr = (stg.reward !== undefined && stg.reward !== "") ? Number(stg.reward) : 10;
         let statusHtml = `<span style="font-size:12px; font-weight:700; color:var(--text-soft);">${stgRewardStr}Q</span>`;
         if (stg.id && window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= 3) isMaster = true;
-
         if (isCleared) {
           if (isMaster) {
             statusHtml = `<span style="font-size:12px; font-weight:900; color:#d97706; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fcd34d;">🏆 MASTER</span>`;
@@ -648,7 +570,7 @@ window.renderStageMaps = function() {
             statusHtml = `<span style="font-size:12px; font-weight:700; color:#94a3b8;">済</span>`;
             if (window.saveData.reviewDates && window.saveData.reviewDates[stg.id]) {
               const passedDays = (window.currentServerTime - window.saveData.reviewDates[stg.id]) / (1000 * 60 * 60 * 24);
-              if (passedDays >= 1.0) { 
+              if (passedDays >= 1.0) {
                 isReview = true; statusHtml = `<span style="font-size:12px; font-weight:900; color:#10b981; background:#d1fae5; padding:4px 8px; border-radius:12px;">🔄 復習 ${Math.floor(stgRewardStr/2)}Q</span>`;
               } else {
                 const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
@@ -659,11 +581,10 @@ window.renderStageMaps = function() {
             }
           }
         }
-        
-        if (!stg.id || String(stg.id).trim() === "") { 
-          statusHtml = `<span style="font-size:12px; font-weight:900; color:#0284c7; background:#e0f2fe; padding:4px 8px; border-radius:12px;">🔬 実験専用</span>`; 
-        }
 
+        if (!stg.id || String(stg.id).trim() === "") {
+          statusHtml = `<span style="font-size:12px; font-weight:900; color:#0284c7; background:#e0f2fe; padding:4px 8px; border-radius:12px;">🔬 実験専用</span>`;
+        }
         card.innerHTML = `<div class="stage-left"><span class="stage-icon">${isMaster ? '👑' : '🌟'}</span><span class="stage-title">${stg.name}</span></div>${statusHtml}`;
         card.onclick = () => { stg.isReview = isReview; stg.isMaster = isMaster; window.openBriefing(stg); }; panel.appendChild(card);
       });
@@ -671,35 +592,34 @@ window.renderStageMaps = function() {
   }
   container.appendChild(panel);
 };
-
 window.openBriefing = function(stg) {
   window.currentStage = stg; window.bonusVideoUsed = false; window.bonusLabUsed = false; document.getElementById("br-title").textContent = stg.name;
   const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
-  
+
   let stgReward = (stg.reward !== undefined && stg.reward !== "") ? Number(stg.reward) : 10;
   let baseReward = isCleared ? 2 : stgReward;
-  
-  if (stg.isMaster) { baseReward = 0; } 
-  else if (stg.isReview) { baseReward = Math.floor(stgReward / 2); } 
+
+  if (stg.isMaster) { baseReward = 0; }
+  else if (stg.isReview) { baseReward = Math.floor(stgReward / 2); }
   else if (isCleared) {
     const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
     if (stg.id && window.saveData.lastLoopDate === todayStr && window.saveData.dailyLoopCounts && window.saveData.dailyLoopCounts[stg.id] >= 3) { baseReward = 0; }
   }
-  
+
   let rewardText = `基本クリア報酬: ${baseReward} Q`;
   if (stg.isMaster) rewardText += " (🏆 殿堂入りステージ)";
   else if (stg.isReview) rewardText += " (🔄 復習ボーナス!)";
   else if (isCleared && baseReward === 0) rewardText += " (⚠️ 本日上限到達)";
-  
+
   if (!stg.id || String(stg.id).trim() === "") {
      rewardText = "🔬 このステージは観察・実験専用のステージだよ！";
   }
   document.getElementById("br-reward").textContent = rewardText;
-  
+
   const bZone = document.getElementById("br-buttons-zone"); if(!bZone) return; bZone.innerHTML = "";
-  
+
   if (stg.video_url) {
-    const vBtn = document.createElement("button"); vBtn.className = "br-btn video"; 
+    const vBtn = document.createElement("button"); vBtn.className = "br-btn video";
     let isYoutubeOrNhk = stg.video_url.includes("youtube") || stg.video_url.includes("youtu.be") || stg.video_url.includes("nhk.or.jp");
     let btnText = isYoutubeOrNhk ? "📺 動画サイトをひらく (別タブ)" : "📺 アプリ内でビデオを見る";
     if (!isCleared && stg.id) btnText += " (クリアボーナス発生!)"; else btnText += " (あそぶ)";
@@ -707,9 +627,9 @@ window.openBriefing = function(stg) {
     vBtn.onclick = () => { window.openHybridContent(stg.video_url, "学習動画・外部サイト", isCleared); };
     bZone.appendChild(vBtn);
   }
-  
+
   if (stg.lab_url) {
-    const lBtn = document.createElement("button"); lBtn.className = "br-btn lab"; 
+    const lBtn = document.createElement("button"); lBtn.className = "br-btn lab";
     let isLocalHtml = stg.lab_url.startsWith("./");
     let btnText = isLocalHtml ? "🔬 実験室を開く (アプリ内)" : "🔬 実験室リンクを開く (別タブ)";
     if (!isCleared && stg.id) btnText += " (満点ボーナス発生!)"; else btnText += " (あそぶ)";
@@ -717,18 +637,17 @@ window.openBriefing = function(stg) {
     lBtn.onclick = () => { window.openHybridContent(stg.lab_url, "本格実験ラボ", isCleared); };
     bZone.appendChild(lBtn);
   }
-  
+
   const startBtn = document.getElementById("br-start-btn");
   if (!stg.id || String(stg.id).trim() === "") {
      startBtn.style.display = "none";
   } else {
      startBtn.style.display = "block";
   }
-  
+
   document.getElementById("briefing-modal").style.display = "flex";
 };
 window.closeBriefing = function() { document.getElementById("briefing-modal").style.display = "none"; };
-
 window.launchQuest = function() {
   window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0;
   window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
@@ -736,12 +655,11 @@ window.launchQuest = function() {
   window.currentActiveStageReward = (window.currentStage.reward !== undefined && window.currentStage.reward !== "") ? Number(window.currentStage.reward) : 10;
   window.currentActiveStageIsReview = window.currentStage.isReview || false;
   window.currentActiveStageIsMaster = window.currentStage.isMaster || false;
-
   const oldScript = document.getElementById("dynamic-quiz-script"); if(oldScript) oldScript.remove();
-  const script = document.createElement("script"); script.id = "dynamic-quiz-script"; 
-  
+  const script = document.createElement("script"); script.id = "dynamic-quiz-script";
+
   script.src = `./${window.currentStage.id}.js?v=${new Date().getTime()}`;
-  
+
   script.onload = () => {
     if(!window.quizPool || window.quizPool.length === 0) { alert("問題データが空っぽです！"); return; }
     window.currentQuestions = [...window.quizPool].sort(() => Math.random() - 0.5).slice(0, 10);
@@ -752,89 +670,83 @@ window.launchQuest = function() {
   script.onerror = () => { if(confirm(`【エラー】ファイル「${window.currentStage.id}.js」が見つかりません。\nスプレッドシートのidや、フォルダ名が合っているか確認してね！\n\n※このままスキップして強制クリア扱いにしますか？`)) { window.triggerForcedClear(); } };
   document.body.appendChild(script);
 };
-
 // 苦手撃破ラボの階層フォルダ対応＆自動ファイル取得機能
 window.launchWeakAttackLab = function() {
-  if (!window.saveData.weakQuestions || window.saveData.weakQuestions.length === 0) { 
-    alert("🤖 にがて問題は1つも溜まっていないよ！パーフェクト大社長だね！"); 
-    return; 
+  if (!window.saveData.weakQuestions || window.saveData.weakQuestions.length === 0) {
+    alert("🤖 にがて問題は1つも溜まっていないよ！パーフェクト大社長だね！");
+    return;
   }
-
   let firstWeakId = window.saveData.weakQuestions[0];
-  let stageId = firstWeakId.split('_q_')[0]; 
-  
-  window.weakAttackModeActive = true; 
-  window.totalMistakes = 0; 
-  window.weakInitialCountAtLaunch = window.saveData.weakQuestions.length; 
+  let stageId = firstWeakId.split('_q_')[0];
+
+  window.weakAttackModeActive = true;
+  window.totalMistakes = 0;
+  window.weakInitialCountAtLaunch = window.saveData.weakQuestions.length;
   window.weakEarnedQInSession = 0;
-  window.activeItemBuff = null; 
+  window.activeItemBuff = null;
   window.activeBoostMultiplier = 1.0;
   window.currentActiveStageId = stageId;
-
   document.getElementById("game-hint-text").textContent = "🧬 苦手撃破ラボ：データ通信中...";
   document.getElementById("game-screen").style.display = "block";
-
   const oldScript = document.getElementById("dynamic-quiz-script"); if(oldScript) oldScript.remove();
-  const script = document.createElement("script"); script.id = "dynamic-quiz-script"; 
+  const script = document.createElement("script"); script.id = "dynamic-quiz-script";
   script.src = `./${stageId}.js?v=${new Date().getTime()}`;
-  
+
   script.onload = () => {
-    if(!window.quizPool || window.quizPool.length === 0) { 
-      alert("問題データの読み込みに失敗しました！"); window.quitQuest(); return; 
+    if(!window.quizPool || window.quizPool.length === 0) {
+      alert("問題データの読み込みに失敗しました！"); window.quitQuest(); return;
     }
-    
+
     document.getElementById("game-hint-text").textContent = "🧬 苦手撃破ラボ：弱点を克服してトークンを両替しよう！";
-    
-    let allPoolMap = {}; 
+
+    let allPoolMap = {};
     window.quizPool.forEach((q, i) => { allPoolMap[`${stageId}_q_${i}`] = q; });
-    
+
     let targetWeakList = [];
-    window.saveData.weakQuestions.forEach(weakId => { 
-       if (allPoolMap[weakId]) { 
-          let qObj = Object.assign({}, allPoolMap[weakId]); 
-          qObj.isRealWeak = true; 
-          qObj.rawWeakId = weakId; 
+    window.saveData.weakQuestions.forEach(weakId => {
+       if (allPoolMap[weakId]) {
+          let qObj = Object.assign({}, allPoolMap[weakId]);
+          qObj.isRealWeak = true;
+          qObj.rawWeakId = weakId;
           qObj._originStgId = stageId;
-          targetWeakList.push(qObj); 
-       } 
+          targetWeakList.push(qObj);
+       }
     });
-    
+
     if (targetWeakList.length > 0 && targetWeakList.length < 3 && window.quizPool.length > targetWeakList.length) {
-      let currentRealWeakObj = targetWeakList[0]; 
-      let shuffledDummys = [...window.quizPool].sort(() => Math.random() - 0.5); 
+      let currentRealWeakObj = targetWeakList[0];
+      let shuffledDummys = [...window.quizPool].sort(() => Math.random() - 0.5);
       shuffledDummys = shuffledDummys.filter(q => q.q !== currentRealWeakObj.q).slice(0, 3 - targetWeakList.length);
-      shuffledDummys.forEach((dq, idx) => { 
-        let fakeWeakObj = Object.assign({}, dq, { isRealWeak: false, rawWeakId: `dummy_fade_${idx}` }); 
-        targetWeakList.push(fakeWeakObj); 
+      shuffledDummys.forEach((dq, idx) => {
+        let fakeWeakObj = Object.assign({}, dq, { isRealWeak: false, rawWeakId: `dummy_fade_${idx}` });
+        targetWeakList.push(fakeWeakObj);
       });
     }
-    
+
     if (targetWeakList.length === 0) {
        alert("🤖 対象の苦手データが見つからなかったよ！"); window.quitQuest(); return;
     }
+    window.currentQuestions = targetWeakList.sort(() => Math.random() - 0.5);
+    window.currentQIdx = 0;
 
-    window.currentQuestions = targetWeakList.sort(() => Math.random() - 0.5); 
-    window.currentQIdx = 0; 
-    
-    if(window.saveData.inventory && window.saveData.inventory.length >= 1) { 
-      document.getElementById("item-use-in-game-btn").style.display = "block"; 
-    } else { 
-      document.getElementById("item-use-in-game-btn").style.display = "none"; 
+    if(window.saveData.inventory && window.saveData.inventory.length >= 1) {
+      document.getElementById("item-use-in-game-btn").style.display = "block";
+    } else {
+      document.getElementById("item-use-in-game-btn").style.display = "none";
     }
-    
+
     window.showQuestionStep();
   };
-  
-  script.onerror = () => { 
-    alert(`🤖 【エラー】元の問題ファイル（${stageId}.js）が見つからないぞ！\nファイル名が変わったか削除されたみたい。この苦手データは古いのでリストから消去するね。`); 
+
+  script.onerror = () => {
+    alert(`🤖 【エラー】元の問題ファイル（${stageId}.js）が見つからないぞ！\nファイル名が変わったか削除されたみたい。この苦手データは古いのでリストから消去するね。`);
     window.saveData.weakQuestions = window.saveData.weakQuestions.filter(id => !id.startsWith(stageId + '_q_'));
     window.saveGame();
     window.quitQuest();
   };
-  
+
   document.body.appendChild(script);
 };
-
 window.triggerItemInGame = function() {
   if(!window.saveData.inventory || window.saveData.inventory.length === 0) { alert("🤖 アイテムを持っていないぞ！"); return; }
   let counts = { booster: 0, analyzer: 0, hourglass: 0 };
@@ -843,7 +755,7 @@ window.triggerItemInGame = function() {
   if(counts.booster > 0) optionsText += `【1】: 🧪脳内ブースター (残り${counts.booster}個)\n`;
   if(counts.analyzer > 0) optionsText += `【2】: 🔍予言のレンズ (残り${counts.analyzer}個)\n`;
   if(counts.hourglass > 0) optionsText += `【3】: ⏰時空の砂時計 (残り${counts.hourglass}個)\n`;
-  
+
   let choice = prompt(optionsText + "\n使いたいアイテムの番号（1〜3）を半角でいれてね！やめる場合はキャンセルを押してね。");
   if(!choice) return;
   let idx = parseInt(choice, 10); let itemKey = "";
@@ -851,12 +763,11 @@ window.triggerItemInGame = function() {
   else if(idx === 2 && counts.analyzer > 0) itemKey = 'analyzer';
   else if(idx === 3 && counts.hourglass > 0) itemKey = 'hourglass';
   else { alert("🤖 番号が違うか、そのアイテムは持っていないみたいだ！"); return; }
-  
+
   let removeIdx = window.saveData.inventory.indexOf(itemKey);
   if(removeIdx > -1) { window.saveData.inventory.splice(removeIdx, 1); }
   window.updateInventoryUI();
   if(window.saveData.inventory.length === 0) { document.getElementById("item-use-in-game-btn").style.display = "none"; }
-
   if(itemKey === 'booster') { window.activeBoostMultiplier = 2.0; alert("🧪 【脳内ブースター発動！】\nロボナビ「キピーーーン！このステージをクリアした時のQトークン報酬が【2倍】にブーストされる！」"); }
   else if(itemKey === 'analyzer') {
     alert("🔍 【予言のレンズ発動！】\nハズレの選択肢を1つ、光のレーザーで消去するぞ！");
@@ -872,22 +783,20 @@ window.triggerItemInGame = function() {
   else if(itemKey === 'hourglass') { window.activeItemBuff = 'hourglass'; alert("⏰ 【時空の砂時計発動！】\n時間を巻き戻し、今日の周回ペナルティによる減衰を1回だけ無効化（100%のptsを獲得）にするぞ！"); }
   window.saveGame();
 };
-
 window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
-  
-  if (window.currentQIdx >= window.currentQuestions.length) { window.exitToMainMenu(); return; }
 
+  if (window.currentQIdx >= window.currentQuestions.length) { window.exitToMainMenu(); return; }
   const current = window.currentQuestions[window.currentQIdx]; window.currentWeakQuestionObj = current;
   let qNumberStr = window.weakAttackModeActive ? `にがて復元Q.${window.currentQIdx+1}` : `Q.${window.currentQIdx+1}`;
-  document.getElementById("game-q-text").textContent = `【${qNumberStr}】\n${current.q ? current.q.replace(/【Q\.\d+】/g, '') : ""}`; 
+  document.getElementById("game-q-text").textContent = `【${qNumberStr}】\n${current.q ? current.q.replace(/【Q\.\d+】/g, '') : ""}`;
   document.getElementById("game-hint-text").textContent = current.hint || "よく読んで考えてみてね！";
   if (current.speech_text) { window.speakText(current.speech_text, window.currentStage && window.currentStage.id.toLowerCase().includes("eng") ? 'en-US' : 'ja-JP'); }
-  
+
   // チャット会話劇の表示処理
   const oldChatZone = document.getElementById("q-chat-zone");
   if (oldChatZone) oldChatZone.remove();
-  
+
   if (current.scenario && current.scenario.length > 0) {
     const chatZone = document.createElement("div");
     chatZone.id = "q-chat-zone";
@@ -906,7 +815,6 @@ window.showQuestionStep = function() {
     });
     document.getElementById("game-q-text").after(chatZone);
   }
-
   const mediaZone = document.getElementById("q-media-zone");
   mediaZone.innerHTML = "";
   if (current.image_url) {
@@ -918,9 +826,8 @@ window.showQuestionStep = function() {
     try { let drawFunc = new Function('ctx', 'canvas', current.canvas_code); drawFunc(ctx, canvas); } catch(e) { console.error("Canvas描画エラー", e); }
     mediaZone.appendChild(canvas);
   }
-  
-  const zone = document.getElementById("quiz-options-zone"); zone.innerHTML = "";
 
+  const zone = document.getElementById("quiz-options-zone"); zone.innerHTML = "";
   if (current.code_experiment) {
     const exp = current.code_experiment;
     const labBox = document.createElement("div"); labBox.className = "hint-lab-box"; labBox.innerHTML = `<div style="font-size:13px; font-weight:900; color:#334155; margin-bottom:8px;">🔬 プチラボ：数値を打ち込んで実験！</div>`;
@@ -936,36 +843,33 @@ window.showQuestionStep = function() {
     };
     labBox.appendChild(runBtn); zone.appendChild(labBox);
   }
-
   if (current.type === "text_input") {
     const inputBox = document.createElement("input");
     inputBox.type = "text"; inputBox.className = "free-text-input"; inputBox.placeholder = "ここに入力してね";
     zone.appendChild(inputBox);
-
     const submitBtn = document.createElement("button");
     submitBtn.className = "submit-btn"; submitBtn.textContent = "これでこたえる！";
-    
+
     const passBtn = document.createElement("button");
     passBtn.className = "btn-sm";
     passBtn.style.cssText = "width: 100%; background: #e2e8f0; color: #64748b; margin-top: 8px; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 3px 0 #cbd5e1;";
     passBtn.textContent = "💡 わからない（パスして答えを見る）";
     passBtn.onclick = () => {
       passBtn.style.transform = "translateY(3px)"; passBtn.style.boxShadow = "none";
-      window.triggerWrongAnswer(current); 
+      window.triggerWrongAnswer(current);
       submitBtn.disabled = true; passBtn.disabled = true;
-      window.triggerPassAnswer(current);  
+      window.triggerPassAnswer(current);
     };
-
     submitBtn.onclick = () => {
       let val = inputBox.value.trim().replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
       let isCorrect = (current.correct_answers || []).some(ans => String(ans).trim() === val);
-      
+
       if (isCorrect) {
         submitBtn.style.background = "#15803d"; submitBtn.style.boxShadow = "none"; submitBtn.textContent = "✨ 大正解！";
         passBtn.style.display = "none"; window.speakText("まる！大正解！", "ja-JP"); window.triggerCorrectAnswer(current);
       } else {
         submitBtn.style.background = "#ef4444"; submitBtn.style.boxShadow = "none"; submitBtn.textContent = "❌ ざんねん！";
-        window.triggerWrongAnswer(current); 
+        window.triggerWrongAnswer(current);
         submitBtn.disabled = true;
         setTimeout(() => {
           submitBtn.style.background = "var(--lavender)"; submitBtn.style.boxShadow = "0 4px 0 #9333ea"; submitBtn.textContent = "これでこたえる！";
@@ -974,7 +878,6 @@ window.showQuestionStep = function() {
       }
     };
     zone.appendChild(submitBtn); zone.appendChild(passBtn);
-
   } else if (current.a && current.a.length > 0) {
     let opts = current.a.map((txt, idx) => ({ txt, originalIdx: idx })).sort(() => Math.random() - 0.5);
     opts.forEach(o => {
@@ -983,19 +886,18 @@ window.showQuestionStep = function() {
     });
   } else { const passBtn = document.createElement("button"); passBtn.className = "choice-btn correct"; passBtn.textContent = "✨ 実験に成功したらここを押して次へ！"; passBtn.onclick = () => { window.triggerCorrectAnswer(current); }; zone.appendChild(passBtn); }
 };
-
 window.triggerWrongAnswer = function(current) {
-  window.currentFirstTry = false; 
-  window.totalMistakes++; 
-  
+  window.currentFirstTry = false;
+  window.totalMistakes++;
+
   if (current.type === "text_input" && window.totalMistakes >= 2 && current.rescue_hint) {
     document.getElementById("game-hint-text").textContent = `🆘 救済システム作動！：${current.rescue_hint}`;
   } else {
-    document.getElementById("game-hint-text").textContent = `❌ ナビ助言：${current.hint}`; 
+    document.getElementById("game-hint-text").textContent = `❌ ナビ助言：${current.hint}`;
   }
-  
+
   window.speakText("ざんねん！", "ja-JP");
-  
+
   if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
      let weakId = `${window.currentActiveStageId}_q_${window.currentQIdx}`;
@@ -1003,17 +905,15 @@ window.triggerWrongAnswer = function(current) {
      if (!window.saveData.weakQuestions.includes(weakId)) { window.saveData.weakQuestions.push(weakId); window.saveGame(); }
   }
 };
-
 window.triggerPassAnswer = function(current) {
   window.speakText("正解を教えるね", "ja-JP");
   document.getElementById("job-title").textContent = "💡 答えと解説";
-  
+
   let ansText = current.correct_answers ? current.correct_answers.join(" または ") : "";
   let processedDesc = `<span style='color:#ef4444; font-weight:bold; font-size:15px;'>【正解： ${ansText} 】</span><br><br>` + (current.job_desc || "").replace(/\n/g, "<br>");
-  
+
   const jobDescEl = document.getElementById("job-desc");
   jobDescEl.innerHTML = processedDesc;
-
   if (current.explain_image_url) {
     let eImg = document.createElement("img"); eImg.src = current.explain_image_url; eImg.style.cssText = "max-width:100%; border-radius:8px; margin-top:12px; border:2px solid #cbd5e1;"; jobDescEl.appendChild(eImg);
   } else if (current.explain_canvas_code) {
@@ -1022,16 +922,14 @@ window.triggerPassAnswer = function(current) {
     try { let drawFunc = new Function('ctx', 'canvas', current.explain_canvas_code); drawFunc(eCtx, eCan); } catch(e) { console.error("解説Canvasエラー", e); }
     jobDescEl.appendChild(eCan);
   }
+  const nextBtn = document.getElementById("next-btn");
+  nextBtn.innerHTML = window.weakAttackModeActive && window.currentQIdx >= window.currentQuestions.length - 1 ? "🏠 メニューにもどる" : "つぎへ進む 🎀";
+  nextBtn.className = "action-btn nav-next";
+  document.getElementById("feedback-box").style.display = "block";
+  nextBtn.style.display = "block";
 
-  const nextBtn = document.getElementById("next-btn"); 
-  nextBtn.innerHTML = window.weakAttackModeActive && window.currentQIdx >= window.currentQuestions.length - 1 ? "🏠 メニューにもどる" : "つぎへ進む 🎀"; 
-  nextBtn.className = "action-btn nav-next"; 
-  document.getElementById("feedback-box").style.display = "block"; 
-  nextBtn.style.display = "block"; 
-  
-  setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400); 
+  setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
 };
-
 window.triggerCorrectAnswer = function(current) {
   let finalEarnedQ = 0; let finalEarnedPts = 5;
   if (window.weakAttackModeActive) {
@@ -1049,7 +947,7 @@ window.triggerCorrectAnswer = function(current) {
      }
   } else {
     const isCleared = (window.currentStage.id) ? window.saveData.clearedStages[window.currentStage.id] : false;
-    let basePts = window.currentFirstTry ? 10 : 5; 
+    let basePts = window.currentFirstTry ? 10 : 5;
     if(window.activeItemBuff === 'hourglass') { basePts = 10; }
     if (window.currentStage.isMaster) { basePts = 0; finalEarnedPts = 0; window.saveData.pts += basePts; } else if (isCleared && !window.currentStage.isReview && window.activeItemBuff !== 'hourglass') {
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
@@ -1057,9 +955,9 @@ window.triggerCorrectAnswer = function(current) {
       let penalty = n * n; let finalPts = basePts - penalty; if (finalPts < 0) finalPts = 0; finalEarnedPts = finalPts; window.saveData.pts += finalPts;
     } else {
       let stgReward = (window.currentStage.reward !== undefined && window.currentStage.reward !== "") ? Number(window.currentStage.reward) : 10;
-      finalEarnedQ = isCleared ? 2 : stgReward; 
+      finalEarnedQ = isCleared ? 2 : stgReward;
       let isPerfectForDisplay = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
-      if (isPerfectForDisplay) { finalEarnedQ += 5; } 
+      if (isPerfectForDisplay) { finalEarnedQ += 5; }
       finalEarnedQ = Math.floor(finalEarnedQ * window.activeBoostMultiplier); finalEarnedPts = basePts; window.saveData.pts += basePts;
     }
     document.getElementById("job-title").textContent = current.job_title || "クリア！";
@@ -1068,10 +966,9 @@ window.triggerCorrectAnswer = function(current) {
     }
     let processedDesc = (current.job_desc || "").replace(/\n/g, "<br>");
     processedDesc = processedDesc.replace(/\b[1-9]\d*Q\b/gi, `${finalEarnedQ}Q`); processedDesc = processedDesc.replace(/\b[1-9]\d*pt(s)?\b/gi, `${finalEarnedPts}pts`);
-    
+
     const jobDescEl = document.getElementById("job-desc");
     jobDescEl.innerHTML = processedDesc;
-
     if (current.explain_image_url) {
       let eImg = document.createElement("img"); eImg.src = current.explain_image_url; eImg.style.cssText = "max-width:100%; border-radius:8px; margin-top:12px; border:2px solid #cbd5e1;"; jobDescEl.appendChild(eImg);
     } else if (current.explain_canvas_code) {
@@ -1083,50 +980,44 @@ window.triggerCorrectAnswer = function(current) {
   }
   const nextBtn = document.getElementById("next-btn"); nextBtn.innerHTML = window.weakAttackModeActive && window.currentQIdx >= window.currentQuestions.length - 1 ? "🏠 メニューにもどる" : "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next"; document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block"; setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400); window.saveGame();
 };
-
 window.nextQuestStep = function() { window.currentQIdx++; window.showQuestionStep(); };
-
 window.exitToMainMenu = function() {
     if (window.weakAttackModeActive) { window.saveGame(); alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`); window.weakAttackModeActive = false; window.quitQuest(); return; }
     let targetStageId = window.currentActiveStageId;
     if (!targetStageId) { window.quitQuest(); return; }
-
     let isCleared = window.saveData.clearedStages[targetStageId];
     let baseReward = isCleared ? 2 : window.currentActiveStageReward;
-    if (window.currentActiveStageIsMaster) { baseReward = 0; } else if (window.currentActiveStageIsReview) { baseReward = Math.floor(window.currentActiveStageReward / 2); } 
+    if (window.currentActiveStageIsMaster) { baseReward = 0; } else if (window.currentActiveStageIsReview) { baseReward = Math.floor(window.currentActiveStageReward / 2); }
     if (isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster) {
       if (!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
       if (window.saveData.lastLoopDate !== todayStr) { window.saveData.lastLoopDate = todayStr; window.saveData.dailyLoopCounts = {}; }
       if (!window.saveData.dailyLoopCounts[targetStageId]) window.saveData.dailyLoopCounts[targetStageId] = 0;
       window.saveData.dailyLoopCounts[targetStageId]++;
-      if (window.saveData.dailyLoopCounts[targetStageId] > 3) baseReward = 0; 
+      if (window.saveData.dailyLoopCounts[targetStageId] > 3) baseReward = 0;
     }
-    
-    let vBonus = (window.bonusVideoUsed && !isCleared) ? 5 : 0; let lBonus = (window.bonusLabUsed && window.totalMistakes === 0 && !isCleared) ? 15 : 0; 
+
+    let vBonus = (window.bonusVideoUsed && !isCleared) ? 5 : 0; let lBonus = (window.bonusLabUsed && window.totalMistakes === 0 && !isCleared) ? 15 : 0;
     let isPerfect = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
     let pBonus = isPerfect ? 5 : 0;
-
     let earnedQ = Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier);
-    
-    window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true; 
-    if (!window.saveData.reviewDates) window.saveData.reviewDates = {}; window.saveData.reviewDates[targetStageId] = window.currentServerTime; 
-    
+
+    window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
+    if (!window.saveData.reviewDates) window.saveData.reviewDates = {}; window.saveData.reviewDates[targetStageId] = window.currentServerTime;
+
     let justTurnedMaster = false;
     if (window.currentActiveStageIsReview) {
       if (!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
       if (!window.saveData.reviewCounts[targetStageId]) window.saveData.reviewCounts[targetStageId] = 0;
-      window.saveData.reviewCounts[targetStageId]++; 
-      if (window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts[targetStageId] = 0; 
+      window.saveData.reviewCounts[targetStageId]++;
+      if (window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts[targetStageId] = 0;
       if (window.saveData.reviewCounts[targetStageId] === 3) { justTurnedMaster = true; }
     }
-
     let masterCount = 0; for (let key in window.saveData.reviewCounts) { if (window.saveData.reviewCounts[key] >= 3) masterCount++; }
     if (masterCount >= 3 && masterCount % 3 === 0 && masterCount > window.saveData.lastRewardedMasterCount) {
-      window.saveData.q += 100; window.saveData.lastRewardedMasterCount = masterCount; 
+      window.saveData.q += 100; window.saveData.lastRewardedMasterCount = masterCount;
       setTimeout(() => { alert(`🎉🎉🎉【大快挙！殿堂入りマスター連鎖達成！】🎉🎉🎉\n\n🏆MASTERバッジの獲得総数が『 ${masterCount}個 』に達したぞ！\n3個集めるごとの特別アチーブメント達成として、お父さんコーチから臨時の特大ボーナス【 100Q 】が金庫にプレゼントされた！🚀`); window.saveGame(); }, 800);
     } else if (justTurnedMaster) { setTimeout(() => { alert("🏆 【大快挙！】\n忘却曲線を完全にのりこえ、記憶にガッチリ定着したよ！\nこのステージは『殿堂入り（MASTER）』に指定されました！👑"); }, 500); }
-
     let dropMsg = "";
     if(!isCleared && Math.random() < 0.10 && (!window.saveData.inventory || window.saveData.inventory.length < 10) && !window.weakAttackModeActive) {
       let dropItems = ['booster', 'analyzer', 'hourglass']; let dropped = dropItems[Math.floor(Math.random() * dropItems.length)];
@@ -1134,9 +1025,8 @@ window.exitToMainMenu = function() {
       let dName = dropped === 'booster' ? '🧪脳内ブースター' : (dropped === 'analyzer' ? '🔍予言のレンズ' : '⏰時空の砂時計');
       dropMsg = `\n\n🎁 【超ラッキー！】\nステージの中からレアアイテム『${dName}』を直接見つけたぞ！バッグに入れておいたよ！`;
     }
+    window.activeItemBuff = null; window.saveGame();
 
-    window.activeItemBuff = null; window.saveGame(); 
-    
     let msg = `🎉 ミッションコンプリート！\n\n・基本クリア: +${Math.floor(baseReward * window.activeBoostMultiplier)}Q\n`;
     if(pBonus > 0) msg += `・✨ ノーミスパーフェクト: +${Math.floor(pBonus * window.activeBoostMultiplier)}Q\n`;
     if(vBonus > 0) msg += `・📺 予習ボーナス: +${Math.floor(vBonus * window.activeBoostMultiplier)}Q\n`;
@@ -1144,16 +1034,15 @@ window.exitToMainMenu = function() {
     if(window.currentActiveStageIsMaster) msg += `🏆 殿堂入りマスターのご褒美スコアを獲得！\n`;
     if(isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster && baseReward === 0) msg += `⚠️ (本日の2Qボーナスは上限に達しました)\n`;
     msg += `\n合計【 ${earnedQ}Q 】を金庫にチャージしました！${dropMsg}`;
-    
-    alert(msg);
-    window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: window.currentActiveStageIsMaster ? 'MASTER周回完了' : `クリア! +${earnedQ}Q獲得` }); 
-    window.quitQuest(); 
-};
 
+    alert(msg);
+    window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: window.currentActiveStageIsMaster ? 'MASTER周回完了' : `クリア! +${earnedQ}Q獲得` });
+    window.quitQuest();
+};
 window.triggerForcedClear = function() { window.exitToMainMenu(); };
 window.quitQuest = function() { window.weakAttackModeActive = false; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
-
 window.initApp();
 </script>
+<script src="./content.js"></script>
 </body>
 </html>
