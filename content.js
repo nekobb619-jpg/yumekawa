@@ -11,12 +11,20 @@
    ■ステージを増やすには？
      ・下の CONTENT.stages に1行、CONTENT.quizzes に問題配列を1つ足すだけ。
      ・（このチャットで私が丸ごと最新版を作り直してお渡しします）
+   ■期間限定で出したいときは？
+     ・ステージの行に release_from（この日から）／release_until（この日まで）を
+       "YYYY-MM-DD" の形で足すだけ。両方省略すれば今まで通りずっと表示。
+     ・例："release_from: \"2026-08-01\", release_until: \"2026-08-31\""
+       → 8月中だけ メニューに出て、9月になると自動で消える。
+     ・「この動画URLをこの問題に貼って」「この期間だけ出して」とチャットで言ってもらえれば、
+       このファイルを書きかえてお渡しします（スプレッドシート編集は不要）。
    ===================================================================== */
 (function () {
 
   /* ================= ① ステージ一覧（メニューに出る） ================= */
   /* スプレッドシートの列と同じ意味： subject / category / id / name / reward */
   /* showCount = 1回の挑戦で出す問題数（全問数より小さくすると毎回ちがう出題に） */
+  /* release_from / release_until（任意）："YYYY-MM-DD"。この期間だけメニューに表示。 */
   const STAGES = [
     {
       subject: "算数",                      // ★あなたのスプレッドシートと同じ日本語にすると同じタブに合流します
@@ -117,6 +125,42 @@
       reward: 10, showCount: 5, video_url: "",
       // ★四角形へんしんラボ（頂点をうごかして仲間分けを発見）
       lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=2"
+    },
+    {
+      subject: "算数",
+      category: "図形（垂直・平行と四角形）4年",
+      id: "算数/図形/taikakusen01",
+      name: "四角形の対角線（長さ・二等分・垂直）",
+      reward: 10, showCount: 5, video_url: "",
+      // ★対角線はっけんラボ（頂点をうごかして対角線の性質を発見）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=3"
+    },
+    {
+      subject: "算数",
+      category: "図形（三角形の仲間分け）4年",
+      id: "算数/図形/sankaku_bunrui01",
+      name: "三角形の仲間分け（正三角形・二等辺三角形・直角三角形）",
+      reward: 10, showCount: 5, video_url: "",
+      // ★三角形の仲間分けラボ（頂点をうごかして仲間分けを発見）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_sankaku.html?level=1"
+    },
+    {
+      subject: "算数",
+      category: "図形（三角形の仲間分け）4年",
+      id: "算数/図形/naikaku_wa01",
+      name: "三角形の内角の和",
+      reward: 10, showCount: 5, video_url: "",
+      // ★内角の和はっけんラボ（形をかえても180度のまま）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_sankaku.html?level=2"
+    },
+    {
+      subject: "算数",
+      category: "図形（三角形の仲間分け）4年",
+      id: "算数/図形/nakama_sagashi01",
+      name: "三角形と四角形の仲間さがし（まとめ）",
+      reward: 15, showCount: 4, video_url: "",
+      // ★仲間さがしミニゲーム（ドラッグでグループ分け＋ニコと会話）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_nakama_sagashi.html"
     },
     {
       subject: "算数",
@@ -599,6 +643,144 @@
         job_desc:"台形・平行四辺形・ひし形・長方形・正方形は、辺の 平行や 長さ、角度の 組み合わせで つながっているよ。仲間分けが できると、図形の 見え方が グッと 広がるね！" }
     ],
 
+    "算数/図形/taikakusen01": [
+      { q:"四角形で、となりあわない 頂点（かど）どうしを むすんだ 線を 何という？",
+        a:["対角線（たいかくせん）","辺（へん）","高さ","中心線"], c:0,
+        hint:"『対角』は『向かい合う かど』という意味だよ。",
+        speech_text:"となりあわない かどを むすぶ線は？",
+        job_title:"対角線 はじめの一歩！",
+        job_desc:"四角形の、となりあわない頂点（かど）どうしを むすぶ線を『対角線』というよ。四角形には 対角線が 2本 引けるね。" },
+
+      { q:"平行四辺形（長方形・ひし形・正方形もふくむ）の 2本の対角線は、どんな交わり方をする？",
+        a:["真ん中の点で 交わる（二等分する）","はしっこで 交わる","交わらない","いつも 直角に 交わる"], c:0,
+        hint:"『平行四辺形の 仲間』なら いつも 同じ 交わり方に なるよ。",
+        job_title:"二等分の きまり！",
+        job_desc:"平行四辺形（長方形・ひし形・正方形もふくむ）の対角線は、いつも 真ん中の点で 交わる（＝おたがいを 二等分する）よ。" },
+
+      { q:"下の図を 見てね。対角線が 交わる ところに、小さい四角の しるしが あるよ。この四角形は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);var cx=canvas.width/2,cy=canvas.height/2;var pts=[[cx,cy-70],[cx+55,cy],[cx,cy+70],[cx-55,cy]];ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(var i=1;i<4;i++){ctx.lineTo(pts[i][0],pts[i][1]);}ctx.closePath();ctx.fillStyle='#eaddf7';ctx.fill();ctx.strokeStyle='#8a5cf0';ctx.lineWidth=3;ctx.stroke();ctx.strokeStyle='#ff7fc4';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[2][0],pts[2][1]);ctx.stroke();ctx.beginPath();ctx.moveTo(pts[1][0],pts[1][1]);ctx.lineTo(pts[3][0],pts[3][1]);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#1d4ed8';ctx.lineWidth=2;ctx.strokeRect(cx-7,cy-7,14,14);",
+        a:["ひし形","台形","長方形","ただの四角形"], c:0,
+        hint:"対角線が 垂直に 交わる 四角形は、辺の長さにも 特ちょうが あるよ。",
+        job_title:"垂直な 対角線 発見！",
+        job_desc:"対角線が 垂直に 交わるのは『ひし形』（正方形も ふくむ）の 特ちょう。辺の長さが ぜんぶ 等しいことと つながっているんだ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[ { name:"ニコ", icon:"🦄", msg:"『長方形の対角線を 2本 引いて、長さを はかったら 同じだったよ！』<br>この じっけんは <b>なにを たしかめたい</b>のかな？" } ],
+        a:["長方形の対角線は 長さが同じに なる、と たしかめたい","定規で 長さが はかれるか たしかめたい","色が 同じか たしかめたい","四角形が 書けるか たしかめたい"], c:0,
+        hint:"『長さを はかって くらべる』が ポイントだね。",
+        speech_text:"このじっけんの ねらいは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"ねらいは『長方形の対角線は 長さが 同じになる』と 実験で たしかめること。ひし形は 長さがちがうけど 垂直、長方形は 垂直じゃないけど 長さが同じ。四角形ごとに ちがう対角線の せいしつが あるんだね。" },
+
+      { q:"1組の辺だけが 平行な（平行四辺形の仲間じゃない）四角形では、対角線は 真ん中で 交わらないことが 多いです。この 四角形を 何という？",
+        type:"text_input", correct_answers:["台形","だいけい"],
+        hint:"1組の辺だけが 平行な 四角形だよ。",
+        rescue_hint:"1組だけ平行な四角形は『台形』。台形は 対角線が 二等分しないことが 多いよ。",
+        job_title:"四角形の 対角線 マスター！",
+        job_desc:"対角線を 調べると、二等分するか・長さが同じか・垂直に交わるかで、四角形の 仲間が わかる。台形・平行四辺形・ひし形・長方形・正方形、それぞれ ちがう対角線の せいしつを 持っているんだね！" }
+    ],
+
+    "算数/図形/sankaku_bunrui01": [
+      { q:"3つの辺の長さが すべて 等しい 三角形を 何という？",
+        a:["正三角形（せいさんかくけい）","二等辺三角形","直角三角形","ふつうの三角形"], c:0,
+        hint:"『正』は『ぜんぶ 同じ』という意味だよ。",
+        speech_text:"3辺が ぜんぶ 同じ さんかくけいは？",
+        job_title:"正三角形 はじめの一歩！",
+        job_desc:"3つの辺の長さが すべて 等しい 三角形は『正三角形』。3つの角も みんな 60度で 同じだよ。" },
+
+      { q:"2つの辺の長さが 等しい 三角形を 何という？",
+        a:["二等辺三角形（にとうへんさんかくけい）","正三角形","直角三角形","台形"], c:0,
+        hint:"『二等辺』は『2つの辺が 等しい』という意味だよ。",
+        job_title:"二等辺三角形 わかった！",
+        job_desc:"2つの辺の長さが 等しい 三角形は『二等辺三角形』。2つの角の大きさも 等しくなるよ。" },
+
+      { q:"下の図を 見てね。かどに 小さい四角の しるしが ついているよ。この三角形は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);var cx=canvas.width/2,cy=canvas.height/2+40;ctx.strokeStyle='#8a5cf0';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx-70,cy);ctx.lineTo(cx+50,cy);ctx.lineTo(cx-70,cy-90);ctx.closePath();ctx.fillStyle='#eaddf7';ctx.fill();ctx.stroke();ctx.strokeStyle='#1d4ed8';ctx.lineWidth=2;ctx.strokeRect(cx-70,cy-14,14,14);",
+        a:["直角三角形","正三角形","二等辺三角形","ふつうの三角形"], c:0,
+        hint:"かどに ついている 小さい四角の しるしは 90度の めじるしだよ。",
+        job_title:"直角三角形 発見！",
+        job_desc:"かどの1つが ちょうど90度の 三角形は『直角三角形』。三角定規にも この形が あるね。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[ { name:"ニコ", icon:"🦄", msg:"『この三角形、辺の長さを2つ はかったら 同じだったよ！ じゃあ 二等辺三角形だね！』<br>でも 社長、<b>のこり1つの辺</b>は はからなくて いいのかな？" } ],
+        a:["のこりの1辺も くらべて、ちょうど2辺だけが 等しいか たしかめる","色を たしかめる","角の数を 数える","なにも たしかめなくて いい"], c:0,
+        hint:"2つの辺だけじゃなく、ぜんぶの辺の関係を 見ると もっと 正確に わかるよ。",
+        speech_text:"ほかにも たしかめることは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"2辺が 等しいのを 見つけたら、もう1辺も くらべてみよう。もし3辺とも 等しければ、それは 二等辺三角形じゃなくて『正三角形』。ちゃんと 確かめる力が だいじだよ。" },
+
+      { q:"かどの1つが ちょうど90度の 三角形を 何という？ 漢字とひらがなで。",
+        type:"text_input", correct_answers:["直角三角形","ちょっかくさんかくけい"],
+        hint:"『直角』は 90度の こと。",
+        rescue_hint:"90度のかどが ある三角形は『直角三角形』だよ。",
+        job_title:"三角形の 仲間分け マスター！",
+        job_desc:"正三角形・二等辺三角形・直角三角形。辺の長さと 角の大きさで、三角形も いろんな 仲間に 分けられるんだね！" }
+    ],
+
+    "算数/図形/naikaku_wa01": [
+      { q:"三角形の 3つの角を ぜんぶ たすと、何度に なる？",
+        a:["180度","90度","360度","270度"], c:0,
+        hint:"どんな形の三角形でも 同じ 答えに なるよ。",
+        speech_text:"さんかくけいの ないかくの わは？",
+        job_title:"内角の和 はじめの一歩！",
+        job_desc:"三角形の 3つの角（内角）を たすと、いつも『180度』に なるよ。これを『内角の和』というよ。" },
+
+      { q:"三角形の 角Aが 70度、角Bが 50度の とき、角Cは 何度？",
+        a:["60度","70度","50度","120度"], c:0,
+        hint:"180から、70と50を ひいてみよう。",
+        job_title:"のこりの角も バッチリ！",
+        job_desc:"180−70−50＝60。内角の和が 180度だから、2つの角が わかれば のこりの角も 計算で 出せるよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[ { name:"ニコ", icon:"🦄", msg:"『すごく とがった三角形と、ぺたんこに ひらいた三角形。形が ぜんぜん ちがうから、内角の和も ちがうよね？』<br>社長は どう思う？" } ],
+        a:["どんな形の三角形でも、内角の和は いつも180度で 変わらない","とがった三角形は 内角の和が 大きくなる","ひらいた三角形は 内角の和が 小さくなる","形によって 内角の和は かわる"], c:0,
+        hint:"三角形なら、形が どんなに ちがっても 同じ きまりが なりたつよ。",
+        speech_text:"ないかくのわは かわるかな？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"形が どんなに かわっても、三角形である かぎり 内角の和は 180度の まま。この きまりは とても大事で、四角形や 多角形の 内角の和を 考える もとにも なるんだよ。" },
+
+      { q:"三角形の 角A＝80度、角B＝60度の とき、角Cは 何度？ 数字で。",
+        type:"text_input", correct_answers:["40","40度"],
+        hint:"180−80−60。",
+        rescue_hint:"180−80＝100。100−60＝40。だから 角Cは 40度。",
+        job_title:"角の計算 マスター！",
+        job_desc:"180−80−60＝40。内角の和180度を つかえば、わからない角も ひき算で 出せるね。" },
+
+      { q:"四角形は、対角線で 三角形2つに 分けられます。四角形の 内角の和は 何度に なる？",
+        a:["360度","180度","270度","90度"], c:0,
+        hint:"三角形1つ分（180度）が 2つ ぶんだよ。",
+        job_title:"四角形にも つながった！",
+        job_desc:"四角形は 対角線で 三角形2つに 分けられるから、内角の和は 180×2＝360度。三角形の きまりが、四角形の 理解にも つながっていくんだね！" }
+    ],
+
+    "算数/図形/nakama_sagashi01": [
+      { q:"正三角形と 正方形に 共通する とくちょうは どれ？",
+        a:["辺の長さが ぜんぶ 等しい","かどが ぜんぶ 直角","辺が 平行","色が 同じ"], c:0,
+        hint:"『正』という字が つく形は、辺の長さに 共通の きまりが あるよ。",
+        job_title:"仲間さがし はじめの一歩！",
+        job_desc:"正三角形も 正方形も、辺の長さが ぜんぶ 等しい。『正』の つく形の 共通点だね。" },
+
+      { q:"三角形には ぜったいに ない、四角形（台形・平行四辺形など）だけの とくちょうは どれ？",
+        a:["平行な 辺の 組み合わせ","まっすぐな 辺","かど","色を ぬれること"], c:0,
+        hint:"三角形は 3つの辺しか ないから、辺どうしが 平行に なることは ないんだ。",
+        job_title:"三角形と四角形の ちがい 発見！",
+        job_desc:"三角形は 3辺しかないので、辺どうしが 平行には ならない。平行な辺は 四角形（台形以上）ならでは の とくちょうだよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[ { name:"ニコ", icon:"🦄", msg:"『直角三角形と 長方形、どっちも 直角が あるね！ 仲間だ！』<br>この2つの形、ほかにも 仲間って いえる ところが あるかな？" } ],
+        a:["どちらも『90度のかどがある』という仲間わけが できる","色が 同じ","大きさが 同じ","名前が にている"], c:0,
+        hint:"『どんな とくちょうで 仲間分けするか』が だいじだよ。",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"直角三角形と 長方形は、形はちがっても『直角がある』という とくちょうでは 仲間。図形は 辺の長さ・角の大きさ・平行かどうかで、いろんな 仲間分けが できるんだ。" },
+
+      { q:"辺の長さが ぜんぶ 等しい 四角形を 何という？ 漢字とひらがなで。",
+        type:"text_input", correct_answers:["ひし形","ひしがた"],
+        hint:"トランプの ◆マークの 形だよ。",
+        rescue_hint:"辺の長さが 全部同じ 四角形は『ひし形』だよ。",
+        job_title:"仲間さがし マスター！",
+        job_desc:"三角形も 四角形も、辺の長さ・角の大きさ・平行かどうかで 仲間分けできる。この後の 仲間さがしラボで、じっさいに 形を なかま分け してみよう！" }
+    ],
+
     "算数/小数/shosu01": [
       { q:"「1」を 10こに 同じ大きさに 分けた 1つ分の 数を 何という？",
         a:["0.1","0.01","10","0.2"], c:0,
@@ -685,18 +867,50 @@
 
   /* ================= ③ 自動パッチ（既存エンジンにそっと乗せる） ================= */
 
-  // (a) content.js のステージをメニューに合流させる
+  // 今日の日付（YYYY-MM-DD）。端末の時計を使う。
+  function todayStr() {
+    var d = new Date();
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  // release_from / release_until の期間内かどうか（どちらも無ければ常に true＝ずっと表示）
+  function isStageActive(stg) {
+    var t = todayStr();
+    if (stg.release_from && t < stg.release_from) return false;   // まだ公開前
+    if (stg.release_until && t > stg.release_until) return false; // もう公開終了
+    return true;
+  }
+  window.isStageActive = isStageActive; // テスト用に公開
+
+  // (a) content.js のステージをメニューに合流させる（期間限定ステージは自動で出し入れ）
   window.injectContentStages = function () {
     if (!window.CONTENT || !window.CONTENT.stages) return;
     if (!window.globalStageMaster) window.globalStageMaster = {};
     if (!window.availableSubjects) window.availableSubjects = [];
+
+    // ①期限切れ／まだ公開前になった content.js 由来のステージを取りのぞく（GAS由来はさわらない）
+    Object.keys(window.globalStageMaster).forEach(function (sub) {
+      Object.keys(window.globalStageMaster[sub]).forEach(function (cat) {
+        window.globalStageMaster[sub][cat] = window.globalStageMaster[sub][cat].filter(function (s) {
+          if (!s._fromContent) return true;
+          var live = window.CONTENT.stages.filter(function (cs) { return cs.id === s.id; })[0];
+          return !!live && isStageActive(live);
+        });
+      });
+    });
+
+    // ②いま公開中の content.js ステージを合流させる
     window.CONTENT.stages.forEach(function (stg) {
+      if (!isStageActive(stg)) return;
       var sub = String(stg.subject || "japanese").toLowerCase().trim();
       var cat = stg.category || "📚 ステージ";
       if (!window.globalStageMaster[sub]) window.globalStageMaster[sub] = {};
       if (!window.globalStageMaster[sub][cat]) window.globalStageMaster[sub][cat] = [];
       var exists = window.globalStageMaster[sub][cat].some(function (s) { return s.id === stg.id; });
-      if (!exists) window.globalStageMaster[sub][cat].push(stg);
+      if (!exists) {
+        var tagged = Object.assign({}, stg, { _fromContent: true });
+        window.globalStageMaster[sub][cat].push(tagged);
+      }
       if (window.availableSubjects.indexOf(sub) === -1) window.availableSubjects.push(sub);
     });
   };

@@ -570,10 +570,25 @@ window.renderStageMaps = function() {
     panel.innerHTML = `<div style="text-align:center; padding:32px 10px; color:var(--text-soft); font-size:14px; font-weight:700;">🌟 この教科のステージは準備中だよ！</div>`;
   } else {
     categories.forEach(cat => {
-      const title = document.createElement("div"); title.className = "category-title"; title.textContent = cat; panel.appendChild(title);
       let rawStages = window.globalStageMaster[sub][cat]; let normalStages = []; let masterStages = [];
       rawStages.forEach(stg => { let isMaster = (window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= 3); if (isMaster) masterStages.push(stg); else normalStages.push(stg); });
       let sortedStages = [...normalStages, ...masterStages];
+
+      // ★カテゴリごとに折りたたみボックス（全部クリア済みならデフォルトで畳んでおく）
+      const idStages = rawStages.filter(s => s.id && String(s.id).trim() !== "");
+      const clearedCount = idStages.filter(s => window.saveData.clearedStages[s.id]).length;
+      const totalIdCount = idStages.length;
+      const allCleared = totalIdCount > 0 && clearedCount === totalIdCount;
+      const progressBadge = totalIdCount > 0 ? `${clearedCount}/${totalIdCount} クリア` : "🔬 実験";
+
+      const box = document.createElement("div"); box.className = "acc-box";
+      const head = document.createElement("div"); head.className = "acc-head";
+      head.innerHTML = `<span>${cat}</span><span style="font-size:11px; font-weight:700; color:var(--text-soft); background:#fff; padding:3px 8px; border-radius:10px;">${progressBadge}</span>`;
+      head.onclick = () => window.toggleAcc(head);
+      box.appendChild(head);
+      const body = document.createElement("div"); body.className = "acc-body" + (allCleared ? "" : " open");
+      box.appendChild(body); panel.appendChild(box);
+
       sortedStages.forEach(stg => {
         const card = document.createElement("div"); card.className = "stage-card";
         const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
@@ -605,7 +620,7 @@ window.renderStageMaps = function() {
           statusHtml = `<span style="font-size:12px; font-weight:900; color:#0284c7; background:#e0f2fe; padding:4px 8px; border-radius:12px;">🔬 実験専用</span>`;
         }
         card.innerHTML = `<div class="stage-left"><span class="stage-icon">${isMaster ? '👑' : '🌟'}</span><span class="stage-title">${stg.name}</span></div>${statusHtml}`;
-        card.onclick = () => { stg.isReview = isReview; stg.isMaster = isMaster; window.openBriefing(stg); }; panel.appendChild(card);
+        card.onclick = () => { stg.isReview = isReview; stg.isMaster = isMaster; window.openBriefing(stg); }; body.appendChild(card);
       });
     });
   }

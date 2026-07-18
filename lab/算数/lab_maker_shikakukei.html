@@ -63,6 +63,7 @@
   <div class="lvbar" id="lvbar">
     <button class="lvpick" data-l="1" onclick="setLevel(1)">① すいちょく・へいこう</button>
     <button class="lvpick" data-l="2" onclick="setLevel(2)">② 四角形の仲間分け</button>
+    <button class="lvpick" data-l="3" onclick="setLevel(3)">③ 対角線の性質</button>
   </div>
   <div class="steps">
     <div class="step on" id="st1">① 実験</div>
@@ -108,6 +109,27 @@
       <div class="shapes" id="l2chips"></div>
       <div class="hint" id="l2hint"></div>
       <div class="row"><button class="btn go" id="l2next" onclick="go(2)" disabled>5この 仲間を ぜんぶ 見つけたら つぎへ →</button></div>
+    </div>
+    <div class="card lv3" id="lv3exp" style="display:none">
+      <h2>✂️ 対角線 はっけんラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="l3bubble"></div></div>
+      <canvas id="cv3" width="336" height="220"></canvas>
+      <div class="row"><span class="badge" id="l3badge">－</span></div>
+      <div class="row">
+        <span class="small">上の辺の 長さ：</span>
+        <div class="stepper"><button onclick="chg3('topLen',-10)">－</button><span class="num" id="topLenNum3">100</span><button onclick="chg3('topLen',10)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">高さ：</span>
+        <div class="stepper"><button onclick="chg3('topH',-10)">－</button><span class="num" id="topHNum3">80</span><button onclick="chg3('topH',10)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">上の辺の ずれ：</span>
+        <div class="stepper"><button onclick="chg3('skew',-10)">－</button><span class="num" id="skewNum3">30</span><button onclick="chg3('skew',10)">＋</button></div>
+      </div>
+      <div class="shapes" id="l3chips"></div>
+      <div class="hint" id="l3hint"></div>
+      <div class="row"><button class="btn go" id="l3next" onclick="go(2)" disabled>4この パターンを ぜんぶ 見つけたら つぎへ →</button></div>
     </div>
   </div>
 
@@ -170,6 +192,27 @@
           <div id="tResult2"></div>
         </div>
       </div>
+
+      <div class="lv3" id="lv3make" style="display:none">
+        <div class="maketabs">
+          <div class="maketab on" id="tabN3" onclick="switchTab(3,'N')">🟢 通常問題</div>
+          <div class="maketab" id="tabT3" onclick="switchTab(3,'T')">🔴 ワナ問題</div>
+        </div>
+        <div id="mkN3">
+          <div class="small">仲間の 中から 1つ えらんで、「対角線は どんな せいしつ？」の 問題を つくろう。</div>
+          <div class="pickrow" id="shapePick3"></div>
+          <div class="row"><button class="btn go" onclick="makeNormal3()">🦄 ニコに 出す！</button></div>
+          <div id="nResult3"></div>
+        </div>
+        <div id="mkT3" style="display:none;">
+          <div class="small">出題者に なって、ニコを ひっかけよう！ 上の辺の長さを 100いがい（台形）に すると、対角線は 真ん中で 交わる？</div>
+          <div class="row">
+            上の辺の長さ <div class="stepper"><button onclick="chgTrapTop(-10)">－</button><span class="num" id="tTop">140</span><button onclick="chgTrapTop(10)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeTrap3()">🕳️ ワナを 発動！</button></div>
+          <div id="tResult3"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -177,7 +220,7 @@
 <script>
 (function(){
   function qparam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
-  var LV = parseInt(qparam("level")||"1",10); if(!(LV===1||LV===2)) LV=1;
+  var LV = parseInt(qparam("level")||"1",10); if(!(LV===1||LV===2||LV===3)) LV=1;
   var made=0;
   var TOL=4;
 
@@ -320,6 +363,94 @@
   window._state2=function(){ var c=classify2(BASE,topLen,topH,skew); return {topLen:topLen, topH:topH, skew:skew, name:c.name, found:Object.keys(found2).slice()}; };
   window.classify2=classify2;
 
+  /* ===================== レベル3：対角線の性質 ===================== */
+  var cv3=document.getElementById("cv3"), ctx3=cv3.getContext("2d");
+  var topLen3=100, topH3=80, skew3=30, found3={};
+  var DIAG_ORDER=["台形（交わらない）","平行四辺形（二等分だけ）","長方形（二等分＋長さ同じ）","ひし形（二等分＋垂直）"];
+  var DIAG_HINT={
+    "台形（交わらない）":"上の辺の長さ を 100いがい（例：140）に してみよう",
+    "平行四辺形（二等分だけ）":"上の辺の長さ を 100 に そろえて、ずれ を 0いがい（例：30）に してみよう",
+    "長方形（二等分＋長さ同じ）":"上の辺の長さ を 100、ずれ を 0 に してみよう",
+    "ひし形（二等分＋垂直）":"上の辺の長さ を 100、ずれ を 60、高さ を 80 に してみよう"
+  };
+
+  function approxEq3(a,b,tol){ tol=(tol===undefined)?4:tol; return Math.abs(a-b)<=tol; }
+  function quadPts(baseLen,tLen,tH,sk){
+    var B0=[-baseLen/2,0], B1=[baseLen/2,0], T0=[-baseLen/2+sk,tH], T1=[-baseLen/2+sk+tLen,tH];
+    return {B0:B0,B1:B1,T0:T0,T1:T1};
+  }
+  function diagInfo(baseLen,tLen,tH,sk){
+    var p=quadPts(baseLen,tLen,tH,sk);
+    function dist(a,b){ return Math.hypot(b[0]-a[0], b[1]-a[1]); }
+    function mid(a,b){ return [(a[0]+b[0])/2, (a[1]+b[1])/2]; }
+    var lenA=dist(p.B0,p.T1), lenB=dist(p.B1,p.T0);
+    var midA=mid(p.B0,p.T1), midB=mid(p.B1,p.T0);
+    var bisect = approxEq3(midA[0],midB[0],3) && approxEq3(midA[1],midB[1],3);
+    var eqLen = approxEq3(lenA,lenB,4);
+    var vA=[p.T1[0]-p.B0[0], p.T1[1]-p.B0[1]], vB=[p.T0[0]-p.B1[0], p.T0[1]-p.B1[1]];
+    var dot=vA[0]*vB[0]+vA[1]*vB[1];
+    var mags=Math.hypot(vA[0],vA[1])*Math.hypot(vB[0],vB[1]);
+    var cosv = mags ? dot/mags : 0;
+    var perpendicular = Math.abs(cosv) < 0.06;
+    return {pts:p, lenA:lenA, lenB:lenB, bisect:bisect, eqLen:eqLen, perpendicular:perpendicular, midA:midA, midB:midB};
+  }
+  function classifyDiag(baseLen,tLen,tH,sk){
+    var d=diagInfo(baseLen,tLen,tH,sk);
+    if(!d.bisect) return {name:"台形（交わらない）", why:"上の辺の長さが 下と ちがうから、対角線は 真ん中で 交わらない"};
+    if(d.eqLen && d.perpendicular) return {name:"ひし形／正方形（二等分＋長さ同じ＋垂直）", why:"対角線が 真ん中で 交わり、長さも 同じで、しかも 垂直"};
+    if(d.eqLen) return {name:"長方形（二等分＋長さ同じ）", why:"対角線が 真ん中で 交わり、長さも 同じ"};
+    if(d.perpendicular) return {name:"ひし形（二等分＋垂直）", why:"対角線が 真ん中で 交わり、しかも 垂直に 交わる"};
+    return {name:"平行四辺形（二等分だけ）", why:"対角線は 真ん中で 交わるけど、長さも角度も 特別じゃない"};
+  }
+  function drawQuadDiag(ctx, baseLen, tLen, tH, sk){
+    var cx=cv3.width/2, baseY=170;
+    var p=quadPts(baseLen,tLen,tH,sk);
+    function toCanvas(pt){ return [cx+pt[0], baseY-pt[1]]; }
+    var B0=toCanvas(p.B0), B1=toCanvas(p.B1), T0=toCanvas(p.T0), T1=toCanvas(p.T1);
+    ctx.clearRect(0,0,cv3.width,cv3.height);
+    ctx.beginPath(); ctx.moveTo(B0[0],B0[1]); ctx.lineTo(B1[0],B1[1]); ctx.lineTo(T1[0],T1[1]); ctx.lineTo(T0[0],T0[1]); ctx.closePath();
+    ctx.fillStyle="#eaddf7"; ctx.fill(); ctx.strokeStyle="#8a5cf0"; ctx.lineWidth=3; ctx.lineJoin="round"; ctx.stroke();
+    ctx.save(); ctx.strokeStyle="#ff7fc4"; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(B0[0],B0[1]); ctx.lineTo(T1[0],T1[1]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(B1[0],B1[1]); ctx.lineTo(T0[0],T0[1]); ctx.stroke();
+    ctx.restore();
+  }
+  function render3(){
+    drawQuadDiag(ctx3, BASE, topLen3, topH3, skew3);
+    var cls=classifyDiag(BASE, topLen3, topH3, skew3);
+    document.getElementById("topLenNum3").textContent=topLen3;
+    document.getElementById("topHNum3").textContent=topH3;
+    document.getElementById("skewNum3").textContent=skew3;
+    var badge=document.getElementById("l3badge");
+    badge.textContent=cls.name; badge.className="badge";
+    document.getElementById("l3bubble").innerHTML="いまの 対角線は「<b>"+cls.name+"</b>」。"+cls.why+"だからだよ。";
+    if(DIAG_ORDER.indexOf(cls.name)>=0) found3[cls.name]=true;
+    else if(cls.name.indexOf("ひし形")===0) found3["ひし形（二等分＋垂直）"]=true;
+    renderChips3();
+    var missing=DIAG_ORDER.filter(function(s){return !found3[s];});
+    var hintEl=document.getElementById("l3hint");
+    hintEl.textContent = missing.length ? ("つぎに ためす ヒント：「"+missing[0]+"」→ "+DIAG_HINT[missing[0]]) : "4この パターン、ぜんぶ 見つけたよ！";
+    var nx=document.getElementById("l3next");
+    nx.disabled = missing.length>0;
+    if(!nx.disabled) nx.textContent="ぜんぶ 見つけた！ つぎへ →";
+  }
+  function renderChips3(){
+    var z=document.getElementById("l3chips"); z.innerHTML="";
+    DIAG_ORDER.forEach(function(s){
+      var el=document.createElement("div"); el.className="chip"+(found3[s]?" found":"");
+      el.textContent=(found3[s]?"✓ ":"")+s; z.appendChild(el);
+    });
+  }
+  window.chg3=function(k,d){
+    if(k==="topLen") topLen3=Math.max(40,Math.min(180, topLen3+d));
+    if(k==="topH") topH3=Math.max(40,Math.min(120, topH3+d));
+    if(k==="skew") skew3=Math.max(-70,Math.min(70, skew3+d));
+    render3();
+  };
+  window._setParams3=function(tLen,tH,sk){ topLen3=tLen; topH3=tH; skew3=sk; render3(); };
+  window._state3=function(){ var c=classifyDiag(BASE,topLen3,topH3,skew3); var d=diagInfo(BASE,topLen3,topH3,skew3); return {topLen:topLen3, topH:topH3, skew:skew3, name:c.name, bisect:d.bisect, eqLen:d.eqLen, perpendicular:d.perpendicular, found:Object.keys(found3).slice()}; };
+  window.classifyDiag=classifyDiag; window.diagInfo=diagInfo;
+
   /* ===================== 共通：ステップ切り替え ===================== */
   window.go=function(n){
     [1,2,3].forEach(function(i){ document.getElementById("scr"+i).classList.toggle("on", i===n); document.getElementById("st"+i).classList.toggle("on", i===n); });
@@ -329,16 +460,20 @@
     document.querySelectorAll(".lvpick").forEach(function(b){ b.classList.toggle("on", Number(b.dataset.l)===l); });
     document.querySelectorAll(".lv1").forEach(function(el){ el.style.display = (l===1)?"":"none"; });
     document.querySelectorAll(".lv2").forEach(function(el){ el.style.display = (l===2)?"":"none"; });
+    document.querySelectorAll(".lv3").forEach(function(el){ el.style.display = (l===3)?"":"none"; });
     if(l===1){
       document.getElementById("ruleCard").innerHTML="2本の直線が 交わる 角が <span style=\"color:#1d4ed8;\">90度</span> なら「垂直」。<br>どこまで のばしても <span style=\"color:#15803d;\">交わらない</span> なら「平行」。";
       document.getElementById("l3insight").innerHTML="三角定規や 分度器で「ぴったり90度か」を たしかめる。見た目だけで きめないのが コツだよ！";
-    } else {
+    } else if(l===2){
       document.getElementById("ruleCard").innerHTML="上の辺の長さ が 下の辺と <span style=\"color:#1d4ed8;\">同じ</span> なら、2組とも 平行＝「平行四辺形の 仲間」。<br>そこに 直角・辺の長さ が そろうと 長方形・ひし形・正方形 に なる。";
       document.getElementById("l3insight").innerHTML="台形・平行四辺形・ひし形・長方形・正方形は バラバラじゃなくて、みんな「辺の 平行・長さ・角度」の 組み合わせで つながっているんだよ。";
+    } else {
+      document.getElementById("ruleCard").innerHTML="対角線とは、<span style=\"color:#1d4ed8;\">となりあわない 頂点どうしを むすぶ 線</span>。<br>平行四辺形の 仲間なら、対角線は かならず「真ん中の点」で 交わる（二等分する）。";
+      document.getElementById("l3insight").innerHTML="長方形は 対角線の 長さが同じ、ひし形は 対角線が 垂直に交わる。正方形は その両方！ 四角形の 仲間分けが、対角線でも つながっているんだね。";
     }
     go(1);
-    render1(); render2();
-    renderShapePick();
+    render1(); render2(); render3();
+    renderShapePick(); renderShapePick3();
   };
 
   /* ===================== 問題メーカー：レベル1 ===================== */
@@ -424,6 +559,60 @@
     var B0x=cx-baseLen/2, B1x=cx+baseLen/2, T0x=B0x+skk, T1x=T0x+tLen, topY=baseY-tH;
     tx.beginPath(); tx.moveTo(B0x,baseY); tx.lineTo(B1x,baseY); tx.lineTo(T1x,topY); tx.lineTo(T0x,topY); tx.closePath();
     tx.fillStyle="#dbeafe"; tx.fill(); tx.strokeStyle="#1d4ed8"; tx.lineWidth=3; tx.stroke();
+  };
+
+  /* ===================== 問題メーカー：レベル3 ===================== */
+  var pickedShape3="平行四辺形（二等分だけ）";
+  var SHAPE_PARAM3={
+    "台形（交わらない）":[140,80,30],
+    "平行四辺形（二等分だけ）":[100,80,30],
+    "長方形（二等分＋長さ同じ）":[100,60,0],
+    "ひし形（二等分＋垂直）":[100,80,60]
+  };
+  function renderShapePick3(){
+    var z=document.getElementById("shapePick3"); if(!z) return; z.innerHTML="";
+    DIAG_ORDER.forEach(function(s){
+      var b=document.createElement("button"); b.className="pickbtn"+(s===pickedShape3?" sel":"");
+      b.textContent=s; b.onclick=function(){ pickedShape3=s; renderShapePick3(); };
+      z.appendChild(b);
+    });
+  }
+  window.makeNormal3=function(){
+    var p=SHAPE_PARAM3[pickedShape3], cls=classifyDiag(BASE,p[0],p[1],p[2]), d=diagInfo(BASE,p[0],p[1],p[2]);
+    var box=document.getElementById("nResult3");
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>この 四角形の 対角線は どんな せいしつ？</div>'
+      +'<canvas id="mkCv3" width="220" height="140"></canvas>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">答えは「<b>'+pickedShape3+'</b>」！ '+cls.why+'だからだよ。</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true,3)">対角線が 二等分するか・長さが同じか・垂直かで、四角形の せいしつを 見分けられるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,3)">対角線を 早く 引けるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,3)">四角形の 色を きれいに ぬれるか</button>';
+    var mc=document.getElementById("mkCv3"), mx=mc.getContext("2d");
+    var cx=mc.width/2, baseY=110, baseLen=70;
+    var scale=0.7, tLen=p[0]*scale, tH=p[1]*scale, sk=p[2]*scale;
+    var pts=quadPts(baseLen, tLen, tH, sk);
+    function toC(pt){ return [cx+pt[0], baseY-pt[1]]; }
+    var B0=toC(pts.B0), B1=toC(pts.B1), T0=toC(pts.T0), T1=toC(pts.T1);
+    mx.beginPath(); mx.moveTo(B0[0],B0[1]); mx.lineTo(B1[0],B1[1]); mx.lineTo(T1[0],T1[1]); mx.lineTo(T0[0],T0[1]); mx.closePath();
+    mx.fillStyle="#ffe4f2"; mx.fill(); mx.strokeStyle="#ff7fc4"; mx.lineWidth=3; mx.stroke();
+    mx.save(); mx.strokeStyle="#8a5cf0"; mx.lineWidth=1.5; mx.setLineDash([4,3]);
+    mx.beginPath(); mx.moveTo(B0[0],B0[1]); mx.lineTo(T1[0],T1[1]); mx.stroke();
+    mx.beginPath(); mx.moveTo(B1[0],B1[1]); mx.lineTo(T0[0],T0[1]); mx.stroke();
+    mx.restore();
+  };
+  var trapTop3=140;
+  window.chgTrapTop=function(d){ trapTop3=Math.max(110,Math.min(180,trapTop3+d)); document.getElementById("tTop").textContent=trapTop3; };
+  window.makeTrap3=function(){
+    var d=diagInfo(BASE,trapTop3,80,30);
+    var box=document.getElementById("tResult3");
+    box.innerHTML=''
+      +'<div class="prob">きみの ワナ：<br>「上の辺の長さが '+trapTop3+'（下の辺100と ちがう）四角形。対角線は 真ん中で 交わる？」</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">上と下の 辺の長さが ちがうから、これは 台形（平行四辺形の 仲間じゃない）。だから 対角線は「<b>'+(d.bisect?"真ん中で 交わる":"真ん中では 交わらない")+'</b>」！ 平行四辺形の 仲間だけが 対角線を 二等分するんだよ。ひっかかった〜😵</div></div>'
+      +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true,3)">「対角線が二等分する」のは 平行四辺形の 仲間だけ、と 見ぬけるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,3)">対角線を まっすぐ 引けるか</button>'
+      +'<button class="choice" onclick="pickA(this,false,3)">100という数字が わかるか</button>';
   };
 
   window.switchTab=function(lv,t){

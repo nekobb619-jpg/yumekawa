@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>三角形へんしんラボ＆メーカー 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --soft:#7a6985; --lav:#b19cd9; --lavl:#eaddf7; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; --blue:#6f8dff; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#f3e8ff,#ffe4f2 55%,#e6fbf4);min-height:100vh;padding:14px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .lvbar{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+  .lvpick{border:none;padding:8px 12px;border-radius:999px;font-family:inherit;font-weight:900;font-size:12.5px;cursor:pointer;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .lvpick.on{background:var(--gold);color:#fff;box-shadow:0 3px 0 #b45309;}
+  .steps{display:flex;gap:6px;margin-bottom:12px;}
+  .step{flex:1;text-align:center;font-size:11px;font-weight:900;padding:8px 4px;border-radius:999px;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .step.on{background:var(--lav);color:#fff;box-shadow:none;}
+  .card{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 0 rgba(74,59,82,.08);margin-bottom:12px;}
+  .screen{display:none;} .screen.on{display:block;animation:fade .3s;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h2{font-size:17px;margin:0 0 8px;}
+  .niko{display:flex;gap:8px;align-items:flex-start;margin:10px 0;}
+  .niko .face{font-size:30px;}
+  .bubble{background:#fff4fb;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;flex:1;}
+  .bubble b{color:var(--pink);}
+  canvas{display:block;margin:8px auto;background:#fbf7ff;border-radius:12px;border:2px solid #eee;}
+  .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0;}
+  .stepper{display:inline-flex;align-items:center;gap:6px;background:#f6f0ff;border-radius:12px;padding:4px;}
+  .stepper button{border:none;width:32px;height:32px;border-radius:9px;background:var(--lav);color:#fff;font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 3px 0 #8a5cf0;}
+  .stepper button:active{transform:translateY(2px);box-shadow:none;}
+  .stepper .num{min-width:44px;text-align:center;font-weight:900;font-size:15px;}
+  .btn{border:none;border-radius:14px;padding:13px;font-family:inherit;font-weight:900;font-size:15px;color:#fff;cursor:pointer;width:100%;}
+  .btn.go{background:linear-gradient(180deg,#b98cff,#8a5cf0);box-shadow:0 5px 0 #6f3fd6;}
+  .btn.gold{background:linear-gradient(180deg,#ffca5e,#f59e0b);box-shadow:0 5px 0 #b45309;}
+  .btn:active{transform:translateY(3px);box-shadow:none;}
+  .btn.ghost{background:#eee;color:var(--soft);box-shadow:0 4px 0 #ddd;}
+  .btn:disabled{opacity:.5;}
+  .tag{display:inline-block;background:#fef9c3;color:#a16207;font-weight:900;font-size:12px;padding:4px 10px;border-radius:999px;}
+  .badge{display:inline-block;font-weight:900;font-size:15px;padding:6px 14px;border-radius:999px;background:#f1ecff;color:var(--lav);}
+  .shapes{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap;}
+  .chip{font-size:12px;font-weight:900;padding:5px 10px;border-radius:999px;background:#f1f5f9;color:#94a3b8;border:2px dashed #cbd5e1;}
+  .chip.found{background:#dcfce7;color:#15803d;border-style:solid;border-color:#86efac;}
+  .chip.bonus{opacity:.75;}
+  .rulecard{background:linear-gradient(135deg,#fff7d6,#ffe9f5);border:2px dashed #ffbf5e;border-radius:16px;padding:14px;text-align:center;font-weight:900;font-size:14px;color:#b45309;}
+  .maketabs{display:flex;gap:6px;margin-bottom:10px;}
+  .maketab{flex:1;text-align:center;padding:9px;border-radius:12px;background:#f1ecff;font-weight:900;font-size:13px;cursor:pointer;color:var(--soft);}
+  .maketab.on{background:var(--pink);color:#fff;}
+  .prob{background:#f8fafc;border:2px solid #e6def7;border-radius:12px;padding:12px;font-weight:900;font-size:14px;text-align:center;margin:8px 0;}
+  .choice{width:100%;text-align:left;background:#fff;border:2px solid var(--lavl);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:700;font-size:13px;margin-bottom:6px;cursor:pointer;}
+  .choice.ok{border-color:var(--mint);background:#effffb;} .choice.ng{border-color:#fca5a5;background:#fee2e2;}
+  .score{text-align:center;font-weight:900;color:var(--pink);margin-top:6px;}
+  .small{font-size:11px;color:var(--soft);font-weight:700;}
+  .bar{display:flex;width:300px;height:26px;margin:10px auto;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.1);}
+  .bar div{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:11px;}
+  .pickrow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0;}
+  .pickbtn{border:2px solid var(--lavl);background:#fff;border-radius:12px;padding:8px 10px;font-family:inherit;font-weight:900;font-size:12.5px;color:var(--ink);cursor:pointer;}
+  .pickbtn.sel{background:var(--lav);color:#fff;border-color:var(--lav);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lvbar" id="lvbar">
+    <button class="lvpick" data-l="1" onclick="setLevel(1)">① 三角形の仲間分け</button>
+    <button class="lvpick" data-l="2" onclick="setLevel(2)">② 内角の和</button>
+  </div>
+  <div class="steps">
+    <div class="step on" id="st1">① 実験</div>
+    <div class="step" id="st2">② ひらめき</div>
+    <div class="step" id="st3">③ 問題メーカー</div>
+  </div>
+
+  <!-- ① 実験 -->
+  <div class="screen on" id="scr1">
+    <div class="card lv1" id="lv1exp">
+      <h2>🔺 三角形の仲間分けラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="l1bubble"></div></div>
+      <canvas id="cv1" width="336" height="190"></canvas>
+      <div class="row"><span class="badge" id="l1badge">－</span></div>
+      <div class="row">
+        <span class="small">頂点の 横いち：</span>
+        <div class="stepper"><button onclick="chg1('dx',-10)">－</button><span class="num" id="dxNum">0</span><button onclick="chg1('dx',10)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">高さ：</span>
+        <div class="stepper"><button onclick="chg1('h',-10)">－</button><span class="num" id="hNum1">50</span><button onclick="chg1('h',10)">＋</button></div>
+      </div>
+      <div class="shapes" id="l1chips"></div>
+      <div class="row"><button class="btn go" id="l1next" onclick="go(2)" disabled>4この 仲間を ぜんぶ 見つけたら つぎへ →</button></div>
+    </div>
+    <div class="card lv2" id="lv2exp" style="display:none">
+      <h2>📐 内角の和 はっけんラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="l2bubble"></div></div>
+      <canvas id="cv2" width="336" height="190"></canvas>
+      <div class="bar" id="angleBar"></div>
+      <div class="row" style="font-weight:900;">
+        <span id="angleSumText">A＋B＋C＝180度</span>
+      </div>
+      <div class="row">
+        <span class="small">頂点の 横いち：</span>
+        <div class="stepper"><button onclick="chg2('dx',-10)">－</button><span class="num" id="dxNum2">0</span><button onclick="chg2('dx',10)">＋</button></div>
+      </div>
+      <div class="row">
+        <span class="small">高さ：</span>
+        <div class="stepper"><button onclick="chg2('h',-10)">－</button><span class="num" id="hNum2">50</span><button onclick="chg2('h',10)">＋</button></div>
+      </div>
+      <div class="small" style="text-align:center;">ためした 形の数：<b id="triedN">0</b> / 3</div>
+      <div class="row"><button class="btn go" id="l2next" onclick="go(2)" disabled>3つの ちがう形を ためしたら つぎへ →</button></div>
+    </div>
+  </div>
+
+  <!-- ② ひらめき -->
+  <div class="screen" id="scr2">
+    <div class="card">
+      <h2>💡 ひらめき</h2>
+      <div class="rulecard" id="ruleCard"></div>
+      <div class="niko" style="margin-top:12px;"><div class="face">🦄</div><div class="bubble" id="l3insight"></div></div>
+      <div class="row"><button class="btn gold" onclick="go(3)">🛠️ 問題メーカーへ →</button></div>
+      <div class="row"><button class="btn ghost" style="max-width:160px" onclick="go(1)">← 実験に もどる</button></div>
+    </div>
+  </div>
+
+  <!-- ③ メーカー -->
+  <div class="screen" id="scr3">
+    <div class="card">
+      <h2>🛠️ 問題メーカー <span class="tag">作った問題：<span id="madeN">0</span></span></h2>
+
+      <div class="lv1" id="lv1make">
+        <div class="maketabs">
+          <div class="maketab on" id="tabN1" onclick="switchTab(1,'N')">🟢 通常問題</div>
+          <div class="maketab" id="tabT1" onclick="switchTab(1,'T')">🔴 ワナ問題</div>
+        </div>
+        <div id="mkN1">
+          <div class="small">仲間の 中から 1つ えらんで、「これは 何という 三角形？」の 問題を つくろう。</div>
+          <div class="pickrow" id="shapePick1"></div>
+          <div class="row"><button class="btn go" onclick="makeNormal1()">🦄 ニコに 出す！</button></div>
+          <div id="nResult1"></div>
+        </div>
+        <div id="mkT1" style="display:none;">
+          <div class="small">出題者に なって、ニコを ひっかけよう！ 2つの辺の 長さが「近いけど ぴったり同じじゃない」形を つくろう。</div>
+          <div class="row">
+            近さ <div class="stepper"><button onclick="chgTrapDx(-5)">－</button><span class="num" id="tDx">10</span><button onclick="chgTrapDx(5)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeTrap1()">🕳️ ワナを 発動！</button></div>
+          <div id="tResult1"></div>
+        </div>
+      </div>
+
+      <div class="lv2" id="lv2make" style="display:none">
+        <div class="maketabs">
+          <div class="maketab on" id="tabN2" onclick="switchTab(2,'N')">🟢 通常問題</div>
+          <div class="maketab" id="tabT2" onclick="switchTab(2,'T')">🔴 ワナ問題</div>
+        </div>
+        <div id="mkN2">
+          <div class="small">「三角形の 2つの角が わかっているとき、のこりの 角は？」の 問題を つくろう。</div>
+          <div class="row">
+            角A <div class="stepper"><button onclick="chgAB('A',-10)">－</button><span class="num" id="pA">50</span><button onclick="chgAB('A',10)">＋</button></div>
+            ／ 角B <div class="stepper"><button onclick="chgAB('B',-10)">－</button><span class="num" id="pB">60</span><button onclick="chgAB('B',10)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeNormal2()">🦄 ニコに 出す！</button></div>
+          <div id="nResult2"></div>
+        </div>
+        <div id="mkT2" style="display:none;">
+          <div class="small">出題者に なって、ニコを ひっかけよう！ とても とがった（または とても ひらいた）三角形でも、内角の和は 180度のままかな？</div>
+          <div class="row">
+            とがり具合 <div class="stepper"><button onclick="chgTrapH(-10)">－</button><span class="num" id="tH">150</span><button onclick="chgTrapH(10)">＋</button></div>
+          </div>
+          <div class="row"><button class="btn go" onclick="makeTrap2()">🕳️ ワナを 発動！</button></div>
+          <div id="tResult2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function qparam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+  var LV = parseInt(qparam("level")||"1",10); if(!(LV===1||LV===2)) LV=1;
+  var made=0;
+
+  function dist(ax,ay,bx,by){ return Math.hypot(bx-ax, by-ay); }
+  function approxEq(a,b,tol){ tol=(tol===undefined)?4:tol; return Math.abs(a-b)<=tol; }
+
+  function classifyTri(dx,h){
+    var left=dist(-50,0,dx,h), right=dist(50,0,dx,h), base=100;
+    var eqLR=approxEq(left,right), eqLB=approxEq(left,base);
+    var dot=dx*dx-2500+h*h; // apex-vector dot product; ~0 => right angle at apex
+    var rightAngle=Math.abs(dot)<=200;
+    if(eqLR && eqLB) return {name:"正三角形", why:"3つの辺の長さが ぜんぶ 等しい"};
+    if(rightAngle && eqLR) return {name:"直角二等辺三角形", why:"直角が1つ・2辺の長さが等しい（ボーナス発見！）"};
+    if(rightAngle) return {name:"直角三角形", why:"かどの1つが ちょうど90度"};
+    if(eqLR) return {name:"二等辺三角形", why:"2つの辺の長さが 等しい"};
+    return {name:"ふつうの三角形（不等辺三角形）", why:"辺の長さも 角も 特別な関係が ない"};
+  }
+
+  function drawTri(ctx, dx, h, color){
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    var cx=ctx.canvas.width/2, cy=160;
+    var B0=[cx-50,cy], B1=[cx+50,cy], P=[cx+dx,cy-h];
+    ctx.beginPath(); ctx.moveTo(B0[0],B0[1]); ctx.lineTo(B1[0],B1[1]); ctx.lineTo(P[0],P[1]); ctx.closePath();
+    ctx.fillStyle="#eaddf7"; ctx.fill(); ctx.strokeStyle=color; ctx.lineWidth=3; ctx.lineJoin="round"; ctx.stroke();
+    return {B0:B0,B1:B1,P:P};
+  }
+
+  /* ===================== レベル1：三角形の仲間分け ===================== */
+  var cv1=document.getElementById("cv1"), ctx1=cv1.getContext("2d");
+  var dx1=0, h1=50, found1={};
+  var REQ1=["正三角形","二等辺三角形","直角三角形","ふつうの三角形（不等辺三角形）"];
+
+  function render1(){
+    drawTri(ctx1, dx1, h1, "#8a5cf0");
+    var cls=classifyTri(dx1,h1);
+    document.getElementById("dxNum").textContent=dx1;
+    document.getElementById("hNum1").textContent=h1;
+    var badge=document.getElementById("l1badge"); badge.textContent=cls.name;
+    document.getElementById("l1bubble").innerHTML="いまの 形は「<b>"+cls.name+"</b>」。"+cls.why+"だからだよ。";
+    found1[cls.name]=true;
+    renderChips1();
+    var missing=REQ1.filter(function(s){return !found1[s];});
+    var nx=document.getElementById("l1next");
+    nx.disabled = missing.length>0;
+    if(!nx.disabled) nx.textContent="4この 仲間、ぜんぶ 見つけた！ つぎへ →";
+  }
+  function renderChips1(){
+    var z=document.getElementById("l1chips"); z.innerHTML="";
+    REQ1.concat(["直角二等辺三角形"]).forEach(function(s,i){
+      var el=document.createElement("div");
+      el.className="chip"+(found1[s]?" found":"")+(i===4?" bonus":"");
+      el.textContent=(found1[s]?"✓ ":"")+s+(i===4?"(ボーナス)":"");
+      z.appendChild(el);
+    });
+  }
+  window.chg1=function(k,d){
+    if(k==="dx") dx1=Math.max(-50,Math.min(50,dx1+d));
+    if(k==="h") h1=Math.max(30,Math.min(120,h1+d));
+    render1();
+  };
+  window._setTri1=function(dx,h){ dx1=dx; h1=h; render1(); };
+  window._state1=function(){ var c=classifyTri(dx1,h1); return {dx:dx1,h:h1,name:c.name,found:Object.keys(found1).slice()}; };
+  window.classifyTri=classifyTri;
+
+  /* ===================== レベル2：内角の和 ===================== */
+  var cv2=document.getElementById("cv2"), ctx2=cv2.getContext("2d");
+  var dx2=0, h2=50, tried={};
+
+  function computeAngles(dx,h){
+    var B0=[-50,0], B1=[50,0], P=[dx,h];
+    function ang(o,p,q){
+      var v1=[p[0]-o[0],p[1]-o[1]], v2=[q[0]-o[0],q[1]-o[1]];
+      var dot=v1[0]*v2[0]+v1[1]*v2[1], m1=Math.hypot(v1[0],v1[1]), m2=Math.hypot(v2[0],v2[1]);
+      var cos=Math.max(-1,Math.min(1, dot/(m1*m2)));
+      return Math.acos(cos)*180/Math.PI;
+    }
+    var A=Math.round(ang(B0,B1,P));
+    var B=Math.round(ang(B1,B0,P));
+    var C=180-A-B; // forced so the displayed sum is always exactly 180
+    return {A:A,B:B,C:C};
+  }
+
+  function render2(){
+    var pts=drawTri(ctx2, dx2, h2, "#ff7fc4");
+    var ang=computeAngles(dx2,h2);
+    ctx2.fillStyle="#4a3b52"; ctx2.font="bold 12px sans-serif";
+    ctx2.fillText(ang.A+"°", pts.B0[0]+4, pts.B0[1]-6);
+    ctx2.fillText(ang.B+"°", pts.B1[0]-26, pts.B1[1]-6);
+    ctx2.fillText(ang.C+"°", pts.P[0]-8, pts.P[1]+16);
+    document.getElementById("dxNum2").textContent=dx2;
+    document.getElementById("hNum2").textContent=h2;
+    document.getElementById("angleSumText").textContent="A("+ang.A+"°) ＋ B("+ang.B+"°) ＋ C("+ang.C+"°) ＝ 180度";
+    var bar=document.getElementById("angleBar");
+    bar.innerHTML =
+      '<div style="width:'+(ang.A/180*300)+'px;background:#8a5cf0;">'+ang.A+'°</div>' +
+      '<div style="width:'+(ang.B/180*300)+'px;background:#ff7fc4;">'+ang.B+'°</div>' +
+      '<div style="width:'+(ang.C/180*300)+'px;background:#37c79a;">'+ang.C+'°</div>';
+    document.getElementById("l2bubble").innerHTML="形を かえても、A＋B＋C は いつも <b>180度</b>！ 三角形の 内角の和は きまっているんだ。";
+    tried[dx2+","+h2]=true;
+    var n=Object.keys(tried).length;
+    document.getElementById("triedN").textContent=Math.min(n,3);
+    var nx=document.getElementById("l2next");
+    nx.disabled = n<3;
+    if(!nx.disabled) nx.textContent="3つ ためした！ つぎへ →";
+  }
+  window.chg2=function(k,d){
+    if(k==="dx") dx2=Math.max(-50,Math.min(50,dx2+d));
+    if(k==="h") h2=Math.max(30,Math.min(120,h2+d));
+    render2();
+  };
+  window._setTri2=function(dx,h){ dx2=dx; h2=h; render2(); };
+  window._state2=function(){ var a=computeAngles(dx2,h2); return {dx:dx2,h:h2,A:a.A,B:a.B,C:a.C,sum:a.A+a.B+a.C,tried:Object.keys(tried).length}; };
+  window.computeAngles=computeAngles;
+
+  /* ===================== 共通：ステップ切り替え ===================== */
+  window.go=function(n){
+    [1,2,3].forEach(function(i){ document.getElementById("scr"+i).classList.toggle("on", i===n); document.getElementById("st"+i).classList.toggle("on", i===n); });
+  };
+  window.setLevel=function(l){
+    LV=l;
+    document.querySelectorAll(".lvpick").forEach(function(b){ b.classList.toggle("on", Number(b.dataset.l)===l); });
+    document.querySelectorAll(".lv1").forEach(function(el){ el.style.display = (l===1)?"":"none"; });
+    document.querySelectorAll(".lv2").forEach(function(el){ el.style.display = (l===2)?"":"none"; });
+    if(l===1){
+      document.getElementById("ruleCard").innerHTML="辺の長さが <span style=\"color:#1d4ed8;\">3つとも同じ</span> なら「正三角形」。<br>2つだけ同じなら「二等辺三角形」。かどが1つ 90度なら「直角三角形」。";
+      document.getElementById("l3insight").innerHTML="三角定規（正三角形の半分＝直角二等辺三角形と、もう1まいの直角三角形）にも、この仲間分けが かくれているよ！";
+    } else {
+      document.getElementById("ruleCard").innerHTML="三角形の 3つの角を たすと、<span style=\"color:#db2777;\">どんな形でも いつも180度</span>。これを「内角の和」というよ。";
+      document.getElementById("l3insight").innerHTML="とがった三角形でも、ひらいた三角形でも、3つの かどを 合わせると 必ず まっすぐ（180度）に なるんだよ。";
+    }
+    go(1);
+    render1(); render2();
+    renderShapePick1();
+  };
+
+  /* ===================== 問題メーカー：レベル1 ===================== */
+  var pickedShape1="正三角形";
+  var SHAPE_PARAM1={ "正三角形":[0,90], "二等辺三角形":[0,60], "直角三角形":[30,40], "ふつうの三角形（不等辺三角形）":[20,50] };
+  function renderShapePick1(){
+    var z=document.getElementById("shapePick1"); if(!z) return; z.innerHTML="";
+    REQ1.forEach(function(s){
+      var b=document.createElement("button"); b.className="pickbtn"+(s===pickedShape1?" sel":"");
+      b.textContent=s; b.onclick=function(){ pickedShape1=s; renderShapePick1(); };
+      z.appendChild(b);
+    });
+  }
+  window.makeNormal1=function(){
+    var p=SHAPE_PARAM1[pickedShape1], cls=classifyTri(p[0],p[1]);
+    var box=document.getElementById("nResult1");
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>この 三角形は 何？</div>'
+      +'<canvas id="mkCv1" width="200" height="130"></canvas>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">答えは「<b>'+pickedShape1+'</b>」！ '+cls.why+'だからだよ。</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true)">辺の長さや 角の 特ちょうから、三角形の 名前を 見分けられるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">色を きれいに 塗れるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">三角形を 早く 書けるか</button>';
+    var mc=document.getElementById("mkCv1"), mx=mc.getContext("2d");
+    var cx=mc.width/2, cy=110, dxs=p[0]*0.6, hs=p[1]*0.8;
+    mx.beginPath(); mx.moveTo(cx-30,cy); mx.lineTo(cx+30,cy); mx.lineTo(cx+dxs,cy-hs); mx.closePath();
+    mx.fillStyle="#ffe4f2"; mx.fill(); mx.strokeStyle="#ff7fc4"; mx.lineWidth=3; mx.stroke();
+  };
+  var trapDx=10;
+  window.chgTrapDx=function(d){ trapDx=Math.max(5,Math.min(30,trapDx+d)); document.getElementById("tDx").textContent=trapDx; };
+  window.makeTrap1=function(){
+    var left=dist(-50,0,trapDx,60), right=dist(50,0,trapDx,60);
+    var cls=classifyTri(trapDx,60);
+    var box=document.getElementById("tResult1");
+    box.innerHTML=''
+      +'<div class="prob">きみの ワナ：<br>「2つの辺の長さが 近い（'+Math.round(left)+' と '+Math.round(right)+'）三角形。これは 二等辺三角形と 言える？」</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">近いけど、ぴったり 同じじゃない！ 正しくは「<b>'+cls.name+'</b>」。長さが 近くても、キチンと はからないと 二等辺三角形とは 言えないよ。ひっかかった〜😵</div></div>'
+      +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true)">見た目が 近くても、辺の長さが ぴったり同じか たしかめないと 決めつけられないと 見ぬけるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">三角形を きれいに 塗れるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">数字を 大きい順に 並べられるか</button>';
+  };
+  window.pickA=function(el,ok){
+    el.parentNode.querySelectorAll(".choice").forEach(function(b){b.disabled=true;});
+    if(ok){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made; el.insertAdjacentHTML("afterend",'<div class="score">🎉 ねらいバッチリ！ 問題 完成！</div>'); }
+    else { el.classList.add("ng"); el.insertAdjacentHTML("afterend",'<div class="small" style="color:#ef4444;">見た目じゃなく「キチンと たしかめる」力が ねらいだよ。</div>'); }
+  };
+
+  /* ===================== 問題メーカー：レベル2 ===================== */
+  var pA=50, pB=60;
+  window.chgAB=function(k,d){
+    if(k==='A') pA=Math.max(10,Math.min(150,pA+d));
+    if(k==='B') pB=Math.max(10,Math.min(150,pB+d));
+    if(pA+pB>=170){ if(k==='A') pA=170-pB; else pB=170-pA; }
+    document.getElementById("pA").textContent=pA; document.getElementById("pB").textContent=pB;
+  };
+  window.makeNormal2=function(){
+    var C=180-pA-pB, box=document.getElementById("nResult2");
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>三角形の 角A＝'+pA+'度、角B＝'+pB+'度。角Cは？</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">180－'+pA+'－'+pB+'＝<b>'+C+'度</b>！ 内角の和は いつも 180度だから、わり算じゃなくて ひき算で 出せるよ。</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true)">内角の和が 180度なのを 使って、のこりの角を 計算で 出せるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">三角じょうぎが 使えるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">分度器で 色を 塗れるか</button>';
+  };
+  var trapH=150;
+  window.chgTrapH=function(d){ trapH=Math.max(35,Math.min(150,trapH+d)); document.getElementById("tH").textContent=trapH; };
+  window.makeTrap2=function(){
+    var ang=computeAngles(0,trapH), box=document.getElementById("tResult2");
+    box.innerHTML=''
+      +'<div class="prob">きみの ワナ：<br>「ものすごく とがった（または ひらいた）三角形。内角の和は それでも 180度？」</div>'
+      +'<canvas id="tCv2b" width="200" height="130"></canvas>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">形は ぜんぜん ちがうのに… A('+ang.A+'°)＋B('+ang.B+'°)＋C('+ang.C+'°)＝<b>180度</b>！ どんな形でも 内角の和は かわらないんだ。ひっかかった〜😵</div></div>'
+      +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true)">形が どんなに かわっても、内角の和は 180度で 変わらないと 見ぬけるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">とがった形を 早く かけるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">180という数字が 読めるか</button>';
+    var tc=document.getElementById("tCv2b"), tx=tc.getContext("2d");
+    var cx=tc.width/2, cy=110, hs=Math.min(90,trapH*0.6);
+    tx.beginPath(); tx.moveTo(cx-30,cy); tx.lineTo(cx+30,cy); tx.lineTo(cx,cy-hs); tx.closePath();
+    tx.fillStyle="#dcfce7"; tx.fill(); tx.strokeStyle="#15803d"; tx.lineWidth=3; tx.stroke();
+  };
+
+  window.switchTab=function(lv,t){
+    document.getElementById("tabN"+lv).classList.toggle("on", t==='N');
+    document.getElementById("tabT"+lv).classList.toggle("on", t==='T');
+    document.getElementById("mkN"+lv).style.display=t==='N'?'block':'none';
+    document.getElementById("mkT"+lv).style.display=t==='T'?'block':'none';
+  };
+
+  window._made=function(){ return made; };
+  window._level=function(){ return LV; };
+
+  setLevel(LV);
+})();
+</script>
+</body>
+</html>

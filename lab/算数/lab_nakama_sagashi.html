@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>仲間さがしゲーム 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --soft:#7a6985; --lav:#b19cd9; --lavl:#eaddf7; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  body{margin:0;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#f3e8ff,#ffe4f2 55%,#e6fbf4);min-height:100vh;padding:14px;touch-action:none;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .card.top{background:#fff;border-radius:20px;padding:14px;box-shadow:0 8px 0 rgba(74,59,82,.08);margin-bottom:10px;}
+  h2{font-size:17px;margin:0 0 6px;}
+  .niko{display:flex;gap:8px;align-items:flex-start;margin:8px 0;}
+  .niko .face{font-size:28px;}
+  .bubble{background:#fff4fb;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;flex:1;}
+  .bubble b{color:var(--pink);}
+  .progress{text-align:center;font-size:12px;font-weight:900;color:var(--soft);margin-bottom:4px;}
+  .tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:180px;padding:10px;background:#fbf7ff;border-radius:14px;border:2px dashed #e6def7;margin-bottom:10px;}
+  .shapecard{width:70px;height:86px;background:#fff;border-radius:12px;border:2px solid var(--lavl);box-shadow:0 4px 0 rgba(74,59,82,.10);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;touch-action:none;}
+  .shapecard canvas{pointer-events:none;}
+  .shapecard .lbl{font-size:10px;font-weight:900;color:var(--soft);pointer-events:none;margin-top:2px;}
+  .shapecard.dragging{position:fixed;z-index:50;box-shadow:0 10px 18px rgba(74,59,82,.3);}
+  .shapecard.gone{visibility:hidden;}
+  .binrow{display:flex;gap:10px;}
+  .bin{flex:1;min-height:90px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:14px;border:3px dashed;}
+  .bin.yes{background:#effffb;border-color:var(--mint);color:#15803d;}
+  .bin.no{background:#fff1f4;border-color:var(--pink);color:#be185d;}
+  .bin.hover{filter:brightness(0.95);transform:scale(1.02);}
+  .scorebox{text-align:center;margin-top:10px;font-weight:900;color:var(--pink);}
+  .btn{border:none;border-radius:14px;padding:13px;font-family:inherit;font-weight:900;font-size:15px;color:#fff;cursor:pointer;width:100%;margin-top:10px;}
+  .btn.gold{background:linear-gradient(180deg,#ffca5e,#f59e0b);box-shadow:0 5px 0 #b45309;}
+  .btn:active{transform:translateY(3px);box-shadow:none;}
+  .small{font-size:11px;color:var(--soft);font-weight:700;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card top">
+    <h2>🔎 仲間さがしゲーム</h2>
+    <div class="progress" id="progress">お題 1 / 3</div>
+    <div class="niko"><div class="face">🦄</div><div class="bubble" id="themeBubble"></div></div>
+  </div>
+
+  <div class="tray" id="tray"></div>
+
+  <div class="binrow">
+    <div class="bin yes" id="binYes">🟢 なかま</div>
+    <div class="bin no" id="binNo">🔴 ちがう</div>
+  </div>
+
+  <div class="niko" style="margin-top:10px;"><div class="face">🦄</div><div class="bubble" id="feedbackBubble">形を ドラッグして、あてはまる ほうへ 入れてね！</div></div>
+  <div class="scorebox">正解：<span id="scoreN">0</span> / <span id="totalN">24</span></div>
+  <div id="nextArea"></div>
+</div>
+
+<script>
+(function(){
+  var SHAPES = [
+    { id:"tri_eq",   name:"正三角形",   type:"tri", params:[0,90],  allEqual:true,  rightAngle:false, parallel:false },
+    { id:"tri_iso",  name:"二等辺三角形", type:"tri", params:[0,60],  allEqual:false, rightAngle:false, parallel:false },
+    { id:"tri_right",name:"直角三角形",  type:"tri", params:[30,40], allEqual:false, rightAngle:true,  parallel:false },
+    { id:"tri_scal", name:"ふつうの三角形",type:"tri", params:[20,50], allEqual:false, rightAngle:false, parallel:false },
+    { id:"quad_sq",  name:"正方形",     type:"quad",params:[100,100,0], allEqual:true,  rightAngle:true,  parallel:true },
+    { id:"quad_rect",name:"長方形",     type:"quad",params:[100,60,0],  allEqual:false, rightAngle:true,  parallel:true },
+    { id:"quad_trap",name:"台形",       type:"quad",params:[140,80,30], allEqual:false, rightAngle:false, parallel:true },
+    { id:"quad_rhom",name:"ひし形",     type:"quad",params:[100,80,60], allEqual:true,  rightAngle:false, parallel:true }
+  ];
+  var THEMES = [
+    { key:"allEqual",  label:"辺の長さが ぜんぶ 同じ 仲間", explain:"4つ（3つ）の辺の 長さが すべて 等しいかどうかだよ。" },
+    { key:"rightAngle",label:"直角（90度）が ある 仲間",     explain:"かどの どこかに、ぴったり90度が あるかどうかだよ。" },
+    { key:"parallel",  label:"平行な辺が ある 仲間",         explain:"向かい合う辺が、どこまでのばしても 交わらないかどうかだよ。三角形には 平行な辺は ぜったい ないよ。" }
+  ];
+
+  var round=0, placed={}, score=0, totalPerRound=SHAPES.length, done=false;
+
+  function classifyTriLocal(dx,h){
+    function dist(ax,ay,bx,by){ return Math.hypot(bx-ax,by-ay); }
+    var left=dist(-50,0,dx,h), right=dist(50,0,dx,h);
+    return {left:left,right:right};
+  }
+
+  function drawShape(canvas, sh){
+    var ctx=canvas.getContext("2d"), w=canvas.width, h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle="#eaddf7"; ctx.strokeStyle="#8a5cf0"; ctx.lineWidth=2.5;
+    if(sh.type==="tri"){
+      var dx=sh.params[0]*0.28, hh=sh.params[1]*0.42;
+      var cx=w/2, cy=h-14;
+      ctx.beginPath(); ctx.moveTo(cx-24,cy); ctx.lineTo(cx+24,cy); ctx.lineTo(cx+dx*0.6,cy-hh); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+    } else {
+      var topLen=sh.params[0]*0.22, topH=sh.params[1]*0.3, skew=sh.params[2]*0.22;
+      var baseLen=22, cx=w/2, baseY=h-12;
+      var B0x=cx-baseLen, B1x=cx+baseLen, T0x=B0x+skew, T1x=T0x+topLen, topY=baseY-topH;
+      ctx.beginPath(); ctx.moveTo(B0x,baseY); ctx.lineTo(B1x,baseY); ctx.lineTo(T1x,topY); ctx.lineTo(T0x,topY); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+    }
+  }
+
+  function renderTheme(){
+    var t=THEMES[round];
+    document.getElementById("progress").textContent="お題 "+(round+1)+" / "+THEMES.length;
+    document.getElementById("themeBubble").innerHTML="つぎの お題は「<b>"+t.label+"</b>」だよ！<br>"+t.explain;
+    document.getElementById("totalN").textContent = THEMES.length*totalPerRound;
+    document.getElementById("scoreN").textContent = score;
+    document.getElementById("feedbackBubble").textContent="形を ドラッグして、あてはまる ほうへ 入れてね！";
+    document.getElementById("nextArea").innerHTML="";
+  }
+
+  function renderTray(){
+    var tray=document.getElementById("tray"); tray.innerHTML="";
+    SHAPES.forEach(function(sh){
+      var el=document.createElement("div");
+      el.className="shapecard"; el.dataset.id=sh.id;
+      if(placed[sh.id]!==undefined) el.classList.add("gone");
+      var cv=document.createElement("canvas"); cv.width=60; cv.height=60;
+      el.appendChild(cv);
+      var lbl=document.createElement("div"); lbl.className="lbl"; lbl.textContent=sh.name;
+      el.appendChild(lbl);
+      tray.appendChild(el);
+      drawShape(cv, sh);
+      attachDrag(el, sh.id);
+    });
+  }
+
+  function evaluate(shapeId, binId){
+    var sh=SHAPES.filter(function(s){return s.id===shapeId;})[0];
+    var t=THEMES[round];
+    var isYes = !!sh[t.key];
+    var pickedYes = (binId==="binYes");
+    var ok = (isYes===pickedYes);
+    placed[shapeId]=binId;
+    if(ok) score++;
+    document.getElementById("scoreN").textContent=score;
+    var reasonMap={
+      allEqual: isYes ? "辺の長さが ぜんぶ 等しいから「なかま」だよ。" : "辺の長さが ぜんぶは 等しくないから「ちがう」だよ。",
+      rightAngle: isYes ? "90度の かどが あるから「なかま」だよ。" : "90度の かどが ないから「ちがう」だよ。",
+      parallel: isYes ? "平行な 辺が あるから「なかま」だよ。" : (sh.type==="tri" ? "三角形には 平行な辺は ぜったい ないから「ちがう」だよ。" : "平行な辺が ないから「ちがう」だよ。")
+    };
+    var fb=document.getElementById("feedbackBubble");
+    if(ok) fb.innerHTML="🎉 せいかい！ <b>"+sh.name+"</b> は「"+(isYes?"なかま":"ちがう")+"」。"+reasonMap[t.key];
+    else fb.innerHTML="おしい！ <b>"+sh.name+"</b> は ほんとうは「"+(isYes?"なかま":"ちがう")+"」だよ。"+reasonMap[t.key];
+    renderTray();
+    checkRoundDone();
+  }
+
+  function checkRoundDone(){
+    var allPlaced = SHAPES.every(function(s){ return placed[s.id]!==undefined; });
+    if(!allPlaced) return;
+    if(round<THEMES.length-1){
+      document.getElementById("nextArea").innerHTML='<button class="btn gold" onclick="window.nextRound()">つぎの お題へ →</button>';
+    } else {
+      done=true;
+      document.getElementById("nextArea").innerHTML='<div class="small" style="font-size:14px;margin-top:6px;">🏆 ぜんぶの お題、クリア！ '+score+' / '+(THEMES.length*totalPerRound)+'問 せいかい！</div>';
+    }
+  }
+
+  window.nextRound=function(){
+    round++; placed={};
+    renderTheme(); renderTray();
+  };
+
+  /* ===================== ドラッグ操作（ポインターイベント） ===================== */
+  function attachDrag(el, shapeId){
+    el.addEventListener("pointerdown", function(e){
+      if(placed[shapeId]!==undefined) return;
+      e.preventDefault();
+      var rect=el.getBoundingClientRect();
+      var offX=e.clientX-rect.left, offY=e.clientY-rect.top;
+      el.classList.add("dragging");
+      el.style.left=rect.left+"px"; el.style.top=rect.top+"px";
+      el.style.width=rect.width+"px"; el.style.height=rect.height+"px";
+      try{ el.setPointerCapture(e.pointerId); }catch(err){}
+
+      function move(ev){
+        el.style.left=(ev.clientX-offX)+"px";
+        el.style.top=(ev.clientY-offY)+"px";
+        var by=hitBin(ev.clientX,ev.clientY);
+        document.getElementById("binYes").classList.toggle("hover", by==="binYes");
+        document.getElementById("binNo").classList.toggle("hover", by==="binNo");
+      }
+      function up(ev){
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerup", up);
+        document.getElementById("binYes").classList.remove("hover");
+        document.getElementById("binNo").classList.remove("hover");
+        var by=hitBin(ev.clientX,ev.clientY);
+        el.classList.remove("dragging");
+        el.style.left=""; el.style.top=""; el.style.width=""; el.style.height="";
+        if(by){ evaluate(shapeId, by); }
+      }
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerup", up);
+    });
+  }
+  function hitBin(x,y){
+    var yes=document.getElementById("binYes").getBoundingClientRect();
+    var no=document.getElementById("binNo").getBoundingClientRect();
+    if(x>=yes.left&&x<=yes.right&&y>=yes.top&&y<=yes.bottom) return "binYes";
+    if(x>=no.left&&x<=no.right&&y>=no.top&&y<=no.bottom) return "binNo";
+    return null;
+  }
+
+  /* ===================== テスト用フック ===================== */
+  window._dropCard=function(shapeId, binId){ evaluate(shapeId, binId); };
+  window._state=function(){ return { round:round, placed:Object.assign({},placed), score:score, done:done, themeKey:THEMES[round]?THEMES[round].key:null }; };
+  window._shapes=SHAPES; window._themes=THEMES;
+
+  renderTheme(); renderTray();
+})();
+</script>
+</body>
+</html>
