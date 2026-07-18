@@ -279,6 +279,10 @@
 </div>
 <script>
 window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkNke4NbZKrJ5qJwC9aPUjesuHfRKiro_WZgOVGydRznNvmbtXHmBS5AEwt1WH0P8/exec";
+// ★ふだん自動ログインする子どものID（GASの ALLOWED_PLAYERS と同じ名前にしてね）
+window.CHILD_ID = "りお";
+// ★アカウント切替に必要な おうちの人のパスワード
+window.SWITCH_PASSWORD = "papa8888";
 window.TREASURE_ISLAND_SPAWN_CHANCE = 0.5;
 window.subjectDictionary = {
   japanese: { label: "📕国語", sub: "読解・漢字" }, math: { label: "📐算数", sub: "計算・実験" },
@@ -429,14 +433,29 @@ window.saveGame = function() {
     fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SAVE", playerId: window.playerId, saveData: window.saveData }) }).catch(e => {});
   }
 };
-window.initApp = function() { if (!window.playerId) { document.getElementById("login-modal").style.display = "flex"; } else { window.performLogin(window.playerId); } };
+window.initApp = function() {
+  // ★ふだんは自動で子どものアカウントにログイン（ログイン画面＝アカウント作成の入り口は出さない）
+  if (!window.playerId) {
+    window.playerId = window.CHILD_ID;
+    localStorage.setItem("kids_lab_playerId", window.playerId);
+  }
+  window.performLogin(window.playerId);
+};
 window.doLogin = function() {
   const input = document.getElementById("player-id-input").value.trim();
   if (!input) { alert("なまえをいれてね！"); return; }
   window.playerId = input; localStorage.setItem("kids_lab_playerId", window.playerId);
   document.getElementById("login-modal").style.display = "none"; window.performLogin(window.playerId);
 };
-window.logout = function() { if(confirm("ログアウトして、別のアカウントに切り替えますか？")) { localStorage.removeItem("kids_lab_playerId"); location.reload(); } };
+window.logout = function() {
+  // ★アカウント切替は おうちの人のパスワードが必要（子どもは切替・作成できない）
+  var pass = prompt("👨 おうちの人のパスワードを入れてください（アカウント切替）：");
+  if (pass === null) return;
+  if (pass !== window.SWITCH_PASSWORD) { alert("❌ パスワードが ちがいます。"); return; }
+  localStorage.removeItem("kids_lab_playerId");
+  window.playerId = "";
+  document.getElementById("login-modal").style.display = "flex"; // パスOKのときだけログイン画面を出す
+};
 window.openStampModal = function() {
   window.renderStampCard();
   document.getElementById("stamp-modal").style.display = "flex";
