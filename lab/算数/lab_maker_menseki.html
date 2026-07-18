@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>めんせき変身ラボ＆メーカー 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --soft:#7a6985; --lav:#b19cd9; --lavl:#eaddf7; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; --blue:#6f8dff; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#f3e8ff,#ffe4f2 55%,#e6fbf4);min-height:100vh;padding:14px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .lvbar{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+  .lvpick{border:none;padding:8px 14px;border-radius:999px;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .lvpick.on{background:var(--gold);color:#fff;box-shadow:0 3px 0 #b45309;}
+  .steps{display:flex;gap:6px;margin-bottom:12px;}
+  .step{flex:1;text-align:center;font-size:11px;font-weight:900;padding:8px 4px;border-radius:999px;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .step.on{background:var(--lav);color:#fff;box-shadow:none;}
+  .card{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 0 rgba(74,59,82,.08);margin-bottom:12px;}
+  .screen{display:none;} .screen.on{display:block;animation:fade .3s;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h2{font-size:18px;margin:0 0 8px;}
+  .niko{display:flex;gap:8px;align-items:flex-start;margin:10px 0;}
+  .niko .face{font-size:30px;}
+  .bubble{background:#fff4fb;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;flex:1;}
+  .bubble b{color:var(--pink);}
+  canvas{display:block;margin:8px auto;background:#fbf7ff;border-radius:12px;border:2px solid #eee;}
+  .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0;}
+  .stepper{display:inline-flex;align-items:center;gap:8px;background:#f6f0ff;border-radius:12px;padding:4px;}
+  .stepper button{border:none;width:34px;height:34px;border-radius:9px;background:var(--lav);color:#fff;font-weight:900;font-size:18px;cursor:pointer;box-shadow:0 3px 0 #8a5cf0;}
+  .stepper button:active{transform:translateY(2px);box-shadow:none;}
+  .stepper .num{min-width:26px;text-align:center;font-weight:900;font-size:18px;}
+  .btn{border:none;border-radius:14px;padding:13px;font-family:inherit;font-weight:900;font-size:15px;color:#fff;cursor:pointer;width:100%;}
+  .btn.go{background:linear-gradient(180deg,#b98cff,#8a5cf0);box-shadow:0 5px 0 #6f3fd6;}
+  .btn.gold{background:linear-gradient(180deg,#ffca5e,#f59e0b);box-shadow:0 5px 0 #b45309;}
+  .btn:active{transform:translateY(3px);box-shadow:none;}
+  .btn.ghost{background:#eee;color:var(--soft);box-shadow:0 4px 0 #ddd;}
+  .btn:disabled{opacity:.5;}
+  .tag{display:inline-block;background:#fef9c3;color:#a16207;font-weight:900;font-size:12px;padding:4px 10px;border-radius:999px;}
+  .shapes{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap;}
+  .chip{font-size:12px;font-weight:900;padding:5px 10px;border-radius:999px;background:#f1f5f9;color:#94a3b8;border:2px dashed #cbd5e1;}
+  .chip.found{background:#dcfce7;color:#15803d;border-style:solid;border-color:#86efac;}
+  .rulecard{background:linear-gradient(135deg,#fff7d6,#ffe9f5);border:2px dashed #ffbf5e;border-radius:16px;padding:14px;text-align:center;font-weight:900;font-size:15px;color:#b45309;}
+  .maketabs{display:flex;gap:6px;margin-bottom:10px;}
+  .maketab{flex:1;text-align:center;padding:9px;border-radius:12px;background:#f1ecff;font-weight:900;font-size:13px;cursor:pointer;color:var(--soft);}
+  .maketab.on{background:var(--pink);color:#fff;}
+  .prob{background:#f8fafc;border:2px solid #e6def7;border-radius:12px;padding:12px;font-weight:900;font-size:15px;text-align:center;margin:8px 0;}
+  .choice{width:100%;text-align:left;background:#fff;border:2px solid var(--lavl);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:700;font-size:13px;margin-bottom:6px;cursor:pointer;}
+  .choice.ok{border-color:var(--mint);background:#effffb;} .choice.ng{border-color:#fca5a5;background:#fee2e2;}
+  .score{text-align:center;font-weight:900;color:var(--pink);margin-top:6px;}
+  .small{font-size:11px;color:var(--soft);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lvbar" id="lvbar">
+    <button class="lvpick" data-l="1" onclick="setLevel(1)">初級</button>
+    <button class="lvpick" data-l="2" onclick="setLevel(2)">中級</button>
+    <button class="lvpick" data-l="3" onclick="setLevel(3)">上級</button>
+  </div>
+  <div class="steps">
+    <div class="step on" id="st1">① 変身じっけん</div>
+    <div class="step" id="st2">② ひらめき</div>
+    <div class="step" id="st3">③ 問題メーカー</div>
+  </div>
+
+  <!-- ① 実験 -->
+  <div class="screen on" id="scr1">
+    <div class="card">
+      <h2 id="expTitle">🟪 めんせき変身ラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="b1"></div></div>
+      <canvas id="exp" width="336" height="204"></canvas>
+      <div class="row" style="font-weight:900;font-size:17px;">
+        よこ <span id="wNum">3</span> × たて <span id="hNum">4</span> ＝ 面積 <span style="color:var(--pink)" id="areaNum">12</span>
+      </div>
+      <div class="row">
+        <span class="small">よこの数：</span>
+        <div class="stepper"><button onclick="chgW(-1)">－</button><span class="num" id="wStep">3</span><button onclick="chgW(1)">＋</button></div>
+      </div>
+      <div class="shapes" id="shapeChips"></div>
+      <div class="row"><button class="btn go" id="toRule" onclick="go(2)" disabled>形を ぜんぶ 見つけたら つぎへ →</button></div>
+    </div>
+  </div>
+
+  <!-- ② ひらめき -->
+  <div class="screen" id="scr2">
+    <div class="card">
+      <h2>💡 ひらめき</h2>
+      <div class="rulecard" id="ruleCard"></div>
+      <div class="niko" style="margin-top:12px;"><div class="face">🦄</div><div class="bubble">面積で 考えると、わり算も 見える！『面積で よこが 分かれば、たては わり算』。<br>問題を つくって、さいごに <b>大人でも ひっかかる ワナ</b>も 作ってみよう！</div></div>
+      <div class="row"><button class="btn gold" onclick="go(3)">🛠️ 問題メーカーへ →</button></div>
+      <div class="row"><button class="btn ghost" style="max-width:160px" onclick="go(1)">← 実験に もどる</button></div>
+    </div>
+  </div>
+
+  <!-- ③ メーカー -->
+  <div class="screen" id="scr3">
+    <div class="card">
+      <h2>🛠️ 問題メーカー <span class="tag">作った問題：<span id="madeN">0</span></span></h2>
+      <div class="maketabs">
+        <div class="maketab on" id="tabN" onclick="switchTab('N')">🟢 通常問題</div>
+        <div class="maketab" id="tabT" onclick="switchTab('T')">🔴 ワナ問題</div>
+      </div>
+
+      <div id="mkN">
+        <div class="small">「面積が A の 長方形。よこが W なら たては？」の 問題を つくろう。</div>
+        <div class="row">
+          面積 <div class="stepper"><button onclick="chg('A',-1)">－</button><span class="num" id="A">12</span><button onclick="chg('A',1)">＋</button></div>
+          ／ よこ <div class="stepper"><button onclick="chg('W',-1)">－</button><span class="num" id="W">3</span><button onclick="chg('W',1)">＋</button></div>
+        </div>
+        <div class="row"><button class="btn go" onclick="makeNormal()">🦄 ニコに 出す！</button></div>
+        <div id="nResult"></div>
+      </div>
+
+      <div id="mkT" style="display:none;">
+        <div class="small">出題者に なって、ニコを ひっかけよう！ もとの 長方形は <b>よこ3 × たて4（面積12）</b>。<br>「たて・よこ 両方を 何倍に する？」を えらんで ワナを 発動！</div>
+        <div class="row">
+          両方を <div class="stepper"><button onclick="chg('N',-1)">－</button><span class="num" id="Nx">2</span><button onclick="chg('N',1)">＋</button></div> 倍に する
+        </div>
+        <div class="row"><button class="btn go" onclick="makeTrap()">🕳️ ワナを 発動！</button></div>
+        <div id="tResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function qparam(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+  var LEVELS = {
+    1:{ name:"初級", area:12, shapes:[["1x12","1×12"],["2x6","2×6"],["3x4","3×4"]], aMax:12, nMax:2 },
+    2:{ name:"中級", area:24, shapes:[["1x24","1×24"],["2x12","2×12"],["3x8","3×8"],["4x6","4×6"]], aMax:24, nMax:3 },
+    3:{ name:"上級", area:36, shapes:[["1x36","1×36"],["2x18","2×18"],["3x12","3×12"],["4x9","4×9"],["6x6","6×6"]], aMax:36, nMax:4 }
+  };
+  var LV = parseInt(qparam("level")||"1",10); if(!(LV>=1&&LV<=3)) LV=1;
+  var CFG, AREA, W=3, made=0, nA, nW=3, nN=2, found={}, needKeys=[];
+  var cv=document.getElementById("exp"), ctx=cv.getContext("2d");
+
+  function keyOf(a,b){ var lo=Math.min(a,b),hi=Math.max(a,b); return lo+"x"+hi; }
+
+  window.setLevel=function(l){
+    LV=l; CFG=LEVELS[l]; AREA=CFG.area; nA=CFG.area; nW=3; nN=2; W=3; found={};
+    needKeys=CFG.shapes.map(function(s){return s[0];});
+    document.querySelectorAll(".lvpick").forEach(function(b){ b.classList.toggle("on", Number(b.dataset.l)===l); });
+    document.getElementById("expTitle").innerHTML='🟪 めんせき変身ラボ <span class="tag">'+CFG.name+'</span>';
+    document.getElementById("ruleCard").innerHTML='かけ算は <span style="color:#db2777;">面積（タイルの数）</span>！<br>形が ちがっても、面積が 同じなら 同じ かけ算。';
+    document.getElementById("wStep").textContent=W;
+    document.getElementById("A").textContent=nA; document.getElementById("W").textContent=nW; document.getElementById("Nx").textContent=nN;
+    document.getElementById("nResult").innerHTML=""; document.getElementById("tResult").innerHTML="";
+    document.getElementById("toRule").disabled=true; document.getElementById("toRule").textContent=CFG.shapes.length+"つの 形を ぜんぶ 見つけたら つぎへ →";
+    go(1); renderExp();
+  };
+
+  function renderExp(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    var divisible = (AREA % W === 0);
+    var H = Math.ceil(AREA/W);
+    var maxW=cv.width-16, maxH=cv.height-16;
+    var size=Math.max(5, Math.min(28, Math.floor(maxW/W), Math.floor(maxH/H)));
+    var gw=W*size, gh=H*size, ox=(cv.width-gw)/2, oy=(cv.height-gh)/2;
+    var fullCount=Math.floor(AREA/W)*W;
+    for(var i=0;i<AREA;i++){
+      var r=Math.floor(i/W), c=i%W;
+      var leftover=(!divisible && i>=fullCount);
+      ctx.fillStyle= leftover ? "#ffd1dc" : "#b19cd9";
+      ctx.fillRect(ox+c*size, oy+r*size, size-2, size-2);
+      ctx.strokeStyle="#fff"; ctx.lineWidth= size>10?2:1; ctx.strokeRect(ox+c*size, oy+r*size, size-2, size-2);
+    }
+    document.getElementById("wNum").textContent=W;
+    document.getElementById("hNum").textContent=(divisible?(AREA/W):"?");
+    document.getElementById("areaNum").textContent=AREA;
+    var b=document.getElementById("b1");
+    if(divisible){
+      var hh=AREA/W; found[keyOf(W,hh)]=true; renderChips();
+      b.innerHTML="きれい！ <b>よこ"+W+" × たて"+hh+" ＝ "+AREA+"</b>。形は ちがっても、タイルは "+AREA+"こ のまま！";
+      if(needKeys.every(function(k){return found[k];})){
+        document.getElementById("toRule").disabled=false;
+        document.getElementById("toRule").textContent="ぜんぶ 見つけた！ つぎへ →";
+      }
+    } else {
+      b.innerHTML="よこ"+W+"だと "+AREA+"こが きれいな 長方形に ならず <b>あまり</b>が 出るね（ピンクの はみ出し）。"+AREA+"を わりきれる よこの数を さがそう！";
+    }
+  }
+  function renderChips(){
+    var z=document.getElementById("shapeChips"); z.innerHTML="";
+    CFG.shapes.forEach(function(p){ var el=document.createElement("div"); el.className="chip"+(found[p[0]]?" found":""); el.textContent=(found[p[0]]?"✓ ":"")+p[1]; z.appendChild(el); });
+  }
+  window.chgW=function(d){ W=Math.max(1,Math.min(AREA,W+d)); document.getElementById("wStep").textContent=W; renderExp(); };
+  window.setWidth=function(w){ W=w; document.getElementById("wStep").textContent=W; renderExp(); };
+  window._foundCount=function(){ return Object.keys(found).length; };
+
+  window.go=function(n){ [1,2,3].forEach(function(i){ document.getElementById("scr"+i).classList.toggle("on", i===n); document.getElementById("st"+i).classList.toggle("on", i===n); }); };
+  window.switchTab=function(t){
+    document.getElementById("tabN").classList.toggle("on", t==='N'); document.getElementById("tabT").classList.toggle("on", t==='T');
+    document.getElementById("mkN").style.display=t==='N'?'block':'none'; document.getElementById("mkT").style.display=t==='T'?'block':'none';
+  };
+  window.chg=function(k,d){
+    if(k==='A'){ nA=Math.max(1,Math.min(CFG.aMax,nA+d)); document.getElementById("A").textContent=nA; }
+    if(k==='W'){ nW=Math.max(1,Math.min(12,nW+d)); document.getElementById("W").textContent=nW; }
+    if(k==='N'){ nN=Math.max(2,Math.min(CFG.nMax,nN+d)); document.getElementById("Nx").textContent=nN; }
+  };
+
+  window.checkNormal=function(A,w){ if(w===0) return {ok:false,reason:"zero"}; if(A%w!==0) return {ok:false,reason:"not_divisible"}; return {ok:true, need:A/w}; };
+  window.makeNormal=function(){
+    var res=window.checkNormal(nA,nW), box=document.getElementById("nResult");
+    if(!res.ok){ box.innerHTML='<div class="niko"><div class="face">🦄</div><div class="bubble">面積'+nA+'を よこ'+nW+'で わると ぴったりに ならないよ（あまりが 出る）。数を かえてみよう！</div></div>'; return; }
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>面積が '+nA+'の 長方形。よこが '+nW+'。たては？</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">面積÷よこ で… <b>'+nA+'÷'+nW+'＝'+res.need+'</b>！<br>たしかめ：'+nW+'×'+res.need+'＝'+(nW*res.need)+' ＝ 面積。ばっちり、いい問題！🎉</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickA(this,true)">面積と 1つの 辺から、もう1つの 辺を わり算で 出せるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">大きい数を 読めるか</button>'
+      +'<button class="choice" onclick="pickA(this,false)">たし算が はやいか</button>';
+  };
+  window.pickA=function(el,ok){ el.parentNode.querySelectorAll(".choice").forEach(function(b){b.disabled=true;});
+    if(ok){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made; el.insertAdjacentHTML("afterend",'<div class="score">🎉 ねらいバッチリ！ 問題 完成！</div>'); }
+    else { el.classList.add("ng"); el.insertAdjacentHTML("afterend",'<div class="small" style="color:#ef4444;">聞きたいのは「面積÷辺＝もう1つの辺」だよ。</div>'); } };
+
+  window.areaScale=function(w,h,n){ return { W2:w*n, H2:h*n, area1:w*h, area2:w*n*h*n, ratio:n*n }; };
+  window.makeTrap=function(){
+    var s=window.areaScale(3,4,nN), box=document.getElementById("tResult");
+    box.innerHTML=''
+      +'<div class="prob">きみの ワナ：<br>「よこ3・たて4の 長方形。よこも たても '+nN+'倍に すると、面積は '+nN+'倍に なる？」</div>'
+      +'<canvas id="trapCv" width="336" height="150"></canvas>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">'+nN+'倍でしょ！…あれ？ '+s.W2+'×'+s.H2+'＝<b>'+s.area2+'</b>。もとは '+s.area1+'。<br>'+s.area2+'は '+s.area1+'の <b>'+s.ratio+'倍</b>だ！ たて・よこ 両方 '+nN+'倍だから '+nN+'×'+nN+'＝'+s.ratio+'倍！ ひっかかった〜！😵</div></div>'
+      +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+      +'<button class="choice" onclick="pickT(this,true)">たて・よこ 両方を '+nN+'倍すると、面積は '+nN+'×'+nN+'＝'+s.ratio+'倍に なる、を 見ぬけるか</button>'
+      +'<button class="choice" onclick="pickT(this,false)">'+nN+'倍の かけ算が できるか</button>'
+      +'<button class="choice" onclick="pickT(this,false)">長方形の 色が わかるか</button>';
+    var tc=document.getElementById("trapCv"), tx=tc.getContext("2d"); tx.clearRect(0,0,tc.width,tc.height);
+    var sz=Math.max(5, Math.min(13, Math.floor(150/(s.H2))));
+    for(var i=0;i<12;i++){ var r=Math.floor(i/3), c=i%3; tx.fillStyle="#b19cd9"; tx.fillRect(8+c*13, 22+r*13, 11,11); }
+    tx.fillStyle="#7a6985"; tx.font="bold 12px sans-serif"; tx.fillText("もと 3×4 ＝ "+s.area1, 8, 16);
+    var ox=150;
+    for(var j=0;j<s.area2;j++){ var r2=Math.floor(j/s.W2), c2=j%s.W2; tx.fillStyle="#ff9ed6"; tx.fillRect(ox+c2*sz, 22+r2*sz, sz-1, sz-1); }
+    tx.fillStyle="#be185d"; tx.fillText(s.W2+"×"+s.H2+" ＝ "+s.area2+"（"+s.ratio+"倍!）", ox, 16);
+  };
+  window.pickT=function(el,ok){ el.parentNode.querySelectorAll(".choice").forEach(function(b){b.disabled=true;});
+    if(ok){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made; el.insertAdjacentHTML("afterend",'<div class="score">🎯 ニコを ひっかけて、深い ねらいも 見ぬいた！ ワナ 完成！</div>'); }
+    else { el.classList.add("ng"); el.insertAdjacentHTML("afterend",'<div class="small" style="color:#ef4444;">本当の ねらいは「両方n倍で 面積は n×n倍」を 見ぬく力だよ。</div>'); } };
+
+  window._made=function(){ return made; };
+  window._level=function(){ return LV; };
+
+  setLevel(LV);  // URLの?levelで初期レベル
+})();
+</script>
+</body>
+</html>

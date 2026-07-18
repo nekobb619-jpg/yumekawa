@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>魔法の天秤 ラボ＆メーカー 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --soft:#7a6985; --lav:#b19cd9; --lavl:#eaddf7; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; --blue:#6f8dff; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#f3e8ff,#ffe4f2 55%,#e6fbf4);min-height:100vh;padding:14px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .steps{display:flex;gap:6px;margin-bottom:12px;}
+  .step{flex:1;text-align:center;font-size:11px;font-weight:900;padding:8px 4px;border-radius:999px;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(74,59,82,.08);}
+  .step.on{background:var(--lav);color:#fff;box-shadow:none;}
+  .card{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 0 rgba(74,59,82,.08);margin-bottom:12px;}
+  .screen{display:none;} .screen.on{display:block;animation:fade .3s;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h2{font-size:18px;margin:0 0 8px;}
+  .niko{display:flex;gap:8px;align-items:flex-start;margin:10px 0;}
+  .niko .face{font-size:30px;}
+  .bubble{background:#fff4fb;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;flex:1;}
+  .bubble b{color:var(--pink);}
+  /* 天秤 */
+  .scale{position:relative;height:150px;margin:6px 0;}
+  .beam{position:absolute;top:60px;left:50%;width:78%;height:10px;background:var(--lav);border-radius:6px;transform-origin:center;transform:translateX(-50%) rotate(0deg);transition:transform .4s;}
+  .post{position:absolute;top:60px;left:50%;width:8px;height:70px;background:#c9b6ea;transform:translateX(-50%);}
+  .pan{position:absolute;top:66px;width:112px;transition:top .4s;}
+  .pan.L{left:2%;} .pan.R{right:2%;}
+  .pan .plate{background:#fff;border:3px solid var(--lav);border-radius:0 0 40px 40px;height:34px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;box-shadow:0 4px 0 rgba(74,59,82,.08);}
+  .pan .val{text-align:center;font-size:12px;font-weight:900;color:var(--soft);margin-top:4px;}
+  .stepper{display:inline-flex;align-items:center;gap:8px;background:#f6f0ff;border-radius:12px;padding:4px;}
+  .stepper button{border:none;width:34px;height:34px;border-radius:9px;background:var(--lav);color:#fff;font-weight:900;font-size:18px;cursor:pointer;box-shadow:0 3px 0 #8a5cf0;}
+  .stepper button:active{transform:translateY(2px);box-shadow:none;}
+  .stepper .num{min-width:28px;text-align:center;font-weight:900;font-size:18px;}
+  .btn{border:none;border-radius:14px;padding:13px;font-family:inherit;font-weight:900;font-size:15px;color:#fff;cursor:pointer;width:100%;}
+  .btn.go{background:linear-gradient(180deg,#b98cff,#8a5cf0);box-shadow:0 5px 0 #6f3fd6;}
+  .btn.gold{background:linear-gradient(180deg,#ffca5e,#f59e0b);box-shadow:0 5px 0 #b45309;}
+  .btn.mint{background:linear-gradient(180deg,#5fe3c0,#37c79a);box-shadow:0 5px 0 #1f9e78;}
+  .btn:active{transform:translateY(3px);box-shadow:none;}
+  .btn.ghost{background:#eee;color:var(--soft);box-shadow:0 4px 0 #ddd;}
+  .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0;}
+  .tag{display:inline-block;background:#fef9c3;color:#a16207;font-weight:900;font-size:12px;padding:4px 10px;border-radius:999px;}
+  .rulecard{background:linear-gradient(135deg,#fff7d6,#ffe9f5);border:2px dashed #ffbf5e;border-radius:16px;padding:14px;text-align:center;font-weight:900;font-size:15px;color:#b45309;}
+  .maketabs{display:flex;gap:6px;margin-bottom:10px;}
+  .maketab{flex:1;text-align:center;padding:9px;border-radius:12px;background:#f1ecff;font-weight:900;font-size:13px;cursor:pointer;color:var(--soft);}
+  .maketab.on{background:var(--pink);color:#fff;}
+  .prob{background:#f8fafc;border:2px solid #e6def7;border-radius:12px;padding:12px;font-weight:900;font-size:16px;text-align:center;margin:8px 0;}
+  .choice{width:100%;text-align:left;background:#fff;border:2px solid var(--lavl);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:700;font-size:13px;margin-bottom:6px;cursor:pointer;}
+  .choice.ok{border-color:var(--mint);background:#effffb;}
+  .choice.ng{border-color:#fca5a5;background:#fee2e2;}
+  .score{text-align:center;font-weight:900;color:var(--pink);margin-top:6px;}
+  .trapcard{display:flex;gap:8px;flex-wrap:wrap;}
+  .trapcard .t{flex:1;min-width:120px;background:#fff;border:2px solid #e6def7;border-radius:14px;padding:10px;text-align:center;font-weight:900;font-size:13px;cursor:pointer;}
+  .trapcard .t:active{transform:translateY(2px);}
+  .small{font-size:11px;color:var(--soft);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="steps">
+    <div class="step on" id="st1">① じっけん</div>
+    <div class="step" id="st2">② ひらめき</div>
+    <div class="step" id="st3">③ 問題メーカー</div>
+  </div>
+
+  <!-- ① 実験 -->
+  <div class="screen on" id="scr1">
+    <div class="card">
+      <h2>🧪 魔法の天秤 ラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="b1">左は『3×4』。右の『6×？』の ？を かえて、<b>つり合う</b>数を さがそう！</div></div>
+      <div class="scale">
+        <div class="post"></div>
+        <div class="beam" id="beam"></div>
+        <div class="pan L" id="panL"><div class="plate" id="plateL">3 × 4</div><div class="val" id="valL">= 12</div></div>
+        <div class="pan R" id="panR"><div class="plate" id="plateR">6 × 2</div><div class="val" id="valR">= 12</div></div>
+      </div>
+      <div class="row">
+        <span class="small">右の ？：</span>
+        <div class="stepper"><button onclick="chgM(-1)">－</button><span class="num" id="mNum">2</span><button onclick="chgM(1)">＋</button></div>
+      </div>
+      <div class="row"><button class="btn ghost" style="max-width:200px" onclick="tryZero()">🔮『10×0』も ためす</button></div>
+      <div class="row"><button class="btn go" id="toRule" onclick="go(2)" disabled>つり合いを 見つけたら つぎへ →</button></div>
+    </div>
+  </div>
+
+  <!-- ② ひらめき -->
+  <div class="screen" id="scr2">
+    <div class="card">
+      <h2>💡 ひらめき</h2>
+      <div class="rulecard" id="ruleCard">形（式）が ちがっても、<br><span style="color:#db2777;">答え（重さ）が 同じなら つり合う！</span><br><span class="small">両方に 同じ数を かけても つり合ったままだよ。</span></div>
+      <div class="niko" style="margin-top:12px;"><div class="face">🦄</div><div class="bubble">この ルールを つかえば、<b>自分で 問題が つくれる</b>よ！ 通常問題と、ひっかけの ワナ問題、どっちも 作ってみよう！</div></div>
+      <div class="row"><button class="btn gold" onclick="go(3)">🛠️ 問題メーカーへ 進む！</button></div>
+      <div class="row"><button class="btn ghost" style="max-width:160px" onclick="go(1)">← 実験に もどる</button></div>
+    </div>
+  </div>
+
+  <!-- ③ メーカー -->
+  <div class="screen" id="scr3">
+    <div class="card">
+      <h2>🛠️ 問題メーカー <span class="tag">作った問題：<span id="madeN">0</span></span></h2>
+      <div class="maketabs">
+        <div class="maketab on" id="tabN" onclick="switchTab('N')">🟢 通常問題</div>
+        <div class="maketab" id="tabT" onclick="switchTab('T')">🔴 ワナ問題</div>
+      </div>
+
+      <!-- 通常問題メーカー -->
+      <div id="mkN">
+        <div class="small">「左に A×B、右に C×？」の 問題を つくろう。ニコが といて 判定するよ。</div>
+        <div class="row">
+          左： <div class="stepper"><button onclick="chg('A',-1)">－</button><span class="num" id="A">3</span><button onclick="chg('A',1)">＋</button></div>
+          ×
+          <div class="stepper"><button onclick="chg('B',-1)">－</button><span class="num" id="B">4</span><button onclick="chg('B',1)">＋</button></div>
+        </div>
+        <div class="row">
+          右： <div class="stepper"><button onclick="chg('C',-1)">－</button><span class="num" id="C">6</span><button onclick="chg('C',1)">＋</button></div>
+          × ？
+        </div>
+        <div class="row"><button class="btn go" onclick="makeNormal()">🦄 ニコに 出す！</button></div>
+        <div id="nResult"></div>
+      </div>
+
+      <!-- ワナ問題メーカー -->
+      <div id="mkT" style="display:none;">
+        <div class="small">出題者に なって、ニコを ひっかける ワナを えらぼう！</div>
+        <div class="trapcard" style="margin:10px 0;">
+          <div class="t" onclick="makeTrap('zero')">🕳️ ×0の ワナ<br><span class="small">0を かける と…？</span></div>
+          <div class="t" onclick="makeTrap('unit')">📏 たんい ちがいの ワナ<br><span class="small">cmと m を まぜる</span></div>
+        </div>
+        <div id="tResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var m=2, balancedSeen=false, made=0;
+  var nA=3,nB=4,nC=6;
+
+  function tilt(l,r){
+    var diff=r-l; var ang=Math.max(-14,Math.min(14, diff*0.5));
+    document.getElementById("beam").style.transform="translateX(-50%) rotate("+ang+"deg)";
+    document.getElementById("panL").style.top=(66 - ang*1.4)+"px";
+    document.getElementById("panR").style.top=(66 + ang*1.4)+"px";
+  }
+  function renderExp(){
+    var L=3*4, R=6*m;
+    document.getElementById("plateR").textContent="6 × "+m;
+    document.getElementById("valL").textContent="= "+L;
+    document.getElementById("valR").textContent="= "+R;
+    tilt(L,R);
+    var b=document.getElementById("b1");
+    if(L===R){ b.innerHTML="つり合った！ 形は『3×4』と『6×"+m+"』で ちがうのに、<b>答えは どっちも "+L+"</b>。だから つり合うんだ！";
+      balancedSeen=true; document.getElementById("toRule").disabled=false; document.getElementById("toRule").textContent="つり合いを 見つけた！ つぎへ →"; }
+    else if(L>R){ b.innerHTML="左が おもいね（左"+L+" ＞ 右"+R+"）。？を 大きく してみよう。"; }
+    else { b.innerHTML="右が おもいね（右"+R+" ＞ 左"+L+"）。？を 小さく してみよう。"; }
+  }
+  window.chgM=function(d){ m=Math.max(0,Math.min(9,m+d)); document.getElementById("mNum").textContent=m; renderExp(); };
+  window.tryZero=function(){
+    document.getElementById("plateL").textContent="10 × 0"; document.getElementById("valL").textContent="= 0";
+    document.getElementById("plateR").textContent="6 × "+m; var R=6*m; document.getElementById("valR").textContent="= "+R;
+    tilt(0,R);
+    document.getElementById("b1").innerHTML="びっくり！『10×0』は <b>0</b>。どんな数に 0を かけても 0に なるんだ。右を 0に しないと つり合わないよ！";
+    balancedSeen=true; document.getElementById("toRule").disabled=false;
+    setTimeout(function(){ document.getElementById("plateL").textContent="3 × 4"; document.getElementById("valL").textContent="= 12"; renderExp(); }, 2600);
+  };
+
+  window.go=function(n){
+    [1,2,3].forEach(function(i){ document.getElementById("scr"+i).classList.toggle("on", i===n); document.getElementById("st"+i).classList.toggle("on", i===n); });
+  };
+
+  window.switchTab=function(t){
+    document.getElementById("tabN").classList.toggle("on", t==='N');
+    document.getElementById("tabT").classList.toggle("on", t==='T');
+    document.getElementById("mkN").style.display = t==='N'?'block':'none';
+    document.getElementById("mkT").style.display = t==='T'?'block':'none';
+  };
+
+  window.chg=function(k,d){
+    if(k==='A'){ nA=clamp(nA+d); document.getElementById("A").textContent=nA; }
+    if(k==='B'){ nB=clamp(nB+d); document.getElementById("B").textContent=nB; }
+    if(k==='C'){ nC=Math.max(1,Math.min(9,nC+d)); document.getElementById("C").textContent=nC; }
+  };
+  function clamp(v){ return Math.max(0,Math.min(9,v)); }
+
+  // ★通常問題メーカーの判定（ルールベース）
+  window.checkNormal=function(A,B,C){
+    var prod=A*B;
+    if(C===0) return {ok:false, reason:"zero_c"};
+    if(prod % C !== 0) return {ok:false, reason:"not_divisible", prod:prod};
+    return {ok:true, need:prod/C, prod:prod};
+  };
+  window.makeNormal=function(){
+    var res=window.checkNormal(nA,nB,nC);
+    var box=document.getElementById("nResult");
+    if(!res.ok){
+      if(res.reason==="not_divisible"){
+        box.innerHTML='<div class="prob">左『'+nA+'×'+nB+'＝'+res.prod+'』／ 右『'+nC+'×？』</div>'
+          +'<div class="niko"><div class="face">🦄</div><div class="bubble">うーん、'+res.prod+' を '+nC+'で わると ぴったりに ならないよ。右の 数（C）を かえてみよう！</div></div>';
+      } else {
+        box.innerHTML='<div class="niko"><div class="face">🦄</div><div class="bubble">右の 数は 1いじょうに してね。</div></div>';
+      }
+      return;
+    }
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>左『'+nA+'×'+nB+'』、右『'+nC+'×？』<br>？に 入る数は？</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">ぼくの こたえは… <b>？＝'+res.need+'</b>！<br>たしかめ：'+nC+'×'+res.need+'＝'+(nC*res.need)+'。左の '+res.prod+' と 同じ！ <b>つり合った</b>、いい問題だね！🎉</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？（出題者の 意図を えらぼう）</div>'
+      +'<button class="choice" onclick="pickAim(this,true)">形が ちがっても、答えが 同じなら つり合う（かけ算の 見方）が わかるか</button>'
+      +'<button class="choice" onclick="pickAim(this,false)">大きい数の たし算が できるか</button>'
+      +'<button class="choice" onclick="pickAim(this,false)">九九を ぜんぶ 言えるか</button>';
+  };
+  window.pickAim=function(el,correct){
+    var btns=el.parentNode.querySelectorAll(".choice"); btns.forEach(function(b){b.disabled=true;});
+    if(correct){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made;
+      el.insertAdjacentHTML("afterend", '<div class="score">🎉 ねらいバッチリ！ 問題を 1つ 完成！</div>'); }
+    else { el.classList.add("ng");
+      el.insertAdjacentHTML("afterend", '<div class="small" style="color:#ef4444;">おしい！ この問題が いちばん 聞きたいのは「つり合いの 見方」だよ。</div>'); }
+  };
+
+  // ★ワナ問題メーカー
+  window.makeTrap=function(kind){
+    var box=document.getElementById("tResult");
+    if(kind==='zero'){
+      box.innerHTML=''
+        +'<div class="prob">きみが 作った ワナ：<br>左『10×0』、右『100×？』<br>つり合わせるには ？＝？</div>'
+        +'<div class="niko"><div class="face">🦄</div><div class="bubble">かんたん！ 100×1＝100 で… <b>あれ？</b> 左は 10×0＝<b>0</b>だ！<br>100を 何倍しても 0に ならない…！ ？は <b>0</b>だ！ うう、ひっかかった〜！😵</div></div>'
+        +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+        +'<button class="choice" onclick="pickTrap(this,true)">「0を かけると 0」を 見ぬけるか（大きい100に まどわされない）</button>'
+        +'<button class="choice" onclick="pickTrap(this,false)">100の 読み方を 知っているか</button>';
+    } else {
+      box.innerHTML=''
+        +'<div class="prob">きみが 作った ワナ：<br>『1m の リボンを 20cm ずつに 切ると 何本？』</div>'
+        +'<div class="niko"><div class="face">🦄</div><div class="bubble">1わる20…＝0.05？ <b>あれ、へんだ！</b><br>そうか、1m＝<b>100cm</b>に そろえてから！ 100÷20＝<b>5本</b>だ！ たんいの ワナだ〜！😵</div></div>'
+        +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+        +'<button class="choice" onclick="pickTrap(this,true)">計算の 前に「たんいを そろえる」を 見ぬけるか</button>'
+        +'<button class="choice" onclick="pickTrap(this,false)">リボンの 色を 覚えているか</button>';
+    }
+  };
+  window.pickTrap=function(el,correct){
+    var btns=el.parentNode.querySelectorAll(".choice"); btns.forEach(function(b){b.disabled=true;});
+    if(correct){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made;
+      el.insertAdjacentHTML("afterend", '<div class="score">🎯 ニコを ひっかけて、ねらいも 見ぬいた！ ワナ問題 完成！</div>'); }
+    else { el.classList.add("ng");
+      el.insertAdjacentHTML("afterend", '<div class="small" style="color:#ef4444;">このワナが ためして いるのは、もっと 大事な「きまり」を 見ぬく力だよ。</div>'); }
+  };
+
+  // テスト用
+  window._made=function(){ return made; };
+
+  renderExp();
+})();
+</script>
+</body>
+</html>

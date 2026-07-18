@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>てんびん実験ラボ 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --lav:#b19cd9; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);}
+  #scene{position:fixed;inset:0;background:linear-gradient(160deg,#f3e8ff,#ffe4f2 55%,#e6fbf4);}
+  canvas{display:block;}
+  #niko{position:fixed;left:12px;bottom:12px;display:flex;gap:8px;align-items:flex-end;z-index:5;max-width:70%;}
+  #niko svg{width:66px;height:66px;flex:0 0 66px;filter:drop-shadow(0 4px 6px rgba(120,80,160,.25));}
+  #bubble{background:#fff;border:2px solid #ffe0f0;border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;box-shadow:0 6px 14px rgba(120,80,160,.18);}
+  #bubble b{color:var(--pink);}
+  #data{position:fixed;top:10px;left:10px;background:rgba(255,255,255,.92);border-radius:14px;padding:10px 12px;box-shadow:0 6px 14px rgba(120,80,160,.18);font-size:12px;font-weight:700;z-index:5;min-width:150px;}
+  #data .row{display:flex;justify-content:space-between;gap:14px;margin:2px 0;}
+  #data .l{color:#6f8dff;} #data .r{color:var(--pink);}
+  #data .judge{margin-top:6px;text-align:center;font-weight:900;padding:4px;border-radius:8px;background:#f1f5f9;}
+  .barwrap{height:8px;background:#eee;border-radius:9px;overflow:hidden;margin-top:2px;}
+  .bar{height:100%;border-radius:9px;transition:width .3s;}
+  #controls{position:fixed;bottom:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:5;align-items:flex-end;}
+  .grp{display:flex;gap:6px;background:rgba(255,255,255,.9);padding:6px;border-radius:12px;box-shadow:0 4px 10px rgba(120,80,160,.15);}
+  .grp .lab{font-size:11px;font-weight:900;align-self:center;padding:0 4px;}
+  button.b{border:none;border-radius:10px;padding:8px 10px;font-family:inherit;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.15);color:#fff;}
+  .bL{background:#6f8dff;box-shadow:0 3px 0 #4a63d8;} .bR{background:var(--pink);box-shadow:0 3px 0 #e85fab;}
+  .bZ{background:var(--lav);box-shadow:0 3px 0 #8a5cf0;} .bReset{background:#94a3b8;box-shadow:0 3px 0 #64748b;}
+  button.b:active{transform:translateY(3px);box-shadow:none;}
+  #hintbar{position:fixed;top:10px;right:10px;background:rgba(255,255,255,.9);border-radius:12px;padding:8px 10px;font-size:11px;font-weight:700;color:#7a6985;z-index:5;max-width:150px;text-align:center;}
+  #title{position:fixed;top:64px;left:50%;transform:translateX(-50%);font-weight:900;color:var(--lav);font-size:15px;z-index:4;text-shadow:0 2px 0 #fff;}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="title">⚖️ てんびん実験ラボ</div>
+<div id="hintbar">画面を指でドラッグ → ぐるっと回せる🌀</div>
+
+<div id="data">
+  <div class="row"><span class="l">左のちから</span><span id="dL">0</span></div>
+  <div class="barwrap"><div id="barL" class="bar" style="width:0%;background:#6f8dff;"></div></div>
+  <div class="row" style="margin-top:6px;"><span class="r">右のちから</span><span id="dR">0</span></div>
+  <div class="barwrap"><div id="barR" class="bar" style="width:0%;background:#ff7fc4;"></div></div>
+  <div class="judge" id="judge">重りを のせてみよう</div>
+</div>
+
+<div id="niko">
+  <svg viewBox="0 0 100 100" aria-label="ニコ">
+    <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8fb0"/><stop offset=".5" stop-color="#ffd75e"/><stop offset="1" stop-color="#7bd8ff"/></linearGradient></defs>
+    <circle cx="50" cy="54" r="40" fill="#fff4fb" stroke="#ffd6ec" stroke-width="3"/>
+    <path d="M24 42 q-7 11 4 18 q-11 2 -7 15 q9 4 15 -4" fill="url(#m)"/>
+    <path d="M76 42 q7 11 -4 18 q11 2 7 15 q-9 4 -15 -4" fill="url(#m)"/>
+    <path d="M50 14 l5 20 l-10 0 z" fill="#ffd75e" stroke="#f0b800" stroke-width="1.5"/>
+    <circle cx="41" cy="55" r="4.2" fill="#4b2d63"/><circle cx="42" cy="53.5" r="1.3" fill="#fff"/>
+    <circle cx="61" cy="55" r="4.2" fill="#4b2d63"/><circle cx="62" cy="53.5" r="1.3" fill="#fff"/>
+    <circle cx="34" cy="63" r="3.6" fill="#ffb3d1"/><circle cx="68" cy="63" r="3.6" fill="#ffb3d1"/>
+    <path d="M45 65 q5 5 10 0" fill="none" stroke="#4b2d63" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>
+  <div id="bubble">やっほー！ 左と右に 重りを のせて、<b>つり合い</b>を さがそう！</div>
+</div>
+
+<div id="controls">
+  <div class="grp"><span class="lab" style="color:#6f8dff;">左</span><button class="b bL" onclick="addW('L',1)">＋</button><button class="b bL" onclick="addW('L',-1)">－</button></div>
+  <div class="grp"><span class="lab" style="color:#ff7fc4;">右</span><button class="b bR" onclick="addW('R',1)">＋</button><button class="b bR" onclick="addW('R',-1)">－</button></div>
+  <div class="grp"><span class="lab" style="color:#8a5cf0;">ズーム</span><button class="b bZ" onclick="zoom(-1)">🔍＋</button><button class="b bZ" onclick="zoom(1)">🔍－</button></div>
+  <div class="grp"><button class="b bReset" onclick="resetAll()">やり直す</button></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var host = document.getElementById('scene');
+  var W = window.innerWidth, H = window.innerHeight;
+  var scene, camera, renderer, view, pivot, panL, panR;
+  var leftW = 0, rightW = 0, DIST = 3.2;
+  var leftStack = [], rightStack = [];
+  var camDist = 12, targetTilt = 0, curTilt = 0, yaw = 0.5;
+
+  /* ---------- 3Dが無くても動くロジック ---------- */
+  function rebuild(){
+    if(!panL || !panR || typeof THREE === 'undefined') return;
+    leftStack.forEach(function(m){ panL.remove(m); });
+    rightStack.forEach(function(m){ panR.remove(m); });
+    leftStack = []; rightStack = [];
+    function make(n, pan, stack, color, x){
+      for(var i=0;i<n;i++){
+        var b = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.5,0.8), new THREE.MeshLambertMaterial({color:color}));
+        b.position.set(x, 0.05 + i*0.55, 0); pan.add(b); stack.push(b);
+      }
+    }
+    make(leftW, panL, leftStack, 0x6f8dff, -DIST);
+    make(rightW, panR, rightStack, 0xff7fc4, DIST);
+  }
+
+  function update(){
+    var lt = leftW*DIST, rt = rightW*DIST, maxT = 5*DIST;
+    document.getElementById('dL').textContent = lt.toFixed(1);
+    document.getElementById('dR').textContent = rt.toFixed(1);
+    document.getElementById('barL').style.width = (lt/maxT*100)+'%';
+    document.getElementById('barR').style.width = (rt/maxT*100)+'%';
+    var judge = document.getElementById('judge'), bubble = document.getElementById('bubble');
+    if(leftW===0 && rightW===0){ judge.textContent='重りを のせてみよう'; judge.style.background='#f1f5f9'; judge.style.color='#64748b';
+      bubble.innerHTML='やっほー！ 左と右に 重りを のせて、<b>つり合い</b>を さがそう！'; return; }
+    if(lt===rt){ judge.textContent='⚖️ つり合った！'; judge.style.background='#dcfce7'; judge.style.color='#15803d';
+      bubble.innerHTML='すごい！ <b>左と右が おなじ ちから</b> だと まっすぐ！<br>シーソーや はさみも おなじ しくみだよ。'; }
+    else if(lt>rt){ judge.textContent='◀ 左が おもい'; judge.style.background='#e0e7ff'; judge.style.color='#4a63d8';
+      bubble.innerHTML='左が おもいね。<br>右に あと <b>'+Math.round((lt-rt)/DIST)+'こ</b> のせると そろうよ！'; }
+    else { judge.textContent='右が おもい ▶'; judge.style.background='#fce7f3'; judge.style.color='#be185d';
+      bubble.innerHTML='右が おもいね。<br>左に あと <b>'+Math.round((rt-lt)/DIST)+'こ</b> のせると そろうよ！'; }
+  }
+
+  window.addW = function(side, d){
+    if(side==='L'){ leftW = Math.max(0, Math.min(5, leftW+d)); }
+    else { rightW = Math.max(0, Math.min(5, rightW+d)); }
+    rebuild(); update();
+  };
+  window.zoom = function(d){ camDist = Math.max(7, Math.min(20, camDist + d*2)); };
+  window.resetAll = function(){ leftW=0; rightW=0; rebuild(); update(); };
+
+  /* ---------- 3D初期化（失敗しても上は生きる） ---------- */
+  try{
+    if(typeof THREE === 'undefined') throw new Error('3D library not loaded');
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, W/H, 0.1, 100);
+    renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+    host.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    var dir = new THREE.DirectionalLight(0xffffff, 0.6); dir.position.set(5,10,7); scene.add(dir);
+    view = new THREE.Group(); scene.add(view);
+    var base = new THREE.Mesh(new THREE.CylinderGeometry(2.6,3,0.6,24), new THREE.MeshLambertMaterial({color:0xd9c7f0}));
+    base.position.y = -3.3; view.add(base);
+    var post = new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,3.2,16), new THREE.MeshLambertMaterial({color:0xb19cd9}));
+    post.position.y = -1.5; view.add(post);
+    var ful = new THREE.Mesh(new THREE.ConeGeometry(0.5,0.7,4), new THREE.MeshLambertMaterial({color:0xf59e0b}));
+    ful.position.y = 0.2; ful.rotation.y = Math.PI/4; view.add(ful);
+    pivot = new THREE.Group(); pivot.position.y = 0.5; view.add(pivot);
+    var beam = new THREE.Mesh(new THREE.BoxGeometry(9,0.35,0.7), new THREE.MeshLambertMaterial({color:0x8a5cf0}));
+    pivot.add(beam);
+    function mkpan(x, color){
+      var p = new THREE.Mesh(new THREE.CylinderGeometry(1.1,0.9,0.25,20), new THREE.MeshLambertMaterial({color:color}));
+      p.position.set(x,-0.25,0); pivot.add(p); return p;
+    }
+    panL = mkpan(-DIST, 0x8fb0ff); panR = mkpan(DIST, 0xff9ed6);
+
+    var dragging=false, lastX=0;
+    function down(x){ dragging=true; lastX=x; }
+    function move(x){ if(!dragging) return; yaw += (x-lastX)*0.01; lastX=x; }
+    function up(){ dragging=false; }
+    renderer.domElement.addEventListener('mousedown', function(e){ down(e.clientX); });
+    window.addEventListener('mousemove', function(e){ move(e.clientX); });
+    window.addEventListener('mouseup', up);
+    renderer.domElement.addEventListener('touchstart', function(e){ down(e.touches[0].clientX); }, {passive:true});
+    window.addEventListener('touchmove', function(e){ move(e.touches[0].clientX); }, {passive:true});
+    window.addEventListener('touchend', up);
+    window.addEventListener('resize', function(){
+      W=window.innerWidth; H=window.innerHeight; camera.aspect=W/H; camera.updateProjectionMatrix(); renderer.setSize(W,H);
+    });
+
+    (function animate(){
+      requestAnimationFrame(animate);
+      var diff = (rightW*DIST) - (leftW*DIST);
+      targetTilt = Math.max(-0.42, Math.min(0.42, diff*0.05));
+      curTilt += (targetTilt - curTilt)*0.12;
+      pivot.rotation.z = curTilt; view.rotation.y = yaw;
+      camera.position.set(0, 3.2, camDist);
+      camera.lookAt(0, 0.5, 0);
+      renderer.render(scene, camera);
+    })();
+    rebuild();
+  }catch(err){
+    // 3Dが読めない時はやさしく案内（データ・ニコ・ボタンはそのまま使える）
+    var t = document.getElementById('title'); if(t) t.textContent = '⚖️ てんびん実験ラボ';
+    var hb = document.getElementById('hintbar'); if(hb) hb.textContent = 'ボタンで 重りを のせて、データを 見てみよう！';
+    console.warn('[lab] 3D init skipped:', err.message);
+  }
+
+  update();
+})();
+</script>
+</body>
+</html>

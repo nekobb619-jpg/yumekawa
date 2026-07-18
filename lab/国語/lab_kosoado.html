@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>こそあど探検ラボ 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#4a3b52; --lav:#b19cd9; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);}
+  #scene{position:fixed;inset:0;background:linear-gradient(160deg,#eaf0ff,#ffe9f5 55%,#eafff6);}
+  canvas{display:block;}
+  /* お題バー */
+  #task{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:6;background:#fff;border:3px solid #ffe0f0;border-radius:16px;padding:10px 16px;box-shadow:0 8px 18px rgba(120,80,160,.2);text-align:center;max-width:92%;}
+  #task .word{font-size:22px;font-weight:900;color:var(--pink);}
+  #task .say{font-size:12px;font-weight:700;color:#7a6985;margin-top:2px;}
+  /* 宝ゲージ */
+  #treasure{position:fixed;top:10px;left:10px;z-index:6;background:rgba(255,255,255,.92);border-radius:14px;padding:8px 10px;box-shadow:0 6px 14px rgba(120,80,160,.18);font-size:12px;font-weight:900;}
+  #gembar{height:9px;width:120px;background:#eee;border-radius:9px;overflow:hidden;margin-top:4px;}
+  #gembar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#ffd75e,#ff7fc4);transition:width .4s;}
+  /* ニコ吹き出し */
+  #niko{position:fixed;left:12px;bottom:110px;display:flex;gap:8px;align-items:flex-end;z-index:6;max-width:74%;}
+  #niko svg{width:60px;height:60px;flex:0 0 60px;filter:drop-shadow(0 4px 6px rgba(120,80,160,.25));}
+  #bubble{background:#fff;border:2px solid #ffe0f0;border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;box-shadow:0 6px 14px rgba(120,80,160,.18);}
+  #bubble b{color:var(--pink);}
+  /* 場所ボタン（3Dが無くても遊べる） */
+  #choices{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:8px;}
+  .cbtn{border:none;border-radius:14px;padding:12px 12px;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.18);min-width:98px;}
+  .c-niko{background:#8a5cf0;box-shadow:0 4px 0 #6f3fd6;} .c-kimi{background:#ff7fc4;box-shadow:0 4px 0 #e85fab;} .c-tooku{background:#37c79a;box-shadow:0 4px 0 #1f9e78;}
+  .cbtn:active{transform:translateY(3px);box-shadow:none;}
+  #zoombar{position:fixed;right:12px;bottom:12px;z-index:6;display:flex;flex-direction:column;gap:6px;}
+  #zoombar button{border:none;border-radius:10px;padding:8px 10px;font-weight:900;background:var(--lav);color:#fff;box-shadow:0 3px 0 #8a5cf0;cursor:pointer;}
+  #hintbar{position:fixed;top:70px;right:10px;background:rgba(255,255,255,.9);border-radius:12px;padding:6px 9px;font-size:10.5px;font-weight:700;color:#7a6985;z-index:6;max-width:140px;text-align:center;}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div id="treasure">🏆 たからの かけら <span id="gemN">0</span>/5<div id="gembar"><i id="gemFill"></i></div></div>
+<div id="hintbar">画面ドラッグで回転🌀／下のボタンで場所をえらぶ</div>
+
+<div id="task"><div class="word" id="taskWord">これ</div><div class="say" id="taskSay">ニコ：「"これ" を とって！」 どこの ものかな？</div></div>
+
+<div id="niko">
+  <svg viewBox="0 0 100 100" aria-label="ニコ">
+    <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8fb0"/><stop offset=".5" stop-color="#ffd75e"/><stop offset="1" stop-color="#7bd8ff"/></linearGradient></defs>
+    <circle cx="50" cy="54" r="40" fill="#fff4fb" stroke="#ffd6ec" stroke-width="3"/>
+    <path d="M24 42 q-7 11 4 18 q-11 2 -7 15 q9 4 15 -4" fill="url(#m)"/>
+    <path d="M76 42 q7 11 -4 18 q11 2 7 15 q-9 4 -15 -4" fill="url(#m)"/>
+    <path d="M50 14 l5 20 l-10 0 z" fill="#ffd75e" stroke="#f0b800" stroke-width="1.5"/>
+    <circle cx="41" cy="55" r="4.2" fill="#4b2d63"/><circle cx="42" cy="53.5" r="1.3" fill="#fff"/>
+    <circle cx="61" cy="55" r="4.2" fill="#4b2d63"/><circle cx="62" cy="53.5" r="1.3" fill="#fff"/>
+    <circle cx="34" cy="63" r="3.6" fill="#ffb3d1"/><circle cx="68" cy="63" r="3.6" fill="#ffb3d1"/>
+    <path d="M45 65 q5 5 10 0" fill="none" stroke="#4b2d63" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>
+  <div id="bubble">やっほー！ ぼくが 言う <b>こそあど言葉</b> の ものは どこかな？ 場所を あてて、たからの かけらを あつめよう！</div>
+</div>
+
+<div id="choices">
+  <button class="cbtn c-niko" onclick="choose('niko')">🦄 ニコのそば</button>
+  <button class="cbtn c-kimi" onclick="choose('kimi')">🙂 きみのそば</button>
+  <button class="cbtn c-tooku" onclick="choose('tooku')">🌫️ とおく</button>
+</div>
+<div id="zoombar"><button onclick="zoom(-1)">🔍＋</button><button onclick="zoom(1)">🔍－</button></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var host=document.getElementById('scene');
+  var W=window.innerWidth,H=window.innerHeight;
+  var scene,camera,renderer,view,peds={},raycaster,pointer;
+  var camDist=13, yaw=0.0, gems=0, target=null, locked=false;
+
+  var WORDS=[
+    {w:"これ", zone:"niko",  rule:"「こ」＝ 話しているニコの すぐそば"},
+    {w:"この本", zone:"niko", rule:"「こ」＝ 話しているニコの すぐそば"},
+    {w:"それ", zone:"kimi",  rule:"「そ」＝ 聞いているきみの そば"},
+    {w:"その花", zone:"kimi", rule:"「そ」＝ 聞いているきみの そば"},
+    {w:"あれ", zone:"tooku", rule:"「あ」＝ ふたりから とおく はなれた ところ"},
+    {w:"あの星", zone:"tooku",rule:"「あ」＝ ふたりから とおく はなれた ところ"}
+  ];
+  var ZONEJP={niko:"ニコのそば", kimi:"きみのそば", tooku:"とおく"};
+
+  function newRound(){
+    locked=false;
+    target=WORDS[Math.floor(Math.random()*WORDS.length)];
+    document.getElementById('taskWord').textContent=target.w;
+    document.getElementById('taskSay').textContent='ニコ：「"'+target.w+'" を とって！」 どこの ものかな？';
+    document.getElementById('bubble').innerHTML='「<b>'+target.w+'</b>」の ものは どこ？ 場所を えらんでね！';
+    highlight(null);
+  }
+
+  function choose(zone){
+    if(locked) return;
+    var b=document.getElementById('bubble');
+    if(zone===target.zone){
+      locked=true; gems=Math.min(5,gems+1); updateGem(); highlight(zone,true);
+      b.innerHTML='せいかい！ 🎉 <b>'+target.w+'</b> は「'+ZONEJP[zone]+'」。<br>'+target.rule+' だよ。';
+      if(gems>=5){ setTimeout(function(){ b.innerHTML='🏆 たからの かけらが 5こ そろった！<br>とうとう <b>たから箱</b>を 見つけたね！ だいせいこう！'; document.getElementById('taskSay').textContent='クリア！ もういちど あそぶ ときは 場所ボタンを おしてね。'; gems=0; updateGem(); }, 1200); locked=true; return; }
+      setTimeout(newRound, 1300);
+    } else {
+      highlight(zone,false);
+      b.innerHTML='おしい！ 「'+ZONEJP[zone]+'」じゃ ないみたい。<br>ヒント：'+target.rule+'。もういちど！';
+    }
+  }
+
+  function updateGem(){ document.getElementById('gemN').textContent=gems; document.getElementById('gemFill').style.width=(gems/5*100)+'%'; }
+
+  function highlight(zone, ok){
+    if(typeof THREE==='undefined') return;
+    Object.keys(peds).forEach(function(z){
+      var g=peds[z]; if(!g) return;
+      var isSel=(z===zone);
+      g.children.forEach(function(c){ if(c.material&&c.material.emissive){ c.material.emissive.setHex(isSel?(ok?0x22cc66:0xcc3355):0x000000); } });
+      g.scale.setScalar(isSel&&ok?1.15:1.0);
+    });
+  }
+
+  window.choose=choose;
+  window.zoom=function(d){ camDist=Math.max(8,Math.min(20,camDist+d*2)); };
+
+  try{
+    if(typeof THREE==='undefined') throw new Error('3D library not loaded');
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(45,W/H,0.1,100);
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+    host.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0xffffff,0.9));
+    var dir=new THREE.DirectionalLight(0xffffff,0.55); dir.position.set(5,10,6); scene.add(dir);
+    view=new THREE.Group(); scene.add(view);
+    // 床
+    var floor=new THREE.Mesh(new THREE.CylinderGeometry(9,9,0.5,40), new THREE.MeshLambertMaterial({color:0xe7defa}));
+    floor.position.y=-2.25; view.add(floor);
+
+    // ニコ（左・話し手）
+    var niko=new THREE.Group();
+    var body=new THREE.Mesh(new THREE.SphereGeometry(0.9,20,20), new THREE.MeshLambertMaterial({color:0xfff2fb}));
+    var head=new THREE.Mesh(new THREE.SphereGeometry(0.6,20,20), new THREE.MeshLambertMaterial({color:0xfff2fb})); head.position.y=1.1;
+    var horn=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.6,12), new THREE.MeshLambertMaterial({color:0xffd75e})); horn.position.y=1.75;
+    niko.add(body,head,horn); niko.position.set(-4.2,-0.8,-1); view.add(niko);
+
+    // きみ（手前・聞き手）マーカー
+    var kimi=new THREE.Mesh(new THREE.SphereGeometry(0.7,20,20), new THREE.MeshLambertMaterial({color:0xbfe3ff})); kimi.position.set(2.6,-1.2,3.2); view.add(kimi);
+
+    // 3つのだい（場所）＋のせる もの
+    function pedestal(zone, x, z, objColor, objType){
+      var g=new THREE.Group(); g.position.set(x,-1.4,z);
+      var col={niko:0x8a5cf0, kimi:0xff7fc4, tooku:0x37c79a}[zone];
+      var ped=new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.8,0.5,20), new THREE.MeshLambertMaterial({color:col, emissive:0x000000}));
+      var obj;
+      if(objType==='book') obj=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.15,0.5), new THREE.MeshLambertMaterial({color:objColor, emissive:0x000000}));
+      else if(objType==='ring') obj=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.12,12,20), new THREE.MeshLambertMaterial({color:objColor, emissive:0x000000}));
+      else obj=new THREE.Mesh(new THREE.IcosahedronGeometry(0.38,0), new THREE.MeshLambertMaterial({color:objColor, emissive:0x000000}));
+      obj.position.y=0.55; g.add(ped,obj);
+      g.userData.zone=zone; ped.userData.zone=zone; obj.userData.zone=zone;
+      view.add(g); peds[zone]=g;
+    }
+    pedestal('niko', -3.0, -1.2, 0xffd75e, 'book');   // 話し手ニコのそば
+    pedestal('kimi',  2.4, 2.6, 0xff9ed6, 'ring');    // 聞き手きみのそば
+    pedestal('tooku', 0.0, -5.5, 0x8fe3c4, 'gem');    // 遠く
+
+    raycaster=new THREE.Raycaster(); pointer=new THREE.Vector2();
+    function pick(clientX,clientY){
+      pointer.x=(clientX/W)*2-1; pointer.y=-(clientY/H)*2+1;
+      raycaster.setFromCamera(pointer,camera);
+      var hits=raycaster.intersectObjects(view.children,true);
+      for(var i=0;i<hits.length;i++){ var z=hits[i].object.userData.zone; if(z){ choose(z); return; } }
+    }
+
+    var dragging=false,lastX=0,moved=0;
+    renderer.domElement.addEventListener('mousedown',function(e){dragging=true;lastX=e.clientX;moved=0;});
+    window.addEventListener('mousemove',function(e){ if(dragging){ yaw+=(e.clientX-lastX)*0.01; moved+=Math.abs(e.clientX-lastX); lastX=e.clientX; }});
+    window.addEventListener('mouseup',function(e){ if(dragging&&moved<6) pick(e.clientX,e.clientY); dragging=false; });
+    renderer.domElement.addEventListener('touchstart',function(e){dragging=true;lastX=e.touches[0].clientX;moved=0;},{passive:true});
+    window.addEventListener('touchmove',function(e){ if(dragging){ yaw+=(e.touches[0].clientX-lastX)*0.01; moved+=Math.abs(e.touches[0].clientX-lastX); lastX=e.touches[0].clientX; }},{passive:true});
+    window.addEventListener('touchend',function(e){ if(dragging&&moved<6&&e.changedTouches[0]) pick(e.changedTouches[0].clientX,e.changedTouches[0].clientY); dragging=false; },{passive:true});
+    window.addEventListener('resize',function(){ W=window.innerWidth;H=window.innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H); });
+
+    (function animate(){ requestAnimationFrame(animate); view.rotation.y=yaw; camera.position.set(0,4.5,camDist); camera.lookAt(0,-0.5,0); renderer.render(scene,camera); })();
+  }catch(err){
+    var hb=document.getElementById('hintbar'); if(hb) hb.textContent='下のボタンで 場所を えらんで あそべます';
+    console.warn('[lab] 3D init skipped:', err.message);
+  }
+
+  updateGem(); newRound();
+  window._state=function(){ return {target:target, gems:gems, locked:locked}; };
+})();
+</script>
+</body>
+</html>
