@@ -34,7 +34,8 @@
       reward: 10,
       showCount: 10,                        // 1回に出す問題数（全10問中10問。5にすれば毎回ちがう5問）
       video_url: "",
-      lab_url: ""
+      lab_url: "",
+      created: "2026-07-17"                 // ★いつ追加したか（"🆕NEW"バッジの判定に使う）
     },
     {
       subject: "算数",
@@ -45,7 +46,8 @@
       showCount: 10,
       video_url: "",
       // ★AR角度レーダー（別タブで全画面・カメラ＆向きセンサー使用）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_ar_kakudo.html"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_ar_kakudo.html",
+      created: "2026-07-18"
     },
     {
       subject: "国語",
@@ -54,42 +56,40 @@
       name: "こそあど言葉（指示語）",
       reward: 10, showCount: 10, video_url: "",
       // ★3Dたんけんラボ（別タブ・ドラッグで見まわし／台座を選んでたからさがし）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/国語/lab_kosoado.html"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/国語/lab_kosoado.html",
+      created: "2026-07-18"
     },
     {
       subject: "理科",
       category: "電気のはたらき（4年）",
       id: "理科/電気/denki01",
       name: "電気のはたらき（かん電池と回路）",
-      reward: 10, showCount: 10, video_url: "", lab_url: ""
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-18"
     },
     {
       subject: "社会",
       category: "地図（4年）",
       id: "社会/地図/nairiku01",
       name: "海に面していない県（内陸県）",
-      reward: 10, showCount: 10, video_url: "", lab_url: ""
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
       category: "大きな数（4年）",
       id: "算数/大きな数/ookazu01",
       name: "大きな数（万・億）",
-      reward: 10, showCount: 10, video_url: "", lab_url: ""
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-18"
     },
     {
       subject: "国語",
       category: "漢字（4年）",
       id: "国語/漢字/kanji01",
       name: "漢字と部首",
-      reward: 10, showCount: 10, video_url: "", lab_url: ""
-    },
-    {
-      subject: "国語",
-      category: "漢字（4年）",
-      id: "国語/漢字/jukugo01",
-      name: "漢字の組み立て（熟語）",
-      reward: 10, showCount: 10, video_url: "", lab_url: ""
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -97,7 +97,8 @@
       id: "算数/面積/menseki_1",
       name: "面積の変身 ① 初級",
       reward: 10, showCount: 10, video_url: "",
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=1"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=1",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -105,7 +106,8 @@
       id: "算数/面積/menseki_2",
       name: "面積の変身 ② 中級",
       reward: 10, showCount: 10, video_url: "",
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=2"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=2",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -113,7 +115,8 @@
       id: "算数/面積/menseki_3",
       name: "面積の変身 ③ 上級",
       reward: 10, showCount: 10, video_url: "",
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=3"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=3",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -122,7 +125,8 @@
       name: "垂直と平行（すいちょくとへいこう）",
       reward: 10, showCount: 5, video_url: "",
       // ★すいちょく・へいこう はっけんラボ（線をかたむけて発見）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=1"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=1",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -131,7 +135,8 @@
       name: "四角形の仲間分け（台形・平行四辺形・ひし形）",
       reward: 10, showCount: 5, video_url: "",
       // ★四角形へんしんラボ（頂点をうごかして仲間分けを発見）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=2"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=2",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -140,7 +145,8 @@
       name: "四角形の対角線（長さ・二等分・垂直）",
       reward: 10, showCount: 5, video_url: "",
       // ★対角線はっけんラボ（頂点をうごかして対角線の性質を発見）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=3"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_shikakukei.html?level=3",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -149,7 +155,8 @@
       name: "三角形の仲間分け（正三角形・二等辺三角形・直角三角形）",
       reward: 10, showCount: 5, video_url: "",
       // ★三角形の仲間分けラボ（頂点をうごかして仲間分けを発見）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_sankaku.html?level=1"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_sankaku.html?level=1",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -158,7 +165,8 @@
       name: "三角形の内角の和",
       reward: 10, showCount: 5, video_url: "",
       // ★内角の和はっけんラボ（形をかえても180度のまま）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_sankaku.html?level=2"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_sankaku.html?level=2",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
@@ -167,28 +175,32 @@
       name: "三角形と四角形の仲間さがし（まとめ）",
       reward: 15, showCount: 4, video_url: "",
       // ★仲間さがしミニゲーム（ドラッグでグループ分け＋ニコと会話）
-      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_nakama_sagashi.html"
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_nakama_sagashi.html",
+      created: "2026-07-18"
     },
     {
       subject: "算数",
       category: "小数（4年）",
       id: "算数/小数/shosu01",
       name: "小数のしくみと計算",
-      reward: 10, showCount: 5, video_url: "", lab_url: ""
+      reward: 10, showCount: 5, video_url: "", lab_url: "",
+      created: "2026-07-18"
     },
     {
       subject: "理科",
       category: "星と月（4年）",
       id: "理科/星/hoshi01",
       name: "夏の星空と月の動き",
-      reward: 10, showCount: 5, video_url: "", lab_url: ""
+      reward: 10, showCount: 5, video_url: "", lab_url: "",
+      created: "2026-07-18"
     },
     {
       subject: "社会",
       category: "ごみとくらし（4年）",
       id: "社会/ごみ/gomi01",
       name: "ごみのゆくえ（分別とリサイクル）",
-      reward: 10, showCount: 5, video_url: "", lab_url: ""
+      reward: 10, showCount: 5, video_url: "", lab_url: "",
+      created: "2026-07-18"
     }
   ];
 
@@ -946,77 +958,8 @@
         rescue_hint:"『さんアール』。数字は 3、文字は R だよ。",
         job_title:"社会 パーフェクト！",
         job_desc:"『3R（リデュース・リユース・リサイクル）』を おぼえたね。みんなが 意識して 行動すると、ごみを ぐっと へらせるよ。" }
-    ],
-
-    "国語/漢字/jukugo01": [
-      { q:"「温暖（おんだん）」という 熟語（じゅくご）の 組み立ては、次の うち どれかな？",
-        a:["にた 意味の 漢字を くみ合わせたもの","はんたいの 意味の 漢字を くみ合わせたもの","上の漢字が 下の漢字を せつめいするもの","「〜を」にあたる 漢字が 下にくるもの"], c:0,
-        hint:"「温（あたたかい）」と「暖（あたたかい）」は、どちらも あたたかい という 意味だね。",
-        speech_text:"おんだんの 組み立ては？",
-        job_title:"熟語のきほん！",
-        job_desc:"せいかい！「温」も「暖」も『あたたかい』という 似た意味の 漢字。似た意味の 漢字を ならべて 意味を 強めているんだね。" },
-
-      { q:"「勝敗（しょうはい）」という 熟語は、「勝つ（かつ）」と「敗れる（やぶれる）」の 漢字が くみ合わさって できているよ。この 組み立ては？",
-        a:["はんたいの 意味の 漢字を くみ合わせたもの","にた 意味の 漢字を くみ合わせたもの","主語（しゅご）と 述語（じゅつご）の かんけい","打ち消す 意味（〜ない）を プラスするもの"], c:0,
-        hint:"「勝つ」と「負ける（敗れる）」は、どんな かんけいかな？",
-        job_title:"反対の組み合わせ！",
-        job_desc:"せいかい！「勝つ」と「敗れる（負ける）」は はんたいの 意味だね。ほかにも「大小（だいしょう）」や「売買（ばいばい）」などが あるよ。" },
-
-      { q:"「洋画（ようが）」という 熟語は、「洋（外国の）」という 漢字が、「画（絵画・え）」という 漢字を せつめいして『外国の え』という 意味に なっているよ。この 組み立ては？",
-        a:["上の漢字が 下の漢字を せつめいするもの","下の漢字が 上の漢字を せつめいするもの","はんたいの 意味の 漢字の くみ合わせ","主語と 述語の かんけい"], c:0,
-        hint:"『洋（外国の）』が『画（え）』にかかって、どんな絵かを 説明しているよ。",
-        job_title:"説明する関係！",
-        job_desc:"正解！「洋（西洋・外国の）」＋「画（え）」で「外国の絵」。上の漢字が 下の漢字を くわしく せつめい（修飾）しているんだね。" },
-
-      { q:"「日没（にちぼつ）」は「日が 沈む（しずむ）」、「地震（じしん）」は「地（つち・地面）が 震える（ふるえる）」という 組み立てに なっているよ。\nこれは「〜が ◯◯する」という【主語（しゅご）と ◯◯】の 関係（かんけい）だよ。◯◯に 入る ことばを ひらがな 4文字で 書こう。",
-        type:"text_input", correct_answers:["じゅつご", "述語"],
-        hint:"文の 主役が「主語（しゅご）」。その主役の 動きや ようすを あらわすのが「◯◯◯◯」だよ。",
-        rescue_hint:"「ひらがな 4文字」で、答えは「じゅつご」だよ。",
-        job_title:"主語と述語の関係！",
-        job_desc:"よくできたね！「地（主語）」が「震（述語：ふるえる）」。「〜が 〜する」という 組み立ての 熟語も たくさん あるんだよ。" },
-
-      { q:"「読書（どくしょ）」という 熟語は、「書（ほん）を 読む」という 組み立てに なっているよ。\nこのように、日本語とは ぎゃくに、【動作（どうさ）を あらわす 漢字】が 上にきて、【「〜を」や「〜に」にあたる 漢字】が 下にくる 熟語は どれかな？",
-        a:["登山（とざん）","森林（しんりん）","強弱（きょうじゃく）","地主（じぬし）"], c:0,
-        hint:"「登山」を くんよみ（日本語の じゅんばん）に なおすと、「山（やま）に ◯◯」になるね。",
-        job_title:"動作が先に来る！",
-        job_desc:"その通り！「登山」は「山（やま）に 登る（のぼる）」。「登る（動作）」が 上にきて、「山に（〜に）」が 下にきているね。" },
-
-      { q:"次の 3つの 熟語の うち、「道路（どうろ）」と 同じ 組み立て（にた 意味の 漢字の くみ合わせ）の 熟語は どれかな？",
-        a:["絵画（かいが）","売買（ばいばい）","消火（しょうか）","地震（じしん）"], c:0,
-        hint:"「道（みち）」と「路（みち・じ）」は どちらも『みち』という 意味。「絵（え）」と「画（え）」の 意味は？",
-        job_title:"仲間を見つけた！",
-        job_desc:"せいかい！「絵（え）」と「画（が・え）」は どちらも 絵の こと。似た意味の 漢字どうしの くみ合わせだね。ちなみに「売買」は はんたいの 意味、「消火」は「火を 消す（動作＋〜を）」だよ。" },
-
-      { q:"「売買（ばいばい）」は「売る（うる）」と「買う（かう）」の 反対（はんたい）の 意味を くみ合わせた 熟語だよ。\nでは、「軽重（けいちょう）」は「軽い（かるい）」と「◯い」の 反対の 意味を くみ合わせたものだよ。◯に 入る 漢字 1文字を 書こう。",
-        type:"text_input", correct_answers:["重", "おも"],
-        hint:"「軽い（かるい）」の はんたいの 言葉は「◯い（おもい）」だね。",
-        rescue_hint:"漢字 1文字で「重」と 書いてね。",
-        job_title:"反対の漢字！",
-        job_desc:"正解！「軽（かるい）」と「重（おもい）」で「軽重（けいちょう）」。物事の かるさ・おもさ（重要さ）を あらわす 言葉だよ。" },
-
-      { q:"「不合格（ふごうかく）」や「非常識（ひじょうしき）」のように、上に「不」「無」「非」「未」などの 漢字が つく 熟語は、どんな 組み立てかな？",
-        a:["下の漢字の 意味を 打ち消す（〜ない）もの","はんたいの 意味の 漢字を くみ合わせたもの","似た意味の 漢字を 3つ ならべたもの","主語と 述語の かんけい"], c:0,
-        hint:"「不（〜ではない、〜しない）」が 下の「合格」の 意味を どうしているか 考えよう。",
-        job_title:"打ち消しの意味！",
-        job_desc:"せいかい！「不・無・非・未」は『〜ではない』『まだ〜していない』のように、下につく言葉の 意味を 打ち消す（否定する）はたらきが あるよ。" },
-
-      { q:"【問題の ねらいを 見ぬこう】",
-        scenario:[
-          { name:"ニコ", icon:"🦄", msg:"『次の 熟語の うち、はんたいの 意味の 漢字を くみ合わせたものを 選びましょう』って もんだい。<br>これは <b>なにが できると OK</b>かな？" }
-        ],
-        a:["漢字それぞれの 意味を 理解して、はんたいの 関係に あるか 見分けられるか","漢字の 画数（かくすう）を かぞえられるか","熟語を ローマ字で 書けるか","漢字を きれいに 書く練習が できているか"], c:0,
-        hint:"熟語を 組み立てている 漢字 1文字ずつの 意味に ちゅうもく しよう。",
-        speech_text:"この もんだいの ねらいは？",
-        job_title:"🎯 ねらいを 見ぬいた！",
-        job_desc:"ねらいは『漢字それぞれの意味を理解して、はんたいの関係にあるか見分けられるか』。ただ 漢字を おぼえるだけでなく、意味の つながりを 考えることが 大事なんだね！" },
-
-      { q:"漢字 2文字の 熟語には、いろいろな 組み立てが あったね。\nでは、「森林（しんりん）」という 熟語は、次の どの 組み立てに あてはまるかな？\n「にた意味」「はんたい」「上の漢字が下を説明」「動作と〜を」「主語と述語」の うち、あてはまるものを カタカナと 漢字で **「にた意味」** のように 書こう。",
-        type:"text_input", correct_answers:["にた意味", "似た意味", "にた いみ", "にた意味の漢字"],
-        hint:"「森（もり）」と「林（はやし）」は、どちらも 木が たくさん はえている 場所だね。",
-        rescue_hint:"「森」も「林」も どちらも 木が たくさんある 場所だから、答えは「にた意味」だよ。",
-        job_title:"熟語マスター！",
-        job_desc:"せいかい！「森」と「林」は どちらも 木が たくさん 生えている 場所を あらわす 似た意味の 漢字。これで 熟語の 組み立ては パッチリだね！" }
     ]
+
   };
 
   /* 公開 */
