@@ -115,6 +115,12 @@
   .book-story-title { font-size: 17px; font-weight: 900; color: #9a3412; margin-bottom: 10px; }
   .book-story-body { font-size: 14px; font-weight: 700; line-height: 1.9; color: var(--text-main); text-align: left; background: #fff7ed; border-radius: 12px; padding: 14px; margin-bottom: 14px; white-space: pre-wrap; }
   .book-quiz-progress { font-size: 11px; font-weight: 900; color: #c2410c; margin-bottom: 8px; }
+  #review-chat-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 260; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .review-chat-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 440px; max-height: 88vh; overflow-y: auto; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
+  .review-chat-header { font-size: 15px; font-weight: 900; color: #7e22ce; margin-bottom: 4px; }
+  .review-chat-progress { font-size: 11.5px; font-weight: 900; color: #9333ea; margin-bottom: 10px; }
+  .review-chat-qtext { font-size: 13.5px; font-weight: 800; color: var(--text-main); background: #f5f3ff; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; text-align: left; }
+  .review-chat-answer-chip { display: inline-block; font-size: 12.5px; font-weight: 900; color: #15803d; background: #dcfce7; border-radius: 10px; padding: 5px 10px; margin-bottom: 10px; }
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -276,6 +282,14 @@
     <button class="br-btn close" onclick="window.closeBookModal()">とじる</button>
   </div>
 </div>
+<div id="review-chat-modal">
+  <div class="review-chat-box">
+    <div class="review-chat-header">📝 まちがえた問題の ふりかえり</div>
+    <div id="review-chat-progress" class="review-chat-progress"></div>
+    <div id="review-chat-body"></div>
+    <button id="review-chat-next-btn" class="action-btn nav-next" onclick="window.reviewChatNext()">わかった！つぎへ 🎀</button>
+  </div>
+</div>
 <div id="stamp-modal">
   <div class="stamp-box">
     <h2>💮 ログインスタンプ帳</h2>
@@ -334,6 +348,7 @@ window.currentActiveSubject = "japanese";
 window.currentQIdx = 0; window.currentStage = null; window.currentQuestions = [];
 window.currentFirstTry = true; window.availableSubjects = [];
 window.bonusVideoUsed = false; window.bonusLabUsed = false; window.totalMistakes = 0;
+window.sessionMissedQuestions = []; window.reviewChatIdx = 0;
 window.activeBoostMultiplier = 1.0;
 window.tapCount = 0; window.tapTimer = null;
 window.playerId = localStorage.getItem("kids_lab_playerId") || "";
@@ -761,7 +776,7 @@ window.openBriefing = function(stg) {
 };
 window.closeBriefing = function() { document.getElementById("briefing-modal").style.display = "none"; };
 window.launchQuest = function() {
-  window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0;
+  window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
   window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
   window.currentActiveStageId = window.currentStage.id;
   window.currentActiveStageReward = (window.currentStage.reward !== undefined && window.currentStage.reward !== "") ? Number(window.currentStage.reward) : 10;
@@ -898,7 +913,10 @@ window.triggerItemInGame = function() {
 window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
 
-  if (window.currentQIdx >= window.currentQuestions.length) { window.exitToMainMenu(); return; }
+  if (window.currentQIdx >= window.currentQuestions.length) {
+    if (!window.weakAttackModeActive && window.sessionMissedQuestions && window.sessionMissedQuestions.length > 0) { window.startReviewChat(); return; }
+    window.exitToMainMenu(); return;
+  }
   const current = window.currentQuestions[window.currentQIdx]; window.currentWeakQuestionObj = current;
   let qNumberStr = window.weakAttackModeActive ? `にがて復元Q.${window.currentQIdx+1}` : `Q.${window.currentQIdx+1}`;
   document.getElementById("game-q-text").textContent = `【${qNumberStr}】\n${current.q ? current.q.replace(/【Q\.\d+】/g, '') : ""}`;
@@ -1010,6 +1028,21 @@ window.triggerWrongAnswer = function(current) {
 
   window.speakText("ざんねん！", "ja-JP");
 
+  if (!window.weakAttackModeActive) {
+    if (!window.sessionMissedQuestions) window.sessionMissedQuestions = [];
+    if (!window.sessionMissedQuestions.some(m => m._qIdx === window.currentQIdx)) {
+      window.sessionMissedQuestions.push({
+        _qIdx: window.currentQIdx,
+        q: (current.q || "").replace(/【Q\.\d+】/g, '').replace(/\n/g, ' '),
+        hint: current.hint || "",
+        job_desc: current.job_desc || "",
+        job_title: current.job_title || "",
+        correct_answers: current.correct_answers,
+        a: current.a, c: current.c
+      });
+    }
+  }
+
   if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
      let weakId = `${window.currentActiveStageId}_q_${window.currentQIdx}`;
@@ -1091,6 +1124,48 @@ window.triggerCorrectAnswer = function(current) {
     }
   }
   const nextBtn = document.getElementById("next-btn"); nextBtn.innerHTML = window.weakAttackModeActive && window.currentQIdx >= window.currentQuestions.length - 1 ? "🏠 メニューにもどる" : "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next"; document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block"; setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400); window.saveGame();
+};
+window.startReviewChat = function() {
+  window.reviewChatIdx = 0;
+  document.getElementById("review-chat-modal").style.display = "flex";
+  window.renderReviewChatStep();
+};
+window.renderReviewChatStep = function() {
+  const list = window.sessionMissedQuestions || [];
+  const idx = window.reviewChatIdx;
+  const total = list.length;
+  const item = list[idx];
+  if (!item) { document.getElementById("review-chat-modal").style.display = "none"; window.sessionMissedQuestions = []; window.exitToMainMenu(); return; }
+  document.getElementById("review-chat-progress").textContent = `（${idx + 1} / ${total}問目）`;
+  let ansText = "";
+  if (item.correct_answers && item.correct_answers.length > 0) { ansText = item.correct_answers.join(" または "); }
+  else if (item.a && typeof item.c === "number" && item.a[item.c] !== undefined) { ansText = item.a[item.c]; }
+  const descHtml = (item.job_desc || item.hint || "").replace(/\n/g, "<br>");
+  document.getElementById("review-chat-body").innerHTML = `
+    <div class="review-chat-qtext">${item.q}</div>
+    <div class="chat-container">
+      <div class="chat-msg left">
+        <div class="chat-icon">🦄</div>
+        <div class="chat-bubble"><div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">ニコ</div>もう一回 いっしょに 見てみよう！</div>
+      </div>
+      <div class="chat-msg left">
+        <div class="chat-icon">🦄</div>
+        <div class="chat-bubble"><div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">ニコ</div>${ansText ? `<span class="review-chat-answer-chip">こたえ：${ansText}</span><br>` : ""}${descHtml}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById("review-chat-next-btn").textContent = (idx >= total - 1) ? "わかった！とじる 🎀" : "わかった！つぎへ 🎀";
+};
+window.reviewChatNext = function() {
+  const total = (window.sessionMissedQuestions || []).length;
+  window.reviewChatIdx++;
+  if (window.reviewChatIdx >= total) {
+    document.getElementById("review-chat-modal").style.display = "none";
+    window.sessionMissedQuestions = [];
+    window.exitToMainMenu();
+    return;
+  }
+  window.renderReviewChatStep();
 };
 window.nextQuestStep = function() { window.currentQIdx++; window.showQuestionStep(); };
 window.exitToMainMenu = function() {
