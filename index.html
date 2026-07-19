@@ -57,6 +57,12 @@
   .stage-card { background: var(--panel-bg); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 4px 0 rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 2px solid transparent; }
   .stage-card:active { transform: translateY(2px); }
   .stage-left { display: flex; align-items: center; gap: 8px; } .stage-icon { font-size: 20px; } .stage-title { font-weight: 700; font-size: 14px; }
+  .stage-title-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .stage-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+  .stage-badge { font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 8px; white-space: nowrap; display: inline-block; }
+  .stage-badge-new { background: linear-gradient(135deg, #fef08a, #fde047); color: #92400e; border: 1px solid #facc15; animation: badgePulse 1.6s infinite; }
+  .stage-badge-weak { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  @keyframes badgePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
   .acc-box { background: var(--panel-bg); border-radius: var(--radius); box-shadow: var(--card-shadow); margin-bottom: 12px; overflow: hidden; }
   .acc-head { padding: 14px 16px; font-weight: 900; font-size: 15px; color: var(--text-main); background: var(--lavender-light); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
   .acc-body { padding: 16px; display: none; } .acc-body.open { display: block; }
@@ -619,7 +625,29 @@ window.renderStageMaps = function() {
         if (!stg.id || String(stg.id).trim() === "") {
           statusHtml = `<span style="font-size:12px; font-weight:900; color:#0284c7; background:#e0f2fe; padding:4px 8px; border-radius:12px;">🔬 実験専用</span>`;
         }
-        card.innerHTML = `<div class="stage-left"><span class="stage-icon">${isMaster ? '👑' : '🌟'}</span><span class="stage-title">${stg.name}</span></div>${statusHtml}`;
+
+        // ★🆕NEWバッジ：追加から14日以内 かつ 未クリア
+        let isNewStage = false;
+        if (stg.created && !isCleared) {
+          const createdMs = new Date(stg.created + "T00:00:00").getTime();
+          if (!isNaN(createdMs)) {
+            const daysSince = (window.currentServerTime - createdMs) / (1000 * 60 * 60 * 24);
+            if (daysSince >= 0 && daysSince <= 14) isNewStage = true;
+          }
+        }
+        // ★📚復習しようバッジ：このステージ由来の「にがて（weakQuestions）」が残っている
+        let hasWeak = false;
+        if (stg.id && window.saveData.weakQuestions && window.saveData.weakQuestions.length > 0) {
+          hasWeak = window.saveData.weakQuestions.some(w => String(w).indexOf(stg.id + "_q_") === 0);
+        }
+        let badgesHtml = "";
+        if (isNewStage) badgesHtml += `<span class="stage-badge stage-badge-new">🆕 NEW</span>`;
+        if (hasWeak) badgesHtml += `<span class="stage-badge stage-badge-weak">📚 復習しよう</span>`;
+        const titleHtml = badgesHtml
+          ? `<div class="stage-title-wrap"><span class="stage-title">${stg.name}</span><div class="stage-badges">${badgesHtml}</div></div>`
+          : `<span class="stage-title">${stg.name}</span>`;
+
+        card.innerHTML = `<div class="stage-left"><span class="stage-icon">${isMaster ? '👑' : '🌟'}</span>${titleHtml}</div>${statusHtml}`;
         card.onclick = () => { stg.isReview = isReview; stg.isMaster = isMaster; window.openBriefing(stg); }; body.appendChild(card);
       });
     });
