@@ -567,6 +567,23 @@ window.renderSubjectsNav = function() {
   });
 };
 window.switchSubject = function(s) { window.currentActiveSubject = s; document.querySelectorAll('.subjects .tab-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); }); window.renderStageMaps(); };
+// ★NEW / 復習しよう の判定を一か所にまとめる（ステージ一覧とアコーディオン見出しの両方から使う）
+window.computeStageBadgeFlags = function(stg) {
+  const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
+  let isNewStage = false;
+  if (stg.created && !isCleared) {
+    const createdMs = new Date(stg.created + "T00:00:00").getTime();
+    if (!isNaN(createdMs)) {
+      const daysSince = (window.currentServerTime - createdMs) / (1000 * 60 * 60 * 24);
+      if (daysSince >= 0 && daysSince <= 14) isNewStage = true;
+    }
+  }
+  let hasWeak = false;
+  if (stg.id && window.saveData.weakQuestions && window.saveData.weakQuestions.length > 0) {
+    hasWeak = window.saveData.weakQuestions.some(w => String(w).indexOf(stg.id + "_q_") === 0);
+  }
+  return { isNewStage, hasWeak };
+};
 window.renderStageMaps = function() {
   const container = document.getElementById("stage-maps-container"); if (!container) return; container.innerHTML = "";
   const sub = window.currentActiveSubject; const panel = document.createElement("section"); panel.className = "panel subject-panel active";
@@ -587,12 +604,20 @@ window.renderStageMaps = function() {
       const allCleared = totalIdCount > 0 && clearedCount === totalIdCount;
       const progressBadge = totalIdCount > 0 ? `${clearedCount}/${totalIdCount} クリア` : "🔬 実験";
 
+      // ★このカテゴリの中に「NEW」「復習しよう」ステージが1つでもあるか（畳んで隠れないようにする）
+      const catFlags = rawStages.map(s => window.computeStageBadgeFlags(s));
+      const catHasNew = catFlags.some(f => f.isNewStage);
+      const catHasWeak = catFlags.some(f => f.hasWeak);
+      let headExtraHtml = "";
+      if (catHasNew) headExtraHtml += `<span class="stage-badge stage-badge-new" style="margin-left:6px;">🆕</span>`;
+      if (catHasWeak) headExtraHtml += `<span class="stage-badge stage-badge-weak" style="margin-left:4px;">📚</span>`;
+
       const box = document.createElement("div"); box.className = "acc-box";
       const head = document.createElement("div"); head.className = "acc-head";
-      head.innerHTML = `<span>${cat}</span><span style="font-size:11px; font-weight:700; color:var(--text-soft); background:#fff; padding:3px 8px; border-radius:10px;">${progressBadge}</span>`;
+      head.innerHTML = `<span>${cat}${headExtraHtml}</span><span style="font-size:11px; font-weight:700; color:var(--text-soft); background:#fff; padding:3px 8px; border-radius:10px;">${progressBadge}</span>`;
       head.onclick = () => window.toggleAcc(head);
       box.appendChild(head);
-      const body = document.createElement("div"); body.className = "acc-body" + (allCleared ? "" : " open");
+      const body = document.createElement("div"); body.className = "acc-body" + ((allCleared && !catHasNew && !catHasWeak) ? "" : " open");
       box.appendChild(body); panel.appendChild(box);
 
       sortedStages.forEach(stg => {
@@ -626,20 +651,8 @@ window.renderStageMaps = function() {
           statusHtml = `<span style="font-size:12px; font-weight:900; color:#0284c7; background:#e0f2fe; padding:4px 8px; border-radius:12px;">🔬 実験専用</span>`;
         }
 
-        // ★🆕NEWバッジ：追加から14日以内 かつ 未クリア
-        let isNewStage = false;
-        if (stg.created && !isCleared) {
-          const createdMs = new Date(stg.created + "T00:00:00").getTime();
-          if (!isNaN(createdMs)) {
-            const daysSince = (window.currentServerTime - createdMs) / (1000 * 60 * 60 * 24);
-            if (daysSince >= 0 && daysSince <= 14) isNewStage = true;
-          }
-        }
-        // ★📚復習しようバッジ：このステージ由来の「にがて（weakQuestions）」が残っている
-        let hasWeak = false;
-        if (stg.id && window.saveData.weakQuestions && window.saveData.weakQuestions.length > 0) {
-          hasWeak = window.saveData.weakQuestions.some(w => String(w).indexOf(stg.id + "_q_") === 0);
-        }
+        // ★🆕NEW／📚復習しようバッジ（判定は window.computeStageBadgeFlags に一本化）
+        const { isNewStage, hasWeak } = window.computeStageBadgeFlags(stg);
         let badgesHtml = "";
         if (isNewStage) badgesHtml += `<span class="stage-badge stage-badge-new">🆕 NEW</span>`;
         if (hasWeak) badgesHtml += `<span class="stage-badge stage-badge-weak">📚 復習しよう</span>`;
