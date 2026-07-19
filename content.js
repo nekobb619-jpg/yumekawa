@@ -39,6 +39,17 @@
     },
     {
       subject: "算数",
+      category: "わり算（4年）",
+      id: "算数/わり算/hissan_amari02",
+      name: "わり算の筆算（2けたで わる）",
+      reward: 10,
+      showCount: 10,
+      video_url: "",
+      lab_url: "",
+      created: "2026-07-19"
+    },
+    {
+      subject: "算数",
       category: "角度（4年）",
       id: "算数/角度/kakudo01",
       name: "角の大きさ（角度のきほん）",
@@ -299,6 +310,133 @@
         speech_text:"さいごに たしかめる ことは？",
         job_title:"🏆 わり算の筆算 マスター！",
         job_desc:"さいごの チェックは『あまり ＜ わる数』。\nこれが できていれば 筆算は バッチリ。おめでとう、わり算マスター！" }
+    ],
+
+    "算数/わり算/hissan_amari02": [
+      { q:"ウォーミングアップ！ 2けたの 数で わる 筆算では、さいしょに『見当（けんとう）』を つけるよ。\n63 ÷ 21 を とくとき、21を なんじゅう（何十）と みて 見当を つける？",
+        a:["20","30","10","40"], c:0,
+        hint:"21は 20に ちかいね。がい数（何十）で考えると 見当が つけやすいよ。",
+        speech_text:"21を なんじゅうと みる？",
+        job_title:"見当（けんとう）チェック クリア！",
+        job_desc:"21は だいたい20と みるよ。63÷20で ざっくり 見当を つけると、商は だいたい3くらいだと わかるね。" },
+
+      { q:"84 ÷ 21 を 筆算で といたよ。\n商（しょう）は いくつに なる？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('21',136,84);ctx.textAlign='center';ctx.fillText('8',180,84);ctx.fillText('4',212,84);",
+        a:["4","3","5","6"], c:0,
+        hint:"21 × 4 を 計算してみよう。ぴったり 84に なるかな？",
+        job_title:"2けたわり算 マスターへ 一歩！",
+        job_desc:"84÷21＝4。21×4=84で ぴったり わりきれるね。筆算では、わる数が2けたに なっても やりかたは 同じだよ。" },
+
+      { q:"96 ÷ 23 を 筆算で といたよ。\n『商』と『あまり』は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('23',136,84);ctx.textAlign='center';ctx.fillText('9',180,84);ctx.fillText('6',212,84);",
+        a:["4あまり4","3あまり27","5あまり9","4あまり8"], c:0,
+        hint:"23×4=92。96−92=？ あまりは わる数23より 小さいか たしかめよう。",
+        job_title:"あまりも バッチリ！",
+        job_desc:"96÷23＝4あまり4。23×4=92、96−92=4。あまり4は わる数23より 小さいので これで OK！" },
+
+      { q:"91 ÷ 23 を といたよ。23を 20と みて 見当を つけたら、商は4かな？と 思った。\nでも 23×4を 計算したら…",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('23',136,84);ctx.textAlign='center';ctx.fillText('9',180,84);ctx.fillText('1',212,84);",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"23×4を 計算したら 92に なった！ でも 91より 大きく なっちゃった…！ どうしよう？" }
+        ],
+        a:["23×4=92は91より大きいから、商を1へらして3にする","そのまま4でいい","わる数23を へらす","わられる数91を ふやす"], c:0,
+        hint:"見当をつけた商で かけ算した答えが、わられる数より 大きく なったら、商を1へらすんだったね。",
+        speech_text:"商が大きすぎたときは どうする？",
+        job_title:"見当なおし マスター！",
+        job_desc:"23×4=92は91より大きいので、商は3にへらす。23×3=69、91−69=22。あまり22は23より小さいのでOK。91÷23＝3あまり22が正解！" },
+
+      { q:"138 ÷ 23 を 筆算で といたよ（3けた ÷ 2けた）。\n商は いくつ？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('23',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('3',212,84);ctx.fillText('8',244,84);",
+        a:["6","5","7","8"], c:0,
+        hint:"23×6を 計算してみよう。ぴったり138に なるかな？",
+        job_title:"3けた÷2けたも できた！",
+        job_desc:"138÷23＝6。23×6=138で ぴったり わりきれるね。3けたに なっても、見当をつけるやりかたは 同じだよ。" },
+
+      { q:"えんぴつが 96本 あります。\n1ふくろに 24本ずつ 入れると、ふくろは 何ふくろ できる？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('24',136,84);ctx.textAlign='center';ctx.fillText('9',180,84);ctx.fillText('6',212,84);",
+        type:"text_input", correct_answers:["4","4ふくろ"],
+        hint:"96÷24を 筆算で といてみよう。24×いくつ が 96に なるかな？",
+        rescue_hint:"24×4=96。ぴったり わりきれるね。答えは4だよ。",
+        speech_text:"ふくろは なんふくろ できるかな？",
+        job_title:"筆算 文章題 クリア！",
+        job_desc:"96÷24＝4。24×4=96で ぴったりだね。4ふくろ できるよ。" },
+
+      { q:"168 ÷ 31 を 筆算で といたよ（3けた ÷ 2けた、あまりあり）。\n『商』と『あまり』は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('31',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('6',212,84);ctx.fillText('8',244,84);",
+        a:["5あまり13","4あまり44","6あまり12","5あまり3"], c:0,
+        hint:"31×5=155。168−155=？ あまりは わる数31より 小さいか たしかめよう。",
+        job_title:"むずかしい 筆算も バッチリ！",
+        job_desc:"168÷31＝5あまり13。31×5=155、168−155=13。あまり13は わる数31より 小さいので これで OK！" },
+
+      { q:"78 ÷ 13 を 筆算で といたよ。\n商は いくつに なる？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('13',136,84);ctx.textAlign='center';ctx.fillText('7',180,84);ctx.fillText('8',212,84);",
+        a:["6","5","7","8"], c:0,
+        hint:"13 × 6 を 計算してみよう。ぴったり 78に なるかな？",
+        job_title:"わりきれる問題も バッチリ！",
+        job_desc:"78÷13＝6。13×6=78で ぴったり わりきれるね。見当をつけるとき、13は10とみると、商はだいたい7〜8くらいと予想できるよ。" },
+
+      { q:"96 ÷ 16 を 筆算で といたよ。\n商は いくつに なる？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('16',136,84);ctx.textAlign='center';ctx.fillText('9',180,84);ctx.fillText('6',212,84);",
+        a:["6","5","7","4"], c:0,
+        hint:"16 × 6 を 計算してみよう。ぴったり 96に なるかな？",
+        job_title:"2けたわり算も れんしゅう！",
+        job_desc:"96÷16＝6。16×6=96で ぴったり わりきれるね。" },
+
+      { q:"175 ÷ 25 を 筆算で といたよ（3けた ÷ 2けた）。\n商は いくつ？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('25',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('7',212,84);ctx.fillText('5',244,84);",
+        a:["7","6","8","5"], c:0,
+        hint:"25 × 7 を 計算してみよう。ぴったり175に なるかな？",
+        job_title:"3けたでも わりきれた！",
+        job_desc:"175÷25＝7。25×7=175で ぴったり わりきれるね。3けたに なっても やりかたは 同じだよ。" },
+
+      { q:"87 ÷ 16 を 筆算で といたよ。\n『商』と『あまり』は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('16',136,84);ctx.textAlign='center';ctx.fillText('8',180,84);ctx.fillText('7',212,84);",
+        a:["5あまり7","4あまり23","6あまり9","5あまり2"], c:0,
+        hint:"16×5=80。87−80=？ あまりは わる数16より 小さいか たしかめよう。",
+        job_title:"あまりも きちんと！",
+        job_desc:"87÷16＝5あまり7。16×5=80、87−80=7。あまり7は わる数16より 小さいので これで OK！" },
+
+      { q:"142 ÷ 19 を 筆算で といたよ（3けた ÷ 2けた、あまりあり）。\n『商』と『あまり』は？",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('19',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('4',212,84);ctx.fillText('2',244,84);",
+        a:["7あまり9","6あまり28","8あまり2","7あまり2"], c:0,
+        hint:"19×7=133。142−133=？ あまりは わる数19より 小さいか たしかめよう。",
+        job_title:"3けた＋あまりも マスター！",
+        job_desc:"142÷19＝7あまり9。19×7=133、142−133=9。あまり9は わる数19より 小さいので これで OK！" },
+
+      { q:"おり紙が 65まい あります。\n1人に 14まいずつ 配ると、何人に 配れる？（あまりが 出るよ）",
+        canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('14',136,84);ctx.textAlign='center';ctx.fillText('6',180,84);ctx.fillText('5',212,84);",
+        type:"text_input", correct_answers:["4","4人"],
+        hint:"65÷14を 筆算で といてみよう。14×いくつが 65に いちばん近いかな？",
+        rescue_hint:"14×4=56、65−56=9。あまり9は14より小さいのでOK。4人に配れて9まいあまるよ。答えは4だよ。",
+        speech_text:"何人に 配れるかな？",
+        job_title:"あまりのある文章題 クリア！",
+        job_desc:"65÷14＝4あまり9。14×4=56、65−56=9。4人に 配れて、9まい あまるよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"2けたで わる 筆算の もんだいって、いつも さいしょに『わる数を 何十と みて 見当を つけよう』って 出るよね。<br>これは <b>なにが できると OK</b>なのかな？" }
+        ],
+        a:["わる数を がい数（何十）とみて、商の見当を すばやく つけられるか","かけ算九九が ぜんぶ言えるか","大きな数が 読めるか","たし算が はやいか"], c:0,
+        hint:"『見当を つけよう』が ポイントだね。",
+        speech_text:"この もんだいの ねらいは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"ねらいは『わる数を がい数でみて、商の見当を すばやくつけられるか』。2けたで わる筆算では、この 見当のつけかたが いちばん 大事なんだ。" },
+
+      { q:"【ニコに 教えてあげよう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"84 ÷ 27を といたよ！ 27を 30とみて 見当をつけたら、商は4かな…と 思って 27×4を 計算したら 108に なっちゃった！<br>あれ、84より 大きくなっちゃった…どうしよう？" }
+        ],
+        a:["商が大きすぎた。1へらして3にすればいい","わる数をふやせばいい","わられる数をへらせばいい","そのまま4でいい"], c:0,
+        hint:"27×4=108は84より大きいね。商を1へらすと どうなるかな？",
+        job_title:"先生に なれた！",
+        job_desc:"27×4=108は84をこえてしまう。商を1へらして3にすると、27×3=81、84−81=3であまり3。84÷27＝3あまり3が正解！ニコに教えられた社長は、もうバッチリわかってるね。" },
+
+      { q:"138 ÷ 23 の 商を、数字で 書こう。",
+        type:"text_input", correct_answers:["6"],
+        hint:"23×いくつ が 138に なるか、思い出してみよう。",
+        rescue_hint:"23×6=138。答えは6だよ。",
+        job_title:"だい2回 クリア！",
+        job_desc:"2けたで わる 筆算、おつかれさま！ 『わる数を 何十とみて 見当をつける』『見当が大きすぎたら 商を1へらす』の 2つが 今日の ポイントだったね。" }
     ],
 
     "算数/角度/kakudo01": [
