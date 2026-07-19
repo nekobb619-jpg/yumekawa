@@ -100,6 +100,21 @@
   .stamp-mark.anim { animation: stampIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
   @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   @keyframes stampIn { 0% { transform: scale(3) rotate(-20deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+  .book-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: linear-gradient(135deg, #fff7ed, #fed7aa); border: 2px solid #fb923c; border-radius: var(--radius); box-shadow: 0 5px 0 #c2410c; margin-bottom: 12px; cursor: pointer; transition: all 0.1s; }
+  .book-banner:active { transform: translateY(3px); box-shadow: 0 2px 0 #c2410c; }
+  .book-banner.read-done { background: linear-gradient(135deg, #f0fdf4, #bbf7d0); border-color: #22c55e; box-shadow: 0 5px 0 #15803d; }
+  .book-banner-icon { font-size: 30px; flex-shrink: 0; }
+  .book-banner-text { flex: 1; min-width: 0; }
+  .book-banner-title { font-size: 12px; font-weight: 900; color: #9a3412; }
+  .book-banner.read-done .book-banner-title { color: #166534; }
+  .book-banner-sub { font-size: 13px; font-weight: 700; color: #c2410c; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-banner.read-done .book-banner-sub { color: #15803d; }
+  .book-banner-streak { font-size: 10.5px; font-weight: 900; color: #c2410c; background: #fff; border-radius: 10px; padding: 5px 8px; white-space: nowrap; flex-shrink: 0; }
+  #book-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 250; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .book-modal-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
+  .book-story-title { font-size: 17px; font-weight: 900; color: #9a3412; margin-bottom: 10px; }
+  .book-story-body { font-size: 14px; font-weight: 700; line-height: 1.9; color: var(--text-main); text-align: left; background: #fff7ed; border-radius: 12px; padding: 14px; margin-bottom: 14px; white-space: pre-wrap; }
+  .book-quiz-progress { font-size: 11px; font-weight: 900; color: #c2410c; margin-bottom: 8px; }
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -162,6 +177,14 @@
   <div class="navi-box">
     <div class="navi-avatar">🤖</div>
     <div class="navi-text" id="navi-say">ハロー社長！データ通信が終わるまで少し待ってね！</div>
+  </div>
+  <div id="book-banner" class="book-banner" onclick="window.openBookModal()">
+    <div class="book-banner-icon">📖</div>
+    <div class="book-banner-text">
+      <div class="book-banner-title">今日のおはなし</div>
+      <div class="book-banner-sub" id="book-banner-sub">よみこみ中…</div>
+    </div>
+    <div class="book-banner-streak" id="book-banner-streak"></div>
   </div>
   <div class="flex-row">
     <button class="btn-sm" onclick="window.openStampModal()">💮 ログインスタンプ</button>
@@ -247,6 +270,12 @@
   </div>
   <iframe id="content-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
+<div id="book-modal">
+  <div class="book-modal-box">
+    <div id="book-modal-body"></div>
+    <button class="br-btn close" onclick="window.closeBookModal()">とじる</button>
+  </div>
+</div>
 <div id="stamp-modal">
   <div class="stamp-box">
     <h2>💮 ログインスタンプ帳</h2>
@@ -291,14 +320,16 @@ window.CHILD_ID = "りお";
 window.SWITCH_PASSWORD = "papa8888";
 window.TREASURE_ISLAND_SPAWN_CHANCE = 0.5;
 window.subjectDictionary = {
-  japanese: { label: "📕国語", sub: "読解・漢字" }, math: { label: "📐算数", sub: "計算・実験" },
-  science: { label: "🧪理科", sub: "回路・観察" }, society: { label: "🗺️社会", sub: "地図・記号" },
-  english: { label: "💬英語", sub: "単語・会話" }, music: { label: "🎵音楽", sub: "リズム・音符" },
-  programming: { label: "💻プロ", sub: "変数・ロジック" }
+  // ★キーはcontent.js/GASの subject 値（日本語）と一致させる。英語キーだと一致せず「🌟新教科」表示になってしまうので注意。
+  "国語": { label: "📕国語", sub: "読解・漢字" }, "算数": { label: "📐算数", sub: "計算・実験" },
+  "理科": { label: "🧪理科", sub: "回路・観察" }, "社会": { label: "🗺️社会", sub: "地図・記号" },
+  "英語": { label: "💬英語", sub: "単語・会話" }, "音楽": { label: "🎵音楽", sub: "リズム・音符" },
+  "プログラミング": { label: "💻プロ", sub: "変数・ロジック" },
+  "漢検": { label: "📜漢検", sub: "10級ごうかく" }
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "" };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0 };
 window.currentActiveSubject = "japanese";
 window.currentQIdx = 0; window.currentStage = null; window.currentQuestions = [];
 window.currentFirstTry = true; window.availableSubjects = [];
@@ -419,7 +450,10 @@ window.performLogin = function(id) {
        if(!window.saveData.islandStatusDate) window.saveData.islandStatusDate = "";
        if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
        if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
-       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.syncWithGoogleSpreadsheet("LOAD");
+       if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
+       if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
+       if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
+       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD");
     } else { alert("読み込みエラー: " + res.message); }
   })
   .catch(e => { window.loadGameLocal(); window.syncWithGoogleSpreadsheet("LOAD"); });
@@ -431,10 +465,13 @@ window.loadGameLocal = function() {
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
-  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshIslandStatusUI();
+  if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
+  if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
+  if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
+  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
 };
 window.saveGame = function() {
-  localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshIslandStatusUI();
+  localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
   if (window.playerId) {
     fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SAVE", playerId: window.playerId, saveData: window.saveData }) }).catch(e => {});
   }
@@ -1119,5 +1156,6 @@ window.quitQuest = function() { window.weakAttackModeActive = false; document.ge
 window.initApp();
 </script>
 <script src="./content.js"></script>
+<script src="./book.js"></script>
 </body>
 </html>
