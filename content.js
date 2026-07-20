@@ -330,6 +330,7 @@
         job_desc:"21は だいたい20と みるよ。63÷20で ざっくり 見当を つけると、商は だいたい3くらいだと わかるね。" },
 
       { q:"84 ÷ 21 を 筆算で といたよ。\n商（しょう）は いくつに なる？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('21',136,84);ctx.textAlign='center';ctx.fillText('8',180,84);ctx.fillText('4',212,84);",
         a:["4","3","5","6"], c:0,
         hint:"21 × 4 を 計算してみよう。ぴったり 84に なるかな？",
@@ -337,6 +338,7 @@
         job_desc:"84÷21＝4。21×4=84で ぴったり わりきれるね。筆算では、わる数が2けたに なっても やりかたは 同じだよ。" },
 
       { q:"96 ÷ 23 を 筆算で といたよ。\n『商』と『あまり』は？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('23',136,84);ctx.textAlign='center';ctx.fillText('9',180,84);ctx.fillText('6',212,84);",
         a:["4あまり4","3あまり27","5あまり9","4あまり8"], c:0,
         hint:"23×4=92。96−92=？ あまりは わる数23より 小さいか たしかめよう。",
@@ -355,6 +357,7 @@
         job_desc:"23×4=92は91より大きいので、商は3にへらす。23×3=69、91−69=22。あまり22は23より小さいのでOK。91÷23＝3あまり22が正解！" },
 
       { q:"138 ÷ 23 を 筆算で といたよ（3けた ÷ 2けた）。\n商は いくつ？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('23',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('3',212,84);ctx.fillText('8',244,84);",
         a:["6","5","7","8"], c:0,
         hint:"23×6を 計算してみよう。ぴったり138に なるかな？",
@@ -371,6 +374,7 @@
         job_desc:"96÷24＝4。24×4=96で ぴったりだね。4ふくろ できるよ。" },
 
       { q:"168 ÷ 31 を 筆算で といたよ（3けた ÷ 2けた、あまりあり）。\n『商』と『あまり』は？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('31',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('6',212,84);ctx.fillText('8',244,84);",
         a:["5あまり13","4あまり44","6あまり12","5あまり3"], c:0,
         hint:"31×5=155。168−155=？ あまりは わる数31より 小さいか たしかめよう。",
@@ -378,6 +382,7 @@
         job_desc:"168÷31＝5あまり13。31×5=155、168−155=13。あまり13は わる数31より 小さいので これで OK！" },
 
       { q:"78 ÷ 13 を 筆算で といたよ。\n商は いくつに なる？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('13',136,84);ctx.textAlign='center';ctx.fillText('7',180,84);ctx.fillText('8',212,84);",
         a:["6","5","7","8"], c:0,
         hint:"13 × 6 を 計算してみよう。ぴったり 78に なるかな？",
@@ -385,6 +390,7 @@
         job_desc:"78÷13＝6。13×6=78で ぴったり わりきれるね。見当をつけるとき、13は10とみると、商はだいたい7〜8くらいと予想できるよ。" },
 
       { q:"96 ÷ 16 を 筆算で といたよ。\n商は いくつに なる？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('16',136,84);ctx.textAlign='center';ctx.fillText('9',180,84);ctx.fillText('6',212,84);",
         a:["6","5","7","4"], c:0,
         hint:"16 × 6 を 計算してみよう。ぴったり 96に なるかな？",
@@ -392,6 +398,7 @@
         job_desc:"96÷16＝6。16×6=96で ぴったり わりきれるね。" },
 
       { q:"175 ÷ 25 を 筆算で といたよ（3けた ÷ 2けた）。\n商は いくつ？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('25',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('7',212,84);ctx.fillText('5',244,84);",
         a:["7","6","8","5"], c:0,
         hint:"25 × 7 を 計算してみよう。ぴったり175に なるかな？",
@@ -399,6 +406,7 @@
         job_desc:"175÷25＝7。25×7=175で ぴったり わりきれるね。3けたに なっても やりかたは 同じだよ。" },
 
       { q:"87 ÷ 16 を 筆算で といたよ。\n『商』と『あまり』は？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',195,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(240,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('16',136,84);ctx.textAlign='center';ctx.fillText('8',180,84);ctx.fillText('7',212,84);",
         a:["5あまり7","4あまり23","6あまり9","5あまり2"], c:0,
         hint:"16×5=80。87−80=？ あまりは わる数16より 小さいか たしかめよう。",
@@ -406,6 +414,7 @@
         job_desc:"87÷16＝5あまり7。16×5=80、87−80=7。あまり7は わる数16より 小さいので これで OK！" },
 
       { q:"142 ÷ 19 を 筆算で といたよ（3けた ÷ 2けた、あまりあり）。\n『商』と『あまり』は？",
+        regen:{kind:"hissan_divide"},
         canvas_code:"ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#94a3b8';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('（しょうは このスペースに 書こう）',211,18);ctx.strokeStyle='#4a3b52';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(150,102);ctx.stroke();ctx.beginPath();ctx.moveTo(150,38);ctx.lineTo(272,38);ctx.stroke();ctx.fillStyle='#4a3b52';ctx.font='bold 30px sans-serif';ctx.textAlign='right';ctx.fillText('19',136,84);ctx.textAlign='center';ctx.fillText('1',180,84);ctx.fillText('4',212,84);ctx.fillText('2',244,84);",
         a:["7あまり9","6あまり28","8あまり2","7あまり2"], c:0,
         hint:"19×7=133。142−133=？ あまりは わる数19より 小さいか たしかめよう。",
@@ -1369,8 +1378,48 @@
 
   };
 
+  /* ②-b 各問題に「並び順が変わってもズレない」安定id（qid）を自動で振る。
+     苦手リスト（weakQuestions）は今までステージid＋配列インデックス番号で問題を指していたため、
+     途中に新しい問題を差しこむと指し先がズレるという弱点があった（2026-07-19に発覚）。
+     job_title・hint・q冒頭の文字列というほぼ変化しない材料からハッシュを作り、
+     STAGES/QUIZZESの中身を書きかえずに済むようにしている。
+     ★数値をその場で再生成する（regen）問題は、q/hintが実行時に変わるので、
+       このハッシュの元になる「基準文字列」は変化しない部分（job_titleと問題の並び位置）だけを使う。 */
+  function stableQid(q, fallbackIdx) {
+    var basis = (q.job_title || "") + "|" + (q.regen ? "regen" + fallbackIdx : (q.hint || "") + "|" + (q.q || "").slice(0, 14));
+    var h = 5381;
+    for (var i = 0; i < basis.length; i++) { h = ((h << 5) + h) + basis.charCodeAt(i); h = h & 0xffffffff; }
+    return "h" + (h >>> 0).toString(36);
+  }
+  Object.keys(QUIZZES).forEach(function (stageId) {
+    QUIZZES[stageId].forEach(function (q, idx) { if (!q.qid) q.qid = stableQid(q, idx); });
+  });
+
   /* 公開 */
   window.CONTENT = { stages: STAGES, quizzes: QUIZZES };
+
+  /* ②-c 苦手リストの旧形式（ステージid_q_インデックス番号）を、新形式（ステージid::qid）へ移行する。
+     旧形式のまま残っている要素だけを対象に、現在のバンドルからqidを引いて書きかえる。
+     何度実行しても安全（新形式はこの正規表現にマッチしないのでスキップされる）。 */
+  window.migrateWeakQuestionIds = function () {
+    if (!window.saveData || !window.saveData.weakQuestions || window.saveData.weakQuestions.length === 0) return;
+    var changed = false;
+    window.saveData.weakQuestions = window.saveData.weakQuestions.map(function (weakId) {
+      var m = /^(.*)_q_(\d+)$/.exec(weakId);
+      if (!m) return weakId; // 新形式（::区切り）や不明な形式はそのまま
+      var stId = m[1], qIdx = parseInt(m[2], 10);
+      var bundle = QUIZZES[stId];
+      if (bundle && bundle[qIdx] && bundle[qIdx].qid) {
+        changed = true;
+        return stId + "::" + bundle[qIdx].qid;
+      }
+      return weakId; // 解決できない（ステージが無い等）ものは、ひとまず旧形式のまま残す
+    });
+    if (changed && typeof window.saveGame === "function") window.saveGame();
+  };
+  // ★ここでは呼ばない：content.js の実行タイミングでは window.saveData に
+  //   まだ実際のセーブデータ（localStorage/GAS由来）が入っていないため（読み込みは非同期）。
+  //   実際の呼び出しは index.html の loadGameLocal() / performLogin() 成功時に行う。
 
   /* ================= ③ 自動パッチ（既存エンジンにそっと乗せる） ================= */
 
@@ -1466,13 +1515,26 @@
       var targetWeakList = [];
       var resolvedStages = {};
       window.saveData.weakQuestions.forEach(function (weakId) {
-        var sepIdx = weakId.lastIndexOf("_q_");
-        if (sepIdx === -1) return;
-        var stId = weakId.slice(0, sepIdx);
-        var qIdx = parseInt(weakId.slice(sepIdx + 3), 10);
-        var b = (window.CONTENT && window.CONTENT.quizzes) ? window.CONTENT.quizzes[stId] : null;
-        if (b && b[qIdx]) {
-          var o = Object.assign({}, b[qIdx]);
+        var stId = null, b = null, hit = null;
+        if (weakId.indexOf("::") !== -1) {
+          // 新形式：ステージid::qid（並び順が変わってもズレない）
+          var sepPos = weakId.indexOf("::");
+          stId = weakId.slice(0, sepPos);
+          var qid = weakId.slice(sepPos + 2);
+          b = (window.CONTENT && window.CONTENT.quizzes) ? window.CONTENT.quizzes[stId] : null;
+          if (b) { for (var i = 0; i < b.length; i++) { if (b[i].qid === qid) { hit = b[i]; break; } } }
+        } else {
+          // 旧形式（未移行分の保険）：ステージid_q_インデックス番号
+          var sepIdx = weakId.lastIndexOf("_q_");
+          if (sepIdx !== -1) {
+            stId = weakId.slice(0, sepIdx);
+            var qIdx = parseInt(weakId.slice(sepIdx + 3), 10);
+            b = (window.CONTENT && window.CONTENT.quizzes) ? window.CONTENT.quizzes[stId] : null;
+            if (b && b[qIdx]) hit = b[qIdx];
+          }
+        }
+        if (hit) {
+          var o = Object.assign({}, hit);
           o.isRealWeak = true; o.rawWeakId = weakId; o._originStgId = stId;
           targetWeakList.push(o);
           resolvedStages[stId] = b;
