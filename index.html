@@ -121,6 +121,16 @@
   .review-chat-progress { font-size: 11.5px; font-weight: 900; color: #9333ea; margin-bottom: 10px; }
   .review-chat-qtext { font-size: 13.5px; font-weight: 800; color: var(--text-main); background: #f5f3ff; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; text-align: left; }
   .review-chat-answer-chip { display: inline-block; font-size: 12.5px; font-weight: 900; color: #15803d; background: #dcfce7; border-radius: 10px; padding: 5px 10px; margin-bottom: 10px; }
+  .branch-diagram-wrap { margin-bottom: 10px; }
+  .branch-diagram-canvas { width: 100%; background: #fff; border-radius: 10px; border: 2px solid #cbd5e1; margin-bottom: 10px; }
+  .blank-picker-group { background: #f5f3ff; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; text-align: left; transition: opacity 0.2s; }
+  .blank-picker-group.solved { opacity: 0.55; }
+  .blank-picker-label { font-size: 12.5px; font-weight: 900; color: #7e22ce; margin-bottom: 8px; }
+  .blank-picker-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .blank-chip { background: #fff; border: 2px solid #ddd6fe; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 800; color: #4a3b52; cursor: pointer; font-family: 'Zen Maru Gothic'; }
+  .blank-chip.correct { background: #dcfce7; border-color: #86efac; color: #15803d; }
+  .blank-chip.wrong { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+  .branch-diagram-submit:disabled { opacity: 0.4; cursor: not-allowed; }
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -339,7 +349,8 @@ window.subjectDictionary = {
   "理科": { label: "🧪理科", sub: "回路・観察" }, "社会": { label: "🗺️社会", sub: "地図・記号" },
   "英語": { label: "💬英語", sub: "単語・会話" }, "音楽": { label: "🎵音楽", sub: "リズム・音符" },
   "プログラミング": { label: "💻プロ", sub: "変数・ロジック" },
-  "漢検": { label: "📜漢検", sub: "10級ごうかく" }
+  "漢検": { label: "📜漢検", sub: "10級ごうかく" },
+  "探究": { label: "🧭探究", sub: "考える力" }
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
@@ -910,6 +921,153 @@ window.triggerItemInGame = function() {
   else if(itemKey === 'hourglass') { window.activeItemBuff = 'hourglass'; alert("⏰ 【時空の砂時計発動！】\n時間を巻き戻し、今日の周回ペナルティによる減衰を1回だけ無効化（100%のptsを獲得）にするぞ！"); }
   window.saveGame();
 };
+
+// ===== 分岐図解トレーニングツール（if_then / mindmap テンプレート穴うめ式） =====
+window.BRANCH_SLOTS = {
+  top:    { bx:150, by:15,  bw:180, bh:50, ax1:240, ay1:135, ax2:240, ay2:65 },
+  left:   { bx:0,   by:135, bw:140, bh:50, ax1:165, ay1:160, ax2:140, ay2:160 },
+  right:  { bx:340, by:135, bw:140, bh:50, ax1:315, ay1:160, ax2:340, ay2:160 },
+  bottom: { bx:150, by:255, bw:180, bh:50, ax1:240, ay1:185, ax2:240, ay2:255 }
+};
+window.renderBranchDiagramQuestion = function(current, zone) {
+  const spec = current.diagram;
+  window._branchFilled = {};
+  window._branchSpec = spec;
+  window._branchMistakes = 0;
+
+  const wrap = document.createElement("div");
+  wrap.className = "branch-diagram-wrap";
+  const canvas = document.createElement("canvas");
+  canvas.width = 480; canvas.height = spec.template === "mindmap" ? 320 : 260;
+  canvas.className = "branch-diagram-canvas";
+  wrap.appendChild(canvas);
+  zone.appendChild(wrap);
+
+  window.redrawBranchDiagram();
+
+  spec.blanks.forEach(blank => {
+    const group = document.createElement("div");
+    group.className = "blank-picker-group";
+    group.id = "blank-group-" + blank.id;
+    const label = document.createElement("div");
+    label.className = "blank-picker-label";
+    label.textContent = blank.promptLabel || "？の ところは？";
+    group.appendChild(label);
+    const chipsRow = document.createElement("div");
+    chipsRow.className = "blank-picker-chips";
+    blank.options.forEach((opt, i) => {
+      const chip = document.createElement("button");
+      chip.className = "blank-chip";
+      chip.textContent = opt;
+      chip.onclick = () => window.handleBranchBlankTap(current, blank, i, chip, group);
+      chipsRow.appendChild(chip);
+    });
+    group.appendChild(chipsRow);
+    zone.appendChild(group);
+  });
+
+  const submitBtn = document.createElement("button");
+  submitBtn.className = "submit-btn branch-diagram-submit";
+  submitBtn.id = "branch-diagram-submit-btn";
+  submitBtn.textContent = "ぜんぶ できた！こたえあわせ";
+  submitBtn.disabled = true;
+  submitBtn.onclick = () => { window.triggerCorrectAnswer(current); };
+  zone.appendChild(submitBtn);
+};
+window.handleBranchBlankTap = function(current, blank, choiceIdx, chipEl, groupEl) {
+  if (window._branchFilled[blank.id]) return;
+  if (choiceIdx === blank.correct) {
+    window._branchFilled[blank.id] = blank.options[choiceIdx];
+    chipEl.classList.add("correct");
+    Array.from(groupEl.querySelectorAll(".blank-chip")).forEach(c => { if (c !== chipEl) { c.disabled = true; c.style.opacity = "0.35"; } });
+    groupEl.classList.add("solved");
+    window.redrawBranchDiagram();
+    window.speakText("まる！大正解！", "ja-JP");
+    const total = window._branchSpec.blanks.length;
+    const doneCount = Object.keys(window._branchFilled).length;
+    if (doneCount >= total) {
+      const btn = document.getElementById("branch-diagram-submit-btn");
+      if (btn) btn.disabled = false;
+    }
+  } else {
+    chipEl.classList.add("wrong");
+    setTimeout(() => chipEl.classList.remove("wrong"), 600);
+    window._branchMistakes++;
+    window.triggerWrongAnswer(current);
+  }
+};
+window.redrawBranchDiagram = function() {
+  const spec = window._branchSpec;
+  const filled = window._branchFilled;
+  const canvasEl = document.querySelector(".branch-diagram-canvas");
+  if (!spec || !canvasEl) return;
+  const ctx = canvasEl.getContext("2d");
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+
+  function wrapDraw(text, cx, cy, fontSize) {
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    const lines = String(text).split("\n");
+    const lh = fontSize + 4;
+    const startY = cy - ((lines.length - 1) * lh) / 2;
+    lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lh));
+  }
+  function drawBox(x, y, w, h, text, isBlank, isFilled) {
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = isBlank ? (isFilled ? "#86efac" : "#c4b5fd") : "#4a3b52";
+    ctx.fillStyle = isBlank ? (isFilled ? "#f0fdf4" : "#f5f3ff") : "#ffffff";
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, 10); ctx.fill(); ctx.stroke(); }
+    else { ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h); }
+    ctx.fillStyle = isBlank && !isFilled ? "#a78bfa" : "#4a3b52";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    wrapDraw(text, x + w / 2, y + h / 2, 14);
+  }
+  function drawDiamond(cx, cy, hw, hh, text) {
+    ctx.strokeStyle = "#4a3b52"; ctx.lineWidth = 3; ctx.fillStyle = "#fff7ed";
+    ctx.beginPath(); ctx.moveTo(cx, cy - hh); ctx.lineTo(cx + hw, cy); ctx.lineTo(cx, cy + hh); ctx.lineTo(cx - hw, cy); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#4a3b52"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    wrapDraw(text, cx, cy, 13);
+  }
+  function drawArrow(x1, y1, x2, y2, label) {
+    ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.fillStyle = "#94a3b8";
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 10 * Math.cos(angle - 0.4), y2 - 10 * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - 10 * Math.cos(angle + 0.4), y2 - 10 * Math.sin(angle + 0.4));
+    ctx.closePath(); ctx.fill();
+    if (label) { ctx.fillStyle = "#7c3aed"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.fillText(label, (x1 + x2) / 2 + 22, (y1 + y2) / 2); }
+  }
+  function nodeText(node) { return node.kind === "blank" ? (filled[node.blankId] ? filled[node.blankId] : "？") : node.label; }
+  function nodeIsBlank(node) { return node.kind === "blank"; }
+  function nodeIsFilled(node) { return node.kind === "blank" && !!filled[node.blankId]; }
+
+  if (spec.template === "if_then") {
+    const start = spec.nodes.find(n => n.id === "start");
+    const cond = spec.nodes.find(n => n.id === "cond");
+    const yes = spec.nodes.find(n => n.id === "yes");
+    const no = spec.nodes.find(n => n.id === "no");
+    drawBox(140, 15, 200, 38, start.label, false, false);
+    drawArrow(240, 53, 240, 83);
+    drawDiamond(240, 128, 130, 45, cond.label);
+    drawArrow(110, 128, 110, 195, "はい");
+    drawArrow(370, 128, 370, 195, "いいえ");
+    drawBox(10, 195, 200, 50, nodeText(yes), nodeIsBlank(yes), nodeIsFilled(yes));
+    drawBox(270, 195, 200, 50, nodeText(no), nodeIsBlank(no), nodeIsFilled(no));
+  } else if (spec.template === "mindmap") {
+    const center = spec.nodes.find(n => n.id === "center");
+    drawBox(165, 135, 150, 50, center.label, false, false);
+    spec.nodes.filter(n => n.id !== "center").forEach(node => {
+      const slot = window.BRANCH_SLOTS[node.slot];
+      if (!slot) return;
+      drawArrow(slot.ax1, slot.ay1, slot.ax2, slot.ay2);
+      drawBox(slot.bx, slot.by, slot.bw, slot.bh, nodeText(node), nodeIsBlank(node), nodeIsFilled(node));
+    });
+  }
+};
+
 window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
 
@@ -973,7 +1131,9 @@ window.showQuestionStep = function() {
     };
     labBox.appendChild(runBtn); zone.appendChild(labBox);
   }
-  if (current.type === "text_input") {
+  if (current.type === "branch_diagram") {
+    window.renderBranchDiagramQuestion(current, zone);
+  } else if (current.type === "text_input") {
     const inputBox = document.createElement("input");
     inputBox.type = "text"; inputBox.className = "free-text-input"; inputBox.placeholder = "ここに入力してね";
     zone.appendChild(inputBox);
