@@ -229,6 +229,15 @@
       name: "10級 だい1回：一・右・雨・円・王・音・下・火・花・貝",
       reward: 10, showCount: 10, video_url: "", lab_url: "",
       created: "2026-07-19"
+    },
+    {
+      // ★分岐図解トレーニング（考えを図にする汎用ツール）。もし〜なら図（if_then）とマインドマップの2テンプレート。
+      subject: "探究",
+      category: "図解トレーニング",
+      id: "探究/分岐図解/bunki01",
+      name: "分岐図解トレーニング①（もしなら図・マインドマップ）",
+      reward: 10, showCount: 4, video_url: "", lab_url: "",
+      created: "2026-07-19"
     }
   ];
 
@@ -1288,6 +1297,74 @@
         rescue_hint:"「みぎ」だよ。反対は「ひだり」。",
         job_title:"だい1回 クリア！",
         job_desc:"「一・右・雨・円・王・音・下・火・花・貝」の 10字、おつかれさま！ 8/20の 漢検10級 合格に むけて、また つぎの 10字も がんばろうね。" }
+    ],
+
+    "探究/分岐図解/bunki01": [
+      { q:"【新しい ツール】分岐図解トレーニング って なに？",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"社長！ 今日は 新しい ツールを しょうかいするよ！<br>『分岐図解（ぶんきずかい）』は、<b>考えを 図に して 整理する</b> れんしゅうなんだ。" },
+          { name:"ニコ", icon:"🦄", msg:"『もし～なら、こうする』の 矢印を たどる図や、まん中の テーマから 考えを 広げる図など、いろんな 図に チャレンジ できるよ！" }
+        ],
+        a:["考えを図にして整理するちから","絵を上手にかくちから","計算を速くするちから","漢字をきれいに書くちから"], c:0,
+        hint:"『分岐（ぶんき）』は『わかれ道』の いみだよ。",
+        job_title:"分岐図解トレーニング スタート！",
+        job_desc:"分岐図解は、考えを『図』にして 整理する れんしゅうだよ。矢印を たどりながら、あたまの中を せいりする 力を きたえよう！" },
+
+      { q:"下の 図の ？に あう ことばを えらんで、図を かんせいさせよう！",
+        type:"branch_diagram",
+        diagram:{
+          template:"if_then",
+          nodes:[
+            { id:"start", label:"見当を つけて\n計算する" },
+            { id:"cond", label:"こたえが\nわられる数より\n大きい？" },
+            { id:"yes", kind:"blank", blankId:"b1" },
+            { id:"no", label:"そのままでOK！\nつぎに すすむ" }
+          ],
+          blanks:[
+            { id:"b1", promptLabel:"①「はい」の ときは、どうする？", options:["商を1へらして、もう一度 計算する","商を1ふやして、もう一度 計算する","わる数を へらす","さいしょから やりなおす"], correct:0 }
+          ]
+        },
+        hint:"見当の商で かけ算した答えが 大きすぎたときは、商を どうする？",
+        job_title:"分岐図解① クリア！",
+        job_desc:"わり算の 筆算で、見当をつけた商で かけ算した答えが わられる数より 大きくなったら、商を1へらして 計算しなおすんだったね。図に すると、流れが よく わかるね！" },
+
+      { q:"こんどは べつの『もし～なら』図に チャレンジ！\n？に あう ことばを えらぼう。",
+        type:"branch_diagram",
+        diagram:{
+          template:"if_then",
+          nodes:[
+            { id:"start", label:"わり算の筆算が\nおわった" },
+            { id:"cond", label:"あまりは\nわる数より\n小さい？" },
+            { id:"yes", label:"OK！商とあまりが\nこたえだよ" },
+            { id:"no", kind:"blank", blankId:"b2" }
+          ],
+          blanks:[
+            { id:"b2", promptLabel:"①「いいえ」の ときは、どうする？", options:["商を1ふやして、計算しなおす","商を1へらして、計算しなおす","あまりを わる数で わる","わり算を やめる"], correct:0 }
+          ]
+        },
+        hint:"あまりが わる数より 大きいままだと、商が 小さすぎたってこと。",
+        job_title:"分岐図解② クリア！",
+        job_desc:"あまりが わる数より 大きい（小さくない）ときは、商が 小さすぎたということ。商を1ふやして 計算しなおすと、正しい答えに なるよ。" },
+
+      { q:"さいごは マインドマップに チャレンジ！\nまん中の テーマから 広がる ？に あう ことばを えらぼう。",
+        type:"branch_diagram",
+        diagram:{
+          template:"mindmap",
+          nodes:[
+            { id:"center", label:"文章題を\nとく ながれ" },
+            { id:"n1", slot:"top", kind:"blank", blankId:"b3" },
+            { id:"n2", slot:"left", kind:"blank", blankId:"b4" },
+            { id:"n3", slot:"right", label:"計算する\n（筆算など）" },
+            { id:"n4", slot:"bottom", label:"答えに たんいを\nつけて 書く" }
+          ],
+          blanks:[
+            { id:"b3", promptLabel:"①上の ？は？", options:["何が わかっていて、何を 聞かれているか よむ","はやく 答えを 書く","計算を 3回 くりかえす","絵を かく"], correct:0 },
+            { id:"b4", promptLabel:"②左の ？は？", options:["しき（式）を たてる","答えを おぼえる","漢字で 書く","声に出して 読む"], correct:0 }
+          ]
+        },
+        hint:"文章題を とくときの じゅんばんを 思い出してみよう。",
+        job_title:"🎯 分岐図解 マスター！",
+        job_desc:"文章題を とくときは、①何が わかっていて 何を 聞かれているか よむ →②しきを たてる →③計算する →④たんいを つけて 答えを書く、の じゅんばんが 大事だよ。マインドマップに すると、全体の 流れが 一目で わかるね！" }
     ]
 
   };
@@ -1383,24 +1460,37 @@
     var _origWeak = window.launchWeakAttackLab;
     window.launchWeakAttackLab = function () {
       if (!window.saveData.weakQuestions || window.saveData.weakQuestions.length === 0) { alert("🤖 にがて問題は1つも溜まっていないよ！パーフェクト大社長だね！"); return; }
-      var stageId = window.saveData.weakQuestions[0].split("_q_")[0];
-      var bundle = (window.CONTENT && window.CONTENT.quizzes) ? window.CONTENT.quizzes[stageId] : null;
-      if (!bundle) { return _origWeak(); }
+      // ★複数ステージにまたがる「にがて問題」もぜんぶ集めて1回のラボで消化できるようにする
+      // （以前は weakQuestions[0] の教科だけを見ていたため、他ステージ由来のにがてが
+      //   何度ラボをやっても消化されずに残り続けるバグがあった）
+      var targetWeakList = [];
+      var resolvedStages = {};
+      window.saveData.weakQuestions.forEach(function (weakId) {
+        var sepIdx = weakId.lastIndexOf("_q_");
+        if (sepIdx === -1) return;
+        var stId = weakId.slice(0, sepIdx);
+        var qIdx = parseInt(weakId.slice(sepIdx + 3), 10);
+        var b = (window.CONTENT && window.CONTENT.quizzes) ? window.CONTENT.quizzes[stId] : null;
+        if (b && b[qIdx]) {
+          var o = Object.assign({}, b[qIdx]);
+          o.isRealWeak = true; o.rawWeakId = weakId; o._originStgId = stId;
+          targetWeakList.push(o);
+          resolvedStages[stId] = b;
+        }
+      });
+      // content.js側に1つも見つからなかった場合だけ、旧来の単一ステージ読み込み方式にゆずる
+      if (targetWeakList.length === 0) { return _origWeak(); }
       window.weakAttackModeActive = true; window.totalMistakes = 0;
       window.weakInitialCountAtLaunch = window.saveData.weakQuestions.length; window.weakEarnedQInSession = 0;
-      window.activeItemBuff = null; window.activeBoostMultiplier = 1.0; window.currentActiveStageId = stageId;
-      window.quizPool = bundle;
-      var allPoolMap = {}; bundle.forEach(function (q, i) { allPoolMap[stageId + "_q_" + i] = q; });
-      var targetWeakList = [];
-      window.saveData.weakQuestions.forEach(function (weakId) {
-        if (allPoolMap[weakId]) { var o = Object.assign({}, allPoolMap[weakId]); o.isRealWeak = true; o.rawWeakId = weakId; o._originStgId = stageId; targetWeakList.push(o); }
-      });
-      if (targetWeakList.length > 0 && targetWeakList.length < 3 && bundle.length > targetWeakList.length) {
+      window.activeItemBuff = null; window.activeBoostMultiplier = 1.0; window.currentActiveStageId = null;
+      if (targetWeakList.length < 3) {
         var real = targetWeakList[0];
-        var dummies = bundle.slice().sort(function () { return Math.random() - 0.5; }).filter(function (q) { return q.q !== real.q; }).slice(0, 3 - targetWeakList.length);
-        dummies.forEach(function (dq, idx) { targetWeakList.push(Object.assign({}, dq, { isRealWeak: false, rawWeakId: "dummy_fade_" + idx })); });
+        var srcBundle = resolvedStages[real._originStgId];
+        if (srcBundle && srcBundle.length > 1) {
+          var dummies = srcBundle.slice().sort(function () { return Math.random() - 0.5; }).filter(function (q) { return q.q !== real.q; }).slice(0, 3 - targetWeakList.length);
+          dummies.forEach(function (dq, idx) { targetWeakList.push(Object.assign({}, dq, { isRealWeak: false, rawWeakId: "dummy_fade_" + idx })); });
+        }
       }
-      if (targetWeakList.length === 0) { alert("🤖 対象の苦手データが見つからなかったよ！"); window.quitQuest(); return; }
       window.currentQuestions = targetWeakList.sort(function () { return Math.random() - 0.5; }); window.currentQIdx = 0;
       var hint = document.getElementById("game-hint-text"); if (hint) hint.textContent = "🧬 苦手撃破ラボ：弱点を克服してトークンを両替しよう！";
       document.getElementById("game-screen").style.display = "block";
