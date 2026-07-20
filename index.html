@@ -131,6 +131,7 @@
   .blank-chip.correct { background: #dcfce7; border-color: #86efac; color: #15803d; }
   .blank-chip.wrong { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
   .branch-diagram-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+  .regen-badge { display: inline-block; font-size: 11.5px; font-weight: 900; color: #b45309; background: #fef3c7; border: 2px solid #fde68a; border-radius: 20px; padding: 4px 10px; margin-bottom: 8px; }
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -315,6 +316,7 @@
       <div class="navi-text" id="game-hint-text">ナビくんだよ！全力でサポートするからね！</div>
     </div>
     <div class="q-card" id="scroll-target-card">
+      <div id="regen-badge" class="regen-badge" style="display:none;">🔄 数字が新しくなったよ！</div>
       <p class="q-text" id="game-q-text">ここに問題文が入ります。</p>
 
       <div id="q-media-zone"></div>
@@ -479,6 +481,7 @@ window.performLogin = function(id) {
        if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
        if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
        if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
+       if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD");
     } else { alert("読み込みエラー: " + res.message); }
   })
@@ -494,6 +497,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
   if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
   if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
+  if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
 };
 window.saveGame = function() {
@@ -643,7 +647,8 @@ window.computeStageBadgeFlags = function(stg) {
   }
   let hasWeak = false;
   if (stg.id && window.saveData.weakQuestions && window.saveData.weakQuestions.length > 0) {
-    hasWeak = window.saveData.weakQuestions.some(w => String(w).indexOf(stg.id + "_q_") === 0);
+    // ★新形式（ステージid::qid）と旧形式（ステージid_q_インデックス番号）の両方をチェック
+    hasWeak = window.saveData.weakQuestions.some(w => { const s = String(w); return s.indexOf(stg.id + "::") === 0 || s.indexOf(stg.id + "_q_") === 0; });
   }
   return { isNewStage, hasWeak };
 };
@@ -1068,6 +1073,86 @@ window.redrawBranchDiagram = function() {
   }
 };
 
+// ===== 周回プレイ時の「数値を その場で 再生成」エンジン（regen対応の問題のみ） =====
+// クリア済みステージを周回すると、同じ問題がずっと同じ数値で出続けて飽きやすい。
+// canvas図解つきの「筆算」系の問題に regen:{kind:"hissan_divide"} をつけておくと、
+// 周回プレイのときだけ数値をその場でランダム再生成する（マスターデータは無傷。差し替えは
+// window.currentQuestions のこの1問だけ）。qid は元のまま引き継ぐので、苦手リストの
+// 「どの問題テンプレートか」の判定は数値が変わってもズレない。
+window.buildHissanDrawFn = function(divisor, dividend) {
+  const digits = String(dividend).split("");
+  const bracketRight = digits.length >= 3 ? 272 : 240;
+  const labelX = digits.length >= 3 ? 211 : 195;
+  return function(ctx, canvas) {
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#94a3b8"; ctx.font = "13px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("（しょうは このスペースに 書こう）", labelX, 18);
+    ctx.strokeStyle = "#4a3b52"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(150, 38); ctx.lineTo(150, 102); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(150, 38); ctx.lineTo(bracketRight, 38); ctx.stroke();
+    ctx.fillStyle = "#4a3b52"; ctx.font = "bold 30px sans-serif";
+    ctx.textAlign = "right"; ctx.fillText(String(divisor), 136, 84);
+    ctx.textAlign = "center";
+    digits.forEach(function(d, i) { ctx.fillText(d, 180 + i * 32, 84); });
+  };
+};
+window.regenHissanDivide = function() {
+  const divisor = 11 + Math.floor(Math.random() * 30); // 11〜40
+  const quotient = 3 + Math.floor(Math.random() * 7); // 3〜9
+  const hasRemainder = Math.random() < 0.5;
+  const remainder = hasRemainder ? 1 + Math.floor(Math.random() * (divisor - 1)) : 0;
+  const dividend = divisor * quotient + remainder;
+  const correctText = hasRemainder ? (quotient + "あまり" + remainder) : String(quotient);
+
+  let cand;
+  if (hasRemainder) {
+    cand = [correctText];
+    if (quotient > 1) cand.push((quotient - 1) + "あまり" + (remainder + divisor));
+    cand.push((quotient + 1) + "あまり" + Math.max(remainder - divisor, 0));
+    cand.push(quotient + "あまり" + (remainder + 1));
+  } else {
+    cand = [correctText, String(quotient - 1), String(quotient + 1), String(quotient + 2)].filter(function (n) { return Number(n.replace(/[^0-9]/g, "")) > 0; });
+  }
+  const seen = {}; let options = cand.filter(function (x) { if (seen[x]) return false; seen[x] = true; return true; });
+  let fillerN = quotient + 3;
+  while (options.length < 4) { const filler = hasRemainder ? (fillerN + "あまり" + remainder) : String(fillerN); if (!seen[filler]) { options.push(filler); seen[filler] = true; } fillerN++; }
+  options = options.slice(0, 4);
+
+  const withFlag = options.map(function (o) { return { text: o, correct: o === correctText }; });
+  withFlag.sort(function () { return Math.random() - 0.5; });
+  const correctIdx = withFlag.findIndex(function (o) { return o.correct; });
+
+  const qText = hasRemainder
+    ? `${dividend} ÷ ${divisor} を 筆算で といたよ。\n『商』と『あまり』は？`
+    : `${dividend} ÷ ${divisor} を 筆算で といたよ。\n商は いくつに なる？`;
+  const hintText = hasRemainder
+    ? `${divisor}×${quotient}=${divisor * quotient}。${dividend}−${divisor * quotient}=？ あまりは わる数${divisor}より 小さいか たしかめよう。`
+    : `${divisor} × ${quotient} を 計算してみよう。ぴったり ${dividend}に なるかな？`;
+  const jobDescText = hasRemainder
+    ? `${dividend}÷${divisor}＝${quotient}あまり${remainder}。${divisor}×${quotient}=${divisor * quotient}、${dividend}−${divisor * quotient}=${remainder}。あまり${remainder}は わる数${divisor}より 小さいので これで OK！`
+    : `${dividend}÷${divisor}＝${quotient}。${divisor}×${quotient}=${dividend}で ぴったり わりきれるね。`;
+
+  return {
+    q: qText, hint: hintText, job_desc: jobDescText,
+    a: withFlag.map(function (o) { return o.text; }), c: correctIdx,
+    drawFn: window.buildHissanDrawFn(divisor, dividend)
+  };
+};
+window.regenerateQuestion = function (original) {
+  if (!original.regen) return original;
+  const clone = Object.assign({}, original);
+  if (original.regen.kind === "hissan_divide") {
+    const gen = window.regenHissanDivide();
+    clone.q = gen.q; clone.hint = gen.hint; clone.job_desc = gen.job_desc;
+    clone.a = gen.a; clone.c = gen.c;
+    clone._regenDrawFn = gen.drawFn;
+    delete clone.canvas_code;
+  }
+  clone._regenApplied = true;
+  clone._regenBadge = true;
+  return clone;
+};
+
 window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
 
@@ -1075,7 +1160,17 @@ window.showQuestionStep = function() {
     if (!window.weakAttackModeActive && window.sessionMissedQuestions && window.sessionMissedQuestions.length > 0) { window.startReviewChat(); return; }
     window.exitToMainMenu(); return;
   }
-  const current = window.currentQuestions[window.currentQIdx]; window.currentWeakQuestionObj = current;
+  let current = window.currentQuestions[window.currentQIdx];
+  // ★クリア済みステージの周回プレイでは、対応している問題（regen付き）はその場で数値を再生成する
+  //   （マスターデータ本体は書き換えない。差し替えるのは currentQuestions 側のこの1問だけ）
+  if (!window.weakAttackModeActive && current.regen && !current._regenApplied &&
+      window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) {
+    current = window.regenerateQuestion(current);
+    window.currentQuestions[window.currentQIdx] = current;
+  }
+  window.currentWeakQuestionObj = current;
+  const regenBadgeEl = document.getElementById("regen-badge");
+  if (regenBadgeEl) regenBadgeEl.style.display = current._regenBadge ? "inline-block" : "none";
   let qNumberStr = window.weakAttackModeActive ? `にがて復元Q.${window.currentQIdx+1}` : `Q.${window.currentQIdx+1}`;
   document.getElementById("game-q-text").textContent = `【${qNumberStr}】\n${current.q ? current.q.replace(/【Q\.\d+】/g, '') : ""}`;
   document.getElementById("game-hint-text").textContent = current.hint || "よく読んで考えてみてね！";
@@ -1107,6 +1202,12 @@ window.showQuestionStep = function() {
   mediaZone.innerHTML = "";
   if (current.image_url) {
     let img = document.createElement("img"); img.src = current.image_url; img.className = "q-image"; mediaZone.appendChild(img);
+  } else if (current._regenDrawFn) {
+    let canvas = document.createElement("canvas"); canvas.width = 480; canvas.height = 120;
+    canvas.style.cssText = "width:100%; background:#ffffff; border-radius:8px; margin-bottom:12px; border:2px solid #cbd5e1;";
+    let ctx = canvas.getContext("2d");
+    try { current._regenDrawFn(ctx, canvas); } catch(e) { console.error("Canvas描画エラー（再生成）", e); }
+    mediaZone.appendChild(canvas);
   } else if (current.canvas_code) {
     let canvas = document.createElement("canvas"); canvas.width = 480; canvas.height = 120;
     canvas.style.cssText = "width:100%; background:#ffffff; border-radius:8px; margin-bottom:12px; border:2px solid #cbd5e1;";
@@ -1205,7 +1306,8 @@ window.triggerWrongAnswer = function(current) {
 
   if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
-     let weakId = `${window.currentActiveStageId}_q_${window.currentQIdx}`;
+     // ★qid（並び順が変わってもズレない安定id）があればそちらを使う。無ければ従来のindex形式にフォールバック。
+     let weakId = current.qid ? `${window.currentActiveStageId}::${current.qid}` : `${window.currentActiveStageId}_q_${window.currentQIdx}`;
      if (!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
      if (!window.saveData.weakQuestions.includes(weakId)) { window.saveData.weakQuestions.push(weakId); window.saveGame(); }
   }
