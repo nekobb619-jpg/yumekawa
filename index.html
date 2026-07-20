@@ -357,6 +357,13 @@ window.subjectDictionary = {
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
 window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0 };
+// ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
+//   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
+//   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
+//   ただの空っぽの初期値かもしれない）。null のときに saveGame() でクラウドに書き込んでしまうと、
+//   通信エラー等で本物の記録が空っぽのデータで上書き・消失する事故につながるため、
+//   saveGame() 側でこのフラグを見てクラウド送信をガードする。
+window.saveDataConfirmedSource = null;
 window.currentActiveSubject = "japanese";
 window.currentQIdx = 0; window.currentStage = null; window.currentQuestions = [];
 window.currentFirstTry = true; window.availableSubjects = [];
@@ -467,6 +474,7 @@ window.performLogin = function(id) {
   .then(res => {
     if(res.status === "SUCCESS") {
        window.saveData = Object.assign(window.saveData, res.playerData);
+       window.saveDataConfirmedSource = "server"; // ★クラウドから正式に読み込めたことを確認
        if(!window.saveData.reviewDates) window.saveData.reviewDates = {};
        if(!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
        if(!window.saveData.lastRewardedMasterCount) window.saveData.lastRewardedMasterCount = 0;
@@ -489,7 +497,7 @@ window.performLogin = function(id) {
 };
 window.loadGameLocal = function() {
   const local = localStorage.getItem("kids_lab_v12_pro_" + window.playerId);
-  if(local) { try { window.saveData = Object.assign(window.saveData, JSON.parse(local)); } catch(e){} }
+  if(local) { try { window.saveData = Object.assign(window.saveData, JSON.parse(local)); window.saveDataConfirmedSource = "local"; } catch(e){} }
   if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
@@ -502,6 +510,19 @@ window.loadGameLocal = function() {
 };
 window.saveGame = function() {
   localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+  // ★2026-07-20 追加：本物のセーブデータを一度も確認できていない状態（LOGINが失敗し、
+  //   この端末にも前回のセーブが残っていない状態）でクラウドに保存しようとすると、
+  //   通信エラーなどで「空っぽの初期値」が本物の記録の上に上書きされて消えてしまう事故が起きる。
+  //   これを防ぐため、確認が取れるまではクラウドへの送信だけをスキップする
+  //  （この端末のlocalStorageへの保存・画面表示の更新は今まで通り行う）。
+  if (!window.saveDataConfirmedSource) {
+    console.warn("⚠️ saveGame: クラウド保存をスキップしました（本物のセーブデータの読み込みが未確認のため）。");
+    if (!window._unsavedDataWarningShown) {
+      window._unsavedDataWarningShown = true;
+      alert("⚠️ 通信状態が不安定で、いつもの記録を読み込めていません。\n今回のプレイはこの機器には保存されますが、クラウドには保存されません（大事な記録を守るための安全装置です）。\nおうちの人に、通信状況を確認してもらってね。");
+    }
+    return;
+  }
   if (window.playerId) {
     fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SAVE", playerId: window.playerId, saveData: window.saveData }) }).catch(e => {});
   }
@@ -1157,8 +1178,15 @@ window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
 
   if (window.currentQIdx >= window.currentQuestions.length) {
-    if (!window.weakAttackModeActive && window.sessionMissedQuestions && window.sessionMissedQuestions.length > 0) { window.startReviewChat(); return; }
-    window.exitToMainMenu(); return;
+    // ★2026-07-20 修正：スコア加算・saveGame・スプレッドシートへのログ送信は、
+    //   ふりかえりチャットを最後までクリックしたかどうかに関係なく、問題セットが終わった
+    //   瞬間に必ず実行する（以前はチャットを最後まで見ないと保存されず、子どもが
+    //   チャット画面で離脱すると その回の記録が丸ごと消えてしまうバグがあった）。
+    //   ふりかえりチャットは、保存が終わったあとの「おまけの復習画面」として表示するだけにする。
+    const hadMissedQuestions = !window.weakAttackModeActive && window.sessionMissedQuestions && window.sessionMissedQuestions.length > 0;
+    window.exitToMainMenu();
+    if (hadMissedQuestions) { window.startReviewChat(); }
+    return;
   }
   let current = window.currentQuestions[window.currentQIdx];
   // ★クリア済みステージの周回プレイでは、対応している問題（regen付き）はその場で数値を再生成する
@@ -1397,7 +1425,9 @@ window.renderReviewChatStep = function() {
   const idx = window.reviewChatIdx;
   const total = list.length;
   const item = list[idx];
-  if (!item) { document.getElementById("review-chat-modal").style.display = "none"; window.sessionMissedQuestions = []; window.exitToMainMenu(); return; }
+  // ★保存(saveGame/ログ送信)は呼び出し元(showQuestionStep)側ですでに完了している。
+  //   ここではチャット表示のクリーンアップだけ行う（exitToMainMenuを二重に呼ばない）。
+  if (!item) { document.getElementById("review-chat-modal").style.display = "none"; window.sessionMissedQuestions = []; return; }
   document.getElementById("review-chat-progress").textContent = `（${idx + 1} / ${total}問目）`;
   let ansText = "";
   if (item.correct_answers && item.correct_answers.length > 0) { ansText = item.correct_answers.join(" または "); }
@@ -1424,7 +1454,6 @@ window.reviewChatNext = function() {
   if (window.reviewChatIdx >= total) {
     document.getElementById("review-chat-modal").style.display = "none";
     window.sessionMissedQuestions = [];
-    window.exitToMainMenu();
     return;
   }
   window.renderReviewChatStep();
