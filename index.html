@@ -139,6 +139,8 @@
   .treasure-reveal-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 340px; padding: 26px 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); animation: treasurePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 4px solid #cbd5e1; }
   .treasure-reveal-box.r2 { border-color: #60a5fa; background: linear-gradient(160deg, #fff, #eff6ff); }
   .treasure-reveal-box.r3 { border-color: #f59e0b; background: linear-gradient(160deg, #fff, #fffbeb); box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), 0 10px 25px rgba(0,0,0,0.4); }
+  .treasure-reveal-box.r4 { border-color: #a855f7; background: linear-gradient(160deg, #fff, #faf5ff); box-shadow: 0 0 40px rgba(168, 85, 247, 0.65), 0 10px 25px rgba(0,0,0,0.4); animation: treasurePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), r4Glow 1.6s ease-in-out infinite 0.5s; }
+  @keyframes r4Glow { 0%, 100% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.65), 0 10px 25px rgba(0,0,0,0.4); } 50% { box-shadow: 0 0 55px rgba(236, 72, 153, 0.75), 0 10px 25px rgba(0,0,0,0.4); } }
   @keyframes treasurePop { 0% { transform: scale(0.3) rotate(-15deg); opacity: 0; } 60% { transform: scale(1.1) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
   .treasure-reveal-label { font-size: 12px; font-weight: 900; color: #94a3b8; margin-bottom: 6px; }
   .treasure-reveal-icon { font-size: 64px; line-height: 1; margin: 8px 0; animation: treasureIconFloat 1.8s ease-in-out infinite; }
@@ -146,6 +148,7 @@
   .treasure-reveal-rarity { font-size: 13px; font-weight: 900; color: #64748b; margin-bottom: 4px; }
   .treasure-reveal-box.r2 .treasure-reveal-rarity { color: #2563eb; }
   .treasure-reveal-box.r3 .treasure-reveal-rarity { color: #d97706; }
+  .treasure-reveal-box.r4 .treasure-reveal-rarity { color: #a21caf; }
   .treasure-reveal-name { font-size: 19px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
   .treasure-reveal-desc { font-size: 12.5px; font-weight: 700; color: #64748b; line-height: 1.6; margin-bottom: 12px; }
   .treasure-reveal-dupe { font-size: 11.5px; font-weight: 900; color: #b45309; background: #fef3c7; border-radius: 10px; padding: 6px 10px; margin-bottom: 12px; }
@@ -158,6 +161,7 @@
   .treasure-slot.owned { border-style: solid; background: #f0f9ff; border-color: #7dd3fc; }
   .treasure-slot.owned.r2 { background: #eff6ff; border-color: #60a5fa; }
   .treasure-slot.owned.r3 { background: #fffbeb; border-color: #f59e0b; }
+  .treasure-slot.owned.r4 { background: #faf5ff; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
   .treasure-slot-icon { font-size: 28px; line-height: 1.2; }
   .treasure-slot.locked .treasure-slot-icon { opacity: 0.35; }
   .treasure-slot-name { font-size: 10px; font-weight: 900; color: #475569; margin-top: 2px; }
@@ -786,14 +790,31 @@ window.TREASURE_LIST = [
   { id: 't11', name: '合格のおまもり',     icon: '🎗️', rarity: 2, desc: '漢検10級のごうかくを願って、ニコが作ってくれたおまもり。' },
   { id: 't12', name: 'きらきら結晶',       icon: '💠', rarity: 2, desc: '角度によって虹色に光る、めずらしい結晶石。' },
   { id: 't13', name: 'なぞの古地図',       icon: '🗺️', rarity: 2, desc: 'どこかの宝島へ続いていそうな、ボロボロの古地図。' },
+  // ★1（ふつう・出やすい）追加5種（2026-07-24）
+  { id: 't16', name: 'みらいの手帳',       icon: '📓', rarity: 1, desc: '開くと、あしたの学びのヒントがうっすら見える気がするノート。' },
+  { id: 't17', name: 'ふわふわ雲パン',     icon: '🍞', rarity: 1, desc: 'クロぽんの大好物らしい、雲みたいにふわふわのパン。' },
+  { id: 't18', name: '小さな虫めがね',     icon: '🔍', rarity: 1, desc: '漢字の細かい「とめ・はね・はらい」が、はっきり見えるようになる虫めがね。' },
+  { id: 't19', name: 'きらめく貝がら',     icon: '🐚', rarity: 1, desc: '耳にあてると、宝島の波の音が聞こえてくるという貝がら。' },
+  { id: 't20', name: '眠そうな豆電球',     icon: '💡', rarity: 1, desc: 'いいアイデアがうかんだ時だけ、ぴかっと光る不思議な豆電球。' },
+  // ★2（レア）追加4種（2026-07-24）
+  { id: 't21', name: '天才のメガネ',       icon: '👓', rarity: 2, desc: 'かけると、むずかしい問題がちょっとだけ簡単に見えてくるメガネ。' },
+  { id: 't22', name: 'ふしぎな鍵',         icon: '🗝️', rarity: 2, desc: '宝島のどこかにある宝箱を開けられそうな、金色にかがやく鍵。' },
+  { id: 't23', name: 'にじの絵の具セット', icon: '🎨', rarity: 2, desc: 'この世にはない色まで出てくるという、ふしぎな絵の具セット。' },
+  { id: 't24', name: 'タイムトラベル時計', icon: '⌚', rarity: 2, desc: '針を進めると、がんばった未来の自分が見える気がする時計。' },
   // ★3（超レア）2種
   { id: 't14', name: 'ニコの角のかけら',   icon: '🦄', rarity: 3, desc: 'ニコの角から取れたと言われる、ピカピカに光るお宝中のお宝！' },
-  { id: 't15', name: '伝説の金メダル',     icon: '🏅', rarity: 3, desc: '「意図を見ぬく力」をきわめた者だけが手にできる、伝説のメダル。' }
+  { id: 't15', name: '伝説の金メダル',     icon: '🏅', rarity: 3, desc: '「意図を見ぬく力」をきわめた者だけが手にできる、伝説のメダル。' },
+  // ★3（超レア）追加2種（2026-07-24）
+  { id: 't25', name: '賢者の羅針石',       icon: '🧿', rarity: 3, desc: 'あきらめずに挑戦し続けた者だけを導くといわれる、賢者の石。' },
+  { id: 't26', name: '女神のリボン',       icon: '🎀', rarity: 3, desc: '学びの女神からの祝福がこもっていて、身につけると1日だけ運が良くなるらしいリボン。' },
+  // ★4（伝説級）新設2種（2026-07-24）
+  { id: 't27', name: 'でんせつの黄金の角', icon: '💎', rarity: 4, desc: 'ニコの本当のすがたに宿るという、伝説の黄金の角。存在自体がおとぎ話だと言われている。' },
+  { id: 't28', name: '意図を見ぬく者の証', icon: '⚜️', rarity: 4, desc: '「意図を見ぬく力」を完全にきわめた、たったひとりだけが手にできるという、このラボ最高のお宝。' }
 ];
 window.rollTreasureDrop = function() {
   if (Math.random() >= 0.15) return null; // 15%の確率でお宝発見
   let r = Math.random();
-  let rarity = r < 0.70 ? 1 : (r < 0.95 ? 2 : 3); // ★1:70% ★2:25% ★3:5%
+  let rarity = r < 0.65 ? 1 : (r < 0.90 ? 2 : (r < 0.98 ? 3 : 4)); // ★1:65% ★2:25% ★3:8% ★4:2%（2026-07-24改定）
   let pool = window.TREASURE_LIST.filter(t => t.rarity === rarity);
   if (!pool.length) return null;
   let picked = pool[Math.floor(Math.random() * pool.length)];
@@ -810,11 +831,12 @@ window.rollTreasureDrop = function() {
 window.showTreasureReveal = function(treasure, isDupe) {
   const modal = document.getElementById("treasure-reveal-modal"); if (!modal) return;
   const box = document.getElementById("treasure-reveal-box");
-  box.classList.remove("r2", "r3");
+  box.classList.remove("r2", "r3", "r4");
   if (treasure.rarity === 2) box.classList.add("r2");
   if (treasure.rarity === 3) box.classList.add("r3");
+  if (treasure.rarity === 4) box.classList.add("r4");
   document.getElementById("treasure-reveal-icon").textContent = treasure.icon;
-  document.getElementById("treasure-reveal-rarity").textContent = treasure.rarity === 3 ? "★★★ 超レア！" : (treasure.rarity === 2 ? "★★ レア！" : "★ ふつう");
+  document.getElementById("treasure-reveal-rarity").textContent = treasure.rarity === 4 ? "★★★★ 伝説！！" : (treasure.rarity === 3 ? "★★★ 超レア！" : (treasure.rarity === 2 ? "★★ レア！" : "★ ふつう"));
   document.getElementById("treasure-reveal-name").textContent = treasure.name;
   document.getElementById("treasure-reveal-desc").textContent = treasure.desc;
   const dupeEl = document.getElementById("treasure-reveal-dupe");
@@ -836,7 +858,7 @@ window.openTreasureBookModal = function() {
     window.TREASURE_LIST.forEach(t => {
       const owned = window.saveData.treasureBook[t.id];
       const slot = document.createElement("div");
-      slot.className = "treasure-slot " + (owned ? "owned" : "locked") + (t.rarity === 2 ? " r2" : (t.rarity === 3 ? " r3" : ""));
+      slot.className = "treasure-slot " + (owned ? "owned" : "locked") + (t.rarity === 2 ? " r2" : (t.rarity === 3 ? " r3" : (t.rarity === 4 ? " r4" : "")));
       if (owned) {
         slot.innerHTML = `<div class="treasure-slot-icon">${t.icon}</div><div class="treasure-slot-name">${t.name}${owned.count > 1 ? " ×" + owned.count : ""}</div>`;
       } else {

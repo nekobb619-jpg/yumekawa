@@ -100,12 +100,13 @@ LOGIN通信が成功して初めて本物のクラウドの記録で上書きさ
   `performLogin()`のSUCCESS分岐・`loadGameLocal()`双方に
   `if(!window.saveData.treasureBook) window.saveData.treasureBook = {};`という
   初期化ガードがある（既存の古いセーブデータにフィールドが無くても壊れないように）。
-- **お宝一覧**：`window.TREASURE_LIST`（15種、`content.js`ではなく`index.html`内に直書き）。
-  ★1（ふつう・8種）／★2（レア・5種）／★3（超レア・2種）の3段階。
-  それぞれ`{id, name, icon, rarity, desc}`。
+- **お宝一覧**：`window.TREASURE_LIST`（28種、`content.js`ではなく`index.html`内に直書き）。
+  ★1（ふつう・13種）／★2（レア・9種）／★3（超レア・4種）／★4（伝説級・2種、2026-07-24新設）の4段階。
+  それぞれ`{id, name, icon, rarity, desc}`。詳細な設計方針・命名規則・今後の拡張チェックリストは
+  `.knowledge/treasure-collection.md`を参照。
 - **抽選ロジック**：`window.rollTreasureDrop()`。
   ステージクリア（`exitToMainMenu()`内、`window.quitQuest()`の直後）のたびに15%の確率で
-  1個抽選（レアリティの重みは★1:70% / ★2:25% / ★3:5%）。
+  1個抽選（レアリティの重みは2026-07-24改定で★1:65% / ★2:25% / ★3:8% / ★4:2%）。
   苦手撃破ラボ（`weakAttackModeActive`）はこのフックに到達する前に`exitToMainMenu()`が
   早期returnするため対象外（既存のアイテムドロップと同じ扱い）。
   重複（すでに図鑑にある物を引いた）場合は新規追加せず、代わりに欠片🧩を+2する
@@ -113,9 +114,10 @@ LOGIN通信が成功して初めて本物のクラウドの記録で上書きさ
   当たった場合は`window.saveGame()`を呼び直して`treasureBook`の変更をローカル/クラウドへ反映してから、
   `window.showTreasureReveal(treasure, isDupe)`でガチャ演出モーダル（`#treasure-reveal-modal`）を表示する。
 - **UI**：メイン画面に「🏆 お宝図鑑」ボタン（`window.openTreasureBookModal()`）。
-  図鑑モーダル（`#treasure-book-modal`）は15マスのグリッドで、未取得は「❓／？？？」、
+  図鑑モーダル（`#treasure-book-modal`）は28マスのグリッドで、未取得は「❓／？？？」、
   取得済みはアイコン・名前・（2個以上なら）個数を表示。閉じるのはそれぞれ
   `window.closeTreasureReveal()` / `window.closeTreasureBookModal()`。
+  ★4はCSS `.treasure-reveal-box.r4` / `.treasure-slot.owned.r4`（紫系・r3より強い発光アニメーション付き）で演出。
 
 ## 8.5 宝島クラフトの見える化（`window.renderTreasureIsland`、2026-07-24 追加）
 既存の「宝島ショップ」クラフト（`window.buyShopItem`）は、成功してもテキストのアラートだけで
