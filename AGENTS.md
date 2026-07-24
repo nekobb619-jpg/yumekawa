@@ -155,6 +155,42 @@ LOGIN通信が失敗した日はクラウド同期そのものが行われなく
 スプレッドシートの変更履歴（バージョン履歴）を確認しないと確定できない（このリポジトリには
 GASのスクリプト本体が含まれていないため、クライアント側からは確認できない）。
 
+### 5.12 お宝図鑑（コレクション/ガチャ）システム（2026-07-24 追加）
+**背景**：「なかなかRobloxに夢中でやってくれない」という親からの相談を受け、
+既存のごほうび経済（pts/Q/robux/欠片/inventory）とは別レイヤーの、
+非消費型のコレクション（ガチャ的なワクワク＋図鑑コンプ欲）を追加した。
+消費アイテム（inventory）とは違い、一度手に入れたお宝は使ってもなくならず、
+図鑑にずっと残る（コレクション欲・「あと何個で全部そろう」というやり込み動機づけが狙い）。
+
+- **データ構造**：`window.saveData.treasureBook`（オブジェクト、キーはお宝id、
+  値は`{count, firstGotDate}`）。`window.saveData`の初期値宣言に追加ずみで、
+  `performLogin()`のSUCCESS分岐・`loadGameLocal()`双方に
+  `if(!window.saveData.treasureBook) window.saveData.treasureBook = {};`という
+  初期化ガードを追加（既存の古いセーブデータにフィールドが無くても壊れないように）。
+- **お宝一覧**：`window.TREASURE_LIST`（15種、`content.js`ではなく`index.html`内に直書き）。
+  ★1（ふつう・8種）／★2（レア・5種）／★3（超レア・2種）の3段階。
+  それぞれ`{id, name, icon, rarity, desc}`。
+- **抽選ロジック**：`window.rollTreasureDrop()`。
+  ステージクリア（`exitToMainMenu()`内、`window.quitQuest()`の直後）のたびに15%の確率で
+  1個抽選（レアリティの重みは★1:70% / ★2:25% / ★3:5%）。
+  苦手撃破ラボ（`weakAttackModeActive`）はこのフックに到達する前に`exitToMainMenu()`が
+  早期returnするため対象外（既存のアイテムドロップと同じ扱い）。
+  重複（すでに図鑑にある物を引いた）場合は新規追加せず、代わりに欠片🧩を+2する
+  「はずれ無し」設計（`inventory`クラフトの素材にもなるため、ダブっても無駄にならない）。
+  当たった場合は`window.saveGame()`を呼び直して`treasureBook`の変更をローカル/クラウドへ反映してから、
+  `window.showTreasureReveal(treasure, isDupe)`でガチャ演出モーダル（`#treasure-reveal-modal`）を表示する。
+- **UI**：メイン画面に「🏆 お宝図鑑」ボタンを新設（`window.openTreasureBookModal()`）。
+  図鑑モーダル（`#treasure-book-modal`）は15マスのグリッドで、未取得は「❓／？？？」、
+  取得済みはアイコン・名前・（2個以上なら）個数を表示。閉じるのはそれぞれ
+  `window.closeTreasureReveal()` / `window.closeTreasureBookModal()`。
+- **検証**：Node構文チェック（インラインscript全体を`new Function()`でパース）に加え、
+  Playwrightで (a) `TREASURE_LIST`が15件・id重複なしであること、(b) 2万回試行で
+  出現率が概ね15%・レアリティ重みどおりであること、(c) 大量試行後に図鑑が15/15に
+  揃うこと、(d) 重複時に欠片が正しく+2されること、(e) 演出モーダル・図鑑モーダルの
+  開閉とDOM更新が正しいこと、(f) `exitToMainMenu()`を30回連続で呼んでもクラッシュせず
+  お宝演出が発火すること、(g) 5.6・5.11の既存フロー（レビューチャット・セーブガード）に
+  回帰がないこと、を確認ずみ。
+
 ### 5.63 苦手リストの安定id化（qid）と、周回プレイでの数値の その場 再生成（2026-07-20 追加）
 - `content.js` は起動時に、`QUIZZES` の全問題へ自動で `qid`（安定id）を振る
   （`job_title`＋`hint`＋`q`冒頭14文字からのハッシュ。手で編集する必要はない）。
