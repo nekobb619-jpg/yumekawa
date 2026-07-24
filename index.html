@@ -36,6 +36,8 @@
   .treasure-banner.hidden-island { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); border-color: #64748b; box-shadow: 0 5px 0 #475569; }
   .treasure-title { font-size: 18px; font-weight: 900; color: #0369a1; margin-bottom: 6px; }
   .treasure-banner.hidden-island .treasure-title { color: #475569; }
+  #treasure-island-canvas { width: 100%; height: auto; display: block; border-radius: 12px; margin-bottom: 8px; border: 2px solid #7dd3fc; box-shadow: 0 3px 0 rgba(0,0,0,0.08); }
+  .treasure-banner.hidden-island #treasure-island-canvas { border-color: #94a3b8; filter: saturate(0.5) brightness(0.92); }
   .treasure-desc { font-size: 12px; color: #075985; font-weight: 700; line-height: 1.5; }
   .treasure-banner.hidden-island .treasure-desc { color: #475569; }
   .item-shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
@@ -246,6 +248,7 @@
   </div>
   <div id="treasure-island-container-el" class="treasure-banner">
     <div class="treasure-title" id="treasure-island-title-el">🏝️ 脳科学 ＆ ロジック天秤の「宝島」ショップ</div>
+    <canvas id="treasure-island-canvas" width="480" height="150"></canvas>
     <div class="treasure-desc" id="treasure-island-desc-el">
       クイズで集めた【🧩欠片】とトークンを両替して、強力なアイテムをクラフトしよう！<br>
       🎒 <b>リュックの容量：全アイテム合計で最大【10個】まで！</b>
@@ -405,7 +408,7 @@ window.subjectDictionary = {
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {} };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [] };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -473,6 +476,83 @@ window.refreshIslandStatusUI = function() {
     desc.innerHTML = "うーーん、今日の海は深い霧に包まれていて宝島へのルートが閉ざされているぞ！<br><b>明日になったらまた島を探しにきてみよう！</b>（持っているアイテムの確認・使用はできるよ）";
     shelf.style.display = "none";
   }
+  window.renderTreasureIsland();
+};
+/* ★宝島の見える化（2026-07-24 追加）：クラフトした「たてもの」が消えずに島にずっと残っていく、
+   非消費のビジュアル進捗（inventoryは使うと減る消費アイテムなので、それとは別に「積み上げ」を見せる）。 */
+window.ISLAND_BUILDING_ICONS = { booster: "🧪", analyzer: "🔍", hourglass: "⏰" };
+window.renderTreasureIsland = function() {
+  const canvas = document.getElementById("treasure-island-canvas");
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width, h = canvas.height;
+
+  // 空＋海の背景
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "#bae6fd"); sky.addColorStop(0.55, "#7dd3fc"); sky.addColorStop(0.56, "#38bdf8"); sky.addColorStop(1, "#0ea5e9");
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+
+  // 雲（固定の飾り）
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  [[70,24,16],[95,20,12],[380,28,15],[408,22,11]].forEach(function(c) {
+    ctx.beginPath(); ctx.arc(c[0], c[1], c[2], 0, Math.PI * 2); ctx.fill();
+  });
+
+  // 島（砂のベース → 草の丘）
+  ctx.fillStyle = "#fde68a";
+  ctx.beginPath(); ctx.ellipse(w / 2, 108, 190, 34, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#86efac";
+  ctx.beginPath(); ctx.ellipse(w / 2, 96, 175, 26, 0, 0, Math.PI * 2); ctx.fill();
+
+  // ヤシの木（固定の飾り、いつも2本）
+  function drawPalm(x, y) {
+    ctx.strokeStyle = "#92400e"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y - 20); ctx.stroke();
+    ctx.font = "22px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("🌴", x - 4, y - 28);
+  }
+  drawPalm(55, 102); drawPalm(430, 106);
+
+  // クラフトした「たてもの」を島の上に並べる（クラフトするたびに増えていく。使っても消えない）
+  const slots = [];
+  for (let i = 0; i < 24; i++) {
+    const row = Math.floor(i / 6), col = i % 6;
+    slots.push({ x: 108 + col * 55 + (row % 2 === 1 ? 18 : 0), y: 72 + row * 15 });
+  }
+  const log = window.saveData.islandBuildLog || [];
+  const shown = log.length > slots.length ? log.slice(log.length - slots.length) : log.slice();
+  ctx.font = "22px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  shown.forEach(function(key, i) {
+    const icon = window.ISLAND_BUILDING_ICONS[key] || "🏠";
+    const pos = slots[i];
+    if (i === shown.length - 1) {
+      ctx.save(); ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, 15, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    ctx.fillText(icon, pos.x, pos.y);
+  });
+
+  // 見出しラベル（島レベル・たてもの総数）
+  const total = log.length;
+  const level = Math.floor(total / 5) + 1;
+  const label = "🏝️ Lv." + level + "（たてもの " + total + "こ）";
+  ctx.font = "bold 13px sans-serif";
+  const labelW = ctx.measureText(label).width + 16;
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillRect(6, 6, labelW, 20);
+  ctx.fillStyle = "#0369a1"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText(label, 14, 16);
+
+  // 24こを超えた分は右上に「+N」でまとめて表示（島にはいちばん新しい24こが並ぶ）
+  if (total > slots.length) {
+    const overflow = "+" + (total - slots.length);
+    ctx.font = "bold 12px sans-serif";
+    const ow = ctx.measureText(overflow).width + 12;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(w - ow - 6, 6, ow, 20);
+    ctx.fillStyle = "#b45309"; ctx.textAlign = "center";
+    ctx.fillText(overflow, w - ow / 2 - 6, 16);
+  }
 };
 window.refreshWeakBanner = function() {
   const banner = document.getElementById("weak-attack-btn-banner");
@@ -539,6 +619,7 @@ window.performLogin = function(id) {
        if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
        if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
        if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
+       if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD");
     } else { alert("読み込みエラー: " + res.message); }
@@ -556,6 +637,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
   if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
   if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
+  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
 };
@@ -662,7 +744,11 @@ window.buyShopItem = function(itemKey) {
   let currentKakera = window.saveData.kakera || 0;
   if(window.saveData.q < qCost || currentKakera < kCost) { alert(`🤖 【素材不足】\n設計図の欠片🧩 やトークン🪙 が足りないぞ！\n・🪙${qCost}Q と 🧩${kCost}枚 が必要だよ！`); return; }
   window.saveData.q -= qCost; window.saveData.kakera = currentKakera - kCost; window.saveData.inventory.push(itemKey);
-  window.speakText("クラフト成功", "ja-JP"); alert(`🏝️ 【宝島クラフト成功！】\n「${name}」を錬成したぞ！\n（現在の持ち物：${window.saveData.inventory.length} / 10個）`); window.saveGame();
+  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
+  window.saveData.islandBuildLog.push(itemKey);
+  window.speakText("クラフト成功", "ja-JP");
+  alert(`🏝️ 【宝島クラフト成功！】\n「${name}」を錬成したぞ！\n（現在の持ち物：${window.saveData.inventory.length} / 10個）\n\n🏝️ 島に「${name}」の たてものが 増えたよ！（島のたてもの：合計${window.saveData.islandBuildLog.length}こ）`);
+  window.saveGame();
 };
 window.useInventoryItem = function(itemKey) {
   let counts = { booster: 0, analyzer: 0, hourglass: 0 };

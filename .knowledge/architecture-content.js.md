@@ -117,6 +117,36 @@ LOGIN通信が成功して初めて本物のクラウドの記録で上書きさ
   取得済みはアイコン・名前・（2個以上なら）個数を表示。閉じるのはそれぞれ
   `window.closeTreasureReveal()` / `window.closeTreasureBookModal()`。
 
+## 8.5 宝島クラフトの見える化（`window.renderTreasureIsland`、2026-07-24 追加）
+既存の「宝島ショップ」クラフト（`window.buyShopItem`）は、成功してもテキストのアラートだけで
+見た目の変化が無かった。`inventory`（クラフトしたアイテムの在庫）は使うと減る消費物なので、
+「積み上げていく達成感」を見せる場所が無かった。この機能は、クラフトした「たてもの」を
+canvas上の島にずっと残る形で可視化する（inventoryとは別の非消費レイヤー。お宝図鑑と同じ設計思想）。
+
+- **データ構造**：`window.saveData.islandBuildLog`（配列。クラフトした順に `itemKey`
+  文字列 = `"booster"`/`"analyzer"`/`"hourglass"` を`push`していくだけ。1回クラフトする
+  たびに1件増える。使っても・アイテムを使い切っても、この配列からは削除しない＝ずっと残る）。
+  `window.saveData`の初期値宣言に含まれ、`performLogin()`のSUCCESS分岐・`loadGameLocal()`
+  双方に `if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];` の
+  初期化ガードがある。
+- **記録**：`window.buyShopItem(itemKey)`のクラフト成功時、`inventory.push(itemKey)`に加えて
+  `islandBuildLog.push(itemKey)`も行う。成功アラートの文言にも「島にたてものが増えた」旨を追記。
+- **描画**：`window.renderTreasureIsland()`（index.html）。`#treasure-island-canvas`
+  （480×150のcanvas、`#treasure-island-container-el`内、CSSで`width:100%`にして
+  レスポンシブ表示）に、空・海・砂浜・草の丘・ヤシの木2本（固定の飾り）を描き、その上に
+  `islandBuildLog`の内容をアイコン（🧪/🔍/⏰）として並べる。配置スロットは24個の固定パターン
+  （6列×4行の千鳥配置、`Math.random`は使わない＝再描画のたびに位置が変わらない）。
+  24個を超えたら、**表示するのは常に最新の24個**（`log.slice(log.length - slots.length)`）で、
+  古い分は右上の「+N」バッジに集約する。最新の1個には金色の輪でハイライトを付ける。
+  左上に「🏝️ Lv.N（たてもの M こ）」のラベルを表示（`N = Math.floor(合計数 / 5) + 1`）。
+- **描画タイミング**：`window.refreshIslandStatusUI()`の末尾で毎回呼ぶ（このタイミングで
+  一元化しているので、`buyShopItem`→`saveGame`→`refreshIslandStatusUI`の流れで
+  クラフト直後にも自動的に再描画される。個別に呼び出し箇所を増やす必要はない）。
+  宝島が「霧」で閉じている日でも、育てた島の絵そのものは見られる（CSSの`filter`で
+  少し彩度を落とすだけで、`renderTreasureIsland`自体は開閉に関係なく毎回実行する）。
+- 新しいクラフト可能アイテムを増やす場合は、`window.ISLAND_BUILDING_ICONS`に
+  `{itemKey: 絵文字}`を1行足すだけでよい（未登録のキーは🏠にフォールバック）。
+
 ## 9. 苦手リストの安定id化（qid）と、周回プレイでの数値の その場 再生成
 - `content.js` は起動時に、`QUIZZES` の全問題へ自動で `qid`（安定id）を振る
   （`job_title`＋`hint`＋`q`冒頭14文字からのハッシュ。手で編集する必要はない）。
