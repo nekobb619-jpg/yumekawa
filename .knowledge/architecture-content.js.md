@@ -1,0 +1,186 @@
+# architecture-content.js.md — content.js / index.html の実装詳細
+
+このファイルは「新しいステージ・問題タイプ・機能をどう実装するか」の詳細リファレンス。
+毎回読む必要はなく、`content.js` や関連ロジックをさわるタスクのときだけ読み込めばよい。
+過去に実際に起きた事故・バグの経緯は `.knowledge/postmortems.md` を参照（ここには「現在どう動くか」だけを書く）。
+
+---
+
+## 1. content.js「1ファイル方式」
+- `content.js` 1ファイルに全ステージ一覧（`STAGES`配列）と全問題データ（`QUIZZES`オブジェクト）をまとめている。
+- `index.html` の末尾で読み込まれ、`window.injectContentStages()` が
+  `window.globalStageMaster` / `window.availableSubjects` にステージを合流させる（`renderSubjectsNav` /
+  `renderStageMaps` / `launchQuest` / `launchWeakAttackLab` をモンキーパッチして統合）。
+- **新しいステージを増やすときは、スプレッドシートに行を足す必要はなく、`content.js` の
+  `STAGES` に1エントリ、`QUIZZES` に対応する問題配列を1つ足すだけでよい。**
+- ステージIDの命名規則：`"教科/カテゴリ/id名"`（例：`"社会/ごみ/gomi01"`）。`subject` と `category` は
+  実際のGASスプレッドシートのタブ名・見出しと同じ日本語文字列にすること（表記ゆれがあると別タブに分かれてしまう）。
+- 各ステージのフィールド：`subject`, `category`, `id`, `name`, `reward`, `showCount`
+  （1回の挑戦で出す問題数。全問題数より少なくすると毎回ランダムに変わる）, `video_url`, `lab_url`
+  （`https://`始まりなら別タブで開く＝カメラ/センサー等を使うラボ向け、`./`始まりならインライン埋め込み）。
+- 期間限定公開したいときは `release_from` / `release_until`（`"YYYY-MM-DD"`）をステージに足すだけでよい
+  （GAS側は一切さわらない。`isStageActive()` が日付を見て自動で出し入れする）。
+
+## 2. 問題データの書式
+`QUIZZES["教科/カテゴリ/id"]` は配列で、各要素（1問）は主に次のいずれかの形：
+- 選択式：`{ q, a:[選択肢4つ], c:正解のインデックス(0〜3), hint, job_title, job_desc, speech_text? }`
+- 記述式：`{ q, type:"text_input", correct_answers:[正解の表記ゆれを複数], hint, rescue_hint, job_title, job_desc }`
+- キャンバス図解つき：上記に `canvas_code`（`ctx`と`canvas`を使う1行のJS文字列。図形やフローチャートを描く）を追加
+- 会話シナリオつき（「ねらいを見ぬこう」「ニコに教えてあげよう」等）：`scenario:[{name, icon, msg}, ...]` を追加
+- 分岐図解（テンプレート穴うめ式）：`{ q, type:"branch_diagram", diagram:{...}, hint, job_title, job_desc }`。
+  `a`/`c` は使わない（正解情報は `diagram.blanks[].correct` 側にある）。詳細は下記「分岐図解トレーニングツール」参照。
+
+**各ユニットには基本的に「【問題のねらいを見ぬこう】」という会話形式の1問を必ず含める**（このアプリの目玉機能）。
+
+## 3. ラボ（体験・実験）の「Lab & Maker」3画面パターン
+新しい単元でインタラクティブなラボを作るときは、①実験（触って発見）→②ひらめき（気づきの確認）→
+③問題メーカー（通常問題／ワナ問題タブ）の3画面構成にする。
+**過去に作ったラボと似たインタラクション手法（同じ操作方法）を使い回さない** こと。
+（面積＝タイル敷き詰め、四角形＝頂点ドラッグ、三角形＝頂点ドラッグ＋分類、仲間さがし＝ドラッグ&ドロップ分類、
+角度＝線の回転、など単元ごとに手を動かす体験そのものを変えている。）
+
+## 4. 問題管理台帳の同期
+`問題管理台帳.html` の `LEDGER` 配列は `content.js` の `STAGES`/`QUIZZES` の内容と
+**常に一致させる**（id、問題数、選択式/記述式の内訳、特徴タグ）。ステージを1つ追加・変更したら、
+台帳側も同じタイミングで更新すること（AGENTS.md本体のクリティカル・ルール参照）。
+
+## 5. 分岐図解トレーニングツール（`type:"branch_diagram"`、探究/分岐図解/…）
+子どもでも「考えを図にする」練習ができる汎用ツール。テンプレートの穴うめ式（自由描画ではない）。
+`index.html` 側に描画エンジンがあり（`window.renderBranchDiagramQuestion` / `window.redrawBranchDiagram` /
+`window.handleBranchBlankTap`）、`content.js` 側はデータ（`diagram` オブジェクト）を渡すだけでよい。
+
+- テンプレートは2種類：
+  - `template:"if_then"`（もし〜なら フローチャート）：ノードidは固定で `start`/`cond`/`yes`/`no` の4つ。
+    `yes`・`no`のどちらか（または両方）を `kind:"blank"` にして `blankId` を指定すると、そこが穴うめになる。
+  - `template:"mindmap"`（中心テーマから広がる図）：ノードidは `center` が必須、それ以外は
+    `slot:"top"|"left"|"right"|"bottom"` のいずれかを指定（最大4方向）。こちらも `kind:"blank"` で穴に。
+- `diagram.blanks` は `[{ id, promptLabel, options:[選択肢4つ推奨], correct:インデックス }, ...]`。
+  ノード側の `blankId` と `blanks[].id` が対応する。
+- ラベルの改行は `\n`（キャンバス内で複数行表示される）。長すぎる文言は箱からはみ出るので、
+  1行10〜13文字程度・最大3行くらいを目安にする。
+- 正解タップで箱が緑色に変わり、全部の穴が埋まると「ぜんぶできた！こたえあわせ」ボタンが有効になる
+  （このボタンを押した時点で通常の正誤判定と同じ報酬ロジックに合流する）。ミスタップは
+  既存の苦手リスト・チャット復習機能ともちゃんと連動する（`triggerWrongAnswer`をそのまま再利用しているため）。
+- 教科「探究」で使用。`window.subjectDictionary`（index.html）にラベル登録ずみ。
+
+## 6. まちがえた問題のチャット復習（`window.startReviewChat` など）
+1つの問題セットの最後、まちがえた問題が1問でもあれば、いつもの「クリア！」表示の前に
+ニコが吹き出しで一問ずつ「もう一回いっしょに見てみよう」→解説（`job_desc`/`hint`を再利用）→
+「わかった！つぎへ」で次のまちがいへ、という復習チャットが自動で挟まる（サーバーAPI不要、
+あらかじめ用意した文章のみで動く「なりきりチャット」）。
+`window.sessionMissedQuestions` に1問ごとの情報を貯めておき（`launchQuest`のたびにリセット）、
+`showQuestionStep`が最後の問題を終えたタイミングで `startReviewChat` に分岐する。
+既存の「苦手撃破ラボ」（あとで復習）とは独立した仕組みで、両方が共存する。
+新しい問題タイプ（`branch_diagram`など）を追加するときも、`triggerWrongAnswer`をちゃんと呼んでいれば
+自動でこの復習チャット・苦手リストの対象になる。
+**保存・ログ送信は必ず復習チャットより先に完了させる**（AGENTS.md本体のクリティカル・ルール参照。
+過去にこれを破って実害が出た事故は `.knowledge/postmortems.md` 参照）。
+
+## 7. セーブデータの読み込み確認フラグ（`window.saveDataConfirmedSource`）
+`window.saveData`はスクリプト読み込み時に必ず空の初期値で作られ、その後`performLogin()`の
+LOGIN通信が成功して初めて本物のクラウドの記録で上書きされる。LOGIN通信が失敗した場合は
+`window.loadGameLocal()`（その端末のlocalStorageのキャッシュ）にフォールバックする。
+`window.saveDataConfirmedSource`（`null` / `"server"` / `"local"`）というフラグで
+「本物のデータを一度でも確認できたか」を管理し、`performLogin()`のLOGIN成功時に`"server"`、
+`loadGameLocal()`でlocalStorageの前回セーブを読み込めたときに`"local"`をセットする。
+`window.saveGame()`は、このフラグが`null`（＝本物のデータを一度も確認できていない）のときは
+**クラウドへの`SAVE`通信だけをスキップ**する（この端末のlocalStorageへの保存や画面表示の更新は
+今まで通り行うので、その場のプレイ自体は問題なく続けられる）。スキップした場合はセッション中
+1回だけ、通信が不安定でクラウドに保存できていない旨のアラートを表示する
+（`window._unsavedDataWarningShown`でスパム防止）。この仕組みが生まれた経緯・実際の事故は
+`.knowledge/postmortems.md` 参照。
+
+## 8. お宝図鑑（コレクション/ガチャ）システム（2026-07-24 追加）
+既存のごほうび経済（pts/Q/robux/欠片/inventory）とは別レイヤーの、非消費型のコレクション
+（ガチャ的なワクワク＋図鑑コンプ欲）。消費アイテム（inventory）とは違い、一度手に入れたお宝は
+使ってもなくならず、図鑑にずっと残る。
+
+- **データ構造**：`window.saveData.treasureBook`（オブジェクト、キーはお宝id、
+  値は`{count, firstGotDate}`）。`window.saveData`の初期値宣言に含まれており、
+  `performLogin()`のSUCCESS分岐・`loadGameLocal()`双方に
+  `if(!window.saveData.treasureBook) window.saveData.treasureBook = {};`という
+  初期化ガードがある（既存の古いセーブデータにフィールドが無くても壊れないように）。
+- **お宝一覧**：`window.TREASURE_LIST`（15種、`content.js`ではなく`index.html`内に直書き）。
+  ★1（ふつう・8種）／★2（レア・5種）／★3（超レア・2種）の3段階。
+  それぞれ`{id, name, icon, rarity, desc}`。
+- **抽選ロジック**：`window.rollTreasureDrop()`。
+  ステージクリア（`exitToMainMenu()`内、`window.quitQuest()`の直後）のたびに15%の確率で
+  1個抽選（レアリティの重みは★1:70% / ★2:25% / ★3:5%）。
+  苦手撃破ラボ（`weakAttackModeActive`）はこのフックに到達する前に`exitToMainMenu()`が
+  早期returnするため対象外（既存のアイテムドロップと同じ扱い）。
+  重複（すでに図鑑にある物を引いた）場合は新規追加せず、代わりに欠片🧩を+2する
+  「はずれ無し」設計（`inventory`クラフトの素材にもなるため、ダブっても無駄にならない）。
+  当たった場合は`window.saveGame()`を呼び直して`treasureBook`の変更をローカル/クラウドへ反映してから、
+  `window.showTreasureReveal(treasure, isDupe)`でガチャ演出モーダル（`#treasure-reveal-modal`）を表示する。
+- **UI**：メイン画面に「🏆 お宝図鑑」ボタン（`window.openTreasureBookModal()`）。
+  図鑑モーダル（`#treasure-book-modal`）は15マスのグリッドで、未取得は「❓／？？？」、
+  取得済みはアイコン・名前・（2個以上なら）個数を表示。閉じるのはそれぞれ
+  `window.closeTreasureReveal()` / `window.closeTreasureBookModal()`。
+
+## 9. 苦手リストの安定id化（qid）と、周回プレイでの数値の その場 再生成
+- `content.js` は起動時に、`QUIZZES` の全問題へ自動で `qid`（安定id）を振る
+  （`job_title`＋`hint`＋`q`冒頭14文字からのハッシュ。手で編集する必要はない）。
+  苦手リストは以後 `ステージid::qid` 形式で保存される（旧形式 `ステージid_q_インデックス番号` は、
+  問題の並び順を変えると指し先がズレるという弱点があった）。
+- 旧形式のまま残っている苦手リストは `window.migrateWeakQuestionIds()`（content.js）が自動で
+  新形式へ書きかえる。**この関数は content.js 読み込み時ではなく、`index.html` の
+  `loadGameLocal()` と `performLogin()` 成功時（＝実際のセーブデータが `window.saveData` に
+  入ったあと）に呼ぶ**（content.js自体の実行タイミングでは、セーブデータの読み込みがまだ
+  非同期で終わっていないため、そこで呼んでも何もマイグレードされない）。
+- クリア済みステージを周回プレイすると、`regen:{kind:"hissan_divide"}` を持つ問題（今のところ
+  `算数/わり算/hissan_amari02` の筆算系9問）は、`window.regenerateQuestion()`（index.html）が
+  その場で数値をランダムに再生成する（q・hint・job_desc・選択肢・canvas描画をすべて作り直す。
+  `window.currentQuestions` 側の該当1問だけを差し替え、`QUIZZES`本体のマスターデータは触らない）。
+  再生成された問題には `qid` は元のまま引き継がれるので、苦手リストの「どのテンプレートか」の
+  判定は数値が変わってもズレない。画面には「🔄 数字が新しくなったよ！」の小さいバッジが出る
+  （`#regen-badge`）。初回プレイ（まだクリアしていないステージ）や苦手撃破ラボ中は再生成しない
+  （苦手撃破ラボは「まさにその問題を克服できたか」を見るためのものなので、あえて数値を変えない）。
+- 新しい単元に regen対応の問題を追加したいときは、問題オブジェクトに
+  `regen:{kind:"hissan_divide"}` を足すだけでよい（今のところ generator の種類は
+  `hissan_divide`（2けた÷2けたのわり算の筆算）のみ。別の種類を増やす場合は
+  `window.regenHissanDivide` の隣に新しい生成関数を足し、`window.regenerateQuestion`の
+  `if (original.regen.kind === "...")` 分岐を増やす）。まだ全ステージには展開していない
+  （今のところ算数/わり算/hissan_amari02のみに適用）。
+
+## 10. 苦手撃破ラボは複数ステージにまたがるにがて問題もまとめて処理する
+`content.js`の`launchWeakAttackLab`パッチは、`weakQuestions`の全要素をそれぞれ
+新形式（`ステージid::qid`）または旧形式（`ステージid_q_インデックス番号`）として解釈し、
+`window.CONTENT.quizzes`から解決できるものはすべて対象に含める（複数ステージが混ざっていてOK）。
+1件も解決できない場合のみ、旧来の単一ステージ動的読み込み（`.js`ファイルをfetchするGAS時代の方式）
+にフォールバックする。ダミー問題での水増し（3問未満のときの穴うめ）は、引き続き最初の1件が
+属するステージのバンドルからのみ選ぶ（複数ステージから均等に集める、まではやっていない）。
+この仕組みが生まれた経緯（過去のバグ）は `.knowledge/postmortems.md` 参照。
+
+## 11. 苦手問題にアップする基準
+「1問でもまちがえたら即座に苦手リストへ追加」という基準（あえて厳しめ）。将来ここを変える場合は
+`triggerWrongAnswer`（index.html）内の該当ロジックを見ること。
+
+## 12. 既存ユニットの実例（新ユニット作成時の参考）
+- `理科/季節と生き物/kisetsu01`（4年生、全11問・showCount:11）：春夏秋冬の生き物の変化
+  （サクラ・ヘチマ・ツバメ・こん虫の冬越し）＋こん虫の冬越しの姿を示す canvas 図解1問＋
+  「ねらいを見ぬこう」「ニコに教えてあげよう」各1問＋text_input 2問、という構成パターン
+  （`denki01`/`hoshi01`と同じ型）。事実（昆虫の冬越しの姿・ツバメの渡り時期）は複数の専門サイトで
+  クロスチェック済み。
+- `社会/都道府県/todofuken01`（4年生、全11問・showCount:11）：都道府県の数（47）、8地方区分
+  （地方ごとの都道府県数を示す canvas 棒グラフ図解1問）、面積が最大／最小の都道府県、
+  「ねらいを見ぬこう」「ニコに教えてあげよう」各1問、text_input 2問という構成。事実も同様に
+  複数サイトでクロスチェック済み。
+- 新ユニットを作るときはこの型（体験→canvas図解問題→ねらいを見ぬこう→教えてあげよう→text_input復習）
+  を踏襲し、事実確認が必要な内容は必ずWeb検索で複数ソースをクロスチェックしてから出題する。
+
+## 13. ディレクトリ構成（実際の状態）
+```
+（リポジトリ直下）
+  index.html         … アプリ本体（1ファイル、Vite等のビルド無し）
+  content.js          … 全ステージ・全問題のバンドル（上記参照）
+  images/              … 画像アセット
+  lab/教科/xxx.html    … 各単元の体験・実験ラボ（個別ファイル）
+  算数/ 国語/ 理科/ 社会/ 外国語/ 探究/ … 過去（content.js方式より前）の個別 questions.js が残っている場合がある。
+                          特に指示がない限り、削除や整理はしない（現状維持）。
+  docs/                … 初期設計時の参照ドキュメント（要件定義・デザイン方針。技術スタックの記載は
+                          その後 index.html 1ファイル方式に実装が変わったため古いが、学習設計・
+                          ペダゴジー面の意図は今も参考になる）
+  .knowledge/          … このファイルを含む詳細ナレッジ（AGENTS.mdから必要時のみ参照される）
+```
+※ サーバー（GAS = Google Apps Script）は別管理。`コード.gs` はこのリポジトリには含まれない場合がある。
+　GAS側の仕様を変更する提案・実装は、必ずユーザーに確認してから行うこと（現状はGASを一切さわらない方針）。
