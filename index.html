@@ -294,6 +294,23 @@
   .kuropon-hunger-bar { background: #fef9c3; border-radius: 20px; height: 14px; overflow: hidden; margin: 6px 0 2px; border: 2px solid #fde68a; }
   .kuropon-hunger-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #fde68a, #f59e0b); transition: width 0.5s ease; }
   .kuropon-hunger-label { font-size: 10.5px; font-weight: 900; color: #b45309; margin-bottom: 8px; }
+  /* ★アイテム選択モーダル */
+  #item-modal { position: fixed; inset: 0; background: rgba(15, 5, 25, 0.93); z-index: 800; display: none; justify-content: center; align-items: center; padding: 16px; }
+  .item-modal-box { background: linear-gradient(160deg, #0f172a, #1e1b4b); border-radius: 22px; width: 100%; max-width: 380px; padding: 20px 16px 18px; text-align: center; box-shadow: 0 0 60px rgba(124,58,237,0.6), 0 12px 36px rgba(0,0,0,0.7); animation: fadeUp 0.3s ease; border: 1.5px solid rgba(167,139,250,0.3); }
+  .item-modal-title { font-size: 16px; font-weight: 900; color: #c4b5fd; margin-bottom: 4px; }
+  .item-modal-sub { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 16px; }
+  .item-card-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .item-card { background: rgba(255,255,255,0.06); border: 1.5px solid rgba(167,139,250,0.3); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left; transition: all 0.15s; }
+  .item-card:hover, .item-card:active { background: rgba(124,58,237,0.25); border-color: #a78bfa; transform: translateY(-1px); }
+  .item-card.empty { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+  .item-card-icon { font-size: 32px; flex-shrink: 0; }
+  .item-card-body { flex: 1; }
+  .item-card-name { font-size: 13px; font-weight: 900; color: #e2e8f0; margin-bottom: 2px; }
+  .item-card-count { font-size: 10px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; }
+  .item-card-when { font-size: 10px; font-weight: 700; color: #fbbf24; background: rgba(251,191,36,0.12); border-radius: 6px; padding: 2px 6px; display: inline-block; margin-bottom: 4px; }
+  .item-card-desc { font-size: 10px; color: #94a3b8; line-height: 1.5; }
+  .item-card-use-btn { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; border: none; border-radius: 10px; padding: 8px 14px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 12px; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 0 #5b21b6; transition: all 0.1s; }
+  .item-card-use-btn:active { transform: translateY(2px); box-shadow: none; }
 </style>
 </head>
 <body>
@@ -535,6 +552,15 @@
     <button class="br-btn close" style="margin-top:4px;" onclick="window.closeKuroPonModal()">とじる</button>
   </div>
 </div>
+<!-- ★アイテム選択モーダル -->
+<div id="item-modal">
+  <div class="item-modal-box">
+    <div class="item-modal-title">✨ マジックアイテムを使う</div>
+    <div class="item-modal-sub">カードをタップして発動！クイズ中に使うのがおすすめだよ</div>
+    <div class="item-card-list" id="item-card-list-el"></div>
+    <button class="br-btn close" onclick="window.closeItemModal()">とじる</button>
+  </div>
+</div>
 <!-- ★クロぽんミニクイズモーダル -->
 <div id="kuropon-quiz-modal">
   <div class="kuropon-quiz-box">
@@ -598,7 +624,7 @@ window.subjectDictionary = {
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", selectedAvatar: "🐣" };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣" };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -1273,7 +1299,10 @@ window.updateKuroPonModal = function() {
     if (sd.kuroPonFriendship > 0 && sd.kuroPonHunger <= 0) {
       sd.kuroPonFriendship = Math.max(0, sd.kuroPonFriendship - 5); // おなか0で仲良し度も少し減
     }
+    // 日付が変わったら本日の給餌記録もリセット
+    sd.kuroPonFedToday = {};
   }
+  if (!sd.kuroPonFedToday) sd.kuroPonFedToday = {};
 
   const hunger = sd.kuroPonHunger || 0;
   const friendship = sd.kuroPonFriendship || 0;
@@ -1325,15 +1354,24 @@ window.renderFoodGrid = function() {
   const grid = document.getElementById('food-grid-el');
   if (!grid) return;
   grid.innerHTML = '';
+  const sd = window.saveData;
+  const now2 = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  const todayStr2 = `${now2.getFullYear()}-${now2.getMonth()+1}-${now2.getDate()}`;
+  if (!sd.kuroPonFedToday) sd.kuroPonFedToday = {};
   window.GACHA_FOOD_LIST.forEach(food => {
-    const friendship = window.saveData.kuroPonFriendship || 0;
+    const friendship = sd.kuroPonFriendship || 0;
     const locked = friendship < food.unlockFriendship;
+    const fedToday = sd.kuroPonFedToday[food.key] === todayStr2;
     const card = document.createElement('div');
-    card.className = 'food-card' + (locked ? ' locked' : '');
-    card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓もんだい1問</span><span class="food-effect">${food.desc}</span>`;
-    if (!locked) {
+    card.className = 'food-card' + (locked ? ' locked' : (fedToday ? ' locked' : ''));
+    if (fedToday) {
+      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost" style="color:#22c55e;">✅きょうクリア</span><span class="food-effect" style="color:#94a3b8;">また明日にゃ</span>`;
+      card.title = 'きょうはもうあげたにゃ！また明日にゃ';
+    } else if (!locked) {
+      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓もんだい1問</span><span class="food-effect">${food.desc}</span>`;
       card.onclick = () => window.openKuroponQuiz(food);
     } else {
+      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓もんだい1問</span><span class="food-effect">${food.desc}</span>`;
       card.title = `なかよし度${food.unlockFriendship}でかいほうされるにゃ！`;
       card.innerHTML += `<span style="font-size:9px; color:#94a3b8; display:block;">🔒${food.unlockFriendship}～</span>`;
     }
@@ -1349,6 +1387,15 @@ window._kqAnswered   = false; // 解答済みフラグ
 window.openKuroponQuiz = function(food) {
   // 全教科からランダムに選択肢型問題1問を抽出
   if (!window.CONTENT) { alert('もんだいデータがまだ読み込まれていないにゃ…'); return; }
+  // 1日1回クールダウンチェック
+  const sd0 = window.saveData;
+  if (!sd0.kuroPonFedToday) sd0.kuroPonFedToday = {};
+  const now0 = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  const todayStr0 = `${now0.getFullYear()}-${now0.getMonth()+1}-${now0.getDate()}`;
+  if (sd0.kuroPonFedToday[food.key] === todayStr0) {
+    alert(`${food.icon} ${food.name}は きょうもう あげたにゃ！\nまた明日にゃ 🌙`);
+    return;
+  }
   const quizzes = window.CONTENT.quizzes;
   // type が text_input・canvas_code・scenario を除く選択肢問題だけ集める
   const pool = [];
@@ -1437,7 +1484,11 @@ window.kqConfirm = function() {
   sd.kuroPonHunger = Math.min(100, (sd.kuroPonHunger || 0) + food.hungerAdd);
   sd.kuroPonFriendship = Math.min(100, (sd.kuroPonFriendship || 0) + food.friendshipAdd);
   const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
-  sd.kuroPonLastFedDate = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  const todayStrC = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  sd.kuroPonLastFedDate = todayStrC;
+  // 本日の給餌記録を保存（1日1回クールダウン管理）
+  if (!sd.kuroPonFedToday) sd.kuroPonFedToday = {};
+  sd.kuroPonFedToday[food.key] = todayStrC;
   window.updateUI();
   window.saveGame();
 
@@ -1839,39 +1890,98 @@ window.launchWeakAttackLab = function() {
   document.body.appendChild(script);
 };
 window.triggerItemInGame = function() {
-  if(!window.saveData.inventory || window.saveData.inventory.length === 0) { alert("🤖 アイテムを持っていないぞ！"); return; }
+  if(!window.saveData.inventory || window.saveData.inventory.length === 0) { alert("🤖 アイテムを持っていないぞ！\n宝島でクラフトするか、クイズを頑張ろう！"); return; }
+  window.openItemModal();
+};
+
+window.ITEM_DEFS = [
+  {
+    key: 'booster',
+    icon: '🧪',
+    name: '脳内ブースター',
+    when: '💡 クリア時のQ報酬を2倍にしたいとき',
+    desc: 'このステージをクリアしたときにもらえるQトークンが【2倍】になる魔法のドリンク！クエストを始める前に使おう！'
+  },
+  {
+    key: 'analyzer',
+    icon: '🔍',
+    name: '予言のレンズ',
+    when: '💡 むずかしい問題で迷っているとき',
+    desc: 'クイズ中の今の問題でハズレ選択肢を1つ消してくれるレンズ！答えに迷った問題の途中で使おう！'
+  },
+  {
+    key: 'hourglass',
+    icon: '⏰',
+    name: '時空の砂時計',
+    when: '💡 同じステージを何度もくりかえすとき',
+    desc: '周回ペナルティ（同じステージを連続でやると減るpts）を1回だけ無効化！繰り返し練習したいステージで使おう！'
+  }
+];
+
+window.openItemModal = function() {
+  if (!window.saveData.inventory) window.saveData.inventory = [];
   let counts = { booster: 0, analyzer: 0, hourglass: 0 };
   window.saveData.inventory.forEach(i => { if(counts[i] !== undefined) counts[i]++; });
-  let optionsText = "🌟 どのマジックアイテムを発動させる？\n";
-  if(counts.booster > 0) optionsText += `【1】: 🧪脳内ブースター (残り${counts.booster}個)\n`;
-  if(counts.analyzer > 0) optionsText += `【2】: 🔍予言のレンズ (残り${counts.analyzer}個)\n`;
-  if(counts.hourglass > 0) optionsText += `【3】: ⏰時空の砂時計 (残り${counts.hourglass}個)\n`;
 
-  let choice = prompt(optionsText + "\n使いたいアイテムの番号（1〜3）を半角でいれてね！やめる場合はキャンセルを押してね。");
-  if(!choice) return;
-  let idx = parseInt(choice, 10); let itemKey = "";
-  if(idx === 1 && counts.booster > 0) itemKey = 'booster';
-  else if(idx === 2 && counts.analyzer > 0) itemKey = 'analyzer';
-  else if(idx === 3 && counts.hourglass > 0) itemKey = 'hourglass';
-  else { alert("🤖 番号が違うか、そのアイテムは持っていないみたいだ！"); return; }
+  const list = document.getElementById('item-card-list-el');
+  if (!list) return;
+  list.innerHTML = '';
 
-  let removeIdx = window.saveData.inventory.indexOf(itemKey);
-  if(removeIdx > -1) { window.saveData.inventory.splice(removeIdx, 1); }
+  window.ITEM_DEFS.forEach(def => {
+    const cnt = counts[def.key] || 0;
+    const card = document.createElement('div');
+    card.className = 'item-card' + (cnt === 0 ? ' empty' : '');
+    card.innerHTML = `
+      <div class="item-card-icon">${def.icon}</div>
+      <div class="item-card-body">
+        <div class="item-card-name">${def.name}</div>
+        <div class="item-card-count">残り ${cnt}個</div>
+        <div class="item-card-when">${def.when}</div>
+        <div class="item-card-desc">${def.desc}</div>
+      </div>
+      ${cnt > 0 ? `<button class="item-card-use-btn" onclick="window.activateItem('${def.key}')">使う！</button>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  document.getElementById('item-modal').style.display = 'flex';
+};
+
+window.closeItemModal = function() {
+  document.getElementById('item-modal').style.display = 'none';
+};
+
+window.activateItem = function(itemKey) {
+  const removeIdx = window.saveData.inventory.indexOf(itemKey);
+  if(removeIdx === -1) { window.closeItemModal(); return; }
+  window.saveData.inventory.splice(removeIdx, 1);
   window.updateInventoryUI();
   if(window.saveData.inventory.length === 0) { document.getElementById("item-use-in-game-btn").style.display = "none"; }
-  if(itemKey === 'booster') { window.activeBoostMultiplier = 2.0; alert("🧪 【脳内ブースター発動！】\nロボナビ「キピーーーン！このステージをクリアした時のQトークン報酬が【2倍】にブーストされる！」"); }
-  else if(itemKey === 'analyzer') {
-    alert("🔍 【予言のレンズ発動！】\nハズレの選択肢を1つ、光のレーザーで消去するぞ！");
+  window.closeItemModal();
+
+  if(itemKey === 'booster') {
+    window.activeBoostMultiplier = 2.0;
+    alert("🧪 【脳内ブースター発動！】\nこのステージをクリアした時のQ報酬が【2倍】になるぞ！このままクイズを頑張ろう！");
+  } else if(itemKey === 'analyzer') {
     const current = window.currentQuestions[window.currentQIdx];
     if(current && current.a && current.a.length > 1) {
-       const buttons = document.querySelectorAll("#quiz-options-zone .choice-btn");
-       let deleted = false;
-       buttons.forEach(btn => {
-         if(!deleted && btn.textContent !== current.a[current.c]) { btn.style.opacity = "0.2"; btn.style.pointerEvents = "none"; btn.textContent = "❌ レンズ消去"; deleted = true; }
-       });
+      const buttons = document.querySelectorAll("#quiz-options-zone .choice-btn");
+      let deleted = false;
+      buttons.forEach(btn => {
+        if(!deleted && btn.textContent !== current.a[current.c]) {
+          btn.style.opacity = "0.2"; btn.style.pointerEvents = "none"; btn.textContent = "❌ レンズ消去"; deleted = true;
+        }
+      });
+      alert("🔍 【予言のレンズ発動！】\nハズレの選択肢を1つ消したぞ！のこりから正解を選ぼう！");
+    } else {
+      alert("🔍 予言のレンズ：今の問題には使えないタイプだったにゃ…（アイテムは返却されるよ！）");
+      window.saveData.inventory.push(itemKey); // 返却
+      window.updateInventoryUI();
     }
+  } else if(itemKey === 'hourglass') {
+    window.activeItemBuff = 'hourglass';
+    alert("⏰ 【時空の砂時計発動！】\n今日の周回ペナルティを1回だけ無効化したぞ！たっぷりptsをもらおう！");
   }
-  else if(itemKey === 'hourglass') { window.activeItemBuff = 'hourglass'; alert("⏰ 【時空の砂時計発動！】\n時間を巻き戻し、今日の周回ペナルティによる減衰を1回だけ無効化（100%のptsを獲得）にするぞ！"); }
   window.saveGame();
 };
 
