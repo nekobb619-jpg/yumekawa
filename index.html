@@ -199,6 +199,84 @@
   .action-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #64748b; }
   .action-btn.nav-next { background: linear-gradient(135deg, var(--gold), #f59e0b); color: white; box-shadow: 0 5px 0 #b45309; font-size: 16px; flex: 2; }
   .action-btn.nav-next:active { box-shadow: 0 2px 0 #b45309; }
+
+  /* ★ガチャシステム 2026-07-25 */
+  #gacha-modal { position: fixed; inset: 0; background: rgba(20, 10, 35, 0.93); z-index: 600; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .gacha-box { background: #fff; border-radius: 24px; width: 100%; max-width: 380px; padding: 24px 20px 20px; text-align: center; box-shadow: 0 0 60px rgba(168, 85, 247, 0.6), 0 10px 30px rgba(0,0,0,0.5); animation: fadeUp 0.35s ease; overflow: hidden; position: relative; }
+  .gacha-box::before { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(168,85,247,0.08) 0%, transparent 60%); pointer-events: none; }
+  .gacha-title { font-size: 20px; font-weight: 900; color: #7c3aed; margin-bottom: 4px; }
+  .gacha-subtitle { font-size: 11.5px; font-weight: 700; color: #94a3b8; margin-bottom: 16px; }
+  .gacha-cost-badge { display: inline-block; background: linear-gradient(135deg, #1e40af, #3b82f6); color: #fff; font-size: 13px; font-weight: 900; padding: 6px 14px; border-radius: 20px; margin-bottom: 16px; box-shadow: 0 3px 0 #1d4ed8; }
+  .gacha-egg-stage { height: 130px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative; }
+  .gacha-egg { font-size: 88px; line-height: 1; cursor: pointer; filter: drop-shadow(0 0 16px rgba(168,85,247,0.5)); transition: transform 0.1s; user-select: none; }
+  .gacha-egg:active { transform: scale(0.92); }
+  .gacha-egg.shaking { animation: eggShake 0.6s ease; }
+  @keyframes eggShake { 0%,100%{transform:rotate(0)} 15%{transform:rotate(-12deg) scale(1.05)} 30%{transform:rotate(12deg) scale(1.08)} 45%{transform:rotate(-10deg)} 60%{transform:rotate(8deg)} 75%{transform:rotate(-5deg)} 90%{transform:rotate(3deg)} }
+  .gacha-egg.cracking { animation: eggCrack 0.8s ease forwards; }
+  @keyframes eggCrack { 0%{transform:scale(1)} 30%{transform:scale(1.15) rotate(-5deg)} 60%{transform:scale(1.2) rotate(5deg)} 80%{transform:scale(0.5) rotate(20deg); opacity:0.5;} 100%{transform:scale(0) rotate(40deg); opacity:0;} }
+  .gacha-result-zone { min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .gacha-result-icon { font-size: 60px; animation: treasureIconFloat 2s ease-in-out infinite; margin-bottom: 4px; }
+  .gacha-result-rarity { font-size: 12px; font-weight: 900; color: #64748b; }
+  .gacha-result-name { font-size: 18px; font-weight: 900; color: #1e293b; margin: 4px 0; }
+  .gacha-result-desc { font-size: 11.5px; font-weight: 700; color: #64748b; line-height: 1.5; margin-bottom: 8px; }
+  .gacha-result-dupe { font-size: 11px; font-weight: 900; color: #b45309; background: #fef3c7; border-radius: 10px; padding: 5px 10px; margin-bottom: 8px; display: none; }
+  .gacha-rate-table { background: #f8fafc; border-radius: 12px; padding: 10px 12px; margin: 10px 0; text-align: left; font-size: 11px; }
+  .gacha-rate-row { display: flex; justify-content: space-between; font-weight: 700; color: #64748b; margin-bottom: 2px; }
+  .gacha-rate-row.r2 { color: #2563eb; } .gacha-rate-row.r3 { color: #d97706; } .gacha-rate-row.r4 { color: #a21caf; }
+  .gacha-btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  .gacha-btn { flex: 1; padding: 13px; border: none; border-radius: 14px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: all 0.1s; }
+  .gacha-btn:active { transform: translateY(3px); box-shadow: none; }
+  .gacha-btn.primary { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; box-shadow: 0 4px 0 #5b21b6; }
+  .gacha-btn.secondary { background: #e2e8f0; color: #475569; box-shadow: 0 4px 0 #cbd5e1; }
+  .gacha-book-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
+  .gacha-book-slot { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 6px 2px; text-align: center; }
+  .gacha-book-slot.owned { background: #f5f3ff; border: 2px solid #a78bfa; }
+  .gacha-book-slot.owned.r2c { background: #eff6ff; border-color: #60a5fa; }
+  .gacha-book-slot.owned.r3c { background: #fffbeb; border-color: #f59e0b; }
+  .gacha-book-slot.owned.r4c { background: #faf5ff; border-color: #a855f7; box-shadow: 0 0 8px rgba(168,85,247,0.4); }
+  .gacha-book-icon { font-size: 22px; line-height: 1.2; }
+  .gacha-book-name { font-size: 9px; font-weight: 900; color: #475569; margin-top: 2px; line-height: 1.2; }
+  .gacha-book-slot.locked .gacha-book-icon { opacity: 0.25; }
+  .gacha-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .gacha-tab { flex: 1; padding: 7px 4px; border: none; border-radius: 10px; font-family: 'Zen Maru Gothic'; font-weight: 700; font-size: 11px; cursor: pointer; background: #e2e8f0; color: #64748b; transition: all 0.1s; }
+  .gacha-tab.active { background: #7c3aed; color: white; }
+
+  /* ★クロぽんごはん・アバター 2026-07-25 */
+  #kuropon-modal { position: fixed; inset: 0; background: rgba(30, 10, 40, 0.9); z-index: 610; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .kuropon-box { background: linear-gradient(160deg, #fdf4ff, #fff); border-radius: 24px; width: 100%; max-width: 380px; max-height: 88vh; overflow-y: auto; padding: 22px 18px 18px; text-align: center; box-shadow: 0 0 50px rgba(236, 72, 153, 0.5), 0 10px 30px rgba(0,0,0,0.4); animation: fadeUp 0.35s ease; }
+  .kuropon-title { font-size: 19px; font-weight: 900; color: #be185d; margin-bottom: 2px; }
+  .kuropon-subtitle { font-size: 11.5px; font-weight: 700; color: #94a3b8; margin-bottom: 14px; }
+  .kuropon-stage { position: relative; margin-bottom: 14px; }
+  .kuropon-char { font-size: 80px; line-height: 1; display: block; filter: drop-shadow(0 4px 12px rgba(236,72,153,0.4)); }
+  .kuropon-char.happy { animation: kuroHappy 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  @keyframes kuroHappy { 0%{transform:scale(1)} 30%{transform:scale(1.3) rotate(-10deg)} 60%{transform:scale(1.15) rotate(8deg)} 80%{transform:scale(1.05)} 100%{transform:scale(1)} }
+  .kuropon-heart-burst { position: absolute; top: 0; left: 50%; transform: translateX(-50%); font-size: 22px; opacity: 0; pointer-events: none; }
+  .kuropon-heart-burst.burst { animation: heartBurst 1s ease forwards; }
+  @keyframes heartBurst { 0%{opacity:1; transform:translateX(-50%) translateY(0) scale(0.5)} 50%{opacity:1; transform:translateX(-50%) translateY(-40px) scale(1.4)} 100%{opacity:0; transform:translateX(-50%) translateY(-70px) scale(0.8)} }
+  .kuropon-friendship-bar { background: #f1f5f9; border-radius: 20px; height: 18px; overflow: hidden; margin: 8px 0 4px; border: 2px solid #f9a8d4; }
+  .kuropon-friendship-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #f9a8d4, #ec4899); transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+  .kuropon-friendship-label { font-size: 11px; font-weight: 900; color: #be185d; margin-bottom: 10px; }
+  .kuropon-speech { background: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 14px; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #831843; line-height: 1.6; margin-bottom: 14px; text-align: left; min-height: 50px; }
+  .food-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .food-card { background: white; border-radius: 14px; padding: 8px 4px; box-shadow: 0 3px 0 rgba(0,0,0,0.1); border: 2px solid #fce7f3; text-align: center; cursor: pointer; transition: all 0.1s; }
+  .food-card:active { transform: translateY(2px); box-shadow: none; }
+  .food-card.locked { opacity: 0.45; cursor: not-allowed; }
+  .food-icon { font-size: 26px; display: block; margin-bottom: 2px; }
+  .food-name { font-size: 10px; font-weight: 900; color: #334155; }
+  .food-cost { font-size: 10px; font-weight: 700; color: #0284c7; }
+  .food-effect { font-size: 9px; font-weight: 700; color: #15803d; }
+  .avatar-section-title { font-size: 13px; font-weight: 900; color: #6b21a8; margin: 12px 0 8px; border-top: 2px dashed #e9d5ff; padding-top: 12px; }
+  .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+  .avatar-slot { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 8px 2px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .avatar-slot:active { transform: scale(0.95); }
+  .avatar-slot.owned { border-style: solid; border-color: #a78bfa; background: #f5f3ff; }
+  .avatar-slot.selected { border-color: #7c3aed; background: #ede9fe; box-shadow: 0 0 0 3px rgba(124,58,237,0.3); }
+  .avatar-slot.locked { opacity: 0.35; cursor: not-allowed; }
+  .avatar-icon { font-size: 24px; line-height: 1.2; }
+  .avatar-name { font-size: 9px; font-weight: 900; color: #475569; margin-top: 2px; }
+  .kuropon-hunger-bar { background: #fef9c3; border-radius: 20px; height: 14px; overflow: hidden; margin: 6px 0 2px; border: 2px solid #fde68a; }
+  .kuropon-hunger-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #fde68a, #f59e0b); transition: width 0.5s ease; }
+  .kuropon-hunger-label { font-size: 10.5px; font-weight: 900; color: #b45309; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -242,6 +320,10 @@
   </div>
   <div class="flex-row">
     <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openTreasureBookModal()">🏆 お宝図鑑</button>
+    <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openGachaModal()">🥚 ガチャ</button>
+  </div>
+  <div class="flex-row">
+    <button class="btn-sm" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3); color:#be185d; font-weight:900;" id="kuropon-btn" onclick="window.openKuroPonModal()">🐱 クロぽんのへや</button>
   </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
@@ -374,6 +456,68 @@
     <button class="br-btn close" style="margin-top:0;" onclick="window.closeTreasureBookModal()">とじる</button>
   </div>
 </div>
+<!-- ★ガチャモーダル 2026-07-25 -->
+<div id="gacha-modal">
+  <div class="gacha-box">
+    <div class="gacha-title">🥚 ニコのたまごガチャ</div>
+    <div class="gacha-subtitle">欠片🧩を5枚消費して、ニコのたまごをゲットしよう！</div>
+    <div class="gacha-tabs">
+      <button class="gacha-tab active" id="gacha-tab-pull" onclick="window.switchGachaTab('pull')">🥚 ガチャを引く</button>
+      <button class="gacha-tab" id="gacha-tab-book" onclick="window.switchGachaTab('book')">📖 たまご図鑑</button>
+    </div>
+    <div id="gacha-panel-pull">
+      <div class="gacha-cost-badge">🧩 5枚消費 → 1回ガチャ｜現在：<span id="gacha-kakera-count">0</span>🧩</div>
+      <div class="gacha-egg-stage">
+        <div id="gacha-egg-el" class="gacha-egg" onclick="window.doGachaPull()">🥚</div>
+      </div>
+      <div class="gacha-result-zone" id="gacha-result-zone">
+        <div style="font-size:12px; font-weight:700; color:#94a3b8;">↑ たまごをタップしてガチャを引こう！</div>
+      </div>
+      <div class="gacha-rate-table">
+        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム</div>
+        <div class="gacha-rate-row r2">★★レア　キャラ6種 ＋ 強力バフ <span>25%</span></div>
+        <div class="gacha-rate-row r3">★★★超レア　キャラ4種 <span>8%</span></div>
+        <div class="gacha-rate-row r4">★★★★伝説　まぼろしニコ <span>2%</span></div>
+      </div>
+    </div>
+    <div id="gacha-panel-book" style="display:none;">
+      <div style="font-size:12.5px; font-weight:900; color:#7c3aed; margin-bottom:8px;" id="gacha-book-progress">0 / 0 コレクション</div>
+      <div class="gacha-book-grid" id="gacha-book-grid"></div>
+    </div>
+    <div class="gacha-btn-row">
+      <button class="gacha-btn primary" id="gacha-pull-btn" onclick="window.doGachaPull()">🥚 ガチャを引く！（🧩×5）</button>
+      <button class="gacha-btn secondary" onclick="window.closeGachaModal()">とじる</button>
+    </div>
+  </div>
+</div>
+<!-- ★クロぽんごはん・アバターモーダル 2026-07-25 -->
+<div id="kuropon-modal">
+  <div class="kuropon-box">
+    <div class="kuropon-title">🐱 クロぽんのへや</div>
+    <div class="kuropon-subtitle">ごはんをあげて、仲良くなろう！</div>
+    <div class="kuropon-stage">
+      <span class="kuropon-char" id="kuropon-char-el">🐱</span>
+      <span class="kuropon-heart-burst" id="kuropon-heart-el">💖</span>
+    </div>
+    <div style="font-size:11.5px; font-weight:900; color:#ec4899; margin-bottom:4px;">🤝 なかよし度</div>
+    <div class="kuropon-friendship-bar">
+      <div class="kuropon-friendship-fill" id="kuropon-friendship-fill" style="width:0%"></div>
+    </div>
+    <div class="kuropon-friendship-label" id="kuropon-friendship-label">なかよし度：0 / 100</div>
+    <div style="font-size:11.5px; font-weight:900; color:#b45309; margin-bottom:2px;">🍽️ おなかの減り具合</div>
+    <div class="kuropon-hunger-bar">
+      <div class="kuropon-hunger-fill" id="kuropon-hunger-fill" style="width:100%"></div>
+    </div>
+    <div class="kuropon-hunger-label" id="kuropon-hunger-label">おなか：満腹 🍀</div>
+    <div class="kuropon-speech" id="kuropon-speech-el">にゃ～！ごはんがほしいにゃ！</div>
+    <div style="font-size:12.5px; font-weight:900; color:#334155; margin-bottom:8px;">🍱 ごはんをあげる（Q消費）</div>
+    <div class="food-grid" id="food-grid-el"></div>
+    <div class="avatar-section-title">👤 じぶんのアバターをえらぼう</div>
+    <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:8px;">ガチャで集めたニコのたまごからアバターを選べるよ！</div>
+    <div class="avatar-grid" id="avatar-grid-el"></div>
+    <button class="br-btn close" style="margin-top:4px;" onclick="window.closeKuroPonModal()">とじる</button>
+  </div>
+</div>
 <div id="game-screen">
   <div class="game-container">
     <div class="navi-box">
@@ -421,7 +565,7 @@ window.subjectDictionary = {
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [] };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", selectedAvatar: "🐣" };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -452,6 +596,11 @@ window.updateUI = function() {
   document.getElementById("q-val").innerHTML = `${window.saveData.q}<span>Q</span>`;
   let displayKakera = window.saveData.kakera || 0;
   document.getElementById("kakera-val").innerHTML = `${displayKakera}<span>🧩</span>`;
+  // ガチャの欠片カウント更新
+  const kEl = document.getElementById('gacha-kakera-count');
+  if (kEl) kEl.textContent = displayKakera;
+  // アバター・クロぽんボタン状態更新
+  window.applyAvatar && window.applyAvatar();
 };
 window.updateInventoryUI = function() {
   if(!window.saveData.inventory) window.saveData.inventory = [];
@@ -894,6 +1043,336 @@ window.openTreasureBookModal = function() {
 };
 window.closeTreasureBookModal = function() { const modal = document.getElementById("treasure-book-modal"); if (modal) modal.style.display = "none"; };
 /* ★お宝図鑑（コレクション）システム ここまで ------------------- */
+
+/* ★ガチャシステム（ニコのたまごガチャ） 2026-07-25 ここから ------------------- */
+window.GACHA_EGG_LIST = [
+  // ★1（ふつう）キャラ8種
+  { id: 'e01', name: 'ほわほわニコ',   icon: '🐣', rarity: 1, type: 'char', desc: 'うまれたばかりのふわふわニコ。毎日がんばる子のそばにいてくれるよ。' },
+  { id: 'e02', name: 'ねむりニコ',     icon: '😴', rarity: 1, type: 'char', desc: 'ついうとうとしてしまうニコ。でも呼ぶとすぐ起きてくれる。' },
+  { id: 'e03', name: 'はりきりニコ',   icon: '⚡', rarity: 1, type: 'char', desc: 'やるきまんまんのニコ。そばにいると集中力がみなぎってくる気がする！' },
+  { id: 'e04', name: 'のんびりニコ',   icon: '🌸', rarity: 1, type: 'char', desc: 'お花畑でぼーっとしているニコ。ゆったりした気持ちにさせてくれる。' },
+  { id: 'e05', name: 'たべすぎニコ',   icon: '🍙', rarity: 1, type: 'char', desc: 'おにぎりをいつも持ち歩いているニコ。クロぽんとなかよしらしい。' },
+  { id: 'e06', name: 'よるのニコ',     icon: '🌙', rarity: 1, type: 'char', desc: '夜だけ現れる、少し不思議なニコ。星空がすきなんだって。' },
+  { id: 'e07', name: 'あめふりニコ',   icon: '🌧️', rarity: 1, type: 'char', desc: 'かさをさしたニコ。雨の日もがんばる子を応援してくれる。' },
+  { id: 'e08', name: 'ぴかぴかニコ',   icon: '✨', rarity: 1, type: 'char', desc: '全身がきらきら光るニコ。たまごから生まれたばかりで輝いている！' },
+  // ★1 バフアイテム（ふつう確率帯から出るアイテム枠）
+  { id: 'ei01', name: 'ミニQ結晶',     icon: '🔷', rarity: 1, type: 'item', desc: 'ガチャから出た小さなQ結晶。すぐに+1Qになる！', itemKey: 'gachaQ1' },
+  { id: 'ei02', name: 'ちいさなヒント', icon: '💡', rarity: 1, type: 'item', desc: 'クイズで次に使えるヒントが1回無料になる魔法のメモ。', itemKey: 'analyzer' },
+  // ★2（レア）キャラ6種
+  { id: 'e09', name: 'りかニコ',       icon: '🔬', rarity: 2, type: 'char', desc: '顕微鏡を持ち歩く理科好きニコ。実験が大好きで目がきらきらしている。' },
+  { id: 'e10', name: 'さんすうニコ',   icon: '📐', rarity: 2, type: 'char', desc: '三角定規をいつも持っているニコ。計算がとても速い。' },
+  { id: 'e11', name: 'くろぽんニコ',   icon: '🐈‍⬛', rarity: 2, type: 'char', desc: 'クロぽんにへんそうしたニコ。クロぽんがとても喜んでいる（？）らしい。' },
+  { id: 'e12', name: 'おうちゃくニコ', icon: '🛋️', rarity: 2, type: 'char', desc: 'ごろごろしたニコ。でも肝心なときはちゃんとがんばってくれる。' },
+  { id: 'e13', name: 'まほうニコ',     icon: '🪄', rarity: 2, type: 'char', desc: '魔法の杖を持つニコ。ふしぎな力で難しい問題をやさしくしてくれる気がする。' },
+  { id: 'e14', name: 'たびびとニコ',   icon: '🎒', rarity: 2, type: 'char', desc: '大きなリュックを背負ったニコ。世界中の知識を集める旅の途中らしい。' },
+  // ★2 バフアイテム（レア帯）
+  { id: 'ei03', name: 'Q結晶×3',       icon: '💎', rarity: 2, type: 'item', desc: 'ガチャから出た大きなQ結晶。すぐに+3Qになる！', itemKey: 'gachaQ3' },
+  { id: 'ei04', name: 'ブースター',     icon: '🧪', rarity: 2, type: 'item', desc: '次のクイズのQ報酬が2倍になる脳内ブースター！', itemKey: 'booster' },
+  // ★3（超レア）キャラ4種
+  { id: 'e15', name: 'たいようニコ',   icon: '☀️', rarity: 3, type: 'char', desc: '太陽のようなエネルギーを持つニコ。周りも明るくなる！' },
+  { id: 'e16', name: 'でんせつニコ',   icon: '🏆', rarity: 3, type: 'char', desc: '数々の試練を乗り越えた伝説のニコ。ずっと見守ってくれている。' },
+  { id: 'e17', name: 'うちゅうニコ',   icon: '🚀', rarity: 3, type: 'char', desc: '宇宙まで飛び出したニコ。星と星のあいだから応援してくれる。' },
+  { id: 'e18', name: 'りゅうのニコ',   icon: '🐲', rarity: 3, type: 'char', desc: '龍の力を持つニコ。最強の学びの友。' },
+  // ★4（伝説）キャラ1種
+  { id: 'e19', name: 'まぼろしにじニコ', icon: '🦄', rarity: 4, type: 'char', desc: 'ガチャ史上最大のレア！虹色の翼を持つ、伝説の中の伝説のニコ。' }
+];
+
+window.GACHA_FOOD_LIST = [
+  { key: 'kibble',    icon: '🐟', name: 'おさかな',   cost: 1, hungerAdd: 15, friendshipAdd: 3,  unlockFriendship: 0,   desc: '+3なかよし' },
+  { key: 'cake',      icon: '🍰', name: 'ケーキ',     cost: 2, hungerAdd: 30, friendshipAdd: 8,  unlockFriendship: 10,  desc: '+8なかよし' },
+  { key: 'tuna',      icon: '🍣', name: 'まぐろ',     cost: 3, hungerAdd: 50, friendshipAdd: 15, unlockFriendship: 25,  desc: '+15なかよし' },
+  { key: 'parfait',   icon: '🍧', name: 'パフェ',     cost: 5, hungerAdd: 80, friendshipAdd: 30, unlockFriendship: 50,  desc: '+30なかよし' }
+];
+
+window.KUROPON_SPEECHES = [
+  { minFriendship: 0,   texts: ['にゃ～！ごはんがほしいにゃ！', 'おなかすいたにゃ…', 'ねむいにゃ…'] },
+  { minFriendship: 10,  texts: ['あ、きた！まってたにゃ！', 'ごはんちょうだいにゃ～', 'きょうもあそんでくれるにゃ？'] },
+  { minFriendship: 25,  texts: ['なかよしになってきたにゃ♪', 'いっしょにいるとたのしいにゃ！', 'またごはんくれるにゃ？にゃ♡'] },
+  { minFriendship: 50,  texts: ['だいすきにゃ♡！！', 'しゃちょうさんといるのいちばんすきにゃ～！', 'もっとなかよくなりたいにゃ♪♪'] },
+  { minFriendship: 80,  texts: ['にゃ♡にゃ♡にゃ♡！！', 'えいえんにいっしょにゃ！！！♡♡♡', '【レア】クロぽんのヒミツを教えるにゃ：まじめにいうとクロぽん実はニコのこと大好きにゃ♡'] }
+];
+
+window.openGachaModal = function() {
+  if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
+  window.switchGachaTab('pull');
+  const el = document.getElementById('gacha-kakera-count');
+  if (el) el.textContent = window.saveData.kakera || 0;
+  const resultZone = document.getElementById('gacha-result-zone');
+  if (resultZone) resultZone.innerHTML = '<div style="font-size:12px; font-weight:700; color:#94a3b8;">↑ たまごをタップしてガチャを引こう！</div>';
+  const eggEl = document.getElementById('gacha-egg-el');
+  if (eggEl) { eggEl.classList.remove('shaking','cracking'); eggEl.style.display = 'block'; eggEl.textContent = '🥚'; }
+  document.getElementById('gacha-modal').style.display = 'flex';
+};
+window.closeGachaModal = function() { document.getElementById('gacha-modal').style.display = 'none'; };
+
+window.switchGachaTab = function(tab) {
+  document.getElementById('gacha-tab-pull').classList.toggle('active', tab === 'pull');
+  document.getElementById('gacha-tab-book').classList.toggle('active', tab === 'book');
+  document.getElementById('gacha-panel-pull').style.display = tab === 'pull' ? '' : 'none';
+  document.getElementById('gacha-panel-book').style.display = tab === 'book' ? '' : 'none';
+  if (tab === 'book') window.renderGachaBook();
+};
+
+window.renderGachaBook = function() {
+  if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
+  const grid = document.getElementById('gacha-book-grid');
+  const progress = document.getElementById('gacha-book-progress');
+  if (!grid) return;
+  const charList = window.GACHA_EGG_LIST.filter(e => e.type === 'char');
+  const ownedCount = charList.filter(e => window.saveData.gachaEggs[e.id]).length;
+  if (progress) progress.textContent = `${ownedCount} / ${charList.length} コレクション`;
+  grid.innerHTML = '';
+  charList.forEach(egg => {
+    const owned = window.saveData.gachaEggs[egg.id];
+    const slot = document.createElement('div');
+    slot.className = 'gacha-book-slot' + (owned ? ' owned' + (egg.rarity===2?' r2c':egg.rarity===3?' r3c':egg.rarity===4?' r4c':'') : ' locked');
+    slot.innerHTML = `<div class="gacha-book-icon">${owned ? egg.icon : '❓'}</div><div class="gacha-book-name">${owned ? egg.name : '？？？'}</div>`;
+    if (owned) slot.title = egg.desc;
+    grid.appendChild(slot);
+  });
+};
+
+window.doGachaPull = function() {
+  if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
+  const kakeraCount = window.saveData.kakera || 0;
+  const eggEl = document.getElementById('gacha-egg-el');
+  if (eggEl && eggEl.classList.contains('cracking')) return; // アニメ中は無視
+  if (kakeraCount < 5) {
+    alert(`🧩 欠片が足りないにゃ！\n必要：5枚　いま：${kakeraCount}枚\n\n欠片はお宝をダブりゲットしたときに2枚もらえるよ！`);
+    return;
+  }
+  window.saveData.kakera = kakeraCount - 5;
+  const kEl = document.getElementById('gacha-kakera-count');
+  if (kEl) kEl.textContent = window.saveData.kakera;
+  window.updateUI();
+
+  // たまごシェイク → クラック → 結果表示
+  if (eggEl) {
+    eggEl.classList.add('shaking');
+    setTimeout(() => {
+      eggEl.classList.remove('shaking');
+      eggEl.classList.add('cracking');
+      setTimeout(() => {
+        eggEl.style.display = 'none';
+        const result = window.rollGacha();
+        window.showGachaResult(result);
+        window.saveGame();
+      }, 800);
+    }, 700);
+  } else {
+    const result = window.rollGacha();
+    window.showGachaResult(result);
+    window.saveGame();
+  }
+};
+
+window.rollGacha = function() {
+  if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
+  const r = Math.random();
+  const rarity = r < 0.65 ? 1 : (r < 0.90 ? 2 : (r < 0.98 ? 3 : 4));
+  // レアリティ内でキャラとアイテムの比率（★1は20%アイテム、★2は20%アイテム）
+  const pool = window.GACHA_EGG_LIST.filter(e => e.rarity === rarity);
+  const picked = pool[Math.floor(Math.random() * pool.length)];
+  if (picked.type === 'item') {
+    // バフアイテム即付与
+    if (picked.itemKey === 'gachaQ1') { window.saveData.q += 1; }
+    else if (picked.itemKey === 'gachaQ3') { window.saveData.q += 3; }
+    else {
+      if (!window.saveData.inventory) window.saveData.inventory = [];
+      if (window.saveData.inventory.length < 10) window.saveData.inventory.push(picked.itemKey);
+    }
+    window.updateUI();
+    return { egg: picked, isDupe: false, isItem: true };
+  }
+  // キャラ
+  const isDupe = !!window.saveData.gachaEggs[picked.id];
+  if (!isDupe) {
+    window.saveData.gachaEggs[picked.id] = { count: 1, firstGotDate: window.currentServerTime || '' };
+    // アバターグリッドに新キャラが追加されたことを反映するため
+  } else {
+    window.saveData.gachaEggs[picked.id].count = (window.saveData.gachaEggs[picked.id].count || 1) + 1;
+    window.saveData.kakera = (window.saveData.kakera || 0) + 3; // キャラダブりは欠片3枚
+    window.updateUI();
+  }
+  return { egg: picked, isDupe, isItem: false };
+};
+
+window.showGachaResult = function(result) {
+  const zone = document.getElementById('gacha-result-zone');
+  if (!zone) return;
+  const { egg, isDupe, isItem } = result;
+  const rarityLabel = egg.rarity===4?'★★★★ 伝説！！':egg.rarity===3?'★★★ 超レア！':egg.rarity===2?'★★ レア！':'★ ふつう';
+  const rarityColor = egg.rarity===4?'#a21caf':egg.rarity===3?'#d97706':egg.rarity===2?'#2563eb':'#64748b';
+  let dupeHtml = '';
+  if (isDupe) dupeHtml = `<div class="gacha-result-dupe" style="display:block;">🧩 すでにゲット済みキャラ！欠片🧩×3 に交換されたよ</div>`;
+  if (isItem && (egg.itemKey==='gachaQ1'||egg.itemKey==='gachaQ3')) {
+    dupeHtml = `<div class="gacha-result-dupe" style="display:block; background:#dcfce7; color:#15803d;">🪙 即時Q付与済み！</div>`;
+  }
+  zone.innerHTML = `
+    <div class="gacha-result-icon">${egg.icon}</div>
+    <div class="gacha-result-rarity" style="color:${rarityColor};">${rarityLabel}</div>
+    <div class="gacha-result-name">${egg.name}</div>
+    <div class="gacha-result-desc">${egg.desc}</div>
+    ${dupeHtml}
+  `;
+  if (window.speakText) window.speakText(isDupe ? 'また出たよ' : egg.rarity >= 3 ? '超レアキャラゲット！' : '新しいニコのたまごゲット！', 'ja-JP');
+};
+/* ★ガチャシステム ここまで ------------------- */
+
+/* ★クロぽんごはん・アバター 2026-07-25 ここから ------------------- */
+window.openKuroPonModal = function() {
+  window.updateKuroPonModal();
+  document.getElementById('kuropon-modal').style.display = 'flex';
+};
+window.closeKuroPonModal = function() { document.getElementById('kuropon-modal').style.display = 'none'; };
+
+window.updateKuroPonModal = function() {
+  const sd = window.saveData;
+  if (sd.kuroPonFriendship === undefined) sd.kuroPonFriendship = 0;
+  if (sd.kuroPonHunger === undefined) sd.kuroPonHunger = 100;
+
+  // 時間経過でおなかが減る（1日で40%減）
+  const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  if (sd.kuroPonLastFedDate && sd.kuroPonLastFedDate !== todayStr) {
+    // 最後に記録した日から今日までの日数分だけ減らす
+    sd.kuroPonHunger = Math.max(0, (sd.kuroPonHunger||100) - 40);
+    if (sd.kuroPonFriendship > 0 && sd.kuroPonHunger <= 0) {
+      sd.kuroPonFriendship = Math.max(0, sd.kuroPonFriendship - 5); // おなか0で仲良し度も少し減
+    }
+  }
+
+  const hunger = sd.kuroPonHunger || 0;
+  const friendship = sd.kuroPonFriendship || 0;
+
+  // 顔の表情を状態に応じて変える
+  const charEl = document.getElementById('kuropon-char-el');
+  if (charEl) {
+    if (hunger <= 0) { charEl.textContent = '😿'; }
+    else if (friendship >= 80) { charEl.textContent = '😻'; }
+    else if (friendship >= 50) { charEl.textContent = '😺'; }
+    else if (hunger <= 30) { charEl.textContent = '🙀'; }
+    else { charEl.textContent = '🐱'; }
+  }
+
+  // なかよし度バー
+  const friendFill = document.getElementById('kuropon-friendship-fill');
+  if (friendFill) friendFill.style.width = Math.min(100, friendship) + '%';
+  const friendLabel = document.getElementById('kuropon-friendship-label');
+  if (friendLabel) {
+    const lvLabel = friendship>=80?'😻大親友！':friendship>=50?'😺なかよし！':friendship>=25?'😸友達！':friendship>=10?'😼ちょっと仲良し':'😿まだよそよそしい';
+    friendLabel.textContent = `なかよし度：${friendship} / 100　${lvLabel}`;
+  }
+
+  // おなかバー
+  const hungerFill = document.getElementById('kuropon-hunger-fill');
+  if (hungerFill) hungerFill.style.width = Math.min(100, hunger) + '%';
+  const hungerLabel = document.getElementById('kuropon-hunger-label');
+  if (hungerLabel) {
+    const hLabel = hunger>=80?'満腹 🍀':hunger>=50?'ふつう 😐':hunger>=20?'おなかすいた 🍽️':'ぺこぺこ！🚨';
+    hungerLabel.textContent = `おなか：${hunger}%　${hLabel}`;
+  }
+
+  // セリフ
+  const speechEl = document.getElementById('kuropon-speech-el');
+  if (speechEl) {
+    const stages = [...window.KUROPON_SPEECHES].reverse();
+    const stage = stages.find(s => friendship >= s.minFriendship) || window.KUROPON_SPEECHES[0];
+    const texts = hunger <= 10 ? ['おなかぺこぺこにゃ…たすけてにゃ…😿', 'ごはんください…にゃ…😿'] : stage.texts;
+    speechEl.textContent = texts[Math.floor(Math.random() * texts.length)];
+  }
+
+  // ごはんグリッド
+  window.renderFoodGrid();
+  // アバターグリッド
+  window.renderAvatarGrid();
+};
+
+window.renderFoodGrid = function() {
+  const grid = document.getElementById('food-grid-el');
+  if (!grid) return;
+  grid.innerHTML = '';
+  window.GACHA_FOOD_LIST.forEach(food => {
+    const friendship = window.saveData.kuroPonFriendship || 0;
+    const locked = friendship < food.unlockFriendship;
+    const card = document.createElement('div');
+    card.className = 'food-card' + (locked ? ' locked' : '');
+    card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">🪙${food.cost}Q</span><span class="food-effect">${food.desc}</span>`;
+    if (!locked) {
+      card.onclick = () => window.feedKuroPon(food);
+    } else {
+      card.title = `なかよし度${food.unlockFriendship}でかいほうされるにゃ！`;
+      card.innerHTML += `<span style="font-size:9px; color:#94a3b8; display:block;">🔒${food.unlockFriendship}～</span>`;
+    }
+    grid.appendChild(card);
+  });
+};
+
+window.feedKuroPon = function(food) {
+  const sd = window.saveData;
+  if ((sd.q || 0) < food.cost) {
+    alert(`🪙 Qが足りないにゃ！\n必要：${food.cost}Q　いま：${sd.q || 0}Q`);
+    return;
+  }
+  sd.q -= food.cost;
+  sd.kuroPonHunger = Math.min(100, (sd.kuroPonHunger || 0) + food.hungerAdd);
+  sd.kuroPonFriendship = Math.min(100, (sd.kuroPonFriendship || 0) + food.friendshipAdd);
+  const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  sd.kuroPonLastFedDate = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  window.updateUI();
+  window.saveGame();
+
+  // ハッピーアニメ
+  const charEl = document.getElementById('kuropon-char-el');
+  const heartEl = document.getElementById('kuropon-heart-el');
+  if (charEl) { charEl.classList.remove('happy'); void charEl.offsetWidth; charEl.classList.add('happy'); }
+  if (heartEl) { heartEl.textContent = food.friendshipAdd >= 15 ? '💗' : '💖'; heartEl.classList.remove('burst'); void heartEl.offsetWidth; heartEl.classList.add('burst'); }
+  if (window.speakText) window.speakText(`${food.name}ありがとうにゃ！うれしいにゃ！`, 'ja-JP');
+
+  setTimeout(() => window.updateKuroPonModal(), 400);
+};
+
+window.renderAvatarGrid = function() {
+  const grid = document.getElementById('avatar-grid-el');
+  if (!grid) return;
+  if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
+  grid.innerHTML = '';
+  // デフォルト🐣は常に選択可能
+  const defaults = [{id:'default', icon:'🐣', name:'はじめてのニコ', rarity:0}];
+  const charList = [...defaults, ...window.GACHA_EGG_LIST.filter(e => e.type==='char')];
+  charList.forEach(egg => {
+    const owned = egg.id === 'default' || !!window.saveData.gachaEggs[egg.id];
+    const selected = window.saveData.selectedAvatar === egg.icon;
+    const slot = document.createElement('div');
+    slot.className = 'avatar-slot' + (owned ? ' owned' : ' locked') + (selected ? ' selected' : '');
+    slot.innerHTML = `<div class="avatar-icon">${owned ? egg.icon : '❓'}</div><div class="avatar-name">${owned ? egg.name : '？？？'}</div>`;
+    if (owned) {
+      slot.onclick = () => {
+        window.saveData.selectedAvatar = egg.icon;
+        window.applyAvatar();
+        window.saveGame();
+        window.renderAvatarGrid();
+      };
+    }
+    grid.appendChild(slot);
+  });
+};
+
+window.applyAvatar = function() {
+  const avatar = window.saveData.selectedAvatar || '🐣';
+  // メインメニューのナビアバターとゲーム画面アバターを更新
+  const naviAvatars = document.querySelectorAll('.navi-avatar');
+  naviAvatars.forEach(el => { el.textContent = avatar; });
+  // クロぽんボタンにもなかよし度に応じたバッジを付与
+  const btn = document.getElementById('kuropon-btn');
+  if (btn) {
+    const f = window.saveData.kuroPonFriendship || 0;
+    const h = window.saveData.kuroPonHunger || 0;
+    const badge = h <= 20 ? '🚨' : f >= 80 ? '💗' : f >= 50 ? '💕' : '';
+    btn.textContent = `🐱 クロぽんのへや ${badge}`;
+  }
+};
+/* ★クロぽんごはん・アバター ここまで ------------------- */
 window.exchangePtsToQ = function() { if(window.saveData.pts < 20) { alert("🪙 20pts必要です。"); return; } window.saveData.pts -= 20; window.saveData.q += 1; window.saveGame(); alert("🪙 両替しました！"); };
 window.claimRobux = function(qCost, rAmt) { if(window.saveData.q < qCost) { alert(`💸 あと ${qCost - window.saveData.q}Q 必要です！`); return; } window.saveData.q -= qCost; window.saveData.robux += rAmt; window.saveGame(); alert("🎟️ 交換申請完了！"); window.syncWithGoogleSpreadsheet("CLAIM", { robux: rAmt, cost: qCost }); };
 /* ★きょうだい対抗バトル（2026-07-24 追加）：オンライン対人機能は今回やらない方針のため、
