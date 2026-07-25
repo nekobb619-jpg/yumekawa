@@ -634,7 +634,7 @@ window.performLogin = function(id) {
        if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
        if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
-       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD");
+       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
     } else { alert("読み込みエラー: " + res.message); }
   })
   .catch(e => { window.loadGameLocal(); window.syncWithGoogleSpreadsheet("LOAD"); });
@@ -652,7 +652,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
   if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
-  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI(); window.checkAutoLoginBonus();
 };
 window.saveGame = function() {
   localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
@@ -696,6 +696,47 @@ window.logout = function() {
   window.playerId = "";
   document.getElementById("login-modal").style.display = "flex"; // パスOKのときだけログイン画面を出す
 };
+window.checkAutoLoginBonus = function() {
+  if (!window.saveData) return;
+  const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  
+  if (window.saveData.lastStampDate === todayStr) return; // 本日分取得済みならスキップ
+  
+  if (window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
+  window.saveData.loginStampCount++;
+  window.saveData.lastStampDate = todayStr;
+
+  const currentCount = window.saveData.loginStampCount;
+  const isComplete = (currentCount >= 7);
+  const earnedQ = isComplete ? 2 : 1;
+  window.saveData.q += earnedQ;
+
+  window.saveGame();
+
+  // 自動付与モーダル演出
+  setTimeout(() => {
+    window.openStampModal();
+    const markEl = document.getElementById(`stamp-mark-${currentCount}`);
+    if (markEl) {
+      markEl.textContent = isComplete ? "👑" : "💮";
+      markEl.classList.add("anim");
+    }
+    window.speakText("ログインボーナスゲット", "ja-JP");
+
+    setTimeout(() => {
+      if (isComplete) {
+        alert(`🎉 1週間スタンプコンプリート！\nログインボーナスご褒美【＋2Q】を自動ゲットしたぞ！\n明日からまた新しいスタンプ帳がはじまるよ！`);
+        window.saveData.loginStampCount = 0;
+        window.saveGame();
+        window.renderStampCard();
+      } else {
+        alert(`💮 今日のログインボーナス【＋1Q】を自動ゲットしたよ！\n（スタンプ ${currentCount}/7日目・あと ${7 - currentCount}回でコンプリートボーナス！）`);
+      }
+    }, 600);
+  }, 500);
+};
+
 window.openStampModal = function() {
   window.renderStampCard();
   document.getElementById("stamp-modal").style.display = "flex";
@@ -703,8 +744,8 @@ window.openStampModal = function() {
 window.closeStampModal = function() { document.getElementById("stamp-modal").style.display = "none"; };
 window.renderStampCard = function() {
   const count = window.saveData.loginStampCount || 0;
-  const sd = new Date(window.currentServerTime);
-  const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
+  const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
   const alreadyStampedToday = (window.saveData.lastStampDate === todayStr);
   const grid = document.getElementById("stamp-grid-el"); grid.innerHTML = "";
   for(let i=1; i<=7; i++) {
@@ -719,31 +760,13 @@ window.renderStampCard = function() {
   }
   const btn = document.getElementById("stamp-action-btn");
   if (alreadyStampedToday) {
-    btn.textContent = "今日のスタンプは獲得済みだよ！"; btn.style.background = "#cbd5e1"; btn.style.boxShadow = "none"; btn.disabled = true;
+    btn.textContent = "今日のログインボーナス獲得済み！"; btn.style.background = "#cbd5e1"; btn.style.boxShadow = "none"; btn.disabled = true;
   } else {
-    btn.textContent = "💮 スタンプを押す！"; btn.style.background = "var(--gold)"; btn.style.boxShadow = "0 4px 0 #d97706"; btn.disabled = false;
+    btn.textContent = "💮 ログインボーナスを受け取る！"; btn.style.background = "var(--gold)"; btn.style.boxShadow = "0 4px 0 #d97706"; btn.disabled = false;
   }
 };
 window.executeStamp = function() {
-  const sd = new Date(window.currentServerTime);
-  const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
-  if (window.saveData.lastStampDate === todayStr) return;
-  if (window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
-  window.saveData.loginStampCount++; window.saveData.lastStampDate = todayStr;
-
-  let isComplete = (window.saveData.loginStampCount >= 7);
-  let earnedQ = isComplete ? 2 : 1;
-  window.saveData.q += earnedQ;
-  const markEl = document.getElementById(`stamp-mark-${window.saveData.loginStampCount}`);
-  if(markEl) { markEl.textContent = isComplete ? "👑" : "💮"; markEl.classList.add("anim"); document.getElementById("stamp-action-btn").disabled = true; }
-  window.speakText("やったね", "ja-JP");
-  setTimeout(() => {
-    if (isComplete) {
-      alert(`🎉 1週間スタンプコンプリート！\nよくがんばったね！ご褒美ボーナス【＋2Q】をゲットしたぞ！\n明日からまた新しいスタンプ帳がはじまるよ！`);
-      window.saveData.loginStampCount = 0;
-    } else { alert(`💮 スタンプゲット！【＋1Q】\nあと ${7 - window.saveData.loginStampCount}回 でコンプリートボーナスだよ！`); }
-    window.saveGame(); window.closeStampModal();
-  }, 800);
+  window.checkAutoLoginBonus();
 };
 window.buyShopItem = function(itemKey) {
   if (window.saveData.islandStatus !== "open") { alert("🤖 島が霧に包まれているため、今はクラフトできません！"); return; }
