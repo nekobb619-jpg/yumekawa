@@ -175,6 +175,35 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
   という前向きな文言のみを使う（「まけている」「負け」等の言葉は一切出さない）。通信に失敗した
   場合も、子どもを不安にさせない中立的な文言（「今は記録を読み込めなかったよ」）でフォールバックする。
 
+## 8.7 ゆめかわチューター（単元別の予習・振り返り画面、2026-07-25 追加）
+クイズ画面（`#game-screen`）とは完全に独立した、もう1つの全画面ビュー`#tutor-screen`
+（メイン画面の「📖 ゆめかわチューター」ボタンから開く）。新しいAI/外部APIは一切使わず、
+既存の`content.js`/`QUIZZES`にすでにある各問題の`hint`（ヒント文）と`job_desc`
+（正解後に出る解説文）だけを素材にして、単元（ステージ）ごとに自動で一覧化する
+「静的」な仕組み（AI接続や新規コンテンツ執筆が要らないため、実装コストゼロで
+全教科・全単元に即対応できるのが利点）。
+
+- **画面構成**：`#tutor-list-view`（教科タブ→カテゴリのアコーディオン→単元ごとに
+  「🔍予習する」「📝振り返る」の2ボタン）と`#tutor-detail-view`（選んだ単元のポイント一覧）
+  の2ビューを、同じ`#tutor-screen`内で出し分ける（`window.openTutorScreen()`/
+  `window.closeTutorScreen()`/`window.openTutorDetail(stageId, mode)`/
+  `window.closeTutorDetail()`）。
+- **予習と振り返りの違い**：
+  - 予習（`mode:"preview"`）：そのステージを未クリアでも使える。各問題の`hint`
+    （答えを直接明かさないヒント文）だけを見せる。
+  - 振り返り（`mode:"review"`）：`window.saveData.clearedStages[stageId]`が
+    trueのときだけボタンが有効になる。各問題の`job_desc`（解説文。無ければ`hint`で代替）
+    を見せる。
+  - どちらも同じ単元内で重複する文言は`Set`で除去してから表示する。
+- **データソース**：`window.CONTENT.quizzes[stageId]`（content.js由来）。GAS配信ステージ
+  （`content.js`に無い、スプレッドシート直配信のステージ）はhint/job_descの束が無いため、
+  自動的に両ボタンとも`disabled`になる（`window.CONTENT.quizzes[stg.id]`が空の場合）。
+- **教科・単元一覧の取得**：`window.globalStageMaster` / `window.availableSubjects`を
+  そのまま再利用（`window.injectContentStages()`を`openTutorScreen()`内で呼んでから
+  参照するので、メイン画面を経由せず直接チューター画面を開いても最新の一覧になる）。
+- **今後の拡張候補**（未実装）：単元ごとの手書き解説文の追加、予習/振り返りの既読管理、
+  苦手リスト（`weakQuestions`）と連携した「この単元は特に振り返っておこう」のレコメンド。
+
 ## 9. 苦手リストの安定id化（qid）と、周回プレイでの数値の その場 再生成
 - `content.js` は起動時に、`QUIZZES` の全問題へ自動で `qid`（安定id）を振る
   （`job_title`＋`hint`＋`q`冒頭14文字からのハッシュ。手で編集する必要はない）。
