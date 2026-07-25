@@ -263,7 +263,24 @@
   .food-card.locked { opacity: 0.45; cursor: not-allowed; }
   .food-icon { font-size: 26px; display: block; margin-bottom: 2px; }
   .food-name { font-size: 10px; font-weight: 900; color: #334155; }
-  .food-cost { font-size: 10px; font-weight: 700; color: #0284c7; }
+  .food-cost { font-size: 9px; font-weight: 700; color: #7c3aed; }
+  /* ★クロぽんミニクイズモーダル */
+  #kuropon-quiz-modal { position: fixed; inset: 0; background: rgba(20, 5, 30, 0.95); z-index: 700; display: none; justify-content: center; align-items: center; padding: 16px; }
+  .kuropon-quiz-box { background: linear-gradient(160deg, #fdf4ff, #fff); border-radius: 22px; width: 100%; max-width: 380px; max-height: 90vh; overflow-y: auto; padding: 20px 16px 16px; text-align: center; box-shadow: 0 0 60px rgba(236, 72, 153, 0.6), 0 12px 36px rgba(0,0,0,0.5); animation: fadeUp 0.3s ease; }
+  .kq-title { font-size: 15px; font-weight: 900; color: #be185d; margin-bottom: 6px; }
+  .kq-food-preview { font-size: 40px; margin: 8px 0; }
+  .kq-instruction { font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 12px; background: #f8fafc; border-radius: 10px; padding: 8px 12px; }
+  .kq-question { font-size: 14px; font-weight: 900; color: #1e293b; line-height: 1.65; background: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; text-align: left; }
+  .kq-subject-badge { display: inline-block; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 20px; background: #ede9fe; color: #7c3aed; margin-bottom: 8px; }
+  .kq-options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+  .kq-option { background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; text-align: left; transition: all 0.12s; }
+  .kq-option:active { transform: scale(0.97); }
+  .kq-option.correct { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+  .kq-option.wrong { background: #fff1f2; border-color: #f43f5e; color: #be123c; }
+  .kq-result { padding: 12px; border-radius: 14px; margin-bottom: 10px; font-size: 13px; font-weight: 700; line-height: 1.6; display: none; }
+  .kq-result.ok { background: #f0fdf4; border: 2px solid #22c55e; color: #15803d; }
+  .kq-result.ng { background: #fff1f2; border: 2px solid #f43f5e; color: #be123c; }
+  .kq-btn-row { display: flex; gap: 8px; justify-content: center; }
   .food-effect { font-size: 9px; font-weight: 700; color: #15803d; }
   .avatar-section-title { font-size: 13px; font-weight: 900; color: #6b21a8; margin: 12px 0 8px; border-top: 2px dashed #e9d5ff; padding-top: 12px; }
   .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
@@ -510,12 +527,28 @@
     </div>
     <div class="kuropon-hunger-label" id="kuropon-hunger-label">おなか：満腹 🍀</div>
     <div class="kuropon-speech" id="kuropon-speech-el">にゃ～！ごはんがほしいにゃ！</div>
-    <div style="font-size:12.5px; font-weight:900; color:#334155; margin-bottom:8px;">🍱 ごはんをあげる（Q消費）</div>
+    <div style="font-size:12.5px; font-weight:900; color:#334155; margin-bottom:8px;">🍱 ごはんをあげる（問題1問クリアで！）</div>
     <div class="food-grid" id="food-grid-el"></div>
     <div class="avatar-section-title">👤 じぶんのアバターをえらぼう</div>
     <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:8px;">ガチャで集めたニコのたまごからアバターを選べるよ！</div>
     <div class="avatar-grid" id="avatar-grid-el"></div>
     <button class="br-btn close" style="margin-top:4px;" onclick="window.closeKuroPonModal()">とじる</button>
+  </div>
+</div>
+<!-- ★クロぽんミニクイズモーダル -->
+<div id="kuropon-quiz-modal">
+  <div class="kuropon-quiz-box">
+    <div class="kq-title">🍱 ごはんチャレンジ！</div>
+    <div class="kq-food-preview" id="kq-food-icon">🐟</div>
+    <div class="kq-instruction" id="kq-instruction">もんだいに せいかいしたら クロぽんに ごはんを あげられるよ！✨</div>
+    <div class="kq-subject-badge" id="kq-subject-badge">📐算数</div>
+    <div class="kq-question" id="kq-question-text"></div>
+    <div class="kq-options" id="kq-options-el"></div>
+    <div class="kq-result" id="kq-result-el"></div>
+    <div class="kq-btn-row">
+      <button class="br-btn" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); color:#15803d; min-width:120px; display:none;" id="kq-ok-btn" onclick="window.kqConfirm()">🎉 ごはんをあげる！</button>
+      <button class="br-btn close" style="min-width:100px;" id="kq-close-btn" onclick="window.closeKuroponQuiz()">とじる</button>
+    </div>
   </div>
 </div>
 <div id="game-screen">
@@ -1297,9 +1330,9 @@ window.renderFoodGrid = function() {
     const locked = friendship < food.unlockFriendship;
     const card = document.createElement('div');
     card.className = 'food-card' + (locked ? ' locked' : '');
-    card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">🪙${food.cost}Q</span><span class="food-effect">${food.desc}</span>`;
+    card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓もんだい1問</span><span class="food-effect">${food.desc}</span>`;
     if (!locked) {
-      card.onclick = () => window.feedKuroPon(food);
+      card.onclick = () => window.openKuroponQuiz(food);
     } else {
       card.title = `なかよし度${food.unlockFriendship}でかいほうされるにゃ！`;
       card.innerHTML += `<span style="font-size:9px; color:#94a3b8; display:block;">🔒${food.unlockFriendship}～</span>`;
@@ -1308,13 +1341,99 @@ window.renderFoodGrid = function() {
   });
 };
 
-window.feedKuroPon = function(food) {
-  const sd = window.saveData;
-  if ((sd.q || 0) < food.cost) {
-    alert(`🪙 Qが足りないにゃ！\n必要：${food.cost}Q　いま：${sd.q || 0}Q`);
-    return;
+// ★クロぽんごはんをあげる（Q消費なし・問題1問クリア方式）
+window._kqCurrentFood = null; // 選択中の食べ物
+window._kqCurrentQuiz = null; // 出題中の問題
+window._kqAnswered   = false; // 解答済みフラグ
+
+window.openKuroponQuiz = function(food) {
+  // 全教科からランダムに選択肢型問題1問を抽出
+  if (!window.CONTENT) { alert('もんだいデータがまだ読み込まれていないにゃ…'); return; }
+  const quizzes = window.CONTENT.quizzes;
+  // type が text_input・canvas_code・scenario を除く選択肢問題だけ集める
+  const pool = [];
+  Object.keys(quizzes).forEach(stageId => {
+    quizzes[stageId].forEach(q => {
+      if (Array.isArray(q.a) && q.a.length >= 2 && typeof q.c === 'number' &&
+          !q.type && !q.canvas_code && !q.scenario) {
+        pool.push({ stageId, q });
+      }
+    });
+  });
+  if (pool.length === 0) { alert('もんだいが見つからなかったにゃ…'); return; }
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  window._kqCurrentFood = food;
+  window._kqCurrentQuiz = pick;
+  window._kqAnswered = false;
+
+  // 教科バッジ
+  const subj = pick.stageId.split('/')[0] || '';
+  const subjInfo = (window.subjectDictionary && window.subjectDictionary[subj]) || { label: '🌟' + subj };
+  document.getElementById('kq-food-icon').textContent = food.icon;
+  document.getElementById('kq-subject-badge').textContent = subjInfo.label;
+  document.getElementById('kq-instruction').textContent = `もんだいに せいかいしたら ${food.name}を クロぽんに あげられるよ！✨`;
+  document.getElementById('kq-question-text').textContent = pick.q.q;
+
+  // 選択肢
+  const optEl = document.getElementById('kq-options-el');
+  optEl.innerHTML = '';
+  pick.q.a.forEach((ans, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'kq-option';
+    btn.textContent = ans;
+    btn.id = `kq-opt-${i}`;
+    btn.onclick = () => window.kqSelectAnswer(i);
+    optEl.appendChild(btn);
+  });
+
+  // リセット
+  const resultEl = document.getElementById('kq-result-el');
+  resultEl.style.display = 'none'; resultEl.className = 'kq-result';
+  document.getElementById('kq-ok-btn').style.display = 'none';
+  document.getElementById('kq-close-btn').textContent = 'やめる';
+
+  document.getElementById('kuropon-quiz-modal').style.display = 'flex';
+};
+
+window.kqSelectAnswer = function(idx) {
+  if (window._kqAnswered) return;
+  window._kqAnswered = true;
+  const pick = window._kqCurrentQuiz;
+  const correct = pick.q.c;
+  const isCorrect = (idx === correct);
+
+  // 選択肢の色付け
+  pick.q.a.forEach((_, i) => {
+    const btn = document.getElementById(`kq-opt-${i}`);
+    if (!btn) return;
+    btn.onclick = null;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === idx)  btn.classList.add('wrong');
+    btn.style.cursor = 'default';
+  });
+
+  const resultEl = document.getElementById('kq-result-el');
+  resultEl.style.display = 'block';
+  if (isCorrect) {
+    resultEl.className = 'kq-result ok';
+    resultEl.innerHTML = `🎉 せいかい！<br>${pick.q.job_desc || 'すごいにゃ！'}` ;
+    document.getElementById('kq-ok-btn').style.display = 'inline-block';
+    document.getElementById('kq-close-btn').textContent = 'とじる';
+    if (window.speakText) window.speakText('せいかい！すごいにゃ！', 'ja-JP');
+  } else {
+    resultEl.className = 'kq-result ng';
+    const hintText = pick.q.hint ? `ヒント：${pick.q.hint}` : '';
+    resultEl.innerHTML = `😿 ざんねん…！<br>せいかいは「${pick.q.a[correct]}」だったにゃ。<br>${hintText}`;
+    document.getElementById('kq-close-btn').textContent = 'またね';
+    if (window.speakText) window.speakText('ざんねん！またちゃれんじしてにゃ！', 'ja-JP');
   }
-  sd.q -= food.cost;
+};
+
+window.kqConfirm = function() {
+  // 正解後にごはんをあげる処理
+  const food = window._kqCurrentFood;
+  if (!food) return;
+  const sd = window.saveData;
   sd.kuroPonHunger = Math.min(100, (sd.kuroPonHunger || 0) + food.hungerAdd);
   sd.kuroPonFriendship = Math.min(100, (sd.kuroPonFriendship || 0) + food.friendshipAdd);
   const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
@@ -1322,14 +1441,21 @@ window.feedKuroPon = function(food) {
   window.updateUI();
   window.saveGame();
 
-  // ハッピーアニメ
+  // ハッピーアニメ（クロぽんメインモーダル側）
   const charEl = document.getElementById('kuropon-char-el');
   const heartEl = document.getElementById('kuropon-heart-el');
   if (charEl) { charEl.classList.remove('happy'); void charEl.offsetWidth; charEl.classList.add('happy'); }
   if (heartEl) { heartEl.textContent = food.friendshipAdd >= 15 ? '💗' : '💖'; heartEl.classList.remove('burst'); void heartEl.offsetWidth; heartEl.classList.add('burst'); }
-  if (window.speakText) window.speakText(`${food.name}ありがとうにゃ！うれしいにゃ！`, 'ja-JP');
 
-  setTimeout(() => window.updateKuroPonModal(), 400);
+  window.closeKuroponQuiz();
+  setTimeout(() => window.updateKuroPonModal(), 200);
+};
+
+window.closeKuroponQuiz = function() {
+  document.getElementById('kuropon-quiz-modal').style.display = 'none';
+  window._kqCurrentFood = null;
+  window._kqCurrentQuiz = null;
+  window._kqAnswered = false;
 };
 
 window.renderAvatarGrid = function() {
