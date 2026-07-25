@@ -264,6 +264,21 @@
   .food-icon { font-size: 26px; display: block; margin-bottom: 2px; }
   .food-name { font-size: 10px; font-weight: 900; color: #334155; }
   .food-cost { font-size: 9px; font-weight: 700; color: #7c3aed; }
+  /* ★プレミアムガチャモーダル */
+  #premium-gacha-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.97); z-index: 900; display: none; justify-content: center; align-items: center; padding: 16px; }
+  .premium-gacha-box { background: linear-gradient(160deg, #0a0a1a, #1a0a2e, #0a1a0a); border-radius: 26px; width: 100%; max-width: 380px; padding: 26px 20px 22px; text-align: center; box-shadow: 0 0 80px rgba(255, 215, 0, 0.6), 0 0 30px rgba(200, 100, 255, 0.5), 0 12px 40px rgba(0,0,0,0.9); animation: premiumIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid rgba(255,215,0,0.4); }
+  @keyframes premiumIn { 0%{opacity:0;transform:scale(0.7) rotate(-5deg)} 100%{opacity:1;transform:scale(1) rotate(0deg)} }
+  .premium-gacha-crown { font-size: 52px; display: block; margin-bottom: 4px; animation: crownPulse 1.5s ease-in-out infinite; }
+  @keyframes crownPulse { 0%,100%{filter:drop-shadow(0 0 8px gold)} 50%{filter:drop-shadow(0 0 24px gold) drop-shadow(0 0 48px gold)} }
+  .premium-gacha-title { font-size: 17px; font-weight: 900; color: gold; margin-bottom: 4px; text-shadow: 0 0 12px rgba(255,215,0,0.8); }
+  .premium-gacha-sub { font-size: 11px; font-weight: 700; color: #a78bfa; margin-bottom: 18px; }
+  .premium-gacha-reward { background: rgba(255,215,0,0.1); border: 2px solid rgba(255,215,0,0.4); border-radius: 18px; padding: 16px; margin-bottom: 16px; }
+  .premium-gacha-avatar-icon { font-size: 60px; line-height: 1.1; margin-bottom: 6px; filter: drop-shadow(0 0 16px rgba(255,215,0,0.8)); }
+  .premium-gacha-avatar-name { font-size: 14px; font-weight: 900; color: #fde68a; margin-bottom: 4px; }
+  .premium-gacha-avatar-desc { font-size: 11px; color: #c4b5fd; line-height: 1.5; margin-bottom: 10px; }
+  .premium-gacha-q-badge { display: inline-block; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a0a00; font-size: 22px; font-weight: 900; border-radius: 14px; padding: 8px 20px; box-shadow: 0 4px 0 #92400e; animation: qBounce 0.4s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+  @keyframes qBounce { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+  .premium-new-badge { background: linear-gradient(135deg, #ec4899, #be185d); color: white; font-size: 10px; font-weight: 900; border-radius: 6px; padding: 2px 8px; display: inline-block; margin-bottom: 6px; }
   /* ★クロぽんミニクイズモーダル */
   #kuropon-quiz-modal { position: fixed; inset: 0; background: rgba(20, 5, 30, 0.95); z-index: 700; display: none; justify-content: center; align-items: center; padding: 16px; }
   .kuropon-quiz-box { background: linear-gradient(160deg, #fdf4ff, #fff); border-radius: 22px; width: 100%; max-width: 380px; max-height: 90vh; overflow-y: auto; padding: 20px 16px 16px; text-align: center; box-shadow: 0 0 60px rgba(236, 72, 153, 0.6), 0 12px 36px rgba(0,0,0,0.5); animation: fadeUp 0.3s ease; }
@@ -567,14 +582,37 @@
     <div class="kq-title">🍱 ごはんチャレンジ！</div>
     <div class="kq-food-preview" id="kq-food-icon">🐟</div>
     <div class="kq-instruction" id="kq-instruction">もんだいに せいかいしたら クロぽんに ごはんを あげられるよ！✨</div>
+    <!-- 問題進捗バー -->
+    <div id="kq-progress-bar" style="display:none; margin-bottom:8px; background:#f1f5f9; border-radius:20px; height:10px; overflow:hidden; border:2px solid #e2e8f0;">
+      <div id="kq-progress-fill" style="height:100%; border-radius:20px; background:linear-gradient(90deg,#f9a8d4,#ec4899); transition:width 0.4s ease; width:0%"></div>
+    </div>
+    <div id="kq-progress-label" style="display:none; font-size:10px; font-weight:900; color:#be185d; margin-bottom:8px;"></div>
     <div class="kq-subject-badge" id="kq-subject-badge">📐算数</div>
     <div class="kq-question" id="kq-question-text"></div>
     <div class="kq-options" id="kq-options-el"></div>
     <div class="kq-result" id="kq-result-el"></div>
     <div class="kq-btn-row">
       <button class="br-btn" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); color:#15803d; min-width:120px; display:none;" id="kq-ok-btn" onclick="window.kqConfirm()">🎉 ごはんをあげる！</button>
+      <button class="br-btn" style="background:linear-gradient(135deg,#fefce8,#fef9c3); color:#b45309; min-width:120px; display:none;" id="kq-next-btn" onclick="window.kqNextQuestion()">つぎの問題へ ➡️</button>
       <button class="br-btn close" style="min-width:100px;" id="kq-close-btn" onclick="window.closeKuroponQuiz()">とじる</button>
     </div>
+  </div>
+</div>
+<!-- ★プレミアムガチャモーダル -->
+<div id="premium-gacha-modal">
+  <div class="premium-gacha-box">
+    <span class="premium-gacha-crown">👑</span>
+    <div class="premium-gacha-title">✨ プレミアムガチャ！ ✨</div>
+    <div class="premium-gacha-sub">仲良し度MAXのごほうびにゃ💖</div>
+    <div class="premium-gacha-reward">
+      <div id="pg-new-badge" class="premium-new-badge" style="display:none;">🌟 NEW！</div>
+      <div class="premium-gacha-avatar-icon" id="pg-avatar-icon">🌈</div>
+      <div class="premium-gacha-avatar-name" id="pg-avatar-name">???</div>
+      <div class="premium-gacha-avatar-desc" id="pg-avatar-desc"></div>
+      <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:6px;">＋おまけトークン</div>
+      <div class="premium-gacha-q-badge" id="pg-q-amount">+100Q</div>
+    </div>
+    <button class="br-btn" style="background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#1a0a00; font-weight:900; width:100%;" onclick="window.closePremiumGacha()">うけとる！🎊</button>
   </div>
 </div>
 <div id="game-screen">
@@ -1137,10 +1175,22 @@ window.GACHA_EGG_LIST = [
 ];
 
 window.GACHA_FOOD_LIST = [
-  { key: 'kibble',    icon: '🐟', name: 'おさかな',   cost: 1, hungerAdd: 15, friendshipAdd: 3,  unlockFriendship: 0,   desc: '+3なかよし' },
-  { key: 'cake',      icon: '🍰', name: 'ケーキ',     cost: 2, hungerAdd: 30, friendshipAdd: 8,  unlockFriendship: 10,  desc: '+8なかよし' },
-  { key: 'tuna',      icon: '🍣', name: 'まぐろ',     cost: 3, hungerAdd: 50, friendshipAdd: 15, unlockFriendship: 25,  desc: '+15なかよし' },
-  { key: 'parfait',   icon: '🍧', name: 'パフェ',     cost: 5, hungerAdd: 80, friendshipAdd: 30, unlockFriendship: 50,  desc: '+30なかよし' }
+  { key: 'kibble',    icon: '🐟', name: 'おさかな',   cost: 1, hungerAdd: 15, friendshipAdd: 3,  unlockFriendship: 0,   questionCount: 1, desc: '+3なかよし・1問' },
+  { key: 'cake',      icon: '🍰', name: 'ケーキ',     cost: 2, hungerAdd: 30, friendshipAdd: 8,  unlockFriendship: 10,  questionCount: 2, desc: '+8なかよし・2問' },
+  { key: 'tuna',      icon: '🍣', name: 'まぐろ',     cost: 3, hungerAdd: 50, friendshipAdd: 15, unlockFriendship: 25,  questionCount: 3, desc: '+15なかよし・3問' },
+  { key: 'parfait',   icon: '🍧', name: 'パフェ',     cost: 5, hungerAdd: 80, friendshipAdd: 30, unlockFriendship: 50,  questionCount: 4, desc: '+30なかよし・4問' }
+];
+
+// ★プレミアムガチャ専用の隠れアバターリスト
+window.KUROPON_PREMIUM_AVATARS = [
+  { id: 'pa01', icon: '🌈', name: 'にじいろクロぽん',     desc: '仲良し度MAXだけに現れる、虹色に輝く幻のクロぽん。見た人はとても幸せになれると言われている。' },
+  { id: 'pa02', icon: '🌟', name: 'ほしのクロぽん',       desc: '夜空から降りてきた、満天の星をまとったクロぽん。お気に入りの子のそばで光るよ。' },
+  { id: 'pa03', icon: '🔮', name: 'まほうのクロぽん',     desc: '水晶玉を持つ不思議なクロぽん。未来の学びを教えてくれるらしい。' },
+  { id: 'pa04', icon: '💎', name: 'ダイヤモンドクロぽん', desc: '全身がダイヤモンドのように輝くクロぽん。本当に仲良しの証。' },
+  { id: 'pa05', icon: '🦋', name: 'ちょうちょクロぽん',   desc: 'きれいな翼を生やしたクロぽん。ひらひら飛んであなたを応援してくれる。' },
+  { id: 'pa06', icon: '🌸', name: 'はなびらクロぽん',     desc: '桜の花びらに包まれたクロぽん。いっしょに春の風を感じよう。' },
+  { id: 'pa07', icon: '🏆', name: 'チャンピオンクロぽん', desc: '「なかよしチャンピオン」の称号を持つ、最強のクロぽん。本当の大親友の証。' },
+  { id: 'pa08', icon: '🎆', name: 'はなびクロぽん',       desc: '夜空に花火を打ち上げるクロぽん。あなたのがんばりを祝ってくれている！' }
 ];
 
 window.KUROPON_SPEECHES = [
@@ -1279,9 +1329,57 @@ window.showGachaResult = function(result) {
 /* ★ガチャシステム ここまで ------------------- */
 
 /* ★クロぽんごはん・アバター 2026-07-25 ここから ------------------- */
+
+// ★プレミアムガチャ: 仲良し度MAX継続中にランダム発動
+window._premiumGachaCheckedToday = false;
+window.checkPremiumGacha = function() {
+  const sd = window.saveData;
+  const friendship = sd.kuroPonFriendship || 0;
+  if (friendship < 100) { window._premiumGachaCheckedToday = false; return; }
+  // 本日チェック済みならスキップ
+  const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+  const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  if (sd.kuroPonPremiumGachaDate === todayStr) return;
+  // 5〜20%のランダム確率で発動
+  const chance = 0.05 + Math.random() * 0.15;
+  if (Math.random() > chance) return;
+  sd.kuroPonPremiumGachaDate = todayStr;
+  // アバター抽選
+  if (!sd.kuroPonPremiumAvatars) sd.kuroPonPremiumAvatars = {};
+  const available = window.KUROPON_PREMIUM_AVATARS;
+  const picked = available[Math.floor(Math.random() * available.length)];
+  const isNew = !sd.kuroPonPremiumAvatars[picked.id];
+  if (isNew) sd.kuroPonPremiumAvatars[picked.id] = true;
+  // Q付与（50〜300Q）
+  const qGain = 50 + Math.floor(Math.random() * 251);
+  sd.q = (sd.q || 0) + qGain;
+  window.updateUI();
+  window.saveGame();
+  // モーダル表示
+  document.getElementById('pg-avatar-icon').textContent = picked.icon;
+  document.getElementById('pg-avatar-name').textContent = picked.name;
+  document.getElementById('pg-avatar-desc').textContent = picked.desc;
+  document.getElementById('pg-q-amount').textContent = `+${qGain}Q`;
+  const newBadge = document.getElementById('pg-new-badge');
+  if (newBadge) newBadge.style.display = isNew ? 'inline-block' : 'none';
+  // プレミアムアバターを選択可能にする（アバターグリッドへ反映）
+  if (isNew) {
+    if (!sd.gachaEggs) sd.gachaEggs = {};
+    sd.gachaEggs['premium_' + picked.id] = { count: 1, isPremium: true, icon: picked.icon, name: picked.name };
+  }
+  setTimeout(() => { document.getElementById('premium-gacha-modal').style.display = 'flex'; }, 400);
+};
+
+window.closePremiumGacha = function() {
+  document.getElementById('premium-gacha-modal').style.display = 'none';
+  window.updateKuroPonModal();
+};
+
 window.openKuroPonModal = function() {
   window.updateKuroPonModal();
   document.getElementById('kuropon-modal').style.display = 'flex';
+  // モーダルを開いたときにプレミアムガチャチェック（少し遅延して演出）
+  setTimeout(() => window.checkPremiumGacha(), 800);
 };
 window.closeKuroPonModal = function() { document.getElementById('kuropon-modal').style.display = 'none'; };
 
@@ -1290,22 +1388,51 @@ window.updateKuroPonModal = function() {
   if (sd.kuroPonFriendship === undefined) sd.kuroPonFriendship = 0;
   if (sd.kuroPonHunger === undefined) sd.kuroPonHunger = 100;
 
-  // 時間経過でおなかが減る（1日で40%減）
+  // 時間経過でおなかが減る・仲良し度も下がる
   const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
   if (sd.kuroPonLastFedDate && sd.kuroPonLastFedDate !== todayStr) {
-    // 最後に記録した日から今日までの日数分だけ減らす
-    sd.kuroPonHunger = Math.max(0, (sd.kuroPonHunger||100) - 40);
-    if (sd.kuroPonFriendship > 0 && sd.kuroPonHunger <= 0) {
-      sd.kuroPonFriendship = Math.max(0, sd.kuroPonFriendship - 5); // おなか0で仲良し度も少し減
+    // 最後に給餌した日から何日経過したか計算
+    const lastFed = new Date(sd.kuroPonLastFedDate);
+    const daysPassed = Math.max(1, Math.floor((now - lastFed) / 86400000));
+    // おなか減少（1日40%、最大100%まで）
+    sd.kuroPonHunger = Math.max(0, (sd.kuroPonHunger || 100) - 40 * daysPassed);
+    // 仲良し度も日数に応じて減少（1日3、2日目以降は+5ずつ加速）
+    const friendshipDrop = Math.min(sd.kuroPonFriendship || 0, 3 + (daysPassed - 1) * 5);
+    if (friendshipDrop > 0) {
+      sd.kuroPonFriendship = Math.max(0, (sd.kuroPonFriendship || 0) - friendshipDrop);
     }
     // 日付が変わったら本日の給餌記録もリセット
     sd.kuroPonFedToday = {};
   }
-  if (!sd.kuroPonFedToday) sd.kuroPonFedToday = {};
 
-  const hunger = sd.kuroPonHunger || 0;
+  // ★仲良し度閾値達成で欠片プレゼント（1回限り）
+  if (!sd.kuroPonKakeraGifts) sd.kuroPonKakeraGifts = {};
   const friendship = sd.kuroPonFriendship || 0;
+  const kakeraThresholds = [25, 50, 75, 100];
+  let kakeraGiftMsg = '';
+  kakeraThresholds.forEach(th => {
+    if (friendship >= th && !sd.kuroPonKakeraGifts['th_' + th]) {
+      sd.kuroPonKakeraGifts['th_' + th] = true;
+      sd.kakera = (sd.kakera || 0) + 5;
+      kakeraGiftMsg = `🧩 なかよし度${th}達成！欠片×5もらったよ！`;
+    }
+  });
+  // ★仲良し度MAXが続く間、毎日欠片+5
+  if (friendship >= 100) {
+    const lastMaxGift = sd.kuroPonMaxGiftDate || '';
+    if (lastMaxGift !== todayStr) {
+      sd.kuroPonMaxGiftDate = todayStr;
+      sd.kakera = (sd.kakera || 0) + 5;
+      if (!kakeraGiftMsg) kakeraGiftMsg = '🧩 仲良し度MAX継続！欠片×5もらったよ！';
+    }
+  }
+  if (kakeraGiftMsg) {
+    setTimeout(() => window.showToast && window.showToast(kakeraGiftMsg, 'success'), 300);
+    window.updateUI();
+  }
+  const hunger = sd.kuroPonHunger || 0;
+  // friendshipは上で定義済み
 
   // 顔の表情を状態に応じて変える
   const charEl = document.getElementById('kuropon-char-el');
@@ -1355,23 +1482,25 @@ window.renderFoodGrid = function() {
   if (!grid) return;
   grid.innerHTML = '';
   const sd = window.saveData;
-  const now2 = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
-  const todayStr2 = `${now2.getFullYear()}-${now2.getMonth()+1}-${now2.getDate()}`;
-  if (!sd.kuroPonFedToday) sd.kuroPonFedToday = {};
+  const hunger = sd.kuroPonHunger || 0;
+  const friendship = sd.kuroPonFriendship || 0;
+  const isFull = hunger >= 100;
+
   window.GACHA_FOOD_LIST.forEach(food => {
-    const friendship = sd.kuroPonFriendship || 0;
     const locked = friendship < food.unlockFriendship;
-    const fedToday = sd.kuroPonFedToday[food.key] === todayStr2;
+    const qCount = food.questionCount || 1;
     const card = document.createElement('div');
-    card.className = 'food-card' + (locked ? ' locked' : (fedToday ? ' locked' : ''));
-    if (fedToday) {
-      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost" style="color:#22c55e;">✅きょうクリア</span><span class="food-effect" style="color:#94a3b8;">また明日にゃ</span>`;
-      card.title = 'きょうはもうあげたにゃ！また明日にゃ';
+    card.className = 'food-card' + (locked ? ' locked' : (isFull ? ' locked' : ''));
+    if (isFull && !locked) {
+      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost" style="color:#eab308;">🈵満腹</span><span class="food-effect" style="color:#94a3b8;">お腹が減るまで待ってね</span>`;
+      card.title = 'いまはお腹いっぱいにゃ！';
+      card.onclick = () => alert('🐱「いまはおなかいっぱいにゃ！遊んでお腹が減ったらちょうだい！」');
     } else if (!locked) {
-      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓もんだい1問</span><span class="food-effect">${food.desc}</span>`;
+      const weakBadge = (sd.weakQuestions && sd.weakQuestions.length > 0) ? '💔' : '';
+      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓${qCount}問${weakBadge}</span><span class="food-effect">${food.desc}</span>`;
       card.onclick = () => window.openKuroponQuiz(food);
     } else {
-      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓もんだい1問</span><span class="food-effect">${food.desc}</span>`;
+      card.innerHTML = `<span class="food-icon">${food.icon}</span><span class="food-name">${food.name}</span><span class="food-cost">❓${qCount}問</span><span class="food-effect">${food.desc}</span>`;
       card.title = `なかよし度${food.unlockFriendship}でかいほうされるにゃ！`;
       card.innerHTML += `<span style="font-size:9px; color:#94a3b8; display:block;">🔒${food.unlockFriendship}～</span>`;
     }
@@ -1379,52 +1508,61 @@ window.renderFoodGrid = function() {
   });
 };
 
-// ★クロぽんごはんをあげる（Q消費なし・問題1問クリア方式）
-window._kqCurrentFood = null; // 選択中の食べ物
-window._kqCurrentQuiz = null; // 出題中の問題
-window._kqAnswered   = false; // 解答済みフラグ
+// ★クロぽんごはんをあげる（Q消費なし・問題複数問クリア方式）
+window._kqCurrentFood = null;    // 選択中の食べ物
+window._kqCurrentQuiz = null;    // 出題中の問題（シャッフル済み）
+window._kqAnswered    = false;   // 解答済みフラグ
+window._kqCorrectIdx  = -1;      // シャッフル後の正解インデックス
+window._kqQuestionNum = 0;       // 現在の問題番号（1始まり）
+window._kqTotalQuestions = 1;    // 合計問題数
+window._kqPool = [];             // 問題プール（1セット分）
 
-window.openKuroponQuiz = function(food) {
-  // 全教科からランダムに選択肢型問題1問を抽出
-  if (!window.CONTENT) { alert('もんだいデータがまだ読み込まれていないにゃ…'); return; }
-  // 1日1回クールダウンチェック
-  const sd0 = window.saveData;
-  if (!sd0.kuroPonFedToday) sd0.kuroPonFedToday = {};
-  const now0 = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
-  const todayStr0 = `${now0.getFullYear()}-${now0.getMonth()+1}-${now0.getDate()}`;
-  if (sd0.kuroPonFedToday[food.key] === todayStr0) {
-    alert(`${food.icon} ${food.name}は きょうもう あげたにゃ！\nまた明日にゃ 🌙`);
-    return;
+// 選択肢をFisher-Yatesでシャッフルし、正解インデックスを返す
+window._kqShuffleAnswers = function(answers, correctIdx) {
+  const indexed = answers.map((a, i) => ({ text: a, isCorrect: i === correctIdx }));
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
   }
-  const quizzes = window.CONTENT.quizzes;
-  // type が text_input・canvas_code・scenario を除く選択肢問題だけ集める
-  const pool = [];
-  Object.keys(quizzes).forEach(stageId => {
-    quizzes[stageId].forEach(q => {
-      if (Array.isArray(q.a) && q.a.length >= 2 && typeof q.c === 'number' &&
-          !q.type && !q.canvas_code && !q.scenario) {
-        pool.push({ stageId, q });
-      }
-    });
-  });
-  if (pool.length === 0) { alert('もんだいが見つからなかったにゃ…'); return; }
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  window._kqCurrentFood = food;
+  const newCorrectIdx = indexed.findIndex(a => a.isCorrect);
+  return { shuffled: indexed.map(a => a.text), newCorrectIdx };
+};
+
+// 問題プールから1問選んでセット
+window._kqSetQuestion = function(pick) {
   window._kqCurrentQuiz = pick;
   window._kqAnswered = false;
+  const { shuffled, newCorrectIdx } = window._kqShuffleAnswers(pick.q.a, pick.q.c);
+  window._kqCorrectIdx = newCorrectIdx;
 
-  // 教科バッジ
   const subj = pick.stageId.split('/')[0] || '';
   const subjInfo = (window.subjectDictionary && window.subjectDictionary[subj]) || { label: '🌟' + subj };
-  document.getElementById('kq-food-icon').textContent = food.icon;
-  document.getElementById('kq-subject-badge').textContent = subjInfo.label;
-  document.getElementById('kq-instruction').textContent = `もんだいに せいかいしたら ${food.name}を クロぽんに あげられるよ！✨`;
+  
+  // 苦手問題バッジ
+  const weakTag = pick.isWeak ? ' 💔にがて問題' : '';
+  document.getElementById('kq-subject-badge').textContent = subjInfo.label + weakTag;
   document.getElementById('kq-question-text').textContent = pick.q.q;
 
-  // 選択肢
+  // 進捗バー更新
+  const total = window._kqTotalQuestions;
+  const current = window._kqQuestionNum;
+  const progBar = document.getElementById('kq-progress-bar');
+  const progFill = document.getElementById('kq-progress-fill');
+  const progLabel = document.getElementById('kq-progress-label');
+  if (total > 1) {
+    progBar.style.display = 'block';
+    progLabel.style.display = 'block';
+    progFill.style.width = ((current - 1) / total * 100) + '%';
+    progLabel.textContent = `もんだい ${current} / ${total}`;
+  } else {
+    progBar.style.display = 'none';
+    progLabel.style.display = 'none';
+  }
+
+  // 選択肢（シャッフル済み）
   const optEl = document.getElementById('kq-options-el');
   optEl.innerHTML = '';
-  pick.q.a.forEach((ans, i) => {
+  shuffled.forEach((ans, i) => {
     const btn = document.createElement('button');
     btn.className = 'kq-option';
     btn.textContent = ans;
@@ -1437,7 +1575,67 @@ window.openKuroponQuiz = function(food) {
   const resultEl = document.getElementById('kq-result-el');
   resultEl.style.display = 'none'; resultEl.className = 'kq-result';
   document.getElementById('kq-ok-btn').style.display = 'none';
-  document.getElementById('kq-close-btn').textContent = 'やめる';
+  document.getElementById('kq-next-btn').style.display = 'none';
+  document.getElementById('kq-close-btn').textContent = current === 1 ? 'やめる' : 'とじる';
+};
+
+window.openKuroponQuiz = function(food) {
+  if (!window.CONTENT) { alert('もんだいデータがまだ読み込まれていないにゃ…'); return; }
+  const sd0 = window.saveData;
+  const hunger = sd0.kuroPonHunger || 0;
+
+  // 満腹チェック（100%の場合はごはんをあげられない）
+  if (hunger >= 100) {
+    alert('🐱「いまはおなかいっぱいにゃ！遊んでお腹が減ったらまたちょうだい！」');
+    return;
+  }
+
+  const quizzes = window.CONTENT.quizzes;
+  const weakList = sd0.weakQuestions || [];
+  const normalPool = [];
+  const weakPool = [];
+
+  // 全教科から選択肢型問題を抽出＋苦手問題の振り分け
+  Object.keys(quizzes).forEach(stageId => {
+    quizzes[stageId].forEach((q, idx) => {
+      if (Array.isArray(q.a) && q.a.length >= 2 && typeof q.c === 'number' &&
+          !q.type && !q.canvas_code && !q.scenario) {
+        const item = { stageId, q, rawIdx: idx };
+        const wId1 = `${stageId}::${q.qid}`;
+        const wId2 = `${stageId}_q_${idx}`;
+        const isWeak = weakList.includes(wId1) || weakList.includes(wId2);
+        item.isWeak = isWeak;
+        item.weakId = isWeak ? (weakList.includes(wId1) ? wId1 : wId2) : null;
+
+        if (isWeak) weakPool.push(item);
+        else normalPool.push(item);
+      }
+    });
+  });
+
+  if (normalPool.length === 0 && weakPool.length === 0) {
+    alert('もんだいが見つからなかったにゃ…'); return;
+  }
+
+  // エサレベルで問題数決定
+  const qCount = food.questionCount || 1;
+  window._kqTotalQuestions = qCount;
+  window._kqQuestionNum = 1;
+  window._kqCurrentFood = food;
+
+  // 苦手問題を最優先でプールに追加し、不足分を通常問題で補う
+  const shuffledWeak = [...weakPool].sort(() => Math.random() - 0.5);
+  const shuffledNormal = [...normalPool].sort(() => Math.random() - 0.5);
+  window._kqPool = [...shuffledWeak, ...shuffledNormal].slice(0, qCount);
+
+  // 説明テキスト更新
+  document.getElementById('kq-food-icon').textContent = food.icon;
+  const qCountLabel = qCount > 1 ? `${qCount}問ぜんぶ正解したら` : '正解したら';
+  const weakNotice = shuffledWeak.length > 0 ? ' (💔にがて問題から優先出題！)' : '';
+  document.getElementById('kq-instruction').textContent = `${qCountLabel} ${food.name}を クロぽんに あげられるよ！✨${weakNotice}`;
+
+  // 1問目をセット
+  window._kqSetQuestion(window._kqPool[0]);
 
   document.getElementById('kuropon-quiz-modal').style.display = 'flex';
 };
@@ -1446,34 +1644,70 @@ window.kqSelectAnswer = function(idx) {
   if (window._kqAnswered) return;
   window._kqAnswered = true;
   const pick = window._kqCurrentQuiz;
-  const correct = pick.q.c;
+  const correct = window._kqCorrectIdx; // シャッフル後の正解インデックス
   const isCorrect = (idx === correct);
 
-  // 選択肢の色付け
-  pick.q.a.forEach((_, i) => {
-    const btn = document.getElementById(`kq-opt-${i}`);
-    if (!btn) return;
+  // 選択肢の色付け（シャッフル後のインデックス対応）
+  const optEl = document.getElementById('kq-options-el');
+  const btns = optEl ? optEl.querySelectorAll('.kq-option') : [];
+  btns.forEach((btn, i) => {
     btn.onclick = null;
     if (i === correct) btn.classList.add('correct');
-    else if (i === idx)  btn.classList.add('wrong');
+    else if (i === idx) btn.classList.add('wrong');
     btn.style.cursor = 'default';
   });
 
   const resultEl = document.getElementById('kq-result-el');
   resultEl.style.display = 'block';
   if (isCorrect) {
+    // 苦手問題だった場合、苦手リストから自動削除（克服！）
+    if (pick.isWeak && pick.weakId && window.saveData.weakQuestions) {
+      window.saveData.weakQuestions = window.saveData.weakQuestions.filter(id => id !== pick.weakId);
+      window.saveGame();
+    }
+
+    // 進捗バーを更新
+    const current = window._kqQuestionNum;
+    const total = window._kqTotalQuestions;
+    const progFill = document.getElementById('kq-progress-fill');
+    if (progFill) progFill.style.width = (current / total * 100) + '%';
+
+    const isLast = (current >= total);
     resultEl.className = 'kq-result ok';
-    resultEl.innerHTML = `🎉 せいかい！<br>${pick.q.job_desc || 'すごいにゃ！'}` ;
-    document.getElementById('kq-ok-btn').style.display = 'inline-block';
+    const weakClearMsg = pick.isWeak ? '<br>💔✨ にがて問題を克服したよ！' : '';
+    resultEl.innerHTML = isLast
+      ? `🎉 せいかい！ぜんもんクリアにゃ！${weakClearMsg}<br>${pick.q.job_desc || 'すごいにゃ！'}`
+      : `✅ せいかい！(${current}/${total})${weakClearMsg}<br>${pick.q.job_desc || 'つぎもがんばってにゃ！'}`;
+    if (isLast) {
+      document.getElementById('kq-ok-btn').style.display = 'inline-block';
+    } else {
+      document.getElementById('kq-next-btn').style.display = 'inline-block';
+    }
     document.getElementById('kq-close-btn').textContent = 'とじる';
-    if (window.speakText) window.speakText('せいかい！すごいにゃ！', 'ja-JP');
+    if (window.speakText) window.speakText(isLast ? 'せいかい！ぜんもんクリアにゃ！' : 'せいかい！すごいにゃ！', 'ja-JP');
   } else {
-    resultEl.className = 'kq-result ng';
+    // ★不正解 → 仲良し度 -2
+    const sd = window.saveData;
+    const prevF = sd.kuroPonFriendship || 0;
+    sd.kuroPonFriendship = Math.max(0, prevF - 2);
+    window.saveGame();
     const hintText = pick.q.hint ? `ヒント：${pick.q.hint}` : '';
-    resultEl.innerHTML = `😿 ざんねん…！<br>せいかいは「${pick.q.a[correct]}」だったにゃ。<br>${hintText}`;
+    // シャッフル前の正解テキストを取得（shuffled配列のcorrect番目）
+    const optTexts = Array.from(btns).map(b => b.textContent);
+    const correctText = optTexts[correct] || '…';
+    resultEl.className = 'kq-result ng';
+    resultEl.innerHTML = `😿 ざんねん…！なかよし度が少し下がったにゃ💔<br>せいかいは「${correctText}」だったにゃ。<br>${hintText}`;
     document.getElementById('kq-close-btn').textContent = 'またね';
     if (window.speakText) window.speakText('ざんねん！またちゃれんじしてにゃ！', 'ja-JP');
   }
+};
+
+// ★次の問題へ進む（複数問クリア途中）
+window.kqNextQuestion = function() {
+  window._kqQuestionNum++;
+  const nextPick = window._kqPool[window._kqQuestionNum - 1];
+  if (!nextPick) { window.closeKuroponQuiz(); return; }
+  window._kqSetQuestion(nextPick);
 };
 
 window.kqConfirm = function() {
