@@ -190,6 +190,31 @@
   .tutor-point-icon { font-size: 22px; line-height: 1.3; }
   .tutor-point-text { font-size: 13px; font-weight: 700; color: var(--text-main); line-height: 1.7; white-space: pre-line; }
   #tutor-detail-lead { font-size: 12.5px; font-weight: 700; color: #7c3aed; background: #f5f3ff; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+  /* ★おこづかい管理タブ 2026-07-26 追加 */
+  #allowance-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; overflow-y: auto; }
+  .allowance-container { max-width: 540px; margin: 0 auto; padding-bottom: 24px; }
+  .allowance-total-row { display: flex; gap: 8px; margin: 10px 0 14px; }
+  .allowance-total-card { flex: 1; background: #fff; border-radius: 14px; padding: 12px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.06); }
+  .allowance-total-label { font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 4px; }
+  .allowance-total-val { font-size: 20px; font-weight: 900; color: #7c3aed; }
+  .allowance-section-title { font-size: 13px; font-weight: 900; color: #6b21a8; margin: 14px 0 6px; padding-left: 2px; }
+  .allowance-mission-group { background: #fff; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .allowance-mission-group-head { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 900; color: #475569; margin-bottom: 6px; }
+  .allowance-tier-badge { font-size: 11px; font-weight: 900; color: #b45309; background: #fef3c7; border-radius: 10px; padding: 3px 8px; }
+  .allowance-mission-row { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-main); padding: 6px 2px; cursor: pointer; }
+  .allowance-mission-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #7c3aed; flex-shrink: 0; }
+  .allowance-adjust-box { background: #fff; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .allowance-adjust-label { font-size: 12px; font-weight: 900; color: #475569; margin-bottom: 6px; }
+  .allowance-adjust-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .allowance-num-input { width: 90px; padding: 8px; border: 2px solid var(--lavender-light); border-radius: 8px; font-size: 13px; font-weight: 700; text-align: center; font-family: 'Zen Maru Gothic'; }
+  .allowance-note-input { flex: 1; padding: 8px; border: 2px solid var(--lavender-light); border-radius: 8px; font-size: 12px; font-weight: 700; font-family: 'Zen Maru Gothic'; }
+  .allowance-adjust-btn-row { display: flex; gap: 6px; }
+  .allowance-adjust-btn-row .btn-sm { flex: 1; }
+  .allowance-memo-box { width: 100%; min-height: 70px; padding: 10px; border: 2px solid var(--lavender-light); border-radius: 10px; font-size: 12.5px; font-weight: 700; font-family: 'Zen Maru Gothic'; resize: vertical; box-sizing: border-box; }
+  .allowance-history-item { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 10px; padding: 8px 10px; margin-bottom: 5px; font-size: 11.5px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
+  .allowance-history-date { color: #94a3b8; flex-shrink: 0; }
+  .allowance-history-label { color: var(--text-main); flex: 1; }
+  .allowance-history-delta { color: #15803d; font-weight: 900; flex-shrink: 0; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
   .q-text { font-size: 14.5px; font-weight: 700; line-height: 1.5; white-space: pre-wrap; margin: 0; }
@@ -398,6 +423,9 @@
   <div class="flex-row">
     <button class="btn-sm" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3); color:#be185d; font-weight:900;" id="kuropon-btn" onclick="window.openKuroPonModal()">🐱 クロぽんのへや</button>
     <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openTutorScreen()">📖 ゆめかわチューター</button>
+  </div>
+  <div class="flex-row">
+    <button class="btn-sm" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;" onclick="window.openAllowanceScreen()">💰 おこづかい管理</button>
   </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
@@ -697,6 +725,75 @@
     </div>
   </div>
 </div>
+<!-- ★おこづかい（お金＆ロバックス）管理タブ。#tutor-screenと同様、独立した全画面ビュー 2026-07-26 追加 -->
+<div id="allowance-screen">
+  <div class="allowance-container">
+    <div class="tutor-header">
+      <h2>💰 おこづかい管理</h2>
+      <button class="action-btn" style="width:auto; padding:8px 14px; font-size:12px;" onclick="window.closeAllowanceScreen()">🏠 もどる</button>
+    </div>
+    <div class="navi-box">
+      <div class="navi-avatar">🦄</div>
+      <div class="navi-text">ニコ「おうちミッションをクリアして、おこづかいをためよう！」</div>
+    </div>
+
+    <div class="allowance-total-row">
+      <div class="allowance-total-card">
+        <div class="allowance-total-label">💰 ためた金額</div>
+        <div class="allowance-total-val" id="allowance-total-yen">0 円</div>
+      </div>
+      <div class="allowance-total-card">
+        <div class="allowance-total-label">🎮 ロバックス</div>
+        <div class="allowance-total-val" id="allowance-total-robux">0 R$</div>
+      </div>
+    </div>
+
+    <div class="allowance-section-title">🏠 今週のおうちミッション（<span id="allowance-week-label"></span>）</div>
+    <div class="allowance-mission-group">
+      <div class="allowance-mission-group-head">
+        <span>ステップ1</span><span class="allowance-tier-badge" id="allowance-tier1-badge"></span>
+      </div>
+      <div id="allowance-tier1-list"></div>
+    </div>
+    <div class="allowance-mission-group">
+      <div class="allowance-mission-group-head">
+        <span>ステップ2（ステップ1のあと、もっとがんばったら）</span><span class="allowance-tier-badge" id="allowance-tier2-badge"></span>
+      </div>
+      <div id="allowance-tier2-list"></div>
+    </div>
+    <button class="action-btn nav-next" style="width:100%; margin-bottom:14px;" id="allowance-claim-btn">🎁 うけとる</button>
+
+    <div class="allowance-section-title">✏️ 手動で記録する</div>
+    <div class="allowance-adjust-box">
+      <div class="allowance-adjust-label">💰 お金</div>
+      <div class="allowance-adjust-row">
+        <input type="number" id="allowance-yen-input" placeholder="きんがく" class="allowance-num-input">
+        <input type="text" id="allowance-yen-note" placeholder="メモ（例：おこづかいDay）" class="allowance-note-input">
+      </div>
+      <div class="allowance-adjust-btn-row">
+        <button class="btn-sm" style="background:#dcfce7; color:#15803d;" onclick="window.adjustAllowanceTotal('yen', 1)">＋ためる</button>
+        <button class="btn-sm" style="background:#fee2e2; color:#b91c1c;" onclick="window.adjustAllowanceTotal('yen', -1)">－つかった</button>
+      </div>
+    </div>
+    <div class="allowance-adjust-box">
+      <div class="allowance-adjust-label">🎮 ロバックス</div>
+      <div class="allowance-adjust-row">
+        <input type="number" id="allowance-robux-input" placeholder="きんがく(R$)" class="allowance-num-input">
+        <input type="text" id="allowance-robux-note" placeholder="メモ（例：プレゼント）" class="allowance-note-input">
+      </div>
+      <div class="allowance-adjust-btn-row">
+        <button class="btn-sm" style="background:#dcfce7; color:#15803d;" onclick="window.adjustAllowanceTotal('robux', 1)">＋ためる</button>
+        <button class="btn-sm" style="background:#fee2e2; color:#b91c1c;" onclick="window.adjustAllowanceTotal('robux', -1)">－つかった</button>
+      </div>
+    </div>
+
+    <div class="allowance-section-title">📝 じゆうメモ</div>
+    <textarea id="allowance-memo" class="allowance-memo-box" placeholder="なんでも自由に書いてOK！（例：来週は〇〇をがんばる、貯金の目標など）" onblur="window.updateAllowanceMemo(this.value)"></textarea>
+
+    <div class="allowance-section-title">📜 きろく</div>
+    <div id="allowance-history-list"></div>
+  </div>
+</div>
 <script>
 window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkNke4NbZKrJ5qJwC9aPUjesuHfRKiro_WZgOVGydRznNvmbtXHmBS5AEwt1WH0P8/exec";
 // ★ふだん自動ログインする子どものID（GASの ALLOWED_PLAYERS と同じ名前にしてね）
@@ -715,7 +812,7 @@ window.subjectDictionary = {
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣" };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, robux: 0, memo: "", history: [], weeks: {} } };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -931,7 +1028,7 @@ window.performLogin = function(id) {
        if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
        if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
        if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
-       if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
+       if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
     } else { alert("読み込みエラー: " + res.message); }
@@ -949,7 +1046,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
   if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
   if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
-  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
+  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI(); window.checkAutoLoginBonus();
 };
@@ -1079,7 +1176,7 @@ window.buyShopItem = function(itemKey) {
   let currentKakera = window.saveData.kakera || 0;
   if(window.saveData.q < qCost || currentKakera < kCost) { alert(`🤖 【素材不足】\n設計図の欠片🧩 やトークン🪙 が足りないぞ！\n・🪙${qCost}Q と 🧩${kCost}枚 が必要だよ！`); return; }
   window.saveData.q -= qCost; window.saveData.kakera = currentKakera - kCost; window.saveData.inventory.push(itemKey);
-  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
+  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
   window.saveData.islandBuildLog.push(itemKey);
   window.speakText("クラフト成功", "ja-JP");
   alert(`🏝️ 【宝島クラフト成功！】\n「${name}」を錬成したぞ！\n（現在の持ち物：${window.saveData.inventory.length} / 10個）\n\n🏝️ 島に「${name}」の たてものが 増えたよ！（島のたてもの：合計${window.saveData.islandBuildLog.length}こ）`);
@@ -1320,6 +1417,168 @@ window.closeTutorDetail = function() {
   document.getElementById("tutor-list-view").style.display = "block";
 };
 /* ★ゆめかわチューター ここまで ------------------- */
+
+/* ★おこづかい（お金＆ロバックス）管理タブ 2026-07-26 追加 ここから -------------------
+   毎週月曜〜日曜のおうちミッション達成でおこづかいをためられる、シンプルな自己管理タブ。
+   - ティア1（5項目）を全部達成で100円、さらにティア2（3項目）も全部達成で+100円（最大200円/週）。
+   - 「うけとる」ボタンを押した時点でのチェック状況から金額を計算し、今週すでに受け取った分との
+     差額だけを合計（saveData.allowance.yen）に加算する（ティア1だけ先に受け取り→後日ティア2達成分だけ
+     追加でうけとる、という使い方もOK）。
+   - お金・ロバックスどちらも「＋ためる／－つかう」の手動入力にも対応し、履歴に記録する。
+   - メモ欄は完全自由記入。ぜんぶ window.saveData.allowance に保存され、既存のセーブ/クラウド同期の
+     しくみ（saveGame/performLogin/loadGameLocal）にそのまま乗る。 */
+window.ALLOWANCE_TIER1 = [
+  { key: "jigaku1", label: "📖 自学（1回目）" },
+  { key: "jigaku2", label: "📖 自学（2回目）" },
+  { key: "sansu", label: "🧮 算数アプリ" },
+  { key: "program", label: "💻 プログラミング" },
+  { key: "board", label: "🎲 ボードゲーム" }
+];
+window.ALLOWANCE_TIER2 = [
+  { key: "kanji", label: "📜 漢字アプリ" },
+  { key: "sansu2", label: "🧮 算数アプリ（2回目）" },
+  { key: "program2", label: "💻 プログラミング（2回目）" }
+];
+window.getAllowanceMondayKey = function(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  const y = date.getFullYear(), m = date.getMonth() + 1, dd = date.getDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+};
+window.getAllowanceWeekLabel = function(mondayKey) {
+  const mon = new Date(mondayKey + "T00:00:00");
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const f = d => `${d.getMonth() + 1}/${d.getDate()}`;
+  return `${f(mon)}（月）〜${f(sun)}（日）`;
+};
+window.ensureAllowanceData = function() {
+  if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
+  const a = window.saveData.allowance;
+  if (a.yen === undefined) a.yen = 0;
+  if (a.robux === undefined) a.robux = 0;
+  if (a.memo === undefined) a.memo = "";
+  if (!a.history) a.history = [];
+  if (!a.weeks) a.weeks = {};
+  return a;
+};
+window.ensureAllowanceWeek = function(weekKey) {
+  const a = window.ensureAllowanceData();
+  if (!a.weeks[weekKey]) a.weeks[weekKey] = { m: {}, claimedAmount: 0 };
+  if (!a.weeks[weekKey].m) a.weeks[weekKey].m = {};
+  if (a.weeks[weekKey].claimedAmount === undefined) a.weeks[weekKey].claimedAmount = 0;
+  return a.weeks[weekKey];
+};
+window.computeAllowanceWeekEarned = function(week) {
+  const t1done = window.ALLOWANCE_TIER1.every(it => !!week.m[it.key]);
+  const t2done = window.ALLOWANCE_TIER2.every(it => !!week.m[it.key]);
+  return (t1done ? 100 : 0) + (t2done ? 100 : 0);
+};
+window.openAllowanceScreen = function() {
+  window.ensureAllowanceData();
+  window.renderAllowanceScreen();
+  document.getElementById("allowance-screen").style.display = "block";
+};
+window.closeAllowanceScreen = function() { document.getElementById("allowance-screen").style.display = "none"; };
+window.toggleAllowanceMission = function(weekKey, key) {
+  const week = window.ensureAllowanceWeek(weekKey);
+  week.m[key] = !week.m[key];
+  window.saveGame();
+  window.renderAllowanceScreen();
+};
+window.claimAllowanceWeek = function(weekKey) {
+  const week = window.ensureAllowanceWeek(weekKey);
+  const earned = window.computeAllowanceWeekEarned(week);
+  const delta = earned - (week.claimedAmount || 0);
+  if (delta <= 0) { alert("🌟 今の達成状況ぶんは、もううけとりずみだよ！ミッションをもっと達成すると、追加でうけとれるようになるよ。"); return; }
+  const a = window.ensureAllowanceData();
+  a.yen += delta;
+  week.claimedAmount = earned;
+  a.history.unshift({ date: window.currentServerTime ? String(window.currentServerTime).slice(0, 10) : new Date().toISOString().slice(0, 10), label: "🏠 今週のおうちミッション", yenDelta: delta, robuxDelta: 0 });
+  if (a.history.length > 30) a.history.length = 30;
+  window.saveGame();
+  window.renderAllowanceScreen();
+  alert(`🎉 ${delta}円 うけとったよ！合計 ${a.yen}円 になったよ！`);
+};
+window.adjustAllowanceTotal = function(kind, sign) {
+  const inputEl = document.getElementById(kind === "yen" ? "allowance-yen-input" : "allowance-robux-input");
+  const noteEl = document.getElementById(kind === "yen" ? "allowance-yen-note" : "allowance-robux-note");
+  const raw = inputEl ? inputEl.value : "";
+  const val = parseInt(raw, 10);
+  if (!val || val <= 0) { alert("🌟 きんがくを1いじょうの数字で入力してね！"); return; }
+  const a = window.ensureAllowanceData();
+  const delta = sign * val;
+  const note = (noteEl && noteEl.value.trim()) ? noteEl.value.trim() : (sign > 0 ? "手動で追加" : "つかった");
+  if (kind === "yen") {
+    a.yen = Math.max(0, a.yen + delta);
+    a.history.unshift({ date: new Date().toISOString().slice(0, 10), label: `💰 ${note}`, yenDelta: delta, robuxDelta: 0 });
+  } else {
+    a.robux = Math.max(0, a.robux + delta);
+    a.history.unshift({ date: new Date().toISOString().slice(0, 10), label: `🎮 ${note}`, yenDelta: 0, robuxDelta: delta });
+  }
+  if (a.history.length > 30) a.history.length = 30;
+  window.saveGame();
+  if (inputEl) inputEl.value = "";
+  if (noteEl) noteEl.value = "";
+  window.renderAllowanceScreen();
+};
+window.updateAllowanceMemo = function(val) {
+  const a = window.ensureAllowanceData();
+  a.memo = val;
+  window.saveGame();
+};
+window.renderAllowanceScreen = function() {
+  const a = window.ensureAllowanceData();
+  const weekKey = window.getAllowanceMondayKey(window.currentServerTime || new Date());
+  const week = window.ensureAllowanceWeek(weekKey);
+
+  document.getElementById("allowance-total-yen").textContent = a.yen + " 円";
+  document.getElementById("allowance-total-robux").textContent = a.robux + " R$";
+  document.getElementById("allowance-week-label").textContent = window.getAllowanceWeekLabel(weekKey);
+
+  const t1done = window.ALLOWANCE_TIER1.every(it => !!week.m[it.key]);
+  const t2done = window.ALLOWANCE_TIER2.every(it => !!week.m[it.key]);
+  const earned = window.computeAllowanceWeekEarned(week);
+  const remaining = earned - (week.claimedAmount || 0);
+
+  const t1box = document.getElementById("allowance-tier1-list"); t1box.innerHTML = "";
+  window.ALLOWANCE_TIER1.forEach(it => {
+    const row = document.createElement("label"); row.className = "allowance-mission-row";
+    row.innerHTML = `<input type="checkbox" ${week.m[it.key] ? "checked" : ""} onchange="window.toggleAllowanceMission('${weekKey}','${it.key}')"><span>${it.label}</span>`;
+    t1box.appendChild(row);
+  });
+  const t2box = document.getElementById("allowance-tier2-list"); t2box.innerHTML = "";
+  window.ALLOWANCE_TIER2.forEach(it => {
+    const row = document.createElement("label"); row.className = "allowance-mission-row";
+    row.innerHTML = `<input type="checkbox" ${week.m[it.key] ? "checked" : ""} onchange="window.toggleAllowanceMission('${weekKey}','${it.key}')"><span>${it.label}</span>`;
+    t2box.appendChild(row);
+  });
+  document.getElementById("allowance-tier1-badge").textContent = t1done ? "✅ 100円 達成！" : "☆ 5つ全部で100円";
+  document.getElementById("allowance-tier2-badge").textContent = t2done ? "✅ +100円 達成！" : "☆ 3つ全部で+100円";
+  const claimBtn = document.getElementById("allowance-claim-btn");
+  claimBtn.textContent = remaining > 0 ? `🎁 ${remaining}円 うけとる！` : "🎁 うけとる";
+  claimBtn.disabled = remaining <= 0;
+  claimBtn.onclick = () => window.claimAllowanceWeek(weekKey);
+
+  const memoEl = document.getElementById("allowance-memo"); if (memoEl && memoEl.value !== a.memo) memoEl.value = a.memo;
+
+  const histBox = document.getElementById("allowance-history-list"); histBox.innerHTML = "";
+  if (!a.history.length) {
+    histBox.innerHTML = `<div style="text-align:center; padding:14px; color:var(--text-soft); font-size:12px;">まだ記録がないよ。</div>`;
+  } else {
+    a.history.slice(0, 15).forEach(h => {
+      const item = document.createElement("div"); item.className = "allowance-history-item";
+      const parts = [];
+      if (h.yenDelta) parts.push(`${h.yenDelta > 0 ? "+" : ""}${h.yenDelta}円`);
+      if (h.robuxDelta) parts.push(`${h.robuxDelta > 0 ? "+" : ""}${h.robuxDelta}R$`);
+      item.innerHTML = `<span class="allowance-history-date">${h.date}</span><span class="allowance-history-label">${h.label}</span><span class="allowance-history-delta">${parts.join(" / ")}</span>`;
+      histBox.appendChild(item);
+    });
+  }
+};
+/* ★おこづかい管理タブ ここまで ------------------- */
 
 /* ★ガチャシステム（ニコのたまごガチャ） 2026-07-25 ここから ------------------- */
 window.GACHA_EGG_LIST = [
