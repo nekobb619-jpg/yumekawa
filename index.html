@@ -197,6 +197,7 @@
   .allowance-total-card { flex: 1; background: #fff; border-radius: 14px; padding: 12px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.06); }
   .allowance-total-label { font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 4px; }
   .allowance-total-val { font-size: 20px; font-weight: 900; color: #7c3aed; }
+  .allowance-total-sub { font-size: 9.5px; font-weight: 700; color: #94a3b8; margin-top: 2px; }
   .allowance-section-title { font-size: 13px; font-weight: 900; color: #6b21a8; margin: 14px 0 6px; padding-left: 2px; }
   .allowance-mission-group { background: #fff; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
   .allowance-mission-group-head { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 900; color: #475569; margin-bottom: 6px; }
@@ -745,6 +746,7 @@
       <div class="allowance-total-card">
         <div class="allowance-total-label">🎮 ロバックス</div>
         <div class="allowance-total-val" id="allowance-total-robux">0 R$</div>
+        <div class="allowance-total-sub">Qと交換すると増えるよ</div>
       </div>
     </div>
 
@@ -812,7 +814,7 @@ window.subjectDictionary = {
 };
 window.globalStageMaster = {};
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, robux: 0, memo: "", history: [], weeks: {} } };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, memo: "", history: [], weeks: {} } };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -1028,7 +1030,7 @@ window.performLogin = function(id) {
        if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
        if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
        if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
-       if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
+       if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
     } else { alert("読み込みエラー: " + res.message); }
@@ -1046,7 +1048,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.bookStreak) window.saveData.bookStreak = 0;
   if(!window.saveData.bookReadCount) window.saveData.bookReadCount = 0;
   if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
-  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
+  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI(); window.checkAutoLoginBonus();
 };
@@ -1176,7 +1178,7 @@ window.buyShopItem = function(itemKey) {
   let currentKakera = window.saveData.kakera || 0;
   if(window.saveData.q < qCost || currentKakera < kCost) { alert(`🤖 【素材不足】\n設計図の欠片🧩 やトークン🪙 が足りないぞ！\n・🪙${qCost}Q と 🧩${kCost}枚 が必要だよ！`); return; }
   window.saveData.q -= qCost; window.saveData.kakera = currentKakera - kCost; window.saveData.inventory.push(itemKey);
-  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
+  if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
   window.saveData.islandBuildLog.push(itemKey);
   window.speakText("クラフト成功", "ja-JP");
   alert(`🏝️ 【宝島クラフト成功！】\n「${name}」を錬成したぞ！\n（現在の持ち物：${window.saveData.inventory.length} / 10個）\n\n🏝️ 島に「${name}」の たてものが 増えたよ！（島のたてもの：合計${window.saveData.islandBuildLog.length}こ）`);
@@ -1455,13 +1457,15 @@ window.getAllowanceWeekLabel = function(mondayKey) {
   return `${f(mon)}（月）〜${f(sun)}（日）`;
 };
 window.ensureAllowanceData = function() {
-  if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, robux: 0, memo: "", history: [], weeks: {} };
+  if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
   const a = window.saveData.allowance;
   if (a.yen === undefined) a.yen = 0;
-  if (a.robux === undefined) a.robux = 0;
   if (a.memo === undefined) a.memo = "";
   if (!a.history) a.history = [];
   if (!a.weeks) a.weeks = {};
+  // ★2026-07-26 追加：ロバックスは「Qと交換」の申請合計(window.saveData.robux)と連動させる。
+  //   このタブ専用の別カウンターは持たない（二重管理で数字がズレるのを防ぐため）。
+  if (window.saveData.robux === undefined) window.saveData.robux = 0;
   return a;
 };
 window.ensureAllowanceWeek = function(weekKey) {
@@ -1515,7 +1519,8 @@ window.adjustAllowanceTotal = function(kind, sign) {
     a.yen = Math.max(0, a.yen + delta);
     a.history.unshift({ date: new Date().toISOString().slice(0, 10), label: `💰 ${note}`, yenDelta: delta, robuxDelta: 0 });
   } else {
-    a.robux = Math.max(0, a.robux + delta);
+    // ★ロバックスはQ交換の申請合計(window.saveData.robux)と同じ数字を直接増減させる（連動）
+    window.saveData.robux = Math.max(0, (window.saveData.robux || 0) + delta);
     a.history.unshift({ date: new Date().toISOString().slice(0, 10), label: `🎮 ${note}`, yenDelta: 0, robuxDelta: delta });
   }
   if (a.history.length > 30) a.history.length = 30;
@@ -1535,7 +1540,7 @@ window.renderAllowanceScreen = function() {
   const week = window.ensureAllowanceWeek(weekKey);
 
   document.getElementById("allowance-total-yen").textContent = a.yen + " 円";
-  document.getElementById("allowance-total-robux").textContent = a.robux + " R$";
+  document.getElementById("allowance-total-robux").textContent = (window.saveData.robux || 0) + " R$";
   document.getElementById("allowance-week-label").textContent = window.getAllowanceWeekLabel(weekKey);
 
   const t1done = window.ALLOWANCE_TIER1.every(it => !!week.m[it.key]);
