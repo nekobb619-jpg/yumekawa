@@ -2287,7 +2287,25 @@ window.renderBattleStats = function(counts) {
 window.toggleAcc = function(el) { el.nextElementSibling.classList.toggle("open"); };
 window.checkSecretTap = function() { window.tapCount++; clearTimeout(window.tapTimer); window.tapTimer = setTimeout(() => { window.tapCount = 0; }, 1500); if (window.tapCount >= 5) { window.tapCount = 0; const pass = prompt("👨 管理者パスワードを入力してください："); if (pass === "papa8888") { document.getElementById("admin-zone").style.display = "block"; document.getElementById("admin-q-input").value = window.saveData.q; alert("🔧 管理者モードを解放しました。"); } else if (pass !== null) { alert("❌ パスワードが違います。"); } } };
 window.adminSetQ = function() { const val = parseInt(document.getElementById("admin-q-input").value, 10); if (!isNaN(val)) { window.saveData.q = val; window.saveGame(); alert(`🪙 Qを ${val} に変更しました。`); } };
-window.adminResetRobux = function() { window.saveData.robux = 0; window.saveGame(); alert("✅ ロバックス申請額をリセットしました。"); };
+window.adminResetRobux = function() {
+  // ★2026-07-26 追加：パパの隠しモード（ヘッダー5連タップ→パスワード）から「ロバ渡し完了リセット」を
+  //   押した時点の申請中ロバックス量を、おこづかいタブのきろくに残す（渡し忘れ・渡し済みが分かるように）。
+  const amount = window.saveData.robux || 0;
+  window.saveData.robux = 0;
+  if (amount > 0) {
+    const a = window.ensureAllowanceData ? window.ensureAllowanceData() : null;
+    if (a) {
+      a.history.unshift({ date: new Date().toISOString().slice(0, 10), label: "🎟️ パパがロバックスを交換・お渡し完了", yenDelta: 0, robuxDelta: -amount });
+      if (a.history.length > 30) a.history.length = 30;
+    }
+  }
+  window.saveGame();
+  if (typeof window.renderAllowanceScreen === "function") {
+    const scr = document.getElementById("allowance-screen");
+    if (scr && scr.style.display !== "none") window.renderAllowanceScreen();
+  }
+  alert(amount > 0 ? `✅ ${amount}R$ ぶん、お渡し完了として記録したよ！` : "✅ ロバックス申請額をリセットしました。");
+};
 window.adminClearAll = function() { if(confirm("⚠️ クラウドを含む全データを消去して初期化しますか？")) { localStorage.clear(); location.reload(); } };
 window.closeAdmin = function() { document.getElementById("admin-zone").style.display = "none"; };
 window.speakText = function(txt, lang = 'ja-JP') { if (!window.speechSynthesis) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = lang; u.rate = 0.85; window.speechSynthesis.speak(u); };
