@@ -176,6 +176,20 @@
   .treasure-slot.locked .treasure-slot-icon { opacity: 0.35; }
   .treasure-slot-name { font-size: 10px; font-weight: 900; color: #475569; margin-top: 2px; }
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
+  /* ★ゆめかわチューター（振り返り・予習）2026-07-26 追加 */
+  #tutor-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; overflow-y: auto; }
+  .tutor-container { max-width: 540px; margin: 0 auto; padding-bottom: 20px; }
+  .tutor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .tutor-header h2 { font-size: 17px; font-weight: 900; color: var(--text-main); margin: 0; }
+  .tutor-unit-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; border-radius: 10px; padding: 10px 12px; margin: 6px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .tutor-unit-name { font-size: 13px; font-weight: 800; color: var(--text-main); flex: 1; }
+  .tutor-unit-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .tutor-unit-btns .btn-sm { padding: 6px 8px; font-size: 11px; }
+  .tutor-unit-btns .btn-sm:disabled { opacity: 0.35; cursor: not-allowed; }
+  .tutor-point-card { display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-left: 4px solid #b19cd9; }
+  .tutor-point-icon { font-size: 22px; line-height: 1.3; }
+  .tutor-point-text { font-size: 13px; font-weight: 700; color: var(--text-main); line-height: 1.7; white-space: pre-line; }
+  #tutor-detail-lead { font-size: 12.5px; font-weight: 700; color: #7c3aed; background: #f5f3ff; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
   .game-container { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 8px; }
   .q-card { background: var(--panel-bg); border-radius: var(--radius); padding: 14px; box-shadow: var(--card-shadow); flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
   .q-text { font-size: 14.5px; font-weight: 700; line-height: 1.5; white-space: pre-wrap; margin: 0; }
@@ -383,6 +397,7 @@
   </div>
   <div class="flex-row">
     <button class="btn-sm" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3); color:#be185d; font-weight:900;" id="kuropon-btn" onclick="window.openKuroPonModal()">🐱 クロぽんのへや</button>
+    <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openTutorScreen()">📖 ゆめかわチューター</button>
   </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
@@ -654,6 +669,31 @@
       <button class="action-btn" id="item-use-in-game-btn" style="background:#0284c7; box-shadow: 0 5px 0 #0369a1; display:none;" onclick="window.triggerItemInGame()">✨ アイテム使用</button>
       <button class="action-btn" id="quit-game-btn" onclick="window.quitQuest()">🛑 やめる</button>
       <button class="action-btn nav-next" id="next-btn" onclick="window.nextQuestStep()" style="display:none;">つぎへ進む 🎀</button>
+    </div>
+  </div>
+</div>
+<!-- ★ゆめかわチューター（振り返り・予習サポート）画面。クイズ画面(#game-screen)とは独立した、別の全画面ビュー 2026-07-26 追加 -->
+<div id="tutor-screen">
+  <div class="tutor-container">
+    <div id="tutor-list-view">
+      <div class="tutor-header">
+        <h2>📖 ゆめかわチューター</h2>
+        <button class="action-btn" style="width:auto; padding:8px 14px; font-size:12px;" onclick="window.closeTutorScreen()">🏠 もどる</button>
+      </div>
+      <div class="navi-box">
+        <div class="navi-avatar">🦄</div>
+        <div class="navi-text">ニコ「単元をえらんで、『予習』か『振り返り』をタップしてね！」</div>
+      </div>
+      <div id="tutor-subjects-nav" class="subjects" style="display:flex; flex-wrap:wrap; gap:6px; margin:10px 0;"></div>
+      <div id="tutor-unit-list"></div>
+    </div>
+    <div id="tutor-detail-view" style="display:none;">
+      <div class="tutor-header">
+        <h2 id="tutor-detail-title" style="font-size:15px;"></h2>
+        <button class="action-btn" style="width:auto; padding:8px 14px; font-size:12px;" onclick="window.closeTutorDetail()">← 単元一覧</button>
+      </div>
+      <div id="tutor-detail-lead"></div>
+      <div id="tutor-detail-list"></div>
     </div>
   </div>
 </div>
@@ -1175,6 +1215,111 @@ window.openTreasureBookModal = function() {
 };
 window.closeTreasureBookModal = function() { const modal = document.getElementById("treasure-book-modal"); if (modal) modal.style.display = "none"; };
 /* ★お宝図鑑（コレクション）システム ここまで ------------------- */
+
+/* ★ゆめかわチューター（単元ごとの振り返り・予習サポート）2026-07-26 追加 ここから -------------------
+   クイズ画面(#game-screen)とは独立した、別の全画面ビュー(#tutor-screen)。
+   新しいAPI/AIは使わず、既存のcontent.js/QUIZZESにすでにある各問題のhint（ヒント）と
+   job_desc（正解後の解説）を素材として、単元ごとに自動で一覧化するだけの「静的」な仕組み。
+   - 予習（まだ挑戦していなくてもOK）：hintだけを見せる（答えを直接明かさないヒント文）。
+   - 振り返り（そのステージをクリア済みのときだけ使える）：job_desc（解説文）を見せる。 */
+window.currentTutorSubject = null;
+window.openTutorScreen = function() {
+  if (typeof window.injectContentStages === "function") window.injectContentStages();
+  if (!window.currentTutorSubject || !window.globalStageMaster[window.currentTutorSubject]) {
+    window.currentTutorSubject = window.currentActiveSubject || (window.availableSubjects[0] || null);
+  }
+  window.renderTutorSubjectsNav();
+  window.renderTutorUnitList();
+  document.getElementById("tutor-list-view").style.display = "block";
+  document.getElementById("tutor-detail-view").style.display = "none";
+  document.getElementById("tutor-screen").style.display = "block";
+};
+window.closeTutorScreen = function() { document.getElementById("tutor-screen").style.display = "none"; };
+window.switchTutorSubject = function(sub) {
+  window.currentTutorSubject = sub;
+  window.renderTutorSubjectsNav();
+  window.renderTutorUnitList();
+};
+window.renderTutorSubjectsNav = function() {
+  const nav = document.getElementById("tutor-subjects-nav"); if (!nav) return;
+  nav.innerHTML = "";
+  (window.availableSubjects || []).forEach(sub => {
+    const meta = window.subjectDictionary[sub] || { label: "🌟" + sub, sub: "" };
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (sub === window.currentTutorSubject ? " active" : "");
+    btn.innerHTML = `${meta.label}<small>${meta.sub}</small>`;
+    btn.onclick = () => window.switchTutorSubject(sub);
+    nav.appendChild(btn);
+  });
+};
+window.renderTutorUnitList = function() {
+  const container = document.getElementById("tutor-unit-list"); if (!container) return;
+  container.innerHTML = "";
+  const sub = window.currentTutorSubject;
+  const categories = (sub && window.globalStageMaster[sub]) ? Object.keys(window.globalStageMaster[sub]) : [];
+  if (categories.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:32px 10px; color:var(--text-soft); font-size:14px; font-weight:700;">🌟 この教科の単元は準備中だよ！</div>`;
+    return;
+  }
+  categories.forEach(cat => {
+    const stages = (window.globalStageMaster[sub][cat] || []).filter(s => s.id);
+    if (stages.length === 0) return;
+    const box = document.createElement("div"); box.className = "acc-box";
+    const head = document.createElement("div"); head.className = "acc-head";
+    head.innerHTML = `<span>${cat}</span>`;
+    head.onclick = () => window.toggleAcc(head);
+    box.appendChild(head);
+    const body = document.createElement("div"); body.className = "acc-body open";
+    stages.forEach(stg => {
+      const hasQuizzes = !!(window.CONTENT && window.CONTENT.quizzes && window.CONTENT.quizzes[stg.id] && window.CONTENT.quizzes[stg.id].length);
+      const isCleared = !!window.saveData.clearedStages[stg.id];
+      const row = document.createElement("div"); row.className = "tutor-unit-row";
+      row.innerHTML = `<div class="tutor-unit-name">${stg.name}</div>
+        <div class="tutor-unit-btns">
+          <button class="btn-sm" ${hasQuizzes ? "" : "disabled"} onclick="window.openTutorDetail('${stg.id}', 'preview')">🔍 予習する</button>
+          <button class="btn-sm" ${(hasQuizzes && isCleared) ? "" : "disabled"} onclick="window.openTutorDetail('${stg.id}', 'review')">📝 振り返る</button>
+        </div>`;
+      body.appendChild(row);
+    });
+    box.appendChild(body);
+    container.appendChild(box);
+  });
+};
+window.openTutorDetail = function(stageId, mode) {
+  const quizzes = (window.CONTENT && window.CONTENT.quizzes) ? window.CONTENT.quizzes[stageId] : null;
+  if (!quizzes || !quizzes.length) { alert("🦄 ごめんね、まだこの単元の解説が準備できていないよ！"); return; }
+  let stageName = stageId;
+  const sub = window.currentTutorSubject;
+  Object.keys(window.globalStageMaster[sub] || {}).forEach(cat => {
+    (window.globalStageMaster[sub][cat] || []).forEach(s => { if (s.id === stageId) stageName = s.name; });
+  });
+  const seen = new Set(); const points = [];
+  quizzes.forEach(q => {
+    const text = mode === "preview" ? q.hint : (q.job_desc || q.hint);
+    if (text && !seen.has(text)) { seen.add(text); points.push(text); }
+  });
+  document.getElementById("tutor-detail-title").textContent = (mode === "preview" ? "🔍 予習：" : "📝 振り返り：") + stageName;
+  document.getElementById("tutor-detail-lead").textContent = mode === "preview"
+    ? "ニコ「この単元に出てくる、だいじなポイントを先に見ておこう！答えは自分で考えてみてね」"
+    : "ニコ「この単元でやったこと、ポイントをおさらいしよう！」";
+  const list = document.getElementById("tutor-detail-list"); list.innerHTML = "";
+  points.forEach(p => {
+    const item = document.createElement("div"); item.className = "tutor-point-card";
+    item.innerHTML = `<div class="tutor-point-icon">🦄</div><div class="tutor-point-text"></div>`;
+    item.querySelector(".tutor-point-text").textContent = p;
+    list.appendChild(item);
+  });
+  if (points.length === 0) {
+    list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-soft); font-size:13px;">🌟 この単元には、まだヒント・解説の準備がないよ。クイズに直接挑戦してみよう！</div>`;
+  }
+  document.getElementById("tutor-list-view").style.display = "none";
+  document.getElementById("tutor-detail-view").style.display = "block";
+};
+window.closeTutorDetail = function() {
+  document.getElementById("tutor-detail-view").style.display = "none";
+  document.getElementById("tutor-list-view").style.display = "block";
+};
+/* ★ゆめかわチューター ここまで ------------------- */
 
 /* ★ガチャシステム（ニコのたまごガチャ） 2026-07-25 ここから ------------------- */
 window.GACHA_EGG_LIST = [
