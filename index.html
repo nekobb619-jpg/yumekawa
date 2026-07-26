@@ -1385,8 +1385,11 @@ window.checkPremiumGacha = function() {
   const picked = available[Math.floor(Math.random() * available.length)];
   const isNew = !sd.kuroPonPremiumAvatars[picked.id];
   if (isNew) sd.kuroPonPremiumAvatars[picked.id] = true;
-  // Q付与（50〜300Q）
-  const qGain = 50 + Math.floor(Math.random() * 251);
+  // Q付与（2026-07-26 バランス調整：以前は50〜300Q・期待値1日約22Qで、
+  //   全31ステージ初回クリア合計（約310〜460Q）を1ヶ月弱で上回るインフレ要因になっていたため縮小。
+  //   目玉はQではなく「ひみつのクロぽん姿」というコレクション性に寄せ、Qは1回の復習クリア(5Q)前後の
+  //   ささやかなボーナス扱いにする）
+  const qGain = 5 + Math.floor(Math.random() * 11); // 5〜15Q
   sd.q = (sd.q || 0) + qGain;
   window.updateUI();
   window.saveGame();
