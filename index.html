@@ -2249,16 +2249,38 @@ window.fetchBattleStats = function() {
   if (!area) return;
   area.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px;">📡 通信中…</div>';
   fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "GET_BATTLE_STATS" }) })
-    .then(res => res.json())
-    .then(res => { window.renderBattleStats(res || {}); })
-    .catch(e => { area.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px;">今は記録を読み込めなかったよ。またあとで見てみてね！</div>'; });
+    .then(res => res.text())
+    .then(text => {
+      let parsed = {};
+      try { parsed = JSON.parse(text); } catch (e) { parsed = { error: text }; }
+      console.log("[battle] response", parsed);
+      window.renderBattleStats(parsed || {});
+    })
+    .catch(e => {
+      console.error("[battle] fetch failed", e);
+      area.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px;">今は記録を読み込めなかったよ。またあとで見てみてね！</div>';
+    });
 };
-window.renderBattleStats = function(counts) {
+window.renderBattleStats = function(payload) {
   const area = document.getElementById("battle-stats-area");
   if (!area) return;
-  if (!counts || counts.error) { area.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px;">今は記録を読み込めなかったよ。またあとで見てみてね！</div>'; return; }
+
+  let counts = payload;
+  if (payload && typeof payload === "object") {
+    if (payload.counts && typeof payload.counts === "object") counts = payload.counts;
+    else if (payload.battleStats && typeof payload.battleStats === "object") counts = payload.battleStats;
+    else if (payload.result && typeof payload.result === "object") counts = payload.result;
+    else if (payload.data && typeof payload.data === "object" && !Array.isArray(payload.data)) counts = payload.data;
+  }
+
+  if (!counts || typeof counts !== "object" || Array.isArray(counts) || counts.error) {
+    const detail = counts && counts.error ? `（${counts.error}）` : "";
+    area.innerHTML = `<div style="font-size:12px; color:#94a3b8; padding:8px;">今は記録を読み込めなかったよ。またあとで見てみてね！${detail}</div>`;
+    return;
+  }
+
   const ids = window.SIBLING_PLAYER_IDS;
-  const vals = ids.map(id => counts[id] || 0);
+  const vals = ids.map(id => Number(counts[id] || 0));
   const maxVal = Math.max(1, ...vals);
   const total = vals.reduce((a, b) => a + b, 0);
 
