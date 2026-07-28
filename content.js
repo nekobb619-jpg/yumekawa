@@ -388,6 +388,24 @@
       name: "接続する言葉（だから・しかし・なぜなら）",
       reward: 10, showCount: 10, video_url: "", lab_url: "",
       created: "2026-07-28"
+    },
+    {
+      subject: "英語",
+      category: "日常会話（4年）",
+      grade: "4年生",
+      id: "英語/あいさつ/english401",
+      name: "すきなものとあいさつ（How are you? / I like...）",
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-28"
+    },
+    {
+      subject: "英語",
+      category: "かずとアルファベット（3年）",
+      grade: "3年生",
+      id: "英語/数字とアルファベット/english301",
+      name: "かずとアルファベット（1〜10とABCD）",
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-28"
     }
   ];
 
@@ -3420,6 +3438,150 @@
         rescue_hint:"『だから』だよ。",
         job_title:"接続語 パーフェクト！",
         job_desc:"『だから』が バッチリ決まったね！ つなぎ言葉を マスターすると 長い 文章も らくらく 読めるようになるよ！" }
+    ],
+
+    "英語/あいさつ/english401": [
+      { q:"英語で「元気？（調子はどう？）」と たずねるとき、なんと言うかな？",
+        a:["How are you?","What's your name?","Good morning.","Thank you."], c:0,
+        hint:"相手の 気分や 様子を 聞く あいさつだよ。",
+        job_title:"あいさつマスター！",
+        job_desc:"「How are you?」は 友達や 先生と 会ったときの 基本の あいさつ！「I'm fine!」など 気分を 答えよう。" },
+
+      { q:"「How are you?」と 聞かれて「お腹が すいているよ」と 答えるときは どれかな？",
+        a:["I'm hungry.","I'm happy.","I'm tired.","I'm fine."], c:0,
+        hint:"『ハンガリー』みたいな 発音。お腹ペコペコだよ。",
+        job_title:"気分を伝える英語！",
+        job_desc:"お腹がすいたら「I'm hungry.」、幸せなら「I'm happy.」、つかれたら「I'm tired.」だね。" },
+
+      { q:"「What do you like?（なにが すき？）」と 聞かれて「りんごが すき！」と 答えるときの 英語はどれ？",
+        a:["I like apples.","I like dogs.","I like blue.","I'm hungry."], c:0,
+        hint:"「I like ◯◯.」で 好きなものを 伝えるよ。りんご＝apples。",
+        job_title:"すきなものを伝える！",
+        job_desc:"「I like ◯◯.」は 自分の 好きな 食べ物や 動物を 伝える ときの 魔法の フレーズだよ！" },
+
+      { q:"今日の 天気を 聞かれて「晴れているよ☀️」と 答えるときの 英語は どれかな？",
+        a:["It's sunny.","It's rainy.","It's cloudy.","It's cold."], c:0,
+        hint:"太陽（sun）が サンサンと 輝いているよ。",
+        job_title:"お天気の英語！",
+        job_desc:"晴れ＝sunny☀️、雨＝rainy🌧️、くもり＝cloudy☁️。毎日の お天気を 英語で 言ってみよう！" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"『How are you? に 自分自身の いまの 気分で 答えてみましょう』って もんだい。<br>これは <b>なにが できると OK</b>かな？" }
+        ],
+        a:["英語で 自分の 気持ちや 様子を 相手に 伝えられるか","英語を 早口で 話せるか","スペルを 全部 暗記しているか","和訳を 暗記しているか"], c:0,
+        hint:"『自分の気持ちを 英語で伝える』だね。",
+        speech_text:"この もんだいの ねらいは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"ねらいは『英語で 自分の 気持ちや 状況を 相手に 楽しく 伝えられるか』だよ！" },
+
+      { q:"下の 絵。「I'm happy.😃」の意味として 正しいのは どれかな？",
+        canvas_code:"var w=canvas.width,h=canvas.height;ctx.fillStyle='#fffdf0';ctx.fillRect(0,0,w,h);ctx.beginPath();ctx.arc(w/2,h/2-10,35,0,Math.PI*2);ctx.fillStyle='#f1c40f';ctx.fill();ctx.fillStyle='#2c3e50';ctx.beginPath();ctx.arc(w/2-12,h/2-20,4,0,Math.PI*2);ctx.arc(w/2+12,h/2-20,4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(w/2,h/2-10,20,0,Math.PI);ctx.lineWidth=3;ctx.strokeStyle='#2c3e50';ctx.stroke();ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText(\"I'm happy!\",w/2,h-15);",
+        a:["幸せ・うれしい気分","お腹がすいた","ねむい","おこっている"], c:0,
+        hint:"ニコニコ にっこり スマイルの 気分だよ。",
+        job_title:"スマイル英語！",
+        job_desc:"「I'm happy!」は にっこり 嬉しい気分！ 笑顔で あいさつすると 気持ちがいいね。" },
+
+      { q:"英語で「ありがとう！」と 感謝を 伝えるときの 言葉は どれかな？",
+        a:["Thank you!","I'm sorry.","Hello!","Good night."], c:0,
+        hint:"「サンキュー！」だよ。",
+        job_title:"感謝の英語！",
+        job_desc:"「Thank you!」は 世界中どこでも 通じる 素敵な 感謝の 言葉だよ！" },
+
+      { q:"「What color do you like?（何色が すき？）」と 聞かれて「青色が すき！」と 答えるのは どれ？",
+        a:["I like blue.","I like red.","I like yellow.","I like green."], c:0,
+        hint:"青色＝blue（ブルー）。",
+        job_title:"色の英語！",
+        job_desc:"青＝blue、赤＝red、黄色＝yellow、緑＝green。身の回りの 色を 英語で 探してみよう！" },
+
+      { q:"【ニコに おしえてあげよう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"「英語で 『I like...』って 言うときは、どんな気持ちを 伝えているの？」" }
+        ],
+        a:["自分の『すきな ものや こと』を 相手に 伝えるときの 決まり文句だよ！","嫌いなものを 伝えるよ","お別れの あいさつだよ","質問する 言葉だよ"], c:0,
+        hint:"好きなものを 伝えるフレーズ！",
+        speech_text:"ニコに I like の意味を おしえよう！",
+        job_title:"🎓 ニコに おしえた！",
+        job_desc:"「I like ◯◯.」は 自分のお気に入りや 好きを 伝える言葉！ 相手の「I like...」も 聞いてみようね。" },
+
+      { q:"英語の あいさつ「こんにちは」を アルファベットで 書こう。（例：hello）",
+        type:"text_input", correct_answers:["hello","Hello","HELLO"],
+        hint:"『h』から はじまる 5文字の 言葉だよ。",
+        rescue_hint:"『hello』だよ。",
+        job_title:"英語のあいさつ パーフェクト！",
+        job_desc:"「Hello!」と 元気よく あいさつできれば、世界中の 人と 友達に なれるよ！" }
+    ],
+
+    "英語/数字とアルファベット/english301": [
+      { q:"英語で 数（かず）の「1、2、3」を なんと言うかな？",
+        a:["one, two, three","four, five, six","seven, eight, nine","red, blue, yellow"], c:0,
+        hint:"「ワン・ツー・スリー」だよ。",
+        job_title:"1・2・3 マスター！",
+        job_desc:"1＝one、2＝two、3＝three！ リズムに合わせて かぞえてみよう。" },
+
+      { q:"英語の 数で「5」を表す 言葉は どれかな？",
+        a:["five","four","six","three"], c:0,
+        hint:"「ファイブ」だよ。",
+        job_title:"数の英語クリア！",
+        job_desc:"5＝five！ 手の 指の 数（5本）と 同じだね。" },
+
+      { q:"アルファベットの 大文字「A」に 対応する 小文字は どれかな？",
+        a:["a","b","c","d"], c:0,
+        hint:"アルファベットの 最初の 小文字だよ。",
+        job_title:"アルファベット A-a！",
+        job_desc:"大文字「A」の 小文字は「a」。アップル（apple）の 最初の 文字だね。" },
+
+      { q:"アルファベットの 最初の 4文字の 並び順として 正しいのは どれ？",
+        a:["A, B, C, D","A, C, B, D","D, C, B, A","B, A, D, C"], c:0,
+        hint:"「エー・ビー・シー・ディー」の 順番だよ。",
+        job_title:"ABCDソング！",
+        job_desc:"A, B, C, D の 順番！ ABCの歌を 歌うと 楽しく 覚えられるよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"『果物の 数を かぞえて How many? に 答えましょう』って もんだい。<br>これは <b>なにが できると OK</b>かな？" }
+        ],
+        a:["物を 英語で かぞえて 数を 英語で 言えるか","リンゴを たべられるか","数字を 書くのが はやいか","英語の 歌を 歌えるか"], c:0,
+        hint:"『数を 英語で言えるか』だね。",
+        speech_text:"この もんだいの ねらいは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"ねらいは『身の回りの 物を 英語で かぞえて、数を 正しく 言えるか』だよ！" },
+
+      { q:"下の 絵。リンゴは なんこ あるかな？ 英語で 数えよう！",
+        canvas_code:"var w=canvas.width,h=canvas.height;ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.fillStyle='#2c3e50';ctx.font='bold 14px sans-serif';ctx.fillText('🍎 How many apples?',25,25);for(var i=0;i<3;i++){var x=60+i*70;ctx.beginPath();ctx.arc(x,65,20,0,Math.PI*2);ctx.fillStyle='#ff4757';ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(i+1,x,70);}",
+        a:["three（3つ）","two（2つ）","four（4つ）","five（5つ）"], c:0,
+        hint:"1, 2, 3！ 3つの りんごだよ。",
+        job_title:"英語でカウント！",
+        job_desc:"one, two, three！ リンゴは 3つ（three）あるね！" },
+
+      { q:"英語の 数で「10」を 表す 言葉は どれかな？",
+        a:["ten","nine","eight","seven"], c:0,
+        hint:"「テン」だよ。両手の 指の 数！",
+        job_title:"10の英語！",
+        job_desc:"10＝ten！ 1から 10まで 英語で 言えると かっこいいね。" },
+
+      { q:"アルファベットの 大文字「B」に 対応する 小文字は どれ？",
+        a:["b","d","p","q"], c:0,
+        hint:"『b』と『d』は 向きが 反対だから 気をつけてね。",
+        job_title:"B-b クリア！",
+        job_desc:"大文字「B」の 小文字は「b」！ ボール（ball）や ブック（book）の 最初の 文字だよ。" },
+
+      { q:"【ニコに おしえてあげよう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"「英語の アルファベットって ぜんぶで 何文字 あるの？」" }
+        ],
+        a:["大文字も 小文字も ぜんぶで 26文字 あるんだよ！","10文字だよ","100文字だよ","50文字だよ"], c:0,
+        hint:"Aから Zまでで 26文字！",
+        speech_text:"ニコに アルファベットの数を おしえよう！",
+        job_title:"🎓 ニコに おしえた！",
+        job_desc:"アルファベットは Aから Zまで ぜんぶで 26文字！ 26文字を 覚えると 世界中の 英語が 読めるようになるよ。" },
+
+      { q:"英語の 数で「1（ワン）」を アルファベット小文字 3文字で 書こう。（例：one）",
+        type:"text_input", correct_answers:["one","One","ONE"],
+        hint:"『o』から はじまる 3文字。（o-n-e）",
+        rescue_hint:"『one』だよ。",
+        job_title:"かずとアルファベット パーフェクト！",
+        job_desc:"1＝one！ 英語の 数と アルファベットの きほんは バッチリだね！" }
     ]
 
   };
