@@ -901,8 +901,9 @@ window.currentActiveStageIsReview = false;
 window.currentActiveStageIsMaster = false;
 window.currentServerTime = new Date().getTime();
 window.updateUI = function() {
-  document.getElementById("pts-val").innerHTML = `${window.saveData.pts}<span>pts</span>`;
-  document.getElementById("q-val").innerHTML = `${window.saveData.q}<span>Q</span>`;
+  if (!window.saveData) window.saveData = {};
+  document.getElementById("pts-val").innerHTML = `${window.saveData.pts || 0}<span>pts</span>`;
+  document.getElementById("q-val").innerHTML = `${window.saveData.q || 0}<span>Q</span>`;
   let displayKakera = window.saveData.kakera || 0;
   document.getElementById("kakera-val").innerHTML = `${displayKakera}<span>🧩</span>`;
   // ガチャの欠片カウント更新
@@ -910,6 +911,14 @@ window.updateUI = function() {
   if (kEl) kEl.textContent = displayKakera;
   // アバター・クロぽんボタン状態更新
   window.applyAvatar && window.applyAvatar();
+};
+window.refreshBookBanner = function() {
+  const banner = document.getElementById("book-banner");
+  const sub = document.getElementById("book-banner-sub");
+  const streak = document.getElementById("book-banner-streak");
+  if (!banner) return;
+  if (sub) sub.textContent = window.saveData && window.saveData.bookReadCount ? `今日は${window.saveData.bookReadCount}冊読んだよ` : "今日のおはなし";
+  if (streak) streak.textContent = `🔥${window.saveData && window.saveData.bookStreak ? window.saveData.bookStreak : 0}日 つづいてる`;
 };
 window.updateInventoryUI = function() {
   if(!window.saveData.inventory) window.saveData.inventory = [];
