@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>空気でっぽう じっけんラボ 🌬️</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#2c3e50; --soft:#5b7290; --sky:#4fa8e0; --skyl:#dff1fc; --pink:#ff7fc4; --mint:#37c79a; --gold:#f59e0b; --water:#2f7fd6; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#e8f6ff,#f3e8ff 55%,#e6fbf4);min-height:100vh;padding:14px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .steps{display:flex;gap:6px;margin-bottom:12px;}
+  .step{flex:1;text-align:center;font-size:11px;font-weight:900;padding:8px 4px;border-radius:999px;background:#fff;color:var(--soft);box-shadow:0 3px 0 rgba(44,62,80,.08);}
+  .step.on{background:var(--sky);color:#fff;box-shadow:none;}
+  .card{background:#fff;border-radius:20px;padding:16px;box-shadow:0 8px 0 rgba(44,62,80,.08);margin-bottom:12px;}
+  .screen{display:none;} .screen.on{display:block;animation:fade .3s;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h2{font-size:18px;margin:0 0 8px;}
+  .niko{display:flex;gap:8px;align-items:flex-start;margin:10px 0;}
+  .niko .face{font-size:30px;}
+  .bubble{background:#fff4fb;border:2px solid #ffe0f0;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;flex:1;}
+  .bubble b{color:var(--pink);}
+  .mtabs{display:flex;gap:6px;margin:8px 0;}
+  .mtab{flex:1;text-align:center;padding:9px;border-radius:12px;background:#f1f8ff;font-weight:900;font-size:13px;cursor:pointer;color:var(--soft);border:2px solid transparent;}
+  .mtab.on.air{background:var(--sky);color:#fff;}
+  .mtab.on.water{background:var(--water);color:#fff;}
+  /* 注射器 */
+  .syringe-wrap{display:flex;align-items:center;justify-content:center;margin:14px 0;}
+  .syringe{position:relative;width:260px;height:64px;}
+  .barrel{position:absolute;left:0;top:0;width:220px;height:64px;border:4px solid #90a4b8;border-radius:6px;background:#f7fbff;overflow:hidden;}
+  .fill{position:absolute;right:0;top:4px;bottom:4px;background:var(--sky);border-radius:2px;transition:width .35s;width:100%;}
+  .fill.water{background:var(--water);}
+  .ball{position:absolute;left:6px;top:22px;width:18px;height:18px;border-radius:50%;background:#ffb703;box-shadow:0 2px 0 #c47b00;transition:left .5s cubic-bezier(.2,.8,.3,1.1);}
+  .rod{position:absolute;top:24px;height:16px;background:#5b7290;border-radius:2px;transition:left .35s,width .35s;}
+  .knob{position:absolute;top:14px;width:26px;height:36px;background:#5b7290;border-radius:8px;transition:left .35s;}
+  .stepper{display:inline-flex;align-items:center;gap:8px;background:#eef6ff;border-radius:12px;padding:4px;}
+  .stepper button{border:none;width:34px;height:34px;border-radius:9px;background:var(--sky);color:#fff;font-weight:900;font-size:18px;cursor:pointer;box-shadow:0 3px 0 #2b7bb0;}
+  .stepper button:active{transform:translateY(2px);box-shadow:none;}
+  .stepper button:disabled{opacity:.4;cursor:default;}
+  .stepper .num{min-width:24px;text-align:center;font-weight:900;font-size:18px;}
+  .meterrow{margin:8px 0;}
+  .meterrow .lbl{font-size:12px;font-weight:900;color:var(--soft);display:flex;justify-content:space-between;}
+  .meter{height:14px;border-radius:8px;background:#eef2f7;overflow:hidden;margin-top:3px;}
+  .meter .bar{height:100%;border-radius:8px;transition:width .35s;}
+  .meter .bar.vol{background:linear-gradient(90deg,#4fa8e0,#37c79a);}
+  .meter .bar.res{background:linear-gradient(90deg,#f59e0b,#ff7fc4);}
+  .btn{border:none;border-radius:14px;padding:13px;font-family:inherit;font-weight:900;font-size:15px;color:#fff;cursor:pointer;width:100%;}
+  .btn.go{background:linear-gradient(180deg,#6ec3f5,#2b7bb0);box-shadow:0 5px 0 #1c5c85;}
+  .btn.gold{background:linear-gradient(180deg,#ffca5e,#f59e0b);box-shadow:0 5px 0 #b45309;}
+  .btn.mint{background:linear-gradient(180deg,#5fe3c0,#37c79a);box-shadow:0 5px 0 #1f9e78;}
+  .btn:active{transform:translateY(3px);box-shadow:none;}
+  .btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none;}
+  .btn.ghost{background:#eee;color:var(--soft);box-shadow:0 4px 0 #ddd;}
+  .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0;}
+  .tag{display:inline-block;background:#fef9c3;color:#a16207;font-weight:900;font-size:12px;padding:4px 10px;border-radius:999px;}
+  .rulecard{background:linear-gradient(135deg,#e8f6ff,#ffe9f5);border:2px dashed #6ec3f5;border-radius:16px;padding:14px;text-align:center;font-weight:900;font-size:15px;color:#2b7bb0;}
+  .maketabs{display:flex;gap:6px;margin-bottom:10px;}
+  .maketab{flex:1;text-align:center;padding:9px;border-radius:12px;background:#f1f8ff;font-weight:900;font-size:13px;cursor:pointer;color:var(--soft);}
+  .maketab.on{background:var(--pink);color:#fff;}
+  .prob{background:#f8fafc;border:2px solid #dbeafe;border-radius:12px;padding:12px;font-weight:900;font-size:16px;text-align:center;margin:8px 0;}
+  .choice{width:100%;text-align:left;background:#fff;border:2px solid var(--skyl);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:700;font-size:13px;margin-bottom:6px;cursor:pointer;}
+  .choice.ok{border-color:var(--mint);background:#effffb;}
+  .choice.ng{border-color:#fca5a5;background:#fee2e2;}
+  .score{text-align:center;font-weight:900;color:var(--pink);margin-top:6px;}
+  .small{font-size:11px;color:var(--soft);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="steps">
+    <div class="step on" id="st1">① じっけん</div>
+    <div class="step" id="st2">② ひらめき</div>
+    <div class="step" id="st3">③ 問題メーカー</div>
+  </div>
+
+  <!-- ① 実験 -->
+  <div class="screen on" id="scr1">
+    <div class="card">
+      <h2>🌬️ 空気でっぽう じっけんラボ</h2>
+      <div class="niko"><div class="face">🦄</div><div class="bubble" id="b1">注射器（ちゅうしゃき）に <b>空気</b>と<b>水</b>を入れて、ピストンを おしてみよう！ 押しちぢむのは どっちかな？</div></div>
+
+      <div class="mtabs">
+        <div class="mtab on air" id="tabAir" onclick="setMaterial('air')">💨 空気を 入れる</div>
+        <div class="mtab water" id="tabWater" onclick="setMaterial('water')">💧 水を 入れる</div>
+      </div>
+
+      <div class="syringe-wrap">
+        <div class="syringe">
+          <div class="barrel"><div class="fill" id="fill"></div><div class="ball" id="ball">⚪</div></div>
+          <div class="rod" id="rod"></div>
+          <div class="knob" id="knob"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="small">おす 力：</span>
+        <div class="stepper"><button onclick="chgPush(-1)">－</button><span class="num" id="pNum">0</span><button onclick="chgPush(1)">＋</button></div>
+      </div>
+
+      <div class="meterrow">
+        <div class="lbl"><span>体積（大きさ）</span><span id="volLbl">100</span></div>
+        <div class="meter"><div class="bar vol" id="volBar" style="width:100%;"></div></div>
+      </div>
+      <div class="meterrow">
+        <div class="lbl"><span>手ごたえ（押し返す力）</span><span id="resLbl">0</span></div>
+        <div class="meter"><div class="bar res" id="resBar" style="width:0%;"></div></div>
+      </div>
+
+      <div class="row"><button class="btn gold" id="fireBtn" onclick="fireBall()" disabled>🚀 たまを はなす！</button></div>
+      <div class="row"><button class="btn go" id="toRule" onclick="go(2)" disabled>ひみつを 見つけたら つぎへ →</button></div>
+    </div>
+  </div>
+
+  <!-- ② ひらめき -->
+  <div class="screen" id="scr2">
+    <div class="card">
+      <h2>💡 ひらめき</h2>
+      <div class="rulecard">💨 空気は おしちぢめられて、<br><span style="color:#db2777;">元にもどろうとする 力（手ごたえ）が つよくなる！</span><br><span class="small">押しちぢめるほど、玉を とばす パワーも 大きくなるよ。</span></div>
+      <div class="rulecard" style="margin-top:10px;">💧 水は どんなに つよく おしても、<br><span style="color:#2b7bb0;">体積（大きさ）が まったく かわらない！</span><br><span class="small">だから 水を入れた 空気でっぽうは 玉が とばないよ。</span></div>
+      <div class="niko" style="margin-top:12px;"><div class="face">🦄</div><div class="bubble">この ルールを つかえば、<b>自分で じっけん問題が つくれる</b>よ！ 通常問題と、ひっかけの ワナ問題、どっちも 作ってみよう！</div></div>
+      <div class="row"><button class="btn gold" onclick="go(3)">🛠️ 問題メーカーへ 進む！</button></div>
+      <div class="row"><button class="btn ghost" style="max-width:160px" onclick="go(1)">← 実験に もどる</button></div>
+    </div>
+  </div>
+
+  <!-- ③ メーカー -->
+  <div class="screen" id="scr3">
+    <div class="card">
+      <h2>🛠️ 問題メーカー <span class="tag">作った問題：<span id="madeN">0</span></span></h2>
+      <div class="maketabs">
+        <div class="maketab on" id="tabN" onclick="switchTab('N')">🟢 通常問題</div>
+        <div class="maketab" id="tabT" onclick="switchTab('T')">🔴 ワナ問題</div>
+      </div>
+
+      <!-- 通常問題メーカー -->
+      <div id="mkN">
+        <div class="small">「筒Aは 力〇、筒Bは 力〇で 空気を 押しちぢめた」問題を つくろう。どちらが 遠くまで 玉を 飛ばすか、ニコが 答えるよ。</div>
+        <div class="row">
+          筒A の 力： <div class="stepper"><button onclick="chg('A',-1)">－</button><span class="num" id="A">2</span><button onclick="chg('A',1)">＋</button></div>
+        </div>
+        <div class="row">
+          筒B の 力： <div class="stepper"><button onclick="chg('B',-1)">－</button><span class="num" id="B">6</span><button onclick="chg('B',1)">＋</button></div>
+        </div>
+        <div class="row"><button class="btn go" onclick="makeNormal()">🦄 ニコに 出す！</button></div>
+        <div id="nResult"></div>
+      </div>
+
+      <!-- ワナ問題メーカー -->
+      <div id="mkT" style="display:none;">
+        <div class="small">出題者に なって、ニコを ひっかける ワナを えらぼう！</div>
+        <div class="row" style="flex-direction:column;gap:8px;">
+          <button class="btn ghost" onclick="makeTrap('water')">💧 水でっぽうの ワナ<br><span class="small">水を 入れて 強く おすと…？</span></button>
+          <button class="btn ghost" onclick="makeTrap('mix')">🥤 空気と水 まぜまぜの ワナ<br><span class="small">両方 入っていたら どっちが ちぢむ？</span></button>
+        </div>
+        <div id="tResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var material='air', push=0, ruleSeen=false, made=0;
+  var nA=2, nB=6;
+
+  function volumeFor(mat,p){ return mat==='air' ? Math.max(28, 100 - p*8) : 100; }
+  function resistFor(mat,p){ if(mat==='water') return p>0?96:0; return Math.min(92, p*10); }
+
+  function renderSyringe(){
+    var vol = volumeFor(material, push);
+    var res = resistFor(material, push);
+    var barrelW = 220, pistonTravel = barrelW*0.62; // ピストンが動ける範囲
+    var pistonX;
+    if(material==='air'){
+      pistonX = 4 + (pistonTravel * (100 - vol) / 72); // ちぢむ分だけ ピストンが 入りこむ
+    } else {
+      pistonX = 4; // 水は まったく 動かない
+    }
+    document.getElementById("fill").style.width = vol + "%";
+    document.getElementById("fill").className = "fill" + (material==='water' ? " water" : "");
+    document.getElementById("rod").style.left = (barrelW + pistonX) + "px";
+    document.getElementById("rod").style.width = (60 - pistonX*0.5) + "px";
+    document.getElementById("knob").style.left = (barrelW + pistonX + 55 - pistonX*0.5) + "px";
+    document.getElementById("volLbl").textContent = vol;
+    document.getElementById("volBar").style.width = vol + "%";
+    document.getElementById("resLbl").textContent = res;
+    document.getElementById("resBar").style.width = res + "%";
+
+    var b = document.getElementById("b1");
+    var toRule = document.getElementById("toRule");
+    var fireBtn = document.getElementById("fireBtn");
+    if(material==='air'){
+      if(push===0){ b.innerHTML="『＋』を おして、空気を 押しちぢめてみよう！"; }
+      else { b.innerHTML="空気の 体積は "+vol+"！ 手ごたえは "+res+"。押しちぢめるほど、<b>元にもどろうとする力</b>が つよく なるね！"; }
+      fireBtn.disabled = push < 2;
+      if(push>=6){ ruleSeen=true; toRule.disabled=false; toRule.textContent="ひみつを 見つけた！ つぎへ →"; }
+    } else {
+      if(push===0){ b.innerHTML="こんどは 水で ためそう。『＋』を おして、水を 押しちぢめてみよう！"; }
+      else { b.innerHTML="あれ！？ 体積は "+vol+"の まま、ぜんぜん かわらない！ 水は どんなに おしても <b>押しちぢめられない</b>んだ！"; ruleSeen=true; toRule.disabled=false; toRule.textContent="ひみつを 見つけた！ つぎへ →"; }
+      fireBtn.disabled = true;
+    }
+  }
+
+  window.setMaterial=function(m){
+    material=m; push=0; document.getElementById("pNum").textContent=0;
+    document.getElementById("ball").style.left="6px";
+    document.getElementById("tabAir").classList.toggle("on", m==='air');
+    document.getElementById("tabWater").classList.toggle("on", m==='water');
+    renderSyringe();
+  };
+  window.chgPush=function(d){
+    push=Math.max(0,Math.min(9,push+d));
+    document.getElementById("pNum").textContent=push;
+    document.getElementById("ball").style.left="6px";
+    renderSyringe();
+  };
+  window.fireBall=function(){
+    var dist = 20 + push*22;
+    document.getElementById("ball").style.left = dist + "px";
+    document.getElementById("b1").innerHTML = "🚀 ポン！ 押す力 "+push+"で、玉は 遠くまで 飛んだ！ 押しちぢめるほど、玉を とばす パワーが 大きくなるんだね！";
+  };
+
+  window.go=function(n){
+    [1,2,3].forEach(function(i){ document.getElementById("scr"+i).classList.toggle("on", i===n); document.getElementById("st"+i).classList.toggle("on", i===n); });
+  };
+
+  window.switchTab=function(t){
+    document.getElementById("tabN").classList.toggle("on", t==='N');
+    document.getElementById("tabT").classList.toggle("on", t==='T');
+    document.getElementById("mkN").style.display = t==='N'?'block':'none';
+    document.getElementById("mkT").style.display = t==='T'?'block':'none';
+  };
+
+  window.chg=function(k,d){
+    if(k==='A'){ nA=Math.max(1,Math.min(9,nA+d)); document.getElementById("A").textContent=nA; }
+    if(k==='B'){ nB=Math.max(1,Math.min(9,nB+d)); document.getElementById("B").textContent=nB; }
+  };
+
+  window.makeNormal=function(){
+    var box=document.getElementById("nResult");
+    var farther = nA===nB ? "同じくらい" : (nA>nB ? "筒A" : "筒B");
+    box.innerHTML=''
+      +'<div class="prob">できた問題：<br>筒A『押す力 '+nA+'』、筒B『押す力 '+nB+'』<br>どちらが 遠くまで 玉が 飛ぶ？</div>'
+      +'<div class="niko"><div class="face">🦄</div><div class="bubble">ぼくの こたえは… <b>'+farther+'</b>！<br>押す力が 大きいほど、空気を 大きく 押しちぢめられて、元にもどろうとする パワーも 強くなるからだよ！🎉</div></div>'
+      +'<div class="small" style="margin-top:8px;">この問題の <b>ねらい</b>は？（出題者の 意図を えらぼう）</div>'
+      +'<button class="choice" onclick="pickAim(this,true)">押しちぢめる 力が 大きいほど、押し返す パワーが 強くなることが わかるか</button>'
+      +'<button class="choice" onclick="pickAim(this,false)">筒の 色が わかるか</button>'
+      +'<button class="choice" onclick="pickAim(this,false)">玉の 重さが はかれるか</button>';
+  };
+  window.pickAim=function(el,correct){
+    var btns=el.parentNode.querySelectorAll(".choice"); btns.forEach(function(b){b.disabled=true;});
+    if(correct){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made;
+      el.insertAdjacentHTML("afterend", '<div class="score">🎉 ねらいバッチリ！ 問題を 1つ 完成！</div>'); }
+    else { el.classList.add("ng");
+      el.insertAdjacentHTML("afterend", '<div class="small" style="color:#ef4444;">おしい！ この問題が いちばん 聞きたいのは「押しちぢめる力と 手ごたえの 関係」だよ。</div>'); }
+  };
+
+  window.makeTrap=function(kind){
+    var box=document.getElementById("tResult");
+    if(kind==='water'){
+      box.innerHTML=''
+        +'<div class="prob">きみが 作った ワナ：<br>『水を いっぱい 入れた 空気でっぽうを、力いっぱい おしたら 玉は 遠くまで 飛ぶ？』</div>'
+        +'<div class="niko"><div class="face">🦄</div><div class="bubble">力いっぱい おせば きっと 遠くまで… <b>あれ？ ぜんぜん おせない！</b><br>水は 押しちぢめられないから、玉を おし出す パワーが 生まれないんだ！ ひっかかった〜！😵</div></div>'
+        +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+        +'<button class="choice" onclick="pickTrap(this,true)">水は 押しちぢめられないと 見ぬけるか（空気と ちがう性質）</button>'
+        +'<button class="choice" onclick="pickTrap(this,false)">水の 色を 知っているか</button>';
+    } else {
+      box.innerHTML=''
+        +'<div class="prob">きみが 作った ワナ：<br>『空気と水を いっしょに 入れて おしたら、どっちが ちぢむ？』</div>'
+        +'<div class="niko"><div class="face">🦄</div><div class="bubble">両方とも 少しずつ ちぢむのかな… <b>ちがった！</b><br>ちぢむのは <b>空気の部分だけ</b>！ 水は まったく ちぢまないんだ！ ひっかかった〜！😵</div></div>'
+        +'<div class="small" style="margin-top:8px;">この ワナの <b>ねらい</b>は？</div>'
+        +'<button class="choice" onclick="pickTrap(this,true)">まざっていても、ちぢむのは 空気の部分だけと 見ぬけるか</button>'
+        +'<button class="choice" onclick="pickTrap(this,false)">容器の 大きさを 知っているか</button>';
+    }
+  };
+  window.pickTrap=function(el,correct){
+    var btns=el.parentNode.querySelectorAll(".choice"); btns.forEach(function(b){b.disabled=true;});
+    if(correct){ el.classList.add("ok"); made++; document.getElementById("madeN").textContent=made;
+      el.insertAdjacentHTML("afterend", '<div class="score">🎯 ニコを ひっかけて、ねらいも 見ぬいた！ ワナ問題 完成！</div>'); }
+    else { el.classList.add("ng");
+      el.insertAdjacentHTML("afterend", '<div class="small" style="color:#ef4444;">このワナが ためして いるのは、もっと 大事な「空気と水の ちがい」を 見ぬく力だよ。</div>'); }
+  };
+
+  // テスト用
+  window._made=function(){ return made; };
+
+  renderSyringe();
+})();
+</script>
+</body>
+</html>
