@@ -1116,6 +1116,7 @@ window.performLogin = function(id) {
        if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
        if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
+       if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
     } else { alert("読み込みエラー: " + res.message); }
   })
@@ -1153,6 +1154,7 @@ window.loadGameLocal = function() {
   }
   if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
   if(!window.saveData.inventory) window.saveData.inventory = [];
+  if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
   if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
