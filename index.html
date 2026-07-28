@@ -1014,6 +1014,16 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
 window.performLogin = function(id) {
   const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ クラウドからセーブデータをよみこみ中...";
   document.getElementById("display-player-name").textContent = id;
+  const fallbackLocal = () => {
+    window.loadGameLocal();
+    if (window.saveData && Number(window.saveData.pts || 0) <= 0 && Number(window.saveData.q || 0) <= 0) {
+      const candidate = localStorage.getItem("kids_lab_v12_pro_papa") || localStorage.getItem("kids_lab_v12_pro_りお") || localStorage.getItem("kids_lab_v12_pro_りさ");
+      if (candidate) {
+        try { window.saveData = Object.assign(window.saveData, JSON.parse(candidate)); } catch (e) {}
+      }
+    }
+    window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+  };
   fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "LOGIN", playerId: id }) })
   .then(res => res.json())
   .then(res => {
@@ -1040,11 +1050,34 @@ window.performLogin = function(id) {
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
     } else { alert("読み込みエラー: " + res.message); }
   })
-  .catch(e => { window.loadGameLocal(); window.syncWithGoogleSpreadsheet("LOAD"); });
+  .catch(e => { fallbackLocal(); window.syncWithGoogleSpreadsheet("LOAD"); });
 };
 window.loadGameLocal = function() {
   const local = localStorage.getItem("kids_lab_v12_pro_" + window.playerId);
-  if(local) { try { window.saveData = Object.assign(window.saveData, JSON.parse(local)); window.saveDataConfirmedSource = "local"; } catch(e){} }
+  const fallbackKeys = [
+    "kids_lab_v12_pro_" + window.playerId,
+    "kids_lab_v12_pro_papa",
+    "kids_lab_v12_pro_りお",
+    "kids_lab_v12_pro_りさ"
+  ];
+  let recovered = null;
+  for (const key of fallbackKeys) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        recovered = parsed;
+        break;
+      }
+    } catch (e) {}
+  }
+  if (recovered) {
+    window.saveData = Object.assign(window.saveData, recovered);
+    window.saveDataConfirmedSource = "local";
+  } else if (local) {
+    try { window.saveData = Object.assign(window.saveData, JSON.parse(local)); window.saveDataConfirmedSource = "local"; } catch(e){}
+  }
   if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
@@ -1058,7 +1091,12 @@ window.loadGameLocal = function() {
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI(); window.checkAutoLoginBonus();
 };
 window.saveGame = function() {
-  localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+  const snapshot = JSON.stringify(window.saveData);
+  localStorage.setItem("kids_lab_v12_pro_" + window.playerId, snapshot);
+  if (window.playerId === "りお" || window.playerId === "りさ") {
+    localStorage.setItem("kids_lab_v12_pro_papa", snapshot);
+  }
+  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
   // ★2026-07-20 追加：本物のセーブデータを一度も確認できていない状態（LOGINが失敗し、
   //   この端末にも前回のセーブが残っていない状態）でクラウドに保存しようとすると、
   //   通信エラーなどで「空っぽの初期値」が本物の記録の上に上書きされて消えてしまう事故が起きる。
