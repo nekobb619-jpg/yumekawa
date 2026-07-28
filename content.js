@@ -3364,6 +3364,49 @@
     });
     if (changed && typeof window.saveGame === "function") window.saveGame();
   };
+
+  /* ②-d 問題が追加された単元は、すでに「済」になっていても自動で解除する。
+     これにより、同じ単元の内容が増えたときにユーザーへ通知し、クリア済み状態を外す。 */
+  window.ensureStageQuestionCountTracking = function () {
+    if (!window.saveData || !window.CONTENT || !window.CONTENT.quizzes) return false;
+    if (!window.saveData.clearedStages) window.saveData.clearedStages = {};
+    if (!window.saveData.stageQuestionCounts) window.saveData.stageQuestionCounts = {};
+    var updated = false;
+    Object.keys(window.CONTENT.quizzes).forEach(function (stageId) {
+      var bundle = window.CONTENT.quizzes[stageId];
+      var count = Array.isArray(bundle) ? bundle.length : 0;
+      var prevCount = window.saveData.stageQuestionCounts[stageId];
+      if (prevCount === undefined) {
+        window.saveData.stageQuestionCounts[stageId] = count;
+        updated = true;
+        return;
+      }
+      if (count > prevCount && window.saveData.clearedStages[stageId]) {
+        delete window.saveData.clearedStages[stageId];
+        updated = true;
+        var stgMeta = null;
+        if (window.CONTENT.stages) {
+          stgMeta = window.CONTENT.stages.filter(function (s) { return s.id === stageId; })[0];
+        }
+        var label = (stgMeta && stgMeta.name) ? stgMeta.name : stageId;
+        alert("📚 「" + label + "」に新しい問題が追加されたので、これまでの「済」を外しておいたよ！");
+      }
+      window.saveData.stageQuestionCounts[stageId] = count;
+    });
+    if (updated) {
+      try {
+        var snapshot = JSON.stringify(window.saveData);
+        localStorage.setItem("kids_lab_v12_pro_" + (window.playerId || ""), snapshot);
+        if (window.playerId === "りお" || window.playerId === "りさ") {
+          localStorage.setItem("kids_lab_v12_pro_papa", snapshot);
+        }
+      } catch (e) {}
+      if (typeof window.updateUI === "function") window.updateUI();
+      if (typeof window.renderStageMaps === "function") window.renderStageMaps();
+      if (typeof window.renderSubjectsNav === "function") window.renderSubjectsNav();
+    }
+    return updated;
+  };
   // ★ここでは呼ばない：content.js の実行タイミングでは window.saveData に
   //   まだ実際のセーブデータ（localStorage/GAS由来）が入っていないため（読み込みは非同期）。
   //   実際の呼び出しは index.html の loadGameLocal() / performLogin() 成功時に行う。
@@ -3416,6 +3459,9 @@
       }
       if (window.availableSubjects.indexOf(sub) === -1) window.availableSubjects.push(sub);
     });
+    if (typeof window.refreshGradeAwareSubjects === "function") {
+      window.refreshGradeAwareSubjects();
+    }
   };
 
   // (b) 描画のたびにステージを合流させる（GAS読み込みの成功/失敗どちらでも出る）

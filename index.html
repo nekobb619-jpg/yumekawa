@@ -467,8 +467,8 @@
     </div>
   </div>
   <nav class="subjects" id="grade-nav" style="margin-bottom:8px;">
-    <button class="tab-btn active" data-grade="3年生" onclick="window.setGradeFilter('3年生')">📘 3年生</button>
-    <button class="tab-btn" data-grade="4年生" onclick="window.setGradeFilter('4年生')">📗 4年生</button>
+    <button class="tab-btn" data-grade="3年生" onclick="window.setGradeFilter('3年生')">📘 3年生</button>
+    <button class="tab-btn active" data-grade="4年生" onclick="window.setGradeFilter('4年生')">📗 4年生</button>
   </nav>
   <nav class="subjects" id="subjects-nav">
     <div style="font-size:12px; color:#94a3b8;">教科データを読み込み中...</div>
@@ -2465,8 +2465,8 @@ window.normalizeStageGrade = function(stg) {
   if (!stg) return window.currentGradeFilter || "4年生";
   if (typeof stg.grade === "string" && stg.grade.trim()) return stg.grade.trim();
   if (typeof stg.gradeLabel === "string" && stg.gradeLabel.trim()) return stg.gradeLabel.trim();
-  const raw = `${stg.category || ""} ${stg.name || ""}`;
-  if (/3年/.test(raw)) return "3年生";
+  const raw = `${stg.category || ""} ${stg.name || ""} ${stg.id || ""}`;
+  if (/3年|301/.test(raw)) return "3年生";
   if (/4年/.test(raw)) return "4年生";
   return "4年生";
 };
