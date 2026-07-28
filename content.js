@@ -29,6 +29,7 @@
     {
       subject: "算数",                      // ★あなたのスプレッドシートと同じ日本語にすると同じタブに合流します
       category: "わり算（4年）",             // 算数タブの中の見出し（グループ）
+      grade: "4年生",                       // ★学年タブ切り替え用
       id: "算数/わり算/hissan_amari01",       // ステージID（あなたの命名ルールに合わせた形）
       name: "わり算の筆算（あまり）",
       reward: 10,
@@ -40,6 +41,7 @@
     {
       subject: "算数",
       category: "わり算（4年）",
+      grade: "4年生",
       id: "算数/わり算/hissan_amari02",
       name: "わり算の筆算（2けたで わる）",
       reward: 10,
@@ -51,6 +53,7 @@
     {
       subject: "算数",
       category: "角度（4年）",
+      grade: "4年生",
       id: "算数/角度/kakudo01",
       name: "角の大きさ（角度のきほん）",
       reward: 10,
@@ -63,6 +66,7 @@
     {
       subject: "国語",
       category: "読解（4年）",
+      grade: "4年生",
       id: "国語/読解/kosoado01",
       name: "こそあど言葉（指示語）",
       reward: 10, showCount: 10, video_url: "",
@@ -73,6 +77,7 @@
     {
       subject: "理科",
       category: "電気のはたらき（4年）",
+      grade: "4年生",
       id: "理科/電気/denki01",
       name: "電気のはたらき（かん電池と回路）",
       reward: 10, showCount: 10, video_url: "", lab_url: "",
@@ -81,6 +86,7 @@
     {
       subject: "社会",
       category: "地図（4年）",
+      grade: "4年生",
       id: "社会/地図/nairiku01",
       name: "海に面していない県（内陸県）",
       reward: 10, showCount: 10, video_url: "", lab_url: "",
@@ -89,6 +95,7 @@
     {
       subject: "算数",
       category: "大きな数（4年）",
+      grade: "4年生",
       id: "算数/大きな数/ookazu01",
       name: "大きな数（万・億）",
       reward: 10, showCount: 10, video_url: "", lab_url: "",

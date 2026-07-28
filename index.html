@@ -466,6 +466,10 @@
       </div>
     </div>
   </div>
+  <nav class="subjects" id="grade-nav" style="margin-bottom:8px;">
+    <button class="tab-btn active" data-grade="3年生" onclick="window.setGradeFilter('3年生')">📘 3年生</button>
+    <button class="tab-btn" data-grade="4年生" onclick="window.setGradeFilter('4年生')">📗 4年生</button>
+  </nav>
   <nav class="subjects" id="subjects-nav">
     <div style="font-size:12px; color:#94a3b8;">教科データを読み込み中...</div>
   </nav>
@@ -823,6 +827,7 @@ window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, 
 //   saveGame() 側でこのフラグを見てクラウド送信をガードする。
 window.saveDataConfirmedSource = null;
 window.currentActiveSubject = "japanese";
+window.currentGradeFilter = "4年生";
 window.currentQIdx = 0; window.currentStage = null; window.currentQuestions = [];
 window.currentFirstTry = true; window.availableSubjects = [];
 window.bonusVideoUsed = false; window.bonusLabUsed = false; window.totalMistakes = 0;
@@ -2321,17 +2326,68 @@ window.openHybridContent = function(url, title, isCleared) {
     document.getElementById("iframe-title-text").textContent = title; document.getElementById("content-iframe").src = targetUrl; document.getElementById("iframe-modal").style.display = "flex";
   }
 };
+window.normalizeStageGrade = function(stg) {
+  if (!stg) return window.currentGradeFilter || "4年生";
+  if (typeof stg.grade === "string" && stg.grade.trim()) return stg.grade.trim();
+  if (typeof stg.gradeLabel === "string" && stg.gradeLabel.trim()) return stg.gradeLabel.trim();
+  const raw = `${stg.category || ""} ${stg.name || ""}`;
+  if (/3年/.test(raw)) return "3年生";
+  if (/4年/.test(raw)) return "4年生";
+  return "4年生";
+};
+window.matchesGradeFilter = function(stg) {
+  if (!stg) return false;
+  const target = (window.currentGradeFilter || "4年生").trim();
+  if (!target || target === "all") return true;
+  return window.normalizeStageGrade(stg) === target;
+};
+window.getAvailableSubjectsForGrade = function() {
+  const subjects = new Set();
+  const master = window.globalStageMaster || {};
+  Object.keys(master).forEach(sub => {
+    Object.keys(master[sub] || {}).forEach(cat => {
+      (master[sub][cat] || []).forEach(stg => {
+        if (window.matchesGradeFilter(stg)) subjects.add(sub);
+      });
+    });
+  });
+  return Array.from(subjects);
+};
+window.refreshGradeAwareSubjects = function() {
+  const filtered = window.getAvailableSubjectsForGrade();
+  window.availableSubjects = filtered.length > 0 ? filtered : [];
+  if (window.currentActiveSubject && window.availableSubjects.includes(window.currentActiveSubject)) return;
+  if (window.availableSubjects.length > 0) {
+    window.currentActiveSubject = window.availableSubjects[0];
+  } else {
+    window.currentActiveSubject = "japanese";
+  }
+};
+window.setGradeFilter = function(grade) {
+  window.currentGradeFilter = grade;
+  document.querySelectorAll('#grade-nav .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-grade') === grade);
+  });
+  window.refreshGradeAwareSubjects();
+  window.renderSubjectsNav();
+  window.renderStageMaps();
+};
 window.renderSubjectsNav = function() {
   const nav = document.getElementById("subjects-nav"); if(!nav) return; nav.innerHTML = "";
-  if(window.availableSubjects.length === 0) window.availableSubjects = ["japanese"];
-  if(!window.availableSubjects.includes(window.currentActiveSubject)) window.currentActiveSubject = window.availableSubjects[0];
-  window.availableSubjects.forEach(sub => {
+  window.refreshGradeAwareSubjects();
+  const visibleSubjects = window.availableSubjects || [];
+  if (visibleSubjects.length === 0) {
+    nav.innerHTML = '<div style="font-size:12px; color:#94a3b8;">この学年の教科はまだないよ</div>';
+    return;
+  }
+  if(!visibleSubjects.includes(window.currentActiveSubject)) window.currentActiveSubject = visibleSubjects[0];
+  visibleSubjects.forEach(sub => {
     const meta = window.subjectDictionary[sub] || { label: "🌟" + sub.toUpperCase(), sub: "新教科" };
     const btn = document.createElement("button"); btn.className = "tab-btn" + (sub === window.currentActiveSubject ? " active" : "");
     btn.id = `btn-${sub}`; btn.onclick = () => window.switchSubject(sub); btn.innerHTML = `${meta.label}<small>${meta.sub}</small>`; nav.appendChild(btn);
   });
 };
-window.switchSubject = function(s) { window.currentActiveSubject = s; document.querySelectorAll('.subjects .tab-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); }); window.renderStageMaps(); };
+window.switchSubject = function(s) { window.currentActiveSubject = s; document.querySelectorAll('#subjects-nav .tab-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); }); window.renderStageMaps(); };
 // ★NEW / 復習しよう の判定を一か所にまとめる（ステージ一覧とアコーディオン見出しの両方から使う）
 window.computeStageBadgeFlags = function(stg) {
   const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
@@ -2353,13 +2409,13 @@ window.computeStageBadgeFlags = function(stg) {
 window.renderStageMaps = function() {
   const container = document.getElementById("stage-maps-container"); if (!container) return; container.innerHTML = "";
   const sub = window.currentActiveSubject; const panel = document.createElement("section"); panel.className = "panel subject-panel active";
-  const categories = Object.keys(window.globalStageMaster[sub] || {});
+  const categories = Object.keys(window.globalStageMaster[sub] || {}).filter(cat => (window.globalStageMaster[sub][cat] || []).some(stg => window.matchesGradeFilter(stg)));
 
   if (categories.length === 0) {
     panel.innerHTML = `<div style="text-align:center; padding:32px 10px; color:var(--text-soft); font-size:14px; font-weight:700;">🌟 この教科のステージは準備中だよ！</div>`;
   } else {
     categories.forEach(cat => {
-      let rawStages = window.globalStageMaster[sub][cat]; let normalStages = []; let masterStages = [];
+      let rawStages = (window.globalStageMaster[sub][cat] || []).filter(stg => window.matchesGradeFilter(stg)); let normalStages = []; let masterStages = [];
       rawStages.forEach(stg => { let isMaster = (window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= 3); if (isMaster) masterStages.push(stg); else normalStages.push(stg); });
       let sortedStages = [...normalStages, ...masterStages];
 
