@@ -1104,10 +1104,28 @@ window.warnGasSyncFailure = function(actionLabel) {
 };
 window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
   if(!window.GAS_WEBAPP_URL) return;
-  const payload = { action: action, playerId: window.playerId, timestamp: new Date().toLocaleString("ja-JP"), currentPts: window.saveData.pts, currentQ: window.saveData.q, currentRobux: window.saveData.robux, ...extraData };
+  let payload;
+  if (action === "LOG") {
+    // ★きょうだい対抗バトル集計はGAS側でこのpayloadのplayerIdをF列に書き込んで
+    //   playerIdごとに集計する。集計に不要な項目（currentRobux等）は含めず、この形に固定する。
+    payload = {
+      action: "LOG",
+      timestamp: new Date().toLocaleString("ja-JP"),
+      stage: extraData.stage,
+      msg: extraData.msg,
+      currentPts: Number(window.saveData.pts || 0),
+      currentQ: Number(window.saveData.q || 0),
+      playerId: window.playerId
+    };
+  } else {
+    payload = { action: action, playerId: window.playerId, timestamp: new Date().toLocaleString("ja-JP"), currentPts: window.saveData.pts, currentQ: window.saveData.q, currentRobux: window.saveData.robux, ...extraData };
+  }
   window.postToGAS(payload)
   .then(res => {
     if (res.timestamp) { window.currentServerTime = new Date(res.timestamp).getTime(); } else { window.currentServerTime = new Date().getTime(); }
+    // ★LOG応答は画面表示・saveDataの更新には一切使わない（currentServerTimeの補正のみ）。
+    //   スコア表示・saveDataの復元は常にLOAD/LOGIN応答またはローカルのwindow.saveDataから
+    //   window.updateUI()経由で行い、LOG応答の生データが画面に混入することはない。
     if (action === "LOAD" && res.status === "SUCCESS") {
       let incomingStages = res.stages || []; window.globalStageMaster = {}; let foundSubjects = new Set();
       const specCont = document.getElementById("special-missions-container"); if(specCont) specCont.innerHTML = "";
