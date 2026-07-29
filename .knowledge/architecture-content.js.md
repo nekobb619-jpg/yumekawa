@@ -1,18 +1,43 @@
 # architecture-content.js.md — content.js / index.html の実装詳細
 
 このファイルは「新しいステージ・問題タイプ・機能をどう実装するか」の詳細リファレンス。
-毎回読む必要はなく、`content.js` や関連ロジックをさわるタスクのときだけ読み込めばよい。
+毎回読む必要はなく、`js/stages.js`・`js/quizzes/*.js`・`js/patch.js`（旧`content.js`）や関連ロジックを
+さわるタスクのときだけ読み込めばよい。
 過去に実際に起きた事故・バグの経緯は `.knowledge/postmortems.md` を参照（ここには「現在どう動くか」だけを書く）。
 
 ---
 
-## 1. content.js「1ファイル方式」
-- `content.js` 1ファイルに全ステージ一覧（`STAGES`配列）と全問題データ（`QUIZZES`オブジェクト）をまとめている。
-- `index.html` の末尾で読み込まれ、`window.injectContentStages()` が
+## 1. content.js「1ファイル方式」→ 複数ファイル分割（2026-07-29）
+- 元は `content.js` 1ファイルに全ステージ一覧（`STAGES`配列）と全問題データ（`QUIZZES`オブジェクト）、
+  合流ロジックをすべてまとめていたが、AIの編集コスト・トークン消費を抑えるため、まず
+  ステージ・問題データ・ロジックの3ファイルに分割し、同日中に問題データをさらに教科ごとへ
+  再分割した（`content.js`自体は削除ずみ）。
+  - `js/stages.js`：`STAGES`配列（ステージ定義・メタデータのみ、全教科ぶん）。
+    `window.CONTENT_STAGES`として公開。
+  - `js/quizzes/`：`QUIZZES`オブジェクト（問題データ本体）を教科ごとに分割。1教科だけ編集・参照
+    したいときに他教科ぶんのデータを読み込まずに済む（トークン削減が目的）。ファイル名は
+    日本語教科名だとOS間トラブルの懸念があるため英語表記にしている。
+    - `math.js`（算数）／`science.js`（理科）／`japanese.js`（国語）／`social.js`（社会）／
+      `kanji.js`（漢検）／`inquiry.js`（探究）／`english.js`（英語）
+    - 各ファイルは `window.CONTENT_QUIZZES_MATH`／`_SCIENCE`／`_JAPANESE`／`_SOCIAL`／`_KANJI`／
+      `_INQUIRY`／`_ENGLISH` としてそれぞれ公開する（教科名のローマ字表記の大文字）。
+  - `js/patch.js`：即時実行関数。`window.CONTENT_STAGES` と教科ごとの `window.CONTENT_QUIZZES_*`
+    を全部合流させて1つの `QUIZZES` オブジェクトにまとめてから、
+    `stableQid`・`migrateWeakQuestionIds`・`injectContentStages`等のロジック・自動パッチ処理を行う。
+    合流対象の教科ファイル一覧は `patch.js` 冒頭の `quizParts` 配列で管理している。
+  - `index.html` では **`js/stages.js` → `js/quizzes/*.js`（教科、順不同） → `js/patch.js` の順**で
+    読み込むこと（`patch.js`が先に読み込まれたstages/quizzesのグローバル公開値を前提にしているため、
+    `js/patch.js`を最後にする順序だけは崩すと壊れる）。
+- `index.html` の末尾で読み込まれ、`window.injectContentStages()`（`js/patch.js`）が
   `window.globalStageMaster` / `window.availableSubjects` にステージを合流させる（`renderSubjectsNav` /
   `renderStageMaps` / `launchQuest` / `launchWeakAttackLab` をモンキーパッチして統合）。
-- **新しいステージを増やすときは、スプレッドシートに行を足す必要はなく、`content.js` の
-  `STAGES` に1エントリ、`QUIZZES` に対応する問題配列を1つ足すだけでよい。**
+- **新しいステージを増やすときは、スプレッドシートに行を足す必要はなく、`js/stages.js` の
+  `STAGES` に1エントリ、該当教科の `js/quizzes/xxx.js` の `QUIZZES` に対応する問題配列を
+  1つ足すだけでよい**（`js/patch.js`側は触らなくてよい）。
+- **新しい教科を1つ増やす場合のみ**、`js/quizzes/` に新しいファイルを1つ追加し、
+  `window.CONTENT_QUIZZES_XXX` として公開したうえで、`index.html` に `<script>` タグを1行、
+  `js/patch.js` の `quizParts` 配列に1行足す必要がある（既存教科への問題追加とは違い、
+  この3箇所の変更が必要）。
 - ステージIDの命名規則：`"教科/カテゴリ/id名"`（例：`"社会/ごみ/gomi01"`）。`subject` と `category` は
   実際のGASスプレッドシートのタブ名・見出しと同じ日本語文字列にすること（表記ゆれがあると別タブに分かれてしまう）。
 - 各ステージのフィールド：`subject`, `category`, `id`, `name`, `reward`, `showCount`
@@ -40,14 +65,14 @@
 角度＝線の回転、など単元ごとに手を動かす体験そのものを変えている。）
 
 ## 4. 問題管理台帳の同期
-`問題管理台帳.html` の `LEDGER` 配列は `content.js` の `STAGES`/`QUIZZES` の内容と
+`問題管理台帳.html` の `LEDGER` 配列は `js/stages.js`/`js/quizzes/*.js` の `STAGES`/`QUIZZES` の内容と
 **常に一致させる**（id、問題数、選択式/記述式の内訳、特徴タグ）。ステージを1つ追加・変更したら、
 台帳側も同じタイミングで更新すること（AGENTS.md本体のクリティカル・ルール参照）。
 
 ## 5. 分岐図解トレーニングツール（`type:"branch_diagram"`、探究/分岐図解/…）
 子どもでも「考えを図にする」練習ができる汎用ツール。テンプレートの穴うめ式（自由描画ではない）。
 `index.html` 側に描画エンジンがあり（`window.renderBranchDiagramQuestion` / `window.redrawBranchDiagram` /
-`window.handleBranchBlankTap`）、`content.js` 側はデータ（`diagram` オブジェクト）を渡すだけでよい。
+`window.handleBranchBlankTap`）、`js/quizzes/*.js` 側はデータ（`diagram` オブジェクト）を渡すだけでよい。
 
 - テンプレートは2種類：
   - `template:"if_then"`（もし〜なら フローチャート）：ノードidは固定で `start`/`cond`/`yes`/`no` の4つ。
@@ -100,7 +125,7 @@ LOGIN通信が成功して初めて本物のクラウドの記録で上書きさ
   `performLogin()`のSUCCESS分岐・`loadGameLocal()`双方に
   `if(!window.saveData.treasureBook) window.saveData.treasureBook = {};`という
   初期化ガードがある（既存の古いセーブデータにフィールドが無くても壊れないように）。
-- **お宝一覧**：`window.TREASURE_LIST`（28種、`content.js`ではなく`index.html`内に直書き）。
+- **お宝一覧**：`window.TREASURE_LIST`（28種、`js/quizzes/*.js`ではなく`index.html`内に直書き）。
   ★1（ふつう・13種）／★2（レア・9種）／★3（超レア・4種）／★4（伝説級・2種、2026-07-24新設）の4段階。
   それぞれ`{id, name, icon, rarity, desc}`。詳細な設計方針・命名規則・今後の拡張チェックリストは
   `.knowledge/treasure-collection.md`を参照。
@@ -178,7 +203,7 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
 ## 8.7 ゆめかわチューター（単元別の予習・振り返り画面、2026-07-25 追加）
 クイズ画面（`#game-screen`）とは完全に独立した、もう1つの全画面ビュー`#tutor-screen`
 （メイン画面の「📖 ゆめかわチューター」ボタンから開く）。新しいAI/外部APIは一切使わず、
-既存の`content.js`/`QUIZZES`にすでにある各問題の`hint`（ヒント文）と`job_desc`
+既存の`js/quizzes/*.js`/`QUIZZES`にすでにある各問題の`hint`（ヒント文）と`job_desc`
 （正解後に出る解説文）だけを素材にして、単元（ステージ）ごとに自動で一覧化する
 「静的」な仕組み（AI接続や新規コンテンツ執筆が要らないため、実装コストゼロで
 全教科・全単元に即対応できるのが利点）。
@@ -195,8 +220,8 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
     trueのときだけボタンが有効になる。各問題の`job_desc`（解説文。無ければ`hint`で代替）
     を見せる。
   - どちらも同じ単元内で重複する文言は`Set`で除去してから表示する。
-- **データソース**：`window.CONTENT.quizzes[stageId]`（content.js由来）。GAS配信ステージ
-  （`content.js`に無い、スプレッドシート直配信のステージ）はhint/job_descの束が無いため、
+- **データソース**：`window.CONTENT.quizzes[stageId]`（js/quizzes/*.js由来）。GAS配信ステージ
+  （js/quizzes/*.jsに無い、スプレッドシート直配信のステージ）はhint/job_descの束が無いため、
   自動的に両ボタンとも`disabled`になる（`window.CONTENT.quizzes[stg.id]`が空の場合）。
 - **教科・単元一覧の取得**：`window.globalStageMaster` / `window.availableSubjects`を
   そのまま再利用（`window.injectContentStages()`を`openTutorScreen()`内で呼んでから
@@ -204,15 +229,47 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
 - **今後の拡張候補**（未実装）：単元ごとの手書き解説文の追加、予習/振り返りの既読管理、
   苦手リスト（`weakQuestions`）と連携した「この単元は特に振り返っておこう」のレコメンド。
 
+## 8.8 済ステージへの問題追加とクリア判定・報酬計算（2026-07-29 追加）
+既存の問題数トラッキングとは別に、**クリア済みステージに問題が追加されたときの
+初回クリア報酬（pt/Q）の再付与**を目的とした専用の仕組みを`index.html`側に用意している。
+
+- **`window.saveData.clearedQuestionCounts`**（オブジェクト、キーはステージid、値は
+  「最後にクリアした時点の問題数」）。`exitToMainMenu()`でステージをクリアするたびに
+  その時点の`window.CONTENT.quizzes[stageId].length`で上書き更新される。
+  `normalizeSaveData`・初期`window.saveData`・`performLogin`・`loadGameLocal`すべてに
+  `|| {}`のフォールバックがある。
+- **`window.hasNewQuestionsSinceCleared(stageId)`**：`clearedStages[stageId]`が
+  trueで、かつ現在の`window.CONTENT.quizzes[stageId].length`が
+  `clearedQuestionCounts[stageId]`の記録より増えていれば`true`を返す（＝クリア後に
+  問題が追加された）。`clearedQuestionCounts[stageId]`が未記録（`typeof !== "number"`、
+  この仕組み導入前にクリアされた既存セーブなど）の場合は`false`を返す＝**過去分の遡及判定は
+  しない**（次に実際にクリアし直した時点からスナップショットが記録され、以後は正しく機能する）。
+- **`computeStageBadgeFlags(stg)`**はこの判定を取り込み、問題が追加された済ステージを
+  `isCleared:false`・`isNewStage:true`（🆕NEWバッジ表示）として返す（`stg.created`の
+  14日以内チェックとは独立に、新問題追加を検知したら常にNEWバッジを立てる）。
+  `openBriefing`・`exitToMainMenu`・`triggerCorrectAnswer`（1問ごとのpt計算）は、いずれも
+  この判定結果（または`hasNewQuestionsSinceCleared`）を使って`isCleared`を決定するため、
+  問題が追加された済ステージでは「本日上限」の周回ペナルティを踏まずに初回クリア相当の
+  報酬（pt/Q）が付与される。
+- **既存の`js/patch.js`の`ensureStageQuestionCountTracking`（`stageQuestionCounts`）との違い**：
+  あちらはログイン時に問題数の増加を検知すると`clearedStages[stageId]`を**削除**し、
+  「済」を外した旨のアラートを出す、より粗い仕組み（該当ステージは進捗表示ごと「未クリア」に
+  戻る）。こちらの`clearedQuestionCounts`は`clearedStages`自体は書き換えず、報酬計算・NEWバッジの
+  判定だけを内部的に「未クリア扱い」にする、より穏やかな仕組み。両者は併存しており、
+  `ensureStageQuestionCountTracking`が先に`clearedStages[stageId]`を削除した場合は
+  `hasNewQuestionsSinceCleared`はその時点で`clearedStages[stageId]`が偽になるため
+  素通り（`false`を返す）し、報酬計算は`clearedStages`が偽である通常の「未クリア」経路で
+  正しく処理される。
+
 ## 9. 苦手リストの安定id化（qid）と、周回プレイでの数値の その場 再生成
-- `content.js` は起動時に、`QUIZZES` の全問題へ自動で `qid`（安定id）を振る
+- `js/patch.js` は起動時に、`QUIZZES` の全問題へ自動で `qid`（安定id）を振る
   （`job_title`＋`hint`＋`q`冒頭14文字からのハッシュ。手で編集する必要はない）。
   苦手リストは以後 `ステージid::qid` 形式で保存される（旧形式 `ステージid_q_インデックス番号` は、
   問題の並び順を変えると指し先がズレるという弱点があった）。
-- 旧形式のまま残っている苦手リストは `window.migrateWeakQuestionIds()`（content.js）が自動で
-  新形式へ書きかえる。**この関数は content.js 読み込み時ではなく、`index.html` の
+- 旧形式のまま残っている苦手リストは `window.migrateWeakQuestionIds()`（js/patch.js）が自動で
+  新形式へ書きかえる。**この関数は js/patch.js 読み込み時ではなく、`index.html` の
   `loadGameLocal()` と `performLogin()` 成功時（＝実際のセーブデータが `window.saveData` に
-  入ったあと）に呼ぶ**（content.js自体の実行タイミングでは、セーブデータの読み込みがまだ
+  入ったあと）に呼ぶ**（js/patch.js自体の実行タイミングでは、セーブデータの読み込みがまだ
   非同期で終わっていないため、そこで呼んでも何もマイグレードされない）。
 - クリア済みステージを周回プレイすると、`regen:{kind:"hissan_divide"}` を持つ問題（今のところ
   `算数/わり算/hissan_amari02` の筆算系9問）は、`window.regenerateQuestion()`（index.html）が
@@ -230,7 +287,7 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
   （今のところ算数/わり算/hissan_amari02のみに適用）。
 
 ## 10. 苦手撃破ラボは複数ステージにまたがるにがて問題もまとめて処理する
-`content.js`の`launchWeakAttackLab`パッチは、`weakQuestions`の全要素をそれぞれ
+`js/patch.js`の`launchWeakAttackLab`パッチは、`weakQuestions`の全要素をそれぞれ
 新形式（`ステージid::qid`）または旧形式（`ステージid_q_インデックス番号`）として解釈し、
 `window.CONTENT.quizzes`から解決できるものはすべて対象に含める（複数ステージが混ざっていてOK）。
 1件も解決できない場合のみ、旧来の単一ステージ動的読み込み（`.js`ファイルをfetchするGAS時代の方式）
@@ -259,10 +316,21 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
 ```
 （リポジトリ直下）
   index.html         … アプリ本体（1ファイル、Vite等のビルド無し）
-  content.js          … 全ステージ・全問題のバンドル（上記参照）
+  js/stages.js         … 全ステージ一覧（STAGES、全教科ぶん）。window.CONTENT_STAGESとして公開
+  js/quizzes/          … 問題データ本体（QUIZZES）を教科ごとに分割
+    math.js              … 算数。window.CONTENT_QUIZZES_MATHとして公開
+    science.js           … 理科。window.CONTENT_QUIZZES_SCIENCEとして公開
+    japanese.js          … 国語。window.CONTENT_QUIZZES_JAPANESEとして公開
+    social.js            … 社会。window.CONTENT_QUIZZES_SOCIALとして公開
+    kanji.js             … 漢検。window.CONTENT_QUIZZES_KANJIとして公開
+    inquiry.js           … 探究。window.CONTENT_QUIZZES_INQUIRYとして公開
+    english.js           … 英語。window.CONTENT_QUIZZES_ENGLISHとして公開
+  js/patch.js          … 上記を全部合流させる自動パッチ処理・既存エンジンへの統合ロジック
+                          （2026-07-29に旧content.js 1ファイルから3分割 → 同日中に問題データを
+                          教科ごとへ再分割。上記「1.」参照）
   images/              … 画像アセット
   lab/教科/xxx.html    … 各単元の体験・実験ラボ（個別ファイル）
-  算数/ 国語/ 理科/ 社会/ 外国語/ 探究/ … 過去（content.js方式より前）の個別 questions.js が残っている場合がある。
+  算数/ 国語/ 理科/ 社会/ 外国語/ 探究/ … 過去（content.js/js分割方式より前）の個別 questions.js が残っている場合がある。
                           特に指示がない限り、削除や整理はしない（現状維持）。
   docs/                … 初期設計時の参照ドキュメント（要件定義・デザイン方針。技術スタックの記載は
                           その後 index.html 1ファイル方式に実装が変わったため古いが、学習設計・

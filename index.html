@@ -856,6 +856,7 @@ window.normalizeSaveData = function(data) {
   normalized.q = Number(normalized.q || 0);
   normalized.robux = Number(normalized.robux || 0);
   normalized.clearedStages = normalized.clearedStages || {};
+  normalized.clearedQuestionCounts = normalized.clearedQuestionCounts || {};
   normalized.reviewDates = normalized.reviewDates || {};
   normalized.reviewCounts = normalized.reviewCounts || {};
   normalized.lastRewardedMasterCount = Number(normalized.lastRewardedMasterCount || 0);
@@ -900,7 +901,7 @@ window.applyRestoredPlayerSaveData = function(playerId) {
   return true;
 };
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, memo: "", history: [], weeks: {} } };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, memo: "", history: [], weeks: {} } };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -1177,6 +1178,7 @@ window.performLogin = function(id) {
        if(!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
        if(!window.saveData.lastRewardedMasterCount) window.saveData.lastRewardedMasterCount = 0;
        if(!window.saveData.clearedStages) window.saveData.clearedStages = {};
+       if(!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
        if(!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
        if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
        if(!window.saveData.inventory) window.saveData.inventory = [];
@@ -1232,6 +1234,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
+  if(!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
   if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
@@ -2617,9 +2620,22 @@ window.renderSubjectsNav = function() {
   });
 };
 window.switchSubject = function(s) { window.currentActiveSubject = s; document.querySelectorAll('#subjects-nav .tab-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); }); window.renderStageMaps(); };
+// ★済スタージに問題が追加されたかどうかの判定。clearedQuestionCounts[stageId] は
+//   最後にクリアした時点の問題数のスナップショット（exitToMainMenuで更新）。現在の
+//   問題数（window.CONTENT.quizzes由来）がそれより増えていれば「新問題が追加された」とみなし、
+//   このステージは初回クリア報酬・NEWバッジの計算上「未クリア扱い」に戻す。
+window.hasNewQuestionsSinceCleared = function(stageId) {
+  if (!stageId || !window.saveData.clearedStages[stageId]) return false;
+  if (!window.CONTENT || !window.CONTENT.quizzes || !window.CONTENT.quizzes[stageId]) return false;
+  const currentCount = window.CONTENT.quizzes[stageId].length;
+  const clearedCount = window.saveData.clearedQuestionCounts ? window.saveData.clearedQuestionCounts[stageId] : undefined;
+  return typeof clearedCount === "number" && currentCount > clearedCount;
+};
 // ★NEW / 復習しよう の判定を一か所にまとめる（ステージ一覧とアコーディオン見出しの両方から使う）
 window.computeStageBadgeFlags = function(stg) {
-  const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
+  const rawIsCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
+  const hasNewQuestions = (stg.id) ? window.hasNewQuestionsSinceCleared(stg.id) : false;
+  const isCleared = rawIsCleared && !hasNewQuestions;
   let isNewStage = false;
   if (stg.created && !isCleared) {
     const createdMs = new Date(stg.created + "T00:00:00").getTime();
@@ -2628,12 +2644,13 @@ window.computeStageBadgeFlags = function(stg) {
       if (daysSince >= 0 && daysSince <= 14) isNewStage = true;
     }
   }
+  if (hasNewQuestions) isNewStage = true; // ★問題が追加された済ステージも「🆕 NEW」で知らせる
   let hasWeak = false;
   if (stg.id && window.saveData.weakQuestions && window.saveData.weakQuestions.length > 0) {
     // ★新形式（ステージid::qid）と旧形式（ステージid_q_インデックス番号）の両方をチェック
     hasWeak = window.saveData.weakQuestions.some(w => { const s = String(w); return s.indexOf(stg.id + "::") === 0 || s.indexOf(stg.id + "_q_") === 0; });
   }
-  return { isNewStage, hasWeak };
+  return { isNewStage, hasWeak, isCleared, hasNewQuestions };
 };
 window.renderStageMaps = function() {
   const container = document.getElementById("stage-maps-container"); if (!container) return; container.innerHTML = "";
@@ -2720,7 +2737,8 @@ window.renderStageMaps = function() {
 };
 window.openBriefing = function(stg) {
   window.currentStage = stg; window.bonusVideoUsed = false; window.bonusLabUsed = false; document.getElementById("br-title").textContent = stg.name;
-  const isCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
+  // ★問題が追加された済ステージは、window.computeStageBadgeFlags 側の判定で「未クリア扱い」に戻す
+  const isCleared = (stg.id) ? window.computeStageBadgeFlags(stg).isCleared : false;
 
   let stgReward = (stg.reward !== undefined && stg.reward !== "") ? Number(stg.reward) : 10;
   let baseReward = isCleared ? 2 : stgReward;
@@ -3402,7 +3420,8 @@ window.triggerCorrectAnswer = function(current) {
         document.getElementById("job-title").textContent = "🛡️ お邪魔ダビークリア！"; document.getElementById("job-desc").innerHTML = "これはトレーニング問題だよ！バッチリ正解だ！本物の苦手問題を倒して、Qトークンを両替しよう！";
      }
   } else {
-    const isCleared = (window.currentStage.id) ? window.saveData.clearedStages[window.currentStage.id] : false;
+    // ★問題が追加された済ステージは、初回クリア報酬（pt）を正しく付与するため「未クリア扱い」に戻す
+    const isCleared = (window.currentStage.id) ? (window.saveData.clearedStages[window.currentStage.id] && !window.hasNewQuestionsSinceCleared(window.currentStage.id)) : false;
     let basePts = window.currentFirstTry ? 10 : 5;
     if(window.activeItemBuff === 'hourglass') { basePts = 10; }
     if (window.currentStage.isMaster) { basePts = 0; finalEarnedPts = 0; window.saveData.pts += basePts; } else if (isCleared && !window.currentStage.isReview && window.activeItemBuff !== 'hourglass') {
@@ -3484,7 +3503,8 @@ window.exitToMainMenu = function() {
     if (window.weakAttackModeActive) { window.saveGame(); alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`); window.weakAttackModeActive = false; window.quitQuest(); return; }
     let targetStageId = window.currentActiveStageId;
     if (!targetStageId) { window.quitQuest(); return; }
-    let isCleared = window.saveData.clearedStages[targetStageId];
+    // ★問題が追加された済ステージは、初回クリア報酬を正しく付与するため「未クリア扱い」に戻す
+    let isCleared = window.saveData.clearedStages[targetStageId] && !window.hasNewQuestionsSinceCleared(targetStageId);
     let baseReward = isCleared ? 2 : window.currentActiveStageReward;
     if (window.currentActiveStageIsMaster) { baseReward = 0; } else if (window.currentActiveStageIsReview) { baseReward = Math.floor(window.currentActiveStageReward / 2); }
     if (isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster) {
@@ -3502,6 +3522,11 @@ window.exitToMainMenu = function() {
     let earnedQ = Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier);
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
+    // ★クリア時点の問題数を記録しておき、あとで問題が追加されたかどうかの判定に使う（hasNewQuestionsSinceCleared）
+    if (window.CONTENT && window.CONTENT.quizzes && window.CONTENT.quizzes[targetStageId]) {
+      if (!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
+      window.saveData.clearedQuestionCounts[targetStageId] = window.CONTENT.quizzes[targetStageId].length;
+    }
     if (!window.saveData.reviewDates) window.saveData.reviewDates = {}; window.saveData.reviewDates[targetStageId] = window.currentServerTime;
 
     let justTurnedMaster = false;
@@ -3546,7 +3571,15 @@ window.triggerForcedClear = function() { window.exitToMainMenu(); };
 window.quitQuest = function() { window.weakAttackModeActive = false; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
 window.initApp();
 </script>
-<script src="./content.js"></script>
+<script src="./js/stages.js"></script>
+<script src="./js/quizzes/math.js"></script>
+<script src="./js/quizzes/science.js"></script>
+<script src="./js/quizzes/japanese.js"></script>
+<script src="./js/quizzes/social.js"></script>
+<script src="./js/quizzes/kanji.js"></script>
+<script src="./js/quizzes/inquiry.js"></script>
+<script src="./js/quizzes/english.js"></script>
+<script src="./js/patch.js"></script>
 <script src="./book.js"></script>
 </body>
 </html>

@@ -1,12 +1,16 @@
 # guide-testing.md — 納品前の機械的検証チェックリスト
 
-「動きそうな見た目」で納品しない。特に `content.js`（問題データ）や `index.html`（保存・
-スコア・モーダルまわりのロジック）を変更したときは、必ず以下の検証をしてから納品する。
+「動きそうな見た目」で納品しない。特に `js/stages.js`・`js/quizzes/*.js`（教科ごと）・`js/patch.js`
+（問題データ・自動パッチロジック）や `index.html`（保存・スコア・モーダルまわりのロジック）を
+変更したときは、必ず以下の検証をしてから納品する。
 
 ## 1. Node.js による構文・データ構造チェック（必須・最低限）
-- `content.js` を編集したら、Node.jsで `window`/`document`/`alert` をモックして `require()` し、
-  ステージ数・問題数・選択肢が4つあるか・正解インデックスが範囲内か・`canvas_code` が構文エラーなく
-  `new Function('ctx','canvas', code)` で読み込めるか、を機械的に検証する。
+- `js/stages.js`・`js/quizzes/*.js`・`js/patch.js` を編集したら、Node.jsで `window`/`document`/`alert` を
+  モックして、`js/stages.js` → `js/quizzes/`配下の各ファイル（順不同） → `js/patch.js` の順に
+  `vm`（または`require()`相当）で読み込み、ステージ数・問題数・選択肢が4つあるか・正解インデックスが
+  範囲内か・`canvas_code` が構文エラーなく `new Function('ctx','canvas', code)` で読み込めるか、を
+  機械的に検証する（`js/patch.js`を最後に読み込まないと、`window.CONTENT_STAGES`/教科ごとの
+  `window.CONTENT_QUIZZES_*` を空のまま合流させてしまうので注意）。
 - `index.html` のインライン`<script>`を編集したら、`new Function(scriptContent)` でパースだけでも
   試して構文エラーがないことを確認する（実行はせずパースのみでも壊れた括弧・カンマ漏れは検出できる）。
 - 新しいデータ配列（`TREASURE_LIST`など）を追加したときは、id重複がないか、想定件数と一致するか、
