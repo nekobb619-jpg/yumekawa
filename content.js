@@ -410,6 +410,15 @@
       created: "2026-07-28"
     },
     {
+      subject: "英語",
+      category: "メニューと注文（4年）",
+      grade: "4年生",
+      id: "英語/メニュー/english402",
+      name: "レストランと注文の英語（hamburger, pizza, water, I'd like...）",
+      reward: 10, showCount: 10, video_url: "", lab_url: "",
+      created: "2026-07-29"
+    },
+    {
       subject: "漢検",
       category: "10級 だい3回（口〜耳）",
       id: "漢検/10級/dai3kai",
@@ -3703,6 +3712,78 @@
         rescue_hint:"『one』だよ。",
         job_title:"かずとアルファベット パーフェクト！",
         job_desc:"1＝one！ 英語の 数と アルファベットの きほんは バッチリだね！" }
+    ],
+
+    "英語/メニュー/english402": [
+      { q:"ファストフードの お店で 大人気の「ハンバーガー」は 英語で どれかな？",
+        a:["hamburger","hot dog","sandwich","pizza"], c:0,
+        hint:"「ハンバーガー」は 英語でも hamburger と 言うよ。",
+        job_title:"🍔 ハンバーガーの英語！",
+        job_desc:"「hamburger」は 世界中の ファストフード店で 通じる 大人気メニューだよ！" },
+
+      { q:"チーズが トロッとのった「ピザ」を 英語で 書いたものは どれかな？",
+        a:["pizza","pasta","bread","pancake"], c:0,
+        hint:"P-I-Z-Z-A で ピザ と 読むよ。",
+        job_title:"🍕 ピザの英語！",
+        job_desc:"「pizza」は 英語で ピッツァ のように 発音するよ！" },
+
+      { q:"ファストフードの ポテト（フライドポテト）は 英語で なんと言うかな？",
+        a:["french fries","fried potato","potato chips","baked potato"], c:0,
+        hint:"英語では french fries（フレンチ フライ）や fries と 言うよ。",
+        job_title:"🍟 ポテトの英語！",
+        job_desc:"日本の『フライドポテト』は 和製英語！ 英語では「french fries」や「fries」と 言うんだよ！" },
+
+      { q:"レストランで「お水（みず）」が 欲しいとき、お水を表す 英語は どれかな？",
+        a:["water","milk","tea","juice"], c:0,
+        hint:"ウォーター（water）だよ。",
+        job_title:"💧 お水の英語！",
+        job_desc:"「water」は 大事な お水！「Water, please.」で お水を お願いできるよ。" },
+
+      { q:"【問題の ねらいを 見ぬこう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"『レストランの メニューを見て「I'd like pizza, please.」と 注文してみましょう』って もんだい。<br>これは <b>なにが できると OK</b>かな？" }
+        ],
+        a:["英語で 自分の 欲しいものを 丁寧に 注文できるか","英語で ピザを 作ることができるか","メニューの お値段を 計算できるか","英語で 歌を 歌えるか"], c:0,
+        hint:"『自分の欲しいものを 英語で伝える力』だね。",
+        speech_text:"この もんだいの ねらいは？",
+        job_title:"🎯 ねらいを 見ぬいた！",
+        job_desc:"ねらいは『レストランや お店で、欲しいものを 英語で 丁寧に 注文できるか』だよ！" },
+
+      { q:"下の メニュー表の 絵を見てね。🥤 ジュース（$2）を 注文したいときの 英語は どれかな？",
+        canvas_code:"var w=canvas.width,h=canvas.height;ctx.fillStyle='#fffef0';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#e67e22';ctx.lineWidth=4;ctx.strokeRect(10,10,w-20,h-20);ctx.fillStyle='#d35400';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('MENU 🍴',w/2,32);ctx.font='bold 13px sans-serif';ctx.textAlign='left';ctx.fillStyle='#2c3e50';ctx.fillText('🍔 Hamburger ...... $5',30,60);ctx.fillText('🍕 Pizza ................ $8',30,85);ctx.fillText('🥤 Juice ................ $2',30,110);ctx.fillText('🍦 Ice cream ......... $3',30,135);",
+        a:["I'd like juice, please.","I'd like pizza, please.","I'd like ice cream, please.","I'd like hamburger, please."], c:0,
+        hint:"ジュース（juice）を お願いする フレーズを 選ぼう。",
+        job_title:"🥤 メニューから注文！",
+        job_desc:"「I'd like ◯◯, please.」で『◯◯を お願いします』と 丁寧に 注文できるよ！" },
+
+      { q:"レストランで「〜を お願いします（〜が 欲しいです）」と 丁寧に 注文するときの フレーズは どれかな？",
+        a:["I'd like...","I don't know...","How are you?","Good morning."], c:0,
+        hint:"I would like... の 短縮形（アイドライク）だよ。",
+        job_title:"✨ 丁寧な注文フレーズ！",
+        job_desc:"「I'd like ◯◯.」は「◯◯を 頂きたいです」という とても 丁寧で 素敵な 言い方だよ！" },
+
+      { q:"食後の 甘い デザート「アイスクリーム」は 英語で どれかな？",
+        a:["ice cream","pudding","cake","chocolate"], c:0,
+        hint:"アイス（ice）＋ クリーム（cream）だよ。",
+        job_title:"🍦 アイスクリーム！",
+        job_desc:"「ice cream」は 冷たくて 甘い 大人気デザート！「I'd like ice cream, please!」と 言ってみよう。" },
+
+      { q:"【ニコに おしえてあげよう】",
+        scenario:[
+          { name:"ニコ", icon:"🦄", msg:"「注文するときに『..., please!（プリーズ）』を つけると、どうして いいの？」" }
+        ],
+        a:["「〜を お願いします」という 丁寧で 礼儀正しい 言い方に なるからだよ！","早く 料理が 出てくるからだよ","安く なったら ラッキーだからだよ","英語の テストで 点数が 増えるからだよ"], c:0,
+        hint:"please は 丁寧な 気持ちを 伝える 魔法の 言葉！",
+        speech_text:"ニコに please の大切さを おしえよう！",
+        job_title:"🎓 ニコに おしえた！",
+        job_desc:"「please」を つけると『〜を お願いします』という 気持ちが 伝わって、店員さんも 笑顔に なるよ！" },
+
+      { q:"英語で「ピザ」を アルファベット小文字 5文字で 書こう。（例：pizza）",
+        type:"text_input", correct_answers:["pizza","Pizza","PIZZA"],
+        hint:"『p』から はじまる 5文字（p-i-z-z-a）だよ。",
+        rescue_hint:"『pizza』だよ。",
+        job_title:"🍕 レストランの英語 パーフェクト！",
+        job_desc:"「pizza」も 書けたね！ これで 外国の レストランに 行っても バッチリ 注文できるね！" }
     ],
 
     "漢検/10級/dai3kai": [

@@ -121,6 +121,19 @@
   .book-banner-sub { font-size: 13px; font-weight: 700; color: #c2410c; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .book-banner.read-done .book-banner-sub { color: #15803d; }
   .book-banner-streak { font-size: 10.5px; font-weight: 900; color: #c2410c; background: #fff; border-radius: 10px; padding: 5px 8px; white-space: nowrap; flex-shrink: 0; }
+  /* ★夏休みタイムライン */
+  #summer-timeline { display: none; margin-bottom: 12px; }
+  .summer-timeline-label { font-size: 12px; font-weight: 900; color: #0369a1; margin-bottom: 6px; padding-left: 2px; display: flex; align-items: center; gap: 4px; }
+  .summer-timeline-label .summer-badge { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #fff; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 20px; }
+  .summer-card { display: flex; align-items: center; gap: 12px; padding: 13px 15px; background: linear-gradient(135deg, #e0f7ff, #bae6fd); border: 2px solid #38bdf8; border-radius: var(--radius); box-shadow: 0 4px 0 #0284c7; cursor: pointer; transition: all 0.12s; text-decoration: none; color: inherit; }
+  .summer-card:active { transform: translateY(3px); box-shadow: 0 1px 0 #0284c7; }
+  .summer-card-icon { font-size: 32px; flex-shrink: 0; animation: summerBob 2s ease-in-out infinite; }
+  @keyframes summerBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  .summer-card-body { flex: 1; min-width: 0; }
+  .summer-card-tag { font-size: 10px; font-weight: 900; color: #0c4a6e; background: #fff; border-radius: 8px; padding: 2px 7px; display: inline-block; margin-bottom: 4px; }
+  .summer-card-title { font-size: 14px; font-weight: 900; color: #0c4a6e; }
+  .summer-card-sub { font-size: 11.5px; font-weight: 700; color: #0369a1; margin-top: 2px; }
+  .summer-card-arrow { font-size: 20px; flex-shrink: 0; color: #0284c7; }
   #book-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 250; display: none; justify-content: center; align-items: center; padding: 20px; }
   .book-modal-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
   .book-story-title { font-size: 17px; font-weight: 900; color: #9a3412; margin-bottom: 10px; }
@@ -427,6 +440,19 @@
   </div>
   <div class="flex-row">
     <button class="btn-sm" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;" onclick="window.openAllowanceScreen()">💰 おこづかい管理</button>
+  </div>
+  <!-- ★夏休み限定タイムラインバナー -->
+  <div id="summer-timeline">
+    <div class="summer-timeline-label">📢 ニコからのおたより <span class="summer-badge">🌻 夏休み限定</span></div>
+    <a class="summer-card" href="https://nekobb619-jpg.github.io/okome-essay-helper/" target="_blank" rel="noopener noreferrer" id="summer-essay-card">
+      <div class="summer-card-icon">✏️</div>
+      <div class="summer-card-body">
+        <div class="summer-card-tag">🆕 特別コンテンツ</div>
+        <div class="summer-card-title">おこめ作文ヘルパー📝</div>
+        <div class="summer-card-sub">夏休みの読書感想文・作文をニコがサポート！</div>
+      </div>
+      <div class="summer-card-arrow">➡️</div>
+    </a>
   </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
@@ -1049,11 +1075,36 @@ window.refreshWeakBanner = function() {
 window.closeIframeModal = function() {
   document.getElementById("content-iframe").src = ""; document.getElementById("iframe-modal").style.display = "none";
 };
+// ★2026-07-29 追加：GAS通信の共通リトライ＋失敗可視化ヘルパー。
+//   これまでSAVE/LOGの通信失敗は.catch(e=>{})で無音のまま握りつぶされており、
+//   「クラウドに保存されたように見えて実は届いていない」→次回起動時に古いサーバーデータで
+//   上書きされ、pt/Q/済/ログインボーナスが巻き戻って見える不具合の主因だった。
+//   通信エラー時に間隔をあけて3回まで自動リトライし、それでも失敗した場合だけ呼び出し側にthrowする。
+window.postToGAS = function(payload, attempt) {
+  attempt = attempt || 1;
+  const retryDelays = [1500, 4000, 9000];
+  return fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .catch(err => {
+      if (attempt <= retryDelays.length) {
+        return new Promise(resolve => setTimeout(resolve, retryDelays[attempt - 1]))
+          .then(() => window.postToGAS(payload, attempt + 1));
+      }
+      throw err;
+    });
+};
+// 通信失敗の警告は5分に1回までに間引く（成功時にリセットはしないが、次に失敗した時にまた出す）。
+window._gasWarnLastShownAt = 0;
+window.warnGasSyncFailure = function(actionLabel) {
+  const now = Date.now();
+  if (now - window._gasWarnLastShownAt < 5 * 60 * 1000) return;
+  window._gasWarnLastShownAt = now;
+  alert(`⚠️ 通信状態が不安定で、クラウドへの保存（${actionLabel}）が失敗しました。\nこの端末には記録が残っていますが、他の端末やスプレッドシートにはまだ反映されていません。\nWi-Fiなど通信状況を確認して、もう一度アプリを開き直してみてね。`);
+};
 window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
   if(!window.GAS_WEBAPP_URL) return;
   const payload = { action: action, playerId: window.playerId, timestamp: new Date().toLocaleString("ja-JP"), currentPts: window.saveData.pts, currentQ: window.saveData.q, currentRobux: window.saveData.robux, ...extraData };
-  fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
-  .then(response => response.json())
+  window.postToGAS(payload)
   .then(res => {
     if (res.timestamp) { window.currentServerTime = new Date(res.timestamp).getTime(); } else { window.currentServerTime = new Date().getTime(); }
     if (action === "LOAD" && res.status === "SUCCESS") {
@@ -1074,7 +1125,11 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
       window.availableSubjects = Array.from(foundSubjects); window.renderSubjectsNav(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI();
       const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ 通信成功！スプレッドシートの問題を読み込んだよ！";
     }
-  }).catch(e => { console.error("連動エラー:", e); window.renderSubjectsNav(); window.renderStageMaps(); });
+  }).catch(e => {
+    console.error("連動エラー（3回リトライ後もNG）:", action, e);
+    if (action === "LOG") { window.warnGasSyncFailure("プレイ記録の送信"); }
+    window.renderSubjectsNav(); window.renderStageMaps();
+  });
 };
 window.performLogin = function(id) {
   const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ クラウドからセーブデータをよみこみ中...";
@@ -1094,12 +1149,30 @@ window.performLogin = function(id) {
     }
     window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
   };
-  fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "LOGIN", playerId: id }) })
-  .then(res => res.json())
+  window.postToGAS({ action: "LOGIN", playerId: id })
   .then(res => {
     if(res.status === "SUCCESS") {
-       window.saveData = Object.assign(window.saveData, res.playerData);
-       window.saveDataConfirmedSource = "server"; // ★クラウドから正式に読み込めたことを確認
+       // ★前回の終了時にSAVEがクラウドに届かないまま（未同期）だった場合、ここでサーバーの
+       //   古いres.playerDataでこの端末のsaveDataを上書きすると、前回分の進捗（pt/Q/済/
+       //   ログインボーナス等）が丸ごと消えたように見える事故になる。その場合はサーバー応答より
+       //   端末側のローカルセーブを優先し、あとで改めてクラウドへの再送を試みる。
+       let hadUnsynced = false;
+       try { hadUnsynced = localStorage.getItem("kids_lab_v12_pro_unsynced_" + id) === "1"; } catch (e) {}
+       let usedLocalOverride = false;
+       if (hadUnsynced) {
+         let localData = null;
+         try { const raw = localStorage.getItem("kids_lab_v12_pro_" + id); if (raw) localData = JSON.parse(raw); } catch (e) {}
+         if (localData) {
+           console.warn("⚠️ 前回のSAVEが未同期のまま終了していたため、サーバーの記録より端末側の記録を優先します。");
+           window.saveData = Object.assign(window.saveData, localData);
+           window.saveDataConfirmedSource = "local";
+           usedLocalOverride = true;
+         }
+       }
+       if (!usedLocalOverride) {
+         window.saveData = Object.assign(window.saveData, res.playerData);
+         window.saveDataConfirmedSource = "server"; // ★クラウドから正式に読み込めたことを確認
+       }
        if(!window.saveData.reviewDates) window.saveData.reviewDates = {};
        if(!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
        if(!window.saveData.lastRewardedMasterCount) window.saveData.lastRewardedMasterCount = 0;
@@ -1119,6 +1192,9 @@ window.performLogin = function(id) {
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
        if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
+       // ★端末側の記録を正として使った場合は、あらためてクラウドへの再送を試みる
+       //   （成功すれば "unsynced" フラグは saveGame() 内で自動的に解除される）。
+       if (usedLocalOverride) { window.saveGame(); }
     } else { alert("読み込みエラー: " + res.message); }
   })
   .catch(e => { fallbackLocal(); window.syncWithGoogleSpreadsheet("LOAD"); });
@@ -1187,8 +1263,24 @@ window.saveGame = function() {
     return;
   }
   if (window.playerId) {
-    fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "SAVE", playerId: window.playerId, saveData: window.saveData }) }).catch(e => {});
+    // ★このSAVEがクラウドに届くまでは「未同期」フラグを立てておく。次回起動時、performLoginが
+    //   古いサーバーデータでこの端末の新しい進捗（pt/Q/済/ログインボーナス等）を上書きしないための目印。
+    try { localStorage.setItem("kids_lab_v12_pro_unsynced_" + window.playerId, "1"); } catch (e) {}
+    window.postToGAS({ action: "SAVE", playerId: window.playerId, saveData: window.saveData })
+      .then(() => { try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + window.playerId); } catch (e) {} })
+      .catch(e => { console.warn("⚠️ SAVE失敗（3回リトライ後もNG）:", e); window.warnGasSyncFailure("SAVE"); });
   }
+};
+// ★夏休み限定タイムラインの表示制御（毎年7/21〜8/31のみ表示）
+window.refreshSummerTimeline = function() {
+  var el = document.getElementById("summer-timeline");
+  if (!el) return;
+  var now = new Date();
+  var month = now.getMonth() + 1; // 1-12
+  var day = now.getDate();
+  // 7月21日〜8月31日の間だけ表示
+  var isSummer = (month === 7 && day >= 21) || month === 8;
+  el.style.display = isSummer ? "block" : "none";
 };
 window.initApp = function() {
   // ★ふだんは自動で子どものアカウントにログイン（ログイン画面＝アカウント作成の入り口は出さない）
@@ -1196,6 +1288,7 @@ window.initApp = function() {
     window.playerId = window.CHILD_ID;
     localStorage.setItem("kids_lab_playerId", window.playerId);
   }
+  window.refreshSummerTimeline(); // 夏休みタイムラインの表示判定
   window.performLogin(window.playerId);
 };
 window.doLogin = function() {
