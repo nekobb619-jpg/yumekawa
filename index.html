@@ -1163,7 +1163,7 @@ window.performLogin = function(id) {
     if (window.saveData && Number(window.saveData.pts || 0) <= 0 && Number(window.saveData.q || 0) <= 0) {
       const candidate = localStorage.getItem("kids_lab_v12_pro_papa") || localStorage.getItem("kids_lab_v12_pro_りお") || localStorage.getItem("kids_lab_v12_pro_りさ");
       if (candidate) {
-        try { window.saveData = Object.assign(window.saveData, JSON.parse(candidate)); } catch (e) {}
+        try { window.saveData = window.normalizeSaveData(Object.assign(window.saveData, JSON.parse(candidate))); } catch (e) {}
       }
     }
     window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
@@ -1183,13 +1183,17 @@ window.performLogin = function(id) {
          try { const raw = localStorage.getItem("kids_lab_v12_pro_" + id); if (raw) localData = JSON.parse(raw); } catch (e) {}
          if (localData) {
            console.warn("⚠️ 前回のSAVEが未同期のまま終了していたため、サーバーの記録より端末側の記録を優先します。");
-           window.saveData = Object.assign(window.saveData, localData);
+           // ★normalizeSaveDataを必ず通す：GAS/スプレッドシート由来のpts/q/robux等が
+           //   文字列で返ってくると、あとで`+=`する箇所が数値加算ではなく文字列結合に
+           //   なってしまい、pt/Qが意味不明な値に壊れる（例："307"+10 === "30710"）。
+           window.saveData = window.normalizeSaveData(Object.assign(window.saveData, localData));
            window.saveDataConfirmedSource = "local";
            usedLocalOverride = true;
          }
        }
        if (!usedLocalOverride) {
-         window.saveData = Object.assign(window.saveData, res.playerData);
+         // ★同上の理由でnormalizeSaveDataを通す（サーバー応答由来のpts/q/robux型ゆれ対策）
+         window.saveData = window.normalizeSaveData(Object.assign(window.saveData, res.playerData));
          window.saveDataConfirmedSource = "server"; // ★クラウドから正式に読み込めたことを確認
        }
        if(!window.saveData.reviewDates) window.saveData.reviewDates = {};
@@ -1244,10 +1248,11 @@ window.loadGameLocal = function() {
     } catch (e) {}
   }
   if (recovered) {
-    window.saveData = Object.assign(window.saveData, recovered);
+    // ★normalizeSaveDataを通してpts/q/robux等の型ゆれ（他端末・古い保存形式由来）を防ぐ
+    window.saveData = window.normalizeSaveData(Object.assign(window.saveData, recovered));
     window.saveDataConfirmedSource = "local";
   } else if (local) {
-    try { window.saveData = Object.assign(window.saveData, JSON.parse(local)); window.saveDataConfirmedSource = "local"; } catch(e){}
+    try { window.saveData = window.normalizeSaveData(Object.assign(window.saveData, JSON.parse(local))); window.saveDataConfirmedSource = "local"; } catch(e){}
   }
   if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
   if(!window.saveData.inventory) window.saveData.inventory = [];
@@ -1287,20 +1292,30 @@ window.saveGame = function() {
     // ★このSAVEがクラウドに届くまでは「未同期」フラグを立てておく。次回起動時、performLoginが
     //   古いサーバーデータでこの端末の新しい進捗（pt/Q/済/ログインボーナス等）を上書きしないための目印。
     try { localStorage.setItem("kids_lab_v12_pro_unsynced_" + window.playerId, "1"); } catch (e) {}
-    window.postToGAS({ action: "SAVE", playerId: window.playerId, saveData: window.saveData })
-      .then((res) => {
-        // ★通信自体は成功しても、GASが明示的にエラーを返した場合（res.statusが"SUCCESS"以外）は
-        //   「未同期」フラグを消さない＝次回ログイン時にサーバーの古いデータで上書きさせない。
-        //   res.statusが無い応答形式の場合は従来通り成功扱い（未知の応答形式で誤って
-        //   毎回失敗警告を出し続けることを避けるための保守的な判定）。
-        if (res && typeof res.status === "string" && res.status !== "SUCCESS") {
-          console.warn("⚠️ SAVE失敗（サーバーがエラーを返しました）:", res);
-          window.warnGasSyncFailure("SAVE");
-          return;
-        }
-        try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + window.playerId); } catch (e) {}
-      })
-      .catch(e => { console.warn("⚠️ SAVE失敗（3回リトライ後もNG）:", e); window.warnGasSyncFailure("SAVE"); });
+    const playerIdAtQueue = window.playerId;
+    // ★2026-07-29追加：1回のexitToMainMenu内でも、通常クリア＋マスター連鎖ボーナス（setTimeout）＋
+    //   お宝ドロップなど、saveGame()が短時間に複数回呼ばれることがある。並列に送信すると
+    //   通信の遅延次第で「先に呼ばれた（=古い状態の）SAVE」が「あとに呼ばれた（=新しい状態の）SAVE」
+    //   より後にサーバーへ届き、player_dbが古いpt/Qで上書きされる恐れがある。そのため
+    //   window._saveGameQueueで必ず直列実行にする（前のSAVEの通信が終わってから次を送る）。
+    //   実際に送信する中身はキューに積んだ時点ではなく「送信する瞬間」の最新window.saveDataなので、
+    //   待たされている間に増えた分もちゃんと含まれる。
+    window._saveGameQueue = (window._saveGameQueue || Promise.resolve()).then(() => {
+      return window.postToGAS({ action: "SAVE", playerId: playerIdAtQueue, saveData: window.saveData })
+        .then((res) => {
+          // ★通信自体は成功しても、GASが明示的にエラーを返した場合（res.statusが"SUCCESS"以外）は
+          //   「未同期」フラグを消さない＝次回ログイン時にサーバーの古いデータで上書きさせない。
+          //   res.statusが無い応答形式の場合は従来通り成功扱い（未知の応答形式で誤って
+          //   毎回失敗警告を出し続けることを避けるための保守的な判定）。
+          if (res && typeof res.status === "string" && res.status !== "SUCCESS") {
+            console.warn("⚠️ SAVE失敗（サーバーがエラーを返しました）:", res);
+            window.warnGasSyncFailure("SAVE");
+            return;
+          }
+          try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + playerIdAtQueue); } catch (e) {}
+        })
+        .catch(e => { console.warn("⚠️ SAVE失敗（3回リトライ後もNG）:", e); window.warnGasSyncFailure("SAVE"); });
+    });
   }
 };
 // ★夏休み限定タイムラインの表示制御（毎年7/21〜8/31のみ表示）
