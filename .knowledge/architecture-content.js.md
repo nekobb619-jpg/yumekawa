@@ -115,6 +115,15 @@ LOGIN通信が成功して初めて本物のクラウドの記録で上書きさ
 （`window._unsavedDataWarningShown`でスパム防止）。この仕組みが生まれた経緯・実際の事故は
 `.knowledge/postmortems.md` 参照。
 
+- **「未同期」フラグ（`kids_lab_v12_pro_unsynced_<playerId>`）**：`saveGame()`はクラウドへの
+  `SAVE`送信の直前にこのlocalStorageフラグを`"1"`にし、GASが**`res.status === "SUCCESS"`を
+  返した場合のみ**（2026-07-29修正、それ以前は`fetch`が例外を投げなかっただけで成功扱いにしていた）
+  削除する。`performLogin()`はLOGIN成功時にこのフラグが残っていれば「前回のSAVEが
+  クラウドに届いていない」とみなし、サーバー応答（`res.playerData`）ではなくこの端末の
+  localStorageの記録を優先して復元し、再度`saveGame()`で送信し直す。これにより、
+  クリア直後の pt/Q がリロードでサーバーの古いデータに巻き戻る事故を防いでいる
+  （経緯は`.knowledge/postmortems.md`の2026-07-29の項を参照）。
+
 ## 8. お宝図鑑（コレクション/ガチャ）システム（2026-07-24 追加）
 既存のごほうび経済（pts/Q/robux/欠片/inventory）とは別レイヤーの、非消費型のコレクション
 （ガチャ的なワクワク＋図鑑コンプ欲）。消費アイテム（inventory）とは違い、一度手に入れたお宝は

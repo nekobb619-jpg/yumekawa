@@ -1270,7 +1270,18 @@ window.saveGame = function() {
     //   古いサーバーデータでこの端末の新しい進捗（pt/Q/済/ログインボーナス等）を上書きしないための目印。
     try { localStorage.setItem("kids_lab_v12_pro_unsynced_" + window.playerId, "1"); } catch (e) {}
     window.postToGAS({ action: "SAVE", playerId: window.playerId, saveData: window.saveData })
-      .then(() => { try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + window.playerId); } catch (e) {} })
+      .then((res) => {
+        // ★通信自体は成功しても、GASが明示的にエラーを返した場合（res.statusが"SUCCESS"以外）は
+        //   「未同期」フラグを消さない＝次回ログイン時にサーバーの古いデータで上書きさせない。
+        //   res.statusが無い応答形式の場合は従来通り成功扱い（未知の応答形式で誤って
+        //   毎回失敗警告を出し続けることを避けるための保守的な判定）。
+        if (res && typeof res.status === "string" && res.status !== "SUCCESS") {
+          console.warn("⚠️ SAVE失敗（サーバーがエラーを返しました）:", res);
+          window.warnGasSyncFailure("SAVE");
+          return;
+        }
+        try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + window.playerId); } catch (e) {}
+      })
       .catch(e => { console.warn("⚠️ SAVE失敗（3回リトライ後もNG）:", e); window.warnGasSyncFailure("SAVE"); });
   }
 };
