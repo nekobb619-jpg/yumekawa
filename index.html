@@ -889,6 +889,26 @@ window.normalizeSaveData = function(data) {
   normalized.kuroPonMaxGiftDate = normalized.kuroPonMaxGiftDate || "";
   normalized.kuroPonPremiumGachaDate = normalized.kuroPonPremiumGachaDate || "";
   normalized.kuroPonPremiumAvatars = normalized.kuroPonPremiumAvatars || {};
+  // ★端末の時計ずれ等で、reviewDates等のタイムスタンプ（エポックms）が「未来」の値に
+  //   なっていることがある（例：1785333384036 → 7/30 23:43）。放置すると復習判定の
+  //   経過日数計算がマイナスになったり、この値を信じた別の処理が混乱する可能性があるため、
+  //   現在時刻（Date.now()）より未来の値は現在時刻に丸めてから保存・送信する。
+  const nowMs = Date.now();
+  const clampFutureMs = function (v) { return (typeof v === "number" && v > nowMs) ? nowMs : v; };
+  if (normalized.reviewDates) {
+    Object.keys(normalized.reviewDates).forEach(function (k) { normalized.reviewDates[k] = clampFutureMs(normalized.reviewDates[k]); });
+  }
+  if (normalized.treasureBook) {
+    Object.keys(normalized.treasureBook).forEach(function (k) {
+      if (normalized.treasureBook[k]) normalized.treasureBook[k].firstGotDate = clampFutureMs(normalized.treasureBook[k].firstGotDate);
+    });
+  }
+  if (normalized.gachaEggs) {
+    Object.keys(normalized.gachaEggs).forEach(function (k) {
+      if (normalized.gachaEggs[k]) normalized.gachaEggs[k].firstGotDate = clampFutureMs(normalized.gachaEggs[k].firstGotDate);
+    });
+  }
+  normalized.lastLoginDate = clampFutureMs(normalized.lastLoginDate || "");
   return normalized;
 };
 window.applyRestoredPlayerSaveData = function(playerId) {
@@ -1269,6 +1289,10 @@ window.loadGameLocal = function() {
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI(); window.checkAutoLoginBonus();
 };
 window.saveGame = function() {
+  // ★保存・送信の直前に必ずnormalizeSaveDataを通す：pts/q/robuxの型ゆれに加えて、
+  //   reviewDates等の未来タイムスタンプ（端末の時計ずれ等が原因）もここで現在時刻に丸め、
+  //   壊れた値のままGASへ送ってしまわないようにする。
+  window.saveData = window.normalizeSaveData(window.saveData);
   const snapshot = JSON.stringify(window.saveData);
   localStorage.setItem("kids_lab_v12_pro_" + window.playerId, snapshot);
   if (window.playerId === "りお" || window.playerId === "りさ") {
@@ -1353,12 +1377,22 @@ window.logout = function() {
   window.playerId = "";
   document.getElementById("login-modal").style.display = "flex"; // パスOKのときだけログイン画面を出す
 };
+// ★"2026-7-29"（ゼロ詰めなし）と"2026-07-29"（ゼロ詰めあり）等、表記ゆれのある日付文字列
+//   （player_db経由で古い形式が混ざっている場合も含む）を同じ日として比較できるよう、
+//   年月日を数値化した"YYYY-M-D"形式のキーに正規化する。ログインスタンプの二重付与・
+//   未付与どちらの事故も防ぐため、日付文字列の比較は必ずこの関数を通すこと。
+window.normalizeDateKey = function (input) {
+  if (!input) return "";
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(input).trim());
+  if (!m) return String(input).trim();
+  return `${parseInt(m[1], 10)}-${parseInt(m[2], 10)}-${parseInt(m[3], 10)}`;
+};
 window.checkAutoLoginBonus = function() {
   if (!window.saveData) return;
   const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-  
-  if (window.saveData.lastStampDate === todayStr) return; // 本日分取得済みならスキップ
+
+  if (window.normalizeDateKey(window.saveData.lastStampDate) === window.normalizeDateKey(todayStr)) return; // 本日分取得済みならスキップ
   
   if (window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   window.saveData.loginStampCount++;
@@ -1403,7 +1437,7 @@ window.renderStampCard = function() {
   const count = window.saveData.loginStampCount || 0;
   const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-  const alreadyStampedToday = (window.saveData.lastStampDate === todayStr);
+  const alreadyStampedToday = (window.normalizeDateKey(window.saveData.lastStampDate) === window.normalizeDateKey(todayStr));
   const grid = document.getElementById("stamp-grid-el"); grid.innerHTML = "";
   for(let i=1; i<=7; i++) {
     const slot = document.createElement("div"); slot.className = "stamp-slot";
