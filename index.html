@@ -1023,10 +1023,10 @@ window.currentActiveStageIsMaster = false;
 window.currentServerTime = new Date().getTime();
 // ★殿堂入り(MASTER)システム 案B（達成感・お祝い型）2026-08-02 改修
 //   ・到達ラインを reviewCounts>=3 から >=5 に引き上げ
-//   ・初回昇格時のみ+50Qを一括付与（masterPromotedStagesフラグで二重付与を防止）
+//   ・初回昇格時のみ+30Qを一括付与（masterPromotedStagesフラグで二重付与を防止）
 //   ・昇格後の周回Qは無制限加算ではなく「デイリー上限20Q」の枠内に必ず収める
 window.MASTER_CLEAR_THRESHOLD = 5;
-window.MASTER_PROMOTION_BONUS_Q = 50;
+window.MASTER_PROMOTION_BONUS_Q = 30;
 window.MASTER_LOOP_REWARD_Q = 2;
 window.MASTER_DAILY_Q_CAP = 20;
 
