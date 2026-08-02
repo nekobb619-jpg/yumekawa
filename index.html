@@ -174,6 +174,20 @@
   .treasure-reveal-name { font-size: 19px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
   .treasure-reveal-desc { font-size: 12.5px; font-weight: 700; color: #64748b; line-height: 1.6; margin-bottom: 12px; }
   .treasure-reveal-dupe { font-size: 11.5px; font-weight: 900; color: #b45309; background: #fef3c7; border-radius: 10px; padding: 6px 10px; margin-bottom: 12px; }
+  /* ★殿堂入り(MASTER)お祝いモーダル 2026-08-02 追加 */
+  #master-celebration-modal { position: fixed; inset: 0; background: rgba(76, 29, 80, 0.85); z-index: 290; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .master-celeb-box { background: linear-gradient(160deg, #fffbeb, #fdf2f8); border-radius: var(--radius); width: 100%; max-width: 360px; padding: 28px 20px; text-align: center; box-shadow: 0 0 45px rgba(245, 158, 11, 0.55), 0 10px 25px rgba(0,0,0,0.4); border: 4px solid #f59e0b; animation: treasurePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), masterCelebGlow 1.8s ease-in-out infinite 0.5s; }
+  @keyframes masterCelebGlow { 0%, 100% { box-shadow: 0 0 45px rgba(245, 158, 11, 0.55), 0 10px 25px rgba(0,0,0,0.4); } 50% { box-shadow: 0 0 60px rgba(236, 72, 153, 0.6), 0 10px 25px rgba(0,0,0,0.4); } }
+  .master-celeb-fanfare { font-size: 22px; letter-spacing: 6px; animation: masterCelebBounce 1s ease-in-out infinite; }
+  @keyframes masterCelebBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .master-celeb-label { font-size: 14px; font-weight: 900; color: #b45309; letter-spacing: 2px; margin: 4px 0 10px; }
+  .master-celeb-chars { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+  .master-celeb-char { font-size: 46px; line-height: 1; animation: treasureIconFloat 1.8s ease-in-out infinite; }
+  .master-celeb-char-r { animation-delay: 0.4s; }
+  .master-celeb-trophy { font-size: 34px; line-height: 1; }
+  .master-celeb-stagename { font-size: 19px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
+  .master-celeb-quote { font-size: 12.5px; font-weight: 700; color: #64748b; line-height: 1.7; margin-bottom: 12px; }
+  .master-celeb-bonus { font-size: 15px; font-weight: 900; color: #be185d; background: var(--pastel-pink); border-radius: 12px; padding: 8px 12px; margin-bottom: 14px; }
   #treasure-book-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 270; display: none; justify-content: center; align-items: center; padding: 20px; }
   .treasure-book-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
   .treasure-book-box h2 { margin: 0 0 4px; color: #0369a1; font-size: 20px; }
@@ -581,6 +595,22 @@
     <button class="br-btn start" style="margin-top:0;" onclick="window.closeTreasureReveal()">やったー！</button>
   </div>
 </div>
+<!-- ★殿堂入り(MASTER)お祝いモーダル 2026-08-02 追加：案B（達成感・お祝い型） -->
+<div id="master-celebration-modal">
+  <div class="master-celeb-box">
+    <div class="master-celeb-fanfare">🎉🎊🎉</div>
+    <div class="master-celeb-label">殿堂入り達成！</div>
+    <div class="master-celeb-chars">
+      <span class="master-celeb-char master-celeb-char-l">🦄</span>
+      <span class="master-celeb-trophy">👑</span>
+      <span class="master-celeb-char master-celeb-char-r">🐱</span>
+    </div>
+    <div class="master-celeb-stagename" id="master-celeb-stagename">ステージ名</div>
+    <div class="master-celeb-quote">「すごい！<span id="master-celeb-count"></span>回もクリアして、かんぺきに覚えたね！」</div>
+    <div class="master-celeb-bonus" id="master-celeb-bonus" style="display:none;">🎁 昇格ボーナス ＋<span id="master-celeb-bonus-q">50</span>Q！</div>
+    <button class="br-btn start" style="margin-top:4px;" onclick="window.closeMasterCelebration()">やったー！🎀</button>
+  </div>
+</div>
 <div id="treasure-book-modal">
   <div class="treasure-book-box">
     <h2>🏆 お宝図鑑</h2>
@@ -855,6 +885,9 @@ window.normalizeSaveData = function(data) {
   normalized.reviewDates = normalized.reviewDates || {};
   normalized.reviewCounts = normalized.reviewCounts || {};
   normalized.lastRewardedMasterCount = Number(normalized.lastRewardedMasterCount || 0);
+  normalized.masterPromotedStages = normalized.masterPromotedStages || {};
+  normalized.dailyMasterQEarned = Number(normalized.dailyMasterQEarned || 0);
+  normalized.lastMasterQDate = normalized.lastMasterQDate || "";
   normalized.dailyLoopCounts = normalized.dailyLoopCounts || {};
   normalized.lastLoopDate = normalized.lastLoopDate || "";
   normalized.weakQuestions = normalized.weakQuestions || [];
@@ -907,7 +940,7 @@ window.normalizeSaveData = function(data) {
   return normalized;
 };
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, memo: "", history: [], weeks: {} } };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, memo: "", history: [], weeks: {} } };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -934,6 +967,14 @@ window.currentActiveStageReward = 10;
 window.currentActiveStageIsReview = false;
 window.currentActiveStageIsMaster = false;
 window.currentServerTime = new Date().getTime();
+// ★殿堂入り(MASTER)システム 案B（達成感・お祝い型）2026-08-02 改修
+//   ・到達ラインを reviewCounts>=3 から >=5 に引き上げ
+//   ・初回昇格時のみ+50Qを一括付与（masterPromotedStagesフラグで二重付与を防止）
+//   ・昇格後の周回Qは無制限加算ではなく「デイリー上限20Q」の枠内に必ず収める
+window.MASTER_CLEAR_THRESHOLD = 5;
+window.MASTER_PROMOTION_BONUS_Q = 50;
+window.MASTER_LOOP_REWARD_Q = 2;
+window.MASTER_DAILY_Q_CAP = 20;
 window.updateUI = function() {
   if (!window.saveData) window.saveData = {};
   document.getElementById("pts-val").innerHTML = `${window.saveData.pts || 0}<span>pts</span>`;
@@ -1212,6 +1253,9 @@ window.performLogin = function(id) {
        if(!window.saveData.reviewDates) window.saveData.reviewDates = {};
        if(!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
        if(!window.saveData.lastRewardedMasterCount) window.saveData.lastRewardedMasterCount = 0;
+       if(!window.saveData.masterPromotedStages) window.saveData.masterPromotedStages = {};
+       if(!window.saveData.dailyMasterQEarned) window.saveData.dailyMasterQEarned = 0;
+       if(!window.saveData.lastMasterQDate) window.saveData.lastMasterQDate = "";
        if(!window.saveData.clearedStages) window.saveData.clearedStages = {};
        if(!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
        if(!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
@@ -1575,6 +1619,19 @@ window.showTreasureReveal = function(treasure, isDupe) {
   if (window.speakText) window.speakText(isDupe ? "ふしぎな宝物をまた見つけたよ" : "新しい宝物を発見したよ！", "ja-JP");
 };
 window.closeTreasureReveal = function() { const modal = document.getElementById("treasure-reveal-modal"); if (modal) modal.style.display = "none"; };
+// ★殿堂入り(MASTER)昇格お祝いダイアログ：ニコ🦄とクロぽん🐱が登場するファンファーレ演出。
+//   bonusQ が 0 のとき（万一の二重呼び出し防止フラグ経由）はボーナス行を隠す。
+window.showMasterCelebration = function(stageName, bonusQ) {
+  const modal = document.getElementById("master-celebration-modal"); if (!modal) return;
+  document.getElementById("master-celeb-stagename").textContent = stageName || "";
+  document.getElementById("master-celeb-count").textContent = window.MASTER_CLEAR_THRESHOLD;
+  const bonusEl = document.getElementById("master-celeb-bonus");
+  if (bonusQ > 0) { document.getElementById("master-celeb-bonus-q").textContent = bonusQ; bonusEl.style.display = "block"; }
+  else { bonusEl.style.display = "none"; }
+  modal.style.display = "flex";
+  if (window.speakText) window.speakText("殿堂入り達成！おめでとう！", "ja-JP");
+};
+window.closeMasterCelebration = function() { const modal = document.getElementById("master-celebration-modal"); if (modal) modal.style.display = "none"; };
 window.openTreasureBookModal = function() {
   if (!window.saveData.treasureBook) window.saveData.treasureBook = {};
   const total = window.TREASURE_LIST.length;
@@ -2755,7 +2812,7 @@ window.renderStageMaps = function() {
   } else {
     categories.forEach(cat => {
       let rawStages = (window.globalStageMaster[sub][cat] || []).filter(stg => window.matchesGradeFilter(stg)); let normalStages = []; let masterStages = [];
-      rawStages.forEach(stg => { let isMaster = (window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= 3); if (isMaster) masterStages.push(stg); else normalStages.push(stg); });
+      rawStages.forEach(stg => { let isMaster = (window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= window.MASTER_CLEAR_THRESHOLD); if (isMaster) masterStages.push(stg); else normalStages.push(stg); });
       let sortedStages = [...normalStages, ...masterStages];
 
       // ★カテゴリごとに折りたたみボックス（全部クリア済みならデフォルトで畳んでおく）
@@ -2788,7 +2845,7 @@ window.renderStageMaps = function() {
 
         let stgRewardStr = (stg.reward !== undefined && stg.reward !== "") ? Number(stg.reward) : 10;
         let statusHtml = `<span style="font-size:12px; font-weight:700; color:var(--text-soft);">${stgRewardStr}Q</span>`;
-        if (stg.id && window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= 3) isMaster = true;
+        if (stg.id && window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= window.MASTER_CLEAR_THRESHOLD) isMaster = true;
         if (isCleared) {
           if (isMaster) {
             statusHtml = `<span style="font-size:12px; font-weight:900; color:#d97706; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fcd34d;">🏆 MASTER</span>`;
@@ -2836,7 +2893,15 @@ window.openBriefing = function(stg) {
   let stgReward = (stg.reward !== undefined && stg.reward !== "") ? Number(stg.reward) : 10;
   let baseReward = isCleared ? 2 : stgReward;
 
-  if (stg.isMaster) { baseReward = 0; }
+  let masterDailyCapReached = false;
+  if (stg.isMaster) {
+    // ★ボタンを押す前の予告表示も、実際に付与されるデイリー上限クランプ後の額と一致させる
+    const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
+    const todayEarned = (window.saveData.lastMasterQDate === todayStr) ? (window.saveData.dailyMasterQEarned || 0) : 0;
+    const remainingCap = Math.max(0, window.MASTER_DAILY_Q_CAP - todayEarned);
+    baseReward = Math.min(window.MASTER_LOOP_REWARD_Q, remainingCap);
+    masterDailyCapReached = (baseReward <= 0);
+  }
   else if (stg.isReview) { baseReward = Math.floor(stgReward / 2); }
   else if (isCleared) {
     const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
@@ -2844,7 +2909,7 @@ window.openBriefing = function(stg) {
   }
 
   let rewardText = `基本クリア報酬: ${baseReward} Q`;
-  if (stg.isMaster) rewardText += " (🏆 殿堂入りステージ)";
+  if (stg.isMaster) rewardText += masterDailyCapReached ? " (🏆 殿堂入り・本日のボーナス上限到達)" : " (🏆 殿堂入りステージ)";
   else if (stg.isReview) rewardText += " (🔄 復習ボーナス!)";
   else if (isCleared && baseReward === 0) rewardText += " (⚠️ 本日上限到達)";
 
@@ -3599,7 +3664,18 @@ window.exitToMainMenu = function() {
     // ★問題が追加された済ステージは、初回クリア報酬を正しく付与するため「未クリア扱い」に戻す
     let isCleared = window.saveData.clearedStages[targetStageId] && !window.hasNewQuestionsSinceCleared(targetStageId);
     let baseReward = isCleared ? 2 : window.currentActiveStageReward;
-    if (window.currentActiveStageIsMaster) { baseReward = 0; } else if (window.currentActiveStageIsReview) { baseReward = Math.floor(window.currentActiveStageReward / 2); }
+    let masterCapHit = false;
+    if (window.currentActiveStageIsMaster) {
+      // ★殿堂入り後の周回Qは「デイリー上限(MASTER_DAILY_Q_CAP)Q」の枠内に必ず収める。
+      //   ブースト倍率の影響も受けない固定少額報酬とすることで、無限周回ファームを構造的に防止する。
+      const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
+      if (window.saveData.lastMasterQDate !== todayStr) { window.saveData.lastMasterQDate = todayStr; window.saveData.dailyMasterQEarned = 0; }
+      if (!window.saveData.dailyMasterQEarned) window.saveData.dailyMasterQEarned = 0;
+      const remainingCap = Math.max(0, window.MASTER_DAILY_Q_CAP - window.saveData.dailyMasterQEarned);
+      baseReward = Math.min(window.MASTER_LOOP_REWARD_Q, remainingCap);
+      if (baseReward < window.MASTER_LOOP_REWARD_Q) masterCapHit = true;
+      window.saveData.dailyMasterQEarned += baseReward;
+    } else if (window.currentActiveStageIsReview) { baseReward = Math.floor(window.currentActiveStageReward / 2); }
     if (isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster) {
       if (!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
@@ -3612,7 +3688,8 @@ window.exitToMainMenu = function() {
     let vBonus = (window.bonusVideoUsed && !isCleared) ? 5 : 0; let lBonus = (window.bonusLabUsed && window.totalMistakes === 0 && !isCleared) ? 15 : 0;
     let isPerfect = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
     let pBonus = isPerfect ? 5 : 0;
-    let earnedQ = Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier);
+    // ★殿堂入り周回の報酬はデイリー上限で既に確定額なので、ブースト倍率をかけない（他の報酬経路と分離）
+    let earnedQ = window.currentActiveStageIsMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier);
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
     // ★クリア時点の問題数を記録しておき、あとで問題が追加されたかどうかの判定に使う（hasNewQuestionsSinceCleared）
@@ -3628,13 +3705,19 @@ window.exitToMainMenu = function() {
       if (!window.saveData.reviewCounts[targetStageId]) window.saveData.reviewCounts[targetStageId] = 0;
       window.saveData.reviewCounts[targetStageId]++;
       if (window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts[targetStageId] = 0;
-      if (window.saveData.reviewCounts[targetStageId] === 3) { justTurnedMaster = true; }
+      if (window.saveData.reviewCounts[targetStageId] === window.MASTER_CLEAR_THRESHOLD) { justTurnedMaster = true; }
     }
-    let masterCount = 0; for (let key in window.saveData.reviewCounts) { if (window.saveData.reviewCounts[key] >= 3) masterCount++; }
-    if (masterCount >= 3 && masterCount % 3 === 0 && masterCount > window.saveData.lastRewardedMasterCount) {
-      window.saveData.q += 100; window.saveData.lastRewardedMasterCount = masterCount;
-      setTimeout(() => { alert(`🎉🎉🎉【大快挙！殿堂入りマスター連鎖達成！】🎉🎉🎉\n\n🏆MASTERバッジの獲得総数が『 ${masterCount}個 』に達したぞ！\n3個集めるごとの特別アチーブメント達成として、お父さんコーチから臨時の特大ボーナス【 100Q 】が金庫にプレゼントされた！🚀`); window.saveGame(); }, 800);
-    } else if (justTurnedMaster) { setTimeout(() => { alert("🏆 【大快挙！】\n忘却曲線を完全にのりこえ、記憶にガッチリ定着したよ！\nこのステージは『殿堂入り（MASTER）』に指定されました！👑"); }, 500); }
+    // ★昇格ボーナス(+50Q)は「このステージで初めてMASTERに達した瞬間」だけ一括付与。
+    //   masterPromotedStagesフラグで二重付与（セーブ再送・リトライ等）を完全にブロックする。
+    let masterBonusQ = 0;
+    if (justTurnedMaster) {
+      if (!window.saveData.masterPromotedStages) window.saveData.masterPromotedStages = {};
+      if (!window.saveData.masterPromotedStages[targetStageId]) {
+        window.saveData.masterPromotedStages[targetStageId] = true;
+        masterBonusQ = window.MASTER_PROMOTION_BONUS_Q;
+        window.saveData.q += masterBonusQ;
+      }
+    }
     let dropMsg = "";
     if(!isCleared && Math.random() < 0.10 && (!window.saveData.inventory || window.saveData.inventory.length < 10) && !window.weakAttackModeActive) {
       let dropItems = ['booster', 'analyzer', 'hourglass']; let dropped = dropItems[Math.floor(Math.random() * dropItems.length)];
@@ -3643,13 +3726,18 @@ window.exitToMainMenu = function() {
       dropMsg = `\n\n🎁 【超ラッキー！】\nステージの中からレアアイテム『${dName}』を直接見つけたぞ！バッグに入れておいたよ！`;
     }
     window.activeItemBuff = null; window.saveGame();
+    if (justTurnedMaster) {
+      const celebStageName = (window.currentStage && window.currentStage.name) ? window.currentStage.name : targetStageId;
+      setTimeout(() => { window.showMasterCelebration(celebStageName, masterBonusQ); }, 500);
+    }
 
-    let msg = `🎉 ミッションコンプリート！\n\n・基本クリア: +${Math.floor(baseReward * window.activeBoostMultiplier)}Q\n`;
+    let msg = `🎉 ミッションコンプリート！\n\n・基本クリア: +${window.currentActiveStageIsMaster ? baseReward : Math.floor(baseReward * window.activeBoostMultiplier)}Q\n`;
     if(pBonus > 0) msg += `・✨ ノーミスパーフェクト: +${Math.floor(pBonus * window.activeBoostMultiplier)}Q\n`;
     if(vBonus > 0) msg += `・📺 予習ボーナス: +${Math.floor(vBonus * window.activeBoostMultiplier)}Q\n`;
     if(lBonus > 0) msg += `・🔬 実験ボーナス: +${Math.floor(lBonus * window.activeBoostMultiplier)}Q\n`;
     if(window.currentActiveStageIsMaster) msg += `🏆 殿堂入りマスターのご褒美スコアを獲得！\n`;
     if(isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster && baseReward === 0) msg += `⚠️ (本日の2Qボーナスは上限に達しました)\n`;
+    if(masterCapHit) msg += `⚠️ (本日のマスター周回ボーナス上限 ${window.MASTER_DAILY_Q_CAP}Q に到達しました)\n`;
     msg += `\n合計【 ${earnedQ}Q 】を金庫にチャージしました！${dropMsg}`;
 
     alert(msg);
