@@ -4035,7 +4035,20 @@ window.triggerCorrectAnswer = function(current) {
     }
     document.getElementById("job-title").textContent = current.job_title || "クリア！";
     if(window.currentFirstTry && Math.random() < 0.4 && !window.weakAttackModeActive) {
-      if(!window.saveData.kakera) window.saveData.kakera = 0; window.saveData.kakera += 1; window.speakText("欠片発見", "ja-JP"); document.getElementById("job-title").textContent = "🧩 【欠片センサー作動！】 " + (current.job_title || "クリア！");
+      // ★2026-08-03 修正：欠片だけはdailyLoopCounts/MASTER日次上限の対象外で、周回で無制限に稼げてしまっていたバグ修正。
+      //   同じ単元を覚えて連打するほど「初回正解」判定の回数が増える＝欠片だけ無限farmできる抜け穴になっていたため、
+      //   Qの周回上限（通常:1日3回まで／MASTER:dailyMasterQEarnedの日次上限）と同じ基準で打ち止めにする。
+      const sd2 = new Date(window.currentServerTime); const todayStr2 = `${sd2.getFullYear()}-${sd2.getMonth()+1}-${sd2.getDate()}`;
+      let kakeraCapped;
+      if (window.currentActiveStageIsMaster) {
+        kakeraCapped = window.saveData.lastMasterQDate === todayStr2 && (window.saveData.dailyMasterQEarned || 0) >= window.MASTER_DAILY_Q_CAP;
+      } else {
+        const loopCountToday = (window.saveData.lastLoopDate === todayStr2 && window.saveData.dailyLoopCounts && window.currentActiveStageId) ? (window.saveData.dailyLoopCounts[window.currentActiveStageId] || 0) : 0;
+        kakeraCapped = loopCountToday >= 3;
+      }
+      if (!kakeraCapped) {
+        if(!window.saveData.kakera) window.saveData.kakera = 0; window.saveData.kakera += 1; window.speakText("欠片発見", "ja-JP"); document.getElementById("job-title").textContent = "🧩 【欠片センサー作動！】 " + (current.job_title || "クリア！");
+      }
     }
     let processedDesc = (current.job_desc || "").replace(/\n/g, "<br>");
     processedDesc = processedDesc.replace(/\b[1-9]\d*Q\b/gi, `${finalEarnedQ}Q`); processedDesc = processedDesc.replace(/\b[1-9]\d*pt(s)?\b/gi, `${finalEarnedPts}pts`);
