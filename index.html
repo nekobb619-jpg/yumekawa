@@ -40,6 +40,10 @@
   .navi-avatar { font-size: 32px; animation: bounce 2s infinite; } .navi-text { font-size: 13px; font-weight: 700; line-height: 1.5; }
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   .weak-attack-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fee2e2, #fcd34d); border: 2px solid #ef4444; border-radius: var(--radius); box-shadow: 0 5px 0 #b91c1c; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #991b1b; text-align: center; cursor: pointer; margin-bottom: 14px; display: none; transition: all 0.1s; }
+  /* ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン）ボタン群 */
+  .detective-lab-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .detective-lab-btn { padding: 12px 6px; background: linear-gradient(135deg, #ecfeff, #cffafe); border: 2px solid #22d3ee; border-radius: var(--radius); box-shadow: 0 4px 0 #0891b2; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 12.5px; color: #0e7490; text-align: center; cursor: pointer; transition: all 0.1s; }
+  .detective-lab-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0891b2; }
   .weak-attack-banner:active { transform: translateY(3px); box-shadow: 0 2px 0 #b91c1c; }
   .treasure-banner { background: linear-gradient(135deg, #e0f2fe, #bae6fd); border: 3px solid #0284c7; border-radius: var(--radius); padding: 16px; text-align: center; margin-bottom: 16px; box-shadow: 0 5px 0 #0369a1; }
   .treasure-banner.hidden-island { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); border-color: #64748b; box-shadow: 0 5px 0 #475569; }
@@ -188,6 +192,17 @@
   .master-celeb-stagename { font-size: 19px; font-weight: 900; color: var(--text-main); margin-bottom: 8px; }
   .master-celeb-quote { font-size: 12.5px; font-weight: 700; color: #64748b; line-height: 1.7; margin-bottom: 12px; }
   .master-celeb-bonus { font-size: 15px; font-weight: 900; color: #be185d; background: var(--pastel-pink); border-radius: 12px; padding: 8px 12px; margin-bottom: 14px; }
+  /* ★2026-08-02 追加：学習ストリーク・★強化のお祝いモーダル（master-celeb-*と同系統） */
+  #streak-celebration-modal, #star-upgrade-modal { position: fixed; inset: 0; background: rgba(30, 64, 90, 0.85); z-index: 293; display: none; justify-content: center; align-items: center; padding: 20px; }
+  /* ★2026-08-02 追加：たまご図鑑カードの★ランク・強化ボタン */
+  .gacha-book-slot { position: relative; }
+  .egg-card-count-badge { position: absolute; top: 4px; right: 6px; font-size: 10px; font-weight: 900; color: #475569; background: rgba(255,255,255,0.85); border-radius: 8px; padding: 1px 5px; }
+  .egg-card-star-badge { font-size: 12px; color: #f59e0b; font-weight: 900; margin: 3px 0; }
+  .egg-card-upgrade-btn { font-size: 9.5px; font-weight: 900; border: none; border-radius: 10px; padding: 3px 6px; background: #0ea5e9; color: #fff; cursor: pointer; margin: 1px; }
+  .egg-card-upgrade-btn.ticket { background: #a855f7; }
+  .egg-card-upgrade-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
+  .egg-card-reason { font-size: 8.5px; color: #ef4444; font-weight: 700; margin-top: 2px; line-height: 1.3; }
+  .egg-card-maxed { font-size: 10px; font-weight: 900; color: #a21caf; margin-top: 2px; }
   #treasure-book-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 270; display: none; justify-content: center; align-items: center; padding: 20px; }
   .treasure-book-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
   .treasure-book-box h2 { margin: 0 0 4px; color: #0369a1; font-size: 20px; }
@@ -475,6 +490,13 @@
   <div id="weak-attack-btn-banner" class="weak-attack-banner" onclick="window.launchWeakAttackLab()">
     💔 苦手撃破ラボに挑戦する！ (あと <span id="weak-count-badge">0</span> 問たまってるぞ) ⚡
   </div>
+  <!-- ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン、ステージ非依存） -->
+  <div class="detective-lab-menu">
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('math')">🔍 算数の探偵ラボ</div>
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('kokugo')">🔍 国語の探偵ラボ</div>
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('science')">🔍 理科の探偵ラボ</div>
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('shakai')">🔍 社会の探偵ラボ</div>
+  </div>
   <div id="treasure-island-container-el" class="treasure-banner">
     <div class="treasure-title" id="treasure-island-title-el">🏝️ 脳科学 ＆ ロジック天秤の「宝島」ショップ</div>
     <canvas id="treasure-island-canvas" width="480" height="150"></canvas>
@@ -611,6 +633,26 @@
     <button class="br-btn start" style="margin-top:4px;" onclick="window.closeMasterCelebration()">やったー！🎀</button>
   </div>
 </div>
+<!-- ★学習ストリーク・お祝いモーダル 2026-08-02 追加 -->
+<div id="streak-celebration-modal">
+  <div class="master-celeb-box">
+    <div class="master-celeb-fanfare">🔥🔥🔥</div>
+    <div class="master-celeb-label">連続学習ストリーク！</div>
+    <div class="master-celeb-stagename"><span id="streak-celeb-count"></span>日連続 達成！</div>
+    <div class="master-celeb-bonus" id="streak-celeb-ticket" style="display:none;">🎟️ 3日達成ボーナス！スキルチケット+1！</div>
+    <button class="br-btn start" style="margin-top:4px;" onclick="window.closeStreakCelebrationModal()">やったー！🎉</button>
+  </div>
+</div>
+<!-- ★★強化・お祝いモーダル 2026-08-02 追加 -->
+<div id="star-upgrade-modal">
+  <div class="master-celeb-box">
+    <div class="master-celeb-fanfare" id="star-up-icon" style="font-size:52px;">⭐</div>
+    <div class="master-celeb-label">★強化成功！</div>
+    <div class="master-celeb-stagename" id="star-up-name"></div>
+    <div class="master-celeb-bonus" id="star-up-buff" style="display:block;"></div>
+    <button class="br-btn start" style="margin-top:4px;" onclick="window.closeStarUpgradeModal()">やったー！🎉</button>
+  </div>
+</div>
 <div id="treasure-book-modal">
   <div class="treasure-book-box">
     <h2>🏆 お宝図鑑</h2>
@@ -647,6 +689,7 @@
       </div>
     </div>
     <div id="gacha-panel-book" style="display:none;">
+      <div class="gacha-cost-badge" style="background:linear-gradient(135deg,#7e22ce,#a855f7); box-shadow:0 3px 0 #6b21a8;">🎟️ スキルチケット：<span id="gacha-ticket-count">0</span>枚</div>
       <div style="font-size:12.5px; font-weight:900; color:#7c3aed; margin-bottom:8px;" id="gacha-book-progress">0 / 0 コレクション</div>
       <div class="gacha-book-grid" id="gacha-book-grid"></div>
     </div>
@@ -910,6 +953,17 @@ window.normalizeSaveData = function(data) {
   normalized.kuroPonLastFedDate = normalized.kuroPonLastFedDate || "";
   normalized.kuroPonFedToday = normalized.kuroPonFedToday || {};
   normalized.selectedAvatar = normalized.selectedAvatar || "🐣";
+  // ★2026-08-02 追加：学習ストリーク＆スキルチケット、ガチャキャラの★強化ランク
+  normalized.lastStudyDate = normalized.lastStudyDate || "";
+  normalized.streakCount = Number(normalized.streakCount || 0);
+  normalized.skillTickets = Number(normalized.skillTickets || 0);
+  if (normalized.gachaEggs) {
+    Object.keys(normalized.gachaEggs).forEach(function (k) {
+      if (normalized.gachaEggs[k] && !normalized.gachaEggs[k].starRank) {
+        normalized.gachaEggs[k].starRank = 1;
+      }
+    });
+  }
   normalized.allowance = Object.assign({ yen: 0, robux: 0, memo: "", history: [], weeks: {} }, normalized.allowance || {});
   normalized.cards = normalized.cards || {};
   normalized.lastLoginDate = normalized.lastLoginDate || "";
@@ -940,7 +994,7 @@ window.normalizeSaveData = function(data) {
   return normalized;
 };
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", allowance: { yen: 0, memo: "", history: [], weeks: {} } };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", lastStudyDate: "", streakCount: 0, skillTickets: 0, allowance: { yen: 0, memo: "", history: [], weeks: {} } };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -975,6 +1029,351 @@ window.MASTER_CLEAR_THRESHOLD = 5;
 window.MASTER_PROMOTION_BONUS_Q = 50;
 window.MASTER_LOOP_REWARD_Q = 2;
 window.MASTER_DAILY_Q_CAP = 20;
+
+/* ======================================================================
+   ★2026-08-02 追加：ゆめかわ拡張3システム
+   1) JSON不要の動的問題生成エンジン + ニコの探偵ノート
+   2) 1日1クエスト連続学習ストリーク + スキルチケット自動給付
+   3) ツムツム型★強化システム（宝島レベル連動）
+   設計書: 00_Inbox/20260802_ゆめかわ拡張3システム_設計書.md
+   ====================================================================== */
+
+// --- 宝島レベル判定（renderTreasureIsland内のインライン計算を関数抽出。挙動は不変） ---
+window.getIslandLevel = function() {
+  return Math.floor((window.saveData.islandBuildLog || []).length / 5) + 1;
+};
+
+// --- ★強化システム ---
+window.STAR_UPGRADE_RULES = {
+  2: { costCount: 2, costTickets: 1, minIslandLevel: 2 },
+  3: { costCount: 4, costTickets: 2, minIslandLevel: 5 }
+};
+window.STAR_Q_BUFF = { 1: 0, 2: 0.10, 3: 0.30 };
+
+window.canUpgradeStar = function(eggId, method) {
+  const egg = window.saveData.gachaEggs && window.saveData.gachaEggs[eggId];
+  if (!egg) return { ok: false, reasons: ["未所持"] };
+  const rank = egg.starRank || 1;
+  const rule = window.STAR_UPGRADE_RULES[rank + 1];
+  if (!rule) return { ok: false, maxed: true, reasons: [] };
+  const reasons = [];
+  const islandLevel = window.getIslandLevel();
+  if (islandLevel < rule.minIslandLevel) reasons.push(`🔒 宝島Lv.${rule.minIslandLevel}で解放`);
+  if (method === 'count') {
+    if (egg.count < rule.costCount + 1) reasons.push(`あと${rule.costCount + 1 - egg.count}枚必要`);
+  } else if (method === 'ticket') {
+    if ((window.saveData.skillTickets || 0) < rule.costTickets) reasons.push(`🎟️${rule.costTickets - (window.saveData.skillTickets || 0)}枚不足`);
+  } else {
+    return { ok: false, reasons: ["不正な強化方法"] };
+  }
+  return { ok: reasons.length === 0, nextRank: rank + 1, rule, islandLevel, reasons };
+};
+
+window.upgradeEggStar = function(eggId, method) {
+  const check = window.canUpgradeStar(eggId, method);
+  if (check.maxed) return;
+  if (!check.ok) { if (check.reasons.length) alert("🔒 強化条件が未達成です：\n" + check.reasons.join("\n")); return; }
+  const egg = window.saveData.gachaEggs[eggId];
+  if (method === 'count') egg.count -= check.rule.costCount;
+  else window.saveData.skillTickets -= check.rule.costTickets;
+  egg.starRank = check.nextRank;
+  window.saveGame();
+  window.renderGachaBook();
+  window.updateUI();
+  window.showStarUpgradeCelebration(eggId, check.nextRank);
+};
+
+// バフ対象は新規フィールドを作らず、既存の選択中アバター(selectedAvatar)のキャラで代用する
+window.getStarBuffMultiplier = function() {
+  const activeEgg = window.GACHA_EGG_LIST.find(e => e.icon === window.saveData.selectedAvatar);
+  if (!activeEgg) return 1;
+  const owned = window.saveData.gachaEggs[activeEgg.id];
+  if (!owned) return 1;
+  return 1 + (window.STAR_Q_BUFF[owned.starRank || 1] || 0);
+};
+
+window.showStarUpgradeCelebration = function(eggId, newRank) {
+  const egg = window.GACHA_EGG_LIST.find(e => e.id === eggId);
+  const modal = document.getElementById("star-upgrade-modal");
+  if (!modal || !egg) return;
+  document.getElementById("star-up-icon").textContent = egg.icon;
+  document.getElementById("star-up-name").textContent = `${egg.name}が ${"★".repeat(newRank)}${"☆".repeat(3 - newRank)} に強化された！`;
+  const buffPct = Math.round((window.STAR_Q_BUFF[newRank] || 0) * 100);
+  document.getElementById("star-up-buff").textContent = buffPct > 0 ? `✨ アバターに設定すると学習Qが+${buffPct}%！` : "";
+  modal.style.display = "flex";
+  if (window.speakText) window.speakText("強化成功！", "ja-JP");
+};
+window.closeStarUpgradeModal = function() {
+  const modal = document.getElementById("star-upgrade-modal");
+  if (modal) modal.style.display = "none";
+};
+
+// --- 学習ストリーク & スキルチケット ---
+window.registerStudyStreak = function() {
+  const sd = new Date(window.currentServerTime);
+  const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
+  const todayKey = window.normalizeDateKey(todayStr);
+  if (window.normalizeDateKey(window.saveData.lastStudyDate) === todayKey) return;
+
+  const y = new Date(sd); y.setDate(y.getDate() - 1);
+  const yestKey = window.normalizeDateKey(`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`);
+
+  window.saveData.streakCount = (window.normalizeDateKey(window.saveData.lastStudyDate) === yestKey)
+    ? (window.saveData.streakCount || 0) + 1
+    : 1;
+  window.saveData.lastStudyDate = todayStr;
+
+  let ticketAwarded = false;
+  if (window.saveData.streakCount % 3 === 0) {
+    window.saveData.skillTickets = (window.saveData.skillTickets || 0) + 1;
+    ticketAwarded = true;
+  }
+  window.showStreakCelebration(window.saveData.streakCount, ticketAwarded);
+};
+
+window.showStreakCelebration = function(streakCount, ticketAwarded) {
+  const modal = document.getElementById("streak-celebration-modal");
+  if (!modal) return;
+  document.getElementById("streak-celeb-count").textContent = streakCount;
+  const ticketEl = document.getElementById("streak-celeb-ticket");
+  if (ticketEl) ticketEl.style.display = ticketAwarded ? "block" : "none";
+  modal.style.display = "flex";
+  if (window.speakText) window.speakText(`${streakCount}日連続達成！`, "ja-JP");
+};
+window.closeStreakCelebrationModal = function() {
+  const modal = document.getElementById("streak-celebration-modal");
+  if (modal) modal.style.display = "none";
+};
+
+// --- 動的問題生成エンジン：共通ヘルパー（正解+ダミー候補をシャッフルしてa/c形式に変換） ---
+window._buildChoices = function(correctText, distractors) {
+  const seen = { [correctText]: true };
+  const uniq = distractors.filter(d => { if (seen[d]) return false; seen[d] = true; return true; });
+  // ★候補の値が偶然重なって選択肢が3つ未満になるケースの保険（regenHissanDivideのfillerパターンを踏襲）。
+  //   correctTextが数値の場合のみ機械的に埋める（文字候補は呼び出し側で必ず3つ以上ユニークになるよう設計する）。
+  const correctNum = Number(correctText);
+  if (!Number.isNaN(correctNum) && correctText !== "") {
+    let fillerN = correctNum + 3;
+    while (uniq.length < 3) {
+      const filler = String(fillerN);
+      if (!seen[filler]) { uniq.push(filler); seen[filler] = true; }
+      fillerN++;
+    }
+  }
+  const withFlag = [{ text: correctText, correct: true }, ...uniq.slice(0, 3).map(d => ({ text: d, correct: false }))];
+  withFlag.sort(() => Math.random() - 0.5);
+  return { a: withFlag.map(o => o.text), c: withFlag.findIndex(o => o.correct) };
+};
+
+/* ---------- 算数 ---------- */
+window.genMathShoppingStory = function() {
+  const items = [["りんご", 90], ["みかん", 60], ["ノート", 120], ["消しゴム", 80], ["えんぴつ", 70]];
+  const [nameA, priceA] = items[Math.floor(Math.random() * items.length)];
+  const countA = 2 + Math.floor(Math.random() * 4);
+  const total = priceA * countA;
+  const { a, c } = window._buildChoices(String(total), [total - priceA, total + priceA, total + priceA * 2].map(String));
+  return {
+    q: `1こ ${priceA}円の「${nameA}」を ${countA}こ 買いました。\n代金は ぜんぶで いくらでしょう？`,
+    hint: `${priceA}円 × ${countA}こ を計算してみよう！`,
+    job_desc: `${priceA} × ${countA} = ${total}円 が正解でした！`,
+    a, c, speech_text: `${nameA}を${countA}こ買った代金はいくら？`, job_title: "【ショッピングマネージャー】"
+  };
+};
+window.genMathGroupStory = function() {
+  const people = 2 + Math.floor(Math.random() * 5);
+  const perPerson = 2 + Math.floor(Math.random() * 6);
+  const total = people * perPerson;
+  const { a, c } = window._buildChoices(String(total), [total - perPerson, total + perPerson, total + people].map(String));
+  return {
+    q: `${people}人に、あめを ${perPerson}こずつ 配ります。\nあめは ぜんぶで 何こ 必要でしょう？`,
+    hint: `${people}人 × ${perPerson}こ を計算してみよう！`,
+    job_desc: `${people} × ${perPerson} = ${total}こ が正解でした！`,
+    a, c, speech_text: `あめは全部で何こ必要？`, job_title: "【おかしくばりマスター】"
+  };
+};
+window.genMathReverseMulti = function() {
+  const x = 2 + Math.floor(Math.random() * 8);
+  const y = 2 + Math.floor(Math.random() * 8);
+  const target = x * y;
+  const correctText = `${x} × ${y}`;
+  const distractors = [`${x + 1} × ${y}`, `${x} × ${y + 1}`, `${x - 1 > 0 ? x - 1 : x + 2} × ${y}`];
+  const { a, c } = window._buildChoices(correctText, distractors);
+  return {
+    q: `答えが「${target}」になる かけ算の しきは、次のうち どれでしょう？`,
+    hint: "それぞれの式を実際に計算して、答えが同じになるものを探そう！",
+    rescue_hint: `${x} × ${y} を計算すると ${target} になるよ。他の式も計算して比べてみよう！`,
+    job_desc: `${correctText} = ${target}。答えから逆算して式を見つけられたね！`,
+    a, c, speech_text: `答えがこの数になるかけ算の式はどれ？`, job_title: "【逆算たんてい】"
+  };
+};
+
+/* ---------- 国語 ---------- */
+window.genKokugoAntonym = function() {
+  const pairs = [["大きい", "小さい"], ["あかるい", "くらい"], ["はやい", "おそい"], ["あつい", "つめたい"], ["ながい", "みじかい"], ["たかい", "ひくい"]];
+  const [word, correctText] = pairs[Math.floor(Math.random() * pairs.length)];
+  const distractors = pairs.filter(p => p[1] !== correctText).sort(() => Math.random() - 0.5).slice(0, 3).map(p => p[1]);
+  const { a, c } = window._buildChoices(correctText, distractors);
+  return {
+    q: `「${word}」の 反対の いみの言葉は どれでしょう？`,
+    hint: `「${word}」と正反対のようすを表す言葉を考えてみよう！`,
+    job_desc: `「${word}」の反対語は「${correctText}」でした！`,
+    a, c, speech_text: `${word}の反対の意味の言葉はどれ？`, job_title: "【言葉のたんけんか】"
+  };
+};
+window.genKokugoKanjiReading = function() {
+  const list = [["音楽", "おんがく"], ["世界", "せかい"], ["漢字", "かんじ"], ["風景", "ふうけい"], ["昨夜", "さくや"], ["両親", "りょうしん"]];
+  const [kanji, correctText] = list[Math.floor(Math.random() * list.length)];
+  const distractors = list.filter(p => p[1] !== correctText).sort(() => Math.random() - 0.5).slice(0, 3).map(p => p[1]);
+  const { a, c } = window._buildChoices(correctText, distractors);
+  return {
+    q: `「${kanji}」の 正しい 読みかたは どれでしょう？`,
+    hint: "習った漢字の読み方を思い出してみよう！",
+    job_desc: `「${kanji}」の読みは「${correctText}」でした！`,
+    a, c, speech_text: `${kanji}の正しい読み方はどれ？`, job_title: "【漢字はかせ】"
+  };
+};
+window.genKokugoReverseReason = function() {
+  const scenarios = [
+    { situation: "たろうくんは、朝ごはんを食べずに家を出た。", result: "3時間目のじゅぎょう中に、おなかがなってしまった。", correct: "朝ごはんを食べなかったから", distractors: ["昨日の夜ふかしをしたから", "体育のじゅぎょうがあったから", "友だちとけんかしたから"] },
+    { situation: "はなこさんは、かさを持たずに出かけた。", result: "とちゅうで雨にふられて、びしょぬれになった。", correct: "かさを持っていなかったから", distractors: ["走るのが遅かったから", "傘立てが遠かったから", "友だちが遅刻したから"] },
+    { situation: "けんとくんは、宿題を最後の日にまとめてやろうとした。", result: "時間が足りなくて、全部おわらせられなかった。", correct: "宿題を後回しにしていたから", distractors: ["問題が難しすぎたから", "テレビの音がうるさかったから", "えんぴつが折れたから"] }
+  ];
+  const s = scenarios[Math.floor(Math.random() * scenarios.length)];
+  const { a, c } = window._buildChoices(s.correct, s.distractors);
+  return {
+    q: `${s.situation}\nその結果、「${s.result}」\n\nこうなった一番の理由は、次のうち どれでしょう？`,
+    hint: "起きた出来事の『前』に何があったかを、もう一度読み返してみよう！",
+    rescue_hint: `文章の最初に書かれている出来事が、結果につながる一番の原因になっていることが多いよ！`,
+    job_desc: `「${s.correct}」が一番の理由でした。原因と結果のつながりを見つけられたね！`,
+    a, c, speech_text: "こうなった一番の理由はどれ？", job_title: "【国語の名探偵】"
+  };
+};
+
+/* ---------- 理科 ---------- */
+window.genScienceMelting = function() {
+  const substances = [["氷", 0], ["バター", 32], ["ろう", 60]];
+  const [name, meltPoint] = substances[Math.floor(Math.random() * substances.length)];
+  const testTemp = meltPoint + (Math.random() < 0.5 ? -10 - Math.floor(Math.random() * 10) : 10 + Math.floor(Math.random() * 10));
+  const isMelted = testTemp > meltPoint;
+  const correctText = isMelted ? "とけている（えき体）" : "とけていない（こ体）";
+  const { a, c } = window._buildChoices(correctText, ["半分だけとけている", "こおっている", "気体になっている"]);
+  return {
+    q: `「${name}」は ${meltPoint}℃で とけはじめます。\n今の温度は ${testTemp}℃です。「${name}」は どうなっているでしょう？`,
+    hint: `今の温度(${testTemp}℃)と、とけはじめる温度(${meltPoint}℃)を比べてみよう！`,
+    job_desc: `${testTemp}℃は とけはじめる温度(${meltPoint}℃)より${isMelted ? '高い' : '低い'}ので、「${correctText}」が正解でした！`,
+    a, c, speech_text: `この物質は今どうなっている？`, job_title: "【状態変化けんきゅういん】"
+  };
+};
+window.genScienceCircuit = function() {
+  const isParallel = Math.random() < 0.5;
+  const bulbCount = 2 + Math.floor(Math.random() * 2);
+  const wiring = isParallel ? "へいれつつなぎ" : "直列つなぎ";
+  const correctText = isParallel ? "変わらない（それぞれ同じ明るさ）" : "暗くなる（豆電球の数が増えるほど）";
+  const { a, c } = window._buildChoices(correctText, ["消える", "とても明るくなる", "点滅する"]);
+  return {
+    q: `豆電球を ${bulbCount}こ、「${wiring}」で つなぎました。\n1つの豆電球の明るさは、1こだけの時と比べて どうなるでしょう？`,
+    hint: `直列つなぎは電気の通り道が1本、へいれつつなぎは電気の通り道が枝分かれしているよ！`,
+    job_desc: `「${wiring}」では、豆電球の明るさは「${correctText}」が正解でした！`,
+    a, c, speech_text: "豆電球の明るさはどうなる？", job_title: "【電気回路エンジニア】"
+  };
+};
+window.genScienceReverseResult = function() {
+  const cases = [
+    { result: "コップに入れた氷が、しばらくすると水になっていた。", correct: "コップの周りの空気であたためられたから", distractors: ["コップが重かったから", "光が当たらなかったから", "水がふえたから"] },
+    { result: "植木ばちの植物が、しおれてしまった。", correct: "水をあげるのを忘れていたから", distractors: ["肥料をあげすぎたから", "植木ばちが小さかったから", "風が強かったから"] },
+    { result: "鉄のくぎが、時間がたつと茶色くさびていた。", correct: "空気中の水や酸素にふれていたから", distractors: ["日光が当たらなかったから", "磁石を近づけたから", "とても寒い場所にあったから"] }
+  ];
+  const s = cases[Math.floor(Math.random() * cases.length)];
+  const { a, c } = window._buildChoices(s.correct, s.distractors);
+  return {
+    q: `【実験結果】「${s.result}」\n\nこの結果になった一番の理由は、次のうち どれでしょう？`,
+    hint: "結果が起きるために『必ず必要だった条件』は何かを考えてみよう！",
+    rescue_hint: "その現象が起きる時、周りにある『空気・水・温度』のどれが関わっているか思い出してみよう！",
+    job_desc: `「${s.correct}」が一番の理由でした。結果から原因を逆にたどれたね！`,
+    a, c, speech_text: "この実験結果になった一番の理由はどれ？", job_title: "【理科の名探偵】"
+  };
+};
+
+/* ---------- 社会 ---------- */
+window.genShakaiPrefecture = function() {
+  const table = [["北海道", "じゃがいも"], ["青森県", "りんご"], ["静岡県", "お茶"], ["愛知県", "自動車工業"], ["沖縄県", "さとうきび"], ["新潟県", "お米"]];
+  const [pref, correctText] = table[Math.floor(Math.random() * table.length)];
+  const distractors = table.filter(p => p[1] !== correctText).sort(() => Math.random() - 0.5).slice(0, 3).map(p => p[1]);
+  const { a, c } = window._buildChoices(correctText, distractors);
+  return {
+    q: `「${pref}」の 名産品として 特に有名なものは どれでしょう？`,
+    hint: "その地域の気候や土地のようすと、名産品の関係を思い出してみよう！",
+    job_desc: `「${pref}」の名産品は「${correctText}」でした！`,
+    a, c, speech_text: `${pref}の名産品はどれ？`, job_title: "【ご当地はかせ】"
+  };
+};
+window.genShakaiRegion = function() {
+  const table = [["北海道", "すずしくて雪が多い"], ["沖縄県", "1年中あたたかい"], ["中部地方の山間部", "夏すずしく冬雪が多い"]];
+  const [region, correctText] = table[Math.floor(Math.random() * table.length)];
+  const distractors = table.filter(p => p[1] !== correctText).map(p => p[1]).concat(["1年中雨が少なく乾燥している"]);
+  const { a, c } = window._buildChoices(correctText, distractors);
+  return {
+    q: `「${region}」の 気候の特ちょうとして 正しいものは どれでしょう？`,
+    hint: "地図で見た時のその地域の位置（緯度や地形）を思い出そう！",
+    job_desc: `「${region}」の気候は「${correctText}」が正解でした！`,
+    a, c, speech_text: `この地域の気候の特徴はどれ？`, job_title: "【気候リサーチャー】"
+  };
+};
+window.genShakaiReverseGeo = function() {
+  const cases = [
+    { fact: "この地方では、昔から稲作（お米づくり）がとてもさかんである。", correct: "広い平野と豊かな水があるから", distractors: ["山が多く平地が少ないから", "1年中雪がふらないから", "海に面していないから"] },
+    { fact: "この地方では、漁業（魚をとる仕事）で働く人が多い。", correct: "海に面していて、良い漁場が近いから", distractors: ["山にかこまれているから", "雨がほとんどふらないから", "工場がたくさんあるから"] },
+    { fact: "この地方では、レタスやキャベツなどの高原野菜づくりがさかんである。", correct: "標高が高くすずしい気候だから", distractors: ["海に面しているから", "1年中あたたかいから", "砂ばくが近いから"] }
+  ];
+  const s = cases[Math.floor(Math.random() * cases.length)];
+  const { a, c } = window._buildChoices(s.correct, s.distractors);
+  return {
+    q: `【地理の事実】「${s.fact}」\n\nこうなった一番の理由は、次のうち どれでしょう？`,
+    hint: "その土地の『地形』や『気候』が、人々の仕事にどう関係しているか考えてみよう！",
+    rescue_hint: "地形（平地/山地/海沿い）と気候（あたたかい/すずしい）の組み合わせを思い浮かべてみよう！",
+    job_desc: `「${s.correct}」が一番の理由でした。地理の条件と産業のつながりを見つけられたね！`,
+    a, c, speech_text: "こうなった一番の理由はどれ？", job_title: "【社会の名探偵】"
+  };
+};
+
+window.DYNAMIC_GENERATORS = {
+  math:   { normal: [window.genMathShoppingStory, window.genMathGroupStory], boss: [window.genMathReverseMulti] },
+  kokugo: { normal: [window.genKokugoAntonym, window.genKokugoKanjiReading], boss: [window.genKokugoReverseReason] },
+  science:{ normal: [window.genScienceMelting, window.genScienceCircuit], boss: [window.genScienceReverseResult] },
+  shakai: { normal: [window.genShakaiPrefecture, window.genShakaiRegion], boss: [window.genShakaiReverseGeo] }
+};
+
+window.startDetectiveLab = function(subject) {
+  const genFns = window.DYNAMIC_GENERATORS[subject];
+  if (!genFns) return;
+  window.dynamicPracticeModeActive = true;
+  window.dynamicPracticeCorrectCount = 0;
+  window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
+  window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
+  const normalQs = [];
+  for (let i = 0; i < 5; i++) normalQs.push(genFns.normal[Math.floor(Math.random() * genFns.normal.length)]());
+  const boss = genFns.boss[Math.floor(Math.random() * genFns.boss.length)]();
+  boss.q = "🔍【ニコの探偵ノート】\n" + boss.q;
+  boss.isDetectiveBoss = true;
+  window.currentQuestions = [...normalQs, boss];
+  document.getElementById("game-screen").style.display = "block";
+  const itemBtn = document.getElementById("item-use-in-game-btn"); if (itemBtn) itemBtn.style.display = "none";
+  window.showQuestionStep();
+};
+
+window.finishDynamicPractice = function() {
+  window.dynamicPracticeModeActive = false;
+  const correctCount = window.dynamicPracticeCorrectCount || 0;
+  const totalCount = window.currentQuestions.length;
+  const earnedQ = Math.floor(correctCount * 1.5 * window.getStarBuffMultiplier());
+  window.saveData.q += earnedQ;
+  window.registerStudyStreak();
+  window.saveGame();
+  window.updateUI();
+  document.getElementById("game-screen").style.display = "none";
+  alert(`🔍 探偵ラボ、おつかれさま！\n正解 ${correctCount}/${totalCount} 問\n【+${earnedQ}Q】獲得！`);
+};
+
 window.updateUI = function() {
   if (!window.saveData) window.saveData = {};
   document.getElementById("pts-val").innerHTML = `${window.saveData.pts || 0}<span>pts</span>`;
@@ -1089,7 +1488,7 @@ window.renderTreasureIsland = function() {
 
   // 見出しラベル（島レベル・たてもの総数）
   const total = log.length;
-  const level = Math.floor(total / 5) + 1;
+  const level = window.getIslandLevel();
   const label = "🏝️ Lv." + level + "（たてもの " + total + "こ）";
   ctx.font = "bold 13px sans-serif";
   const labelW = ctx.measureText(label).width + 16;
@@ -2015,6 +2414,8 @@ window.openGachaModal = function() {
   window.switchGachaTab('pull');
   const el = document.getElementById('gacha-kakera-count');
   if (el) el.textContent = window.saveData.kakera || 0;
+  const ticketEl = document.getElementById('gacha-ticket-count');
+  if (ticketEl) ticketEl.textContent = window.saveData.skillTickets || 0;
   const resultZone = document.getElementById('gacha-result-zone');
   if (resultZone) resultZone.innerHTML = '<div style="font-size:12px; font-weight:700; color:#94a3b8;">↑ たまごをタップしてガチャを引こう！</div>';
   const eggEl = document.getElementById('gacha-egg-el');
@@ -2044,8 +2445,33 @@ window.renderGachaBook = function() {
     const owned = window.saveData.gachaEggs[egg.id];
     const slot = document.createElement('div');
     slot.className = 'gacha-book-slot' + (owned ? ' owned' + (egg.rarity===2?' r2c':egg.rarity===3?' r3c':egg.rarity===4?' r4c':'') : ' locked');
-    slot.innerHTML = `<div class="gacha-book-icon">${owned ? egg.icon : '❓'}</div><div class="gacha-book-name">${owned ? egg.name : '？？？'}</div>`;
-    if (owned) slot.title = egg.desc;
+    if (!owned) {
+      slot.innerHTML = `<div class="gacha-book-icon">❓</div><div class="gacha-book-name">？？？</div>`;
+      grid.appendChild(slot);
+      return;
+    }
+    const rank = owned.starRank || 1;
+    const starHtml = "★".repeat(rank) + "☆".repeat(3 - rank);
+    const checkCount = window.canUpgradeStar(egg.id, 'count');
+    const checkTicket = window.canUpgradeStar(egg.id, 'ticket');
+    let upgradeHtml;
+    if (checkCount.maxed) {
+      upgradeHtml = `<div class="egg-card-maxed">👑 最大強化済み</div>`;
+    } else {
+      upgradeHtml = `
+        <button class="egg-card-upgrade-btn" ${checkCount.ok ? '' : 'disabled'} onclick="window.upgradeEggStar('${egg.id}','count')">🧩強化</button>
+        <button class="egg-card-upgrade-btn ticket" ${checkTicket.ok ? '' : 'disabled'} onclick="window.upgradeEggStar('${egg.id}','ticket')">🎟️強化</button>
+        <div class="egg-card-reason">${(checkCount.ok ? [] : checkCount.reasons).join(' / ')}</div>
+      `;
+    }
+    slot.innerHTML = `
+      <div class="egg-card-count-badge">×${owned.count}</div>
+      <div class="gacha-book-icon">${egg.icon}</div>
+      <div class="gacha-book-name">${egg.name}</div>
+      <div class="egg-card-star-badge">${starHtml}</div>
+      ${upgradeHtml}
+    `;
+    slot.title = egg.desc;
     grid.appendChild(slot);
   });
 };
@@ -3375,6 +3801,7 @@ window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
 
   if (window.currentQIdx >= window.currentQuestions.length) {
+    if (window.dynamicPracticeModeActive) { window.finishDynamicPractice(); return; }
     // ★2026-07-20 修正：スコア加算・saveGame・スプレッドシートへのログ送信は、
     //   ふりかえりチャットを最後までクリックしたかどうかに関係なく、問題セットが終わった
     //   瞬間に必ず実行する（以前はチャットを最後まで見ないと保存されず、子どもが
@@ -3506,15 +3933,15 @@ window.triggerWrongAnswer = function(current) {
   window.currentFirstTry = false;
   window.totalMistakes++;
 
-  if (current.type === "text_input" && window.totalMistakes >= 2 && current.rescue_hint) {
-    document.getElementById("game-hint-text").textContent = `🆘 救済システム作動！：${current.rescue_hint}`;
+  if (((current.type === "text_input" && window.totalMistakes >= 2) || (current.isDetectiveBoss && window.totalMistakes >= 1)) && current.rescue_hint) {
+    document.getElementById("game-hint-text").textContent = current.isDetectiveBoss ? `🆘 ニコからのヒント：${current.rescue_hint}` : `🆘 救済システム作動！：${current.rescue_hint}`;
   } else {
     document.getElementById("game-hint-text").textContent = `❌ ナビ助言：${current.hint}`;
   }
 
   window.speakText("ざんねん！", "ja-JP");
 
-  if (!window.weakAttackModeActive) {
+  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive) {
     if (!window.sessionMissedQuestions) window.sessionMissedQuestions = [];
     if (!window.sessionMissedQuestions.some(m => m._qIdx === window.currentQIdx)) {
       window.sessionMissedQuestions.push({
@@ -3529,6 +3956,7 @@ window.triggerWrongAnswer = function(current) {
     }
   }
 
+  if (window.dynamicPracticeModeActive) { return; } // ★特訓ラボはステージ非依存のため、weakQuestions等への書き込みは行わない
   if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
      // ★qid（並び順が変わってもズレない安定id）があればそちらを使う。無ければ従来のindex形式にフォールバック。
@@ -3564,6 +3992,17 @@ window.triggerPassAnswer = function(current) {
 };
 window.triggerCorrectAnswer = function(current) {
   let finalEarnedQ = 0; let finalEarnedPts = 5;
+  if (window.dynamicPracticeModeActive) {
+    // ★特訓ラボはステージ非依存（window.currentStageがnull）なので、既存のelse節（.id/.isMaster等参照）を
+    //   絶対に通してはいけない。正解カウントのみ行い、Q付与はfinishDynamicPractice側でまとめて行う。
+    window.dynamicPracticeCorrectCount = (window.dynamicPracticeCorrectCount || 0) + 1;
+    document.getElementById("job-title").textContent = current.job_title || "正解！";
+    document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
+    const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
+    document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
+    setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
+    return;
+  }
   if (window.weakAttackModeActive) {
      if (current.isRealWeak && current.rawWeakId) {
         window.saveData.weakQuestions = window.saveData.weakQuestions.filter(id => id !== current.rawWeakId);
@@ -3689,7 +4128,7 @@ window.exitToMainMenu = function() {
     let isPerfect = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
     let pBonus = isPerfect ? 5 : 0;
     // ★殿堂入り周回の報酬はデイリー上限で既に確定額なので、ブースト倍率をかけない（他の報酬経路と分離）
-    let earnedQ = window.currentActiveStageIsMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier);
+    let earnedQ = window.currentActiveStageIsMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier * window.getStarBuffMultiplier());
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
     // ★クリア時点の問題数を記録しておき、あとで問題が追加されたかどうかの判定に使う（hasNewQuestionsSinceCleared）
@@ -3725,7 +4164,9 @@ window.exitToMainMenu = function() {
       let dName = dropped === 'booster' ? '🧪脳内ブースター' : (dropped === 'analyzer' ? '🔍予言のレンズ' : '⏰時空の砂時計');
       dropMsg = `\n\n🎁 【超ラッキー！】\nステージの中からレアアイテム『${dName}』を直接見つけたぞ！バッグに入れておいたよ！`;
     }
-    window.activeItemBuff = null; window.saveGame();
+    window.activeItemBuff = null;
+    window.registerStudyStreak(); // ★1日1クエストクリアで連続学習ストリークを登録（同日2回目以降は内部でスキップ）
+    window.saveGame();
     if (justTurnedMaster) {
       const celebStageName = (window.currentStage && window.currentStage.name) ? window.currentStage.name : targetStageId;
       setTimeout(() => { window.showMasterCelebration(celebStageName, masterBonusQ); }, 500);
