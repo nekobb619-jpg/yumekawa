@@ -514,17 +514,17 @@
       <div class="shop-card" onclick="window.buyShopItem('booster')">
         <span class="icon">🧪</span>
         <span class="name">脳内ブースター</span>
-        <span class="cost">🪙5Q + 🧩1枚</span>
+        <span class="cost">🪙6Q + 🧩1枚</span>
       </div>
       <div class="shop-card" onclick="window.buyShopItem('analyzer')">
         <span class="icon">🔍</span>
         <span class="name">予言のレンズ</span>
-        <span class="cost">🪙2Q + 🧩1枚</span>
+        <span class="cost">🪙3Q + 🧩1枚</span>
       </div>
       <div class="shop-card" onclick="window.buyShopItem('hourglass')">
         <span class="icon">⏰</span>
         <span class="name">時空の砂時計</span>
-        <span class="cost">🪙3Q + 🧩1枚</span>
+        <span class="cost">🪙4Q + 🧩1枚</span>
       </div>
     </div>
   </div>
@@ -1922,9 +1922,10 @@ window.buyShopItem = function(itemKey) {
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if(window.saveData.inventory.length >= 10) { alert("🤖 【宝島のロボ警告】\nリュックがパンク寸前だ！アイテムは全部で【最大10個】までしか持てないよ！\nどれかを使ってからまたおいで！"); return; }
 
-  let qCost = 5; let kCost = 1; let name = "脳内ブースター";
-  if(itemKey === 'analyzer') { qCost = 2; kCost = 1; name = "予言のレンズ"; }
-  if(itemKey === 'hourglass') { qCost = 3; kCost = 1; name = "時空の砂時計"; }
+  // ★2026-08-03 改定：アイテム価格を20%値上げ（0.1の位を切り上げ）。欠片コストは据え置き。
+  let qCost = 6; let kCost = 1; let name = "脳内ブースター";
+  if(itemKey === 'analyzer') { qCost = 3; kCost = 1; name = "予言のレンズ"; }
+  if(itemKey === 'hourglass') { qCost = 4; kCost = 1; name = "時空の砂時計"; }
 
   let currentKakera = window.saveData.kakera || 0;
   if(window.saveData.q < qCost || currentKakera < kCost) { alert(`🤖 【素材不足】\n設計図の欠片🧩 やトークン🪙 が足りないぞ！\n・🪙${qCost}Q と 🧩${kCost}枚 が必要だよ！`); return; }
