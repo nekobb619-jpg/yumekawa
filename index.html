@@ -1307,10 +1307,11 @@ window.EXPEDITION_DURATION_MS = 18000000; // 5時間 = 18000秒
 window.EXPEDITION_PREMIUM_CHANCE = 0.03;   // 合計★6以上で抽選する未所持プレミアムお宝の確率
 window.EXPEDITION_MOCHIKUN_CHANCE = 0.001; // もちくん連れ帰り確率（ガチャ経由と別枠）
 // ★2026-08-04 訂正：出動条件＝編成した3体の合計★数ぶん、探偵ラボと同じシャッフル問題プールから出題する確認クイズに答えること
-window.EXPEDITION_QUIZ_MAX_QUESTIONS = 10; // 極端な高★編成でも出題数が際限なく増えないようにする上限
+window.EXPEDITION_QUIZ_MAX_QUESTIONS = 5; // 極端な高★編成でも出題数が際限なく増えないようにする上限
+// ★2026-08-04 修正：飽き防止のため問題数を半分に（合計★数÷2、四捨五入）
 window.computeExpeditionQuizQuestionCount = function (teamIds) {
   const totalStars = window.computeExpeditionTotalStars(teamIds);
-  return Math.max(1, Math.min(totalStars, window.EXPEDITION_QUIZ_MAX_QUESTIONS));
+  return Math.max(1, Math.min(Math.round(totalStars / 2), window.EXPEDITION_QUIZ_MAX_QUESTIONS));
 };
 // 探偵ラボと同じ「CLI生成済みの実問題プール」を全教科ぶんまとめてシャッフルし、指定数だけ抜き出す
 window.buildExpeditionQuizQuestions = function (count) {
