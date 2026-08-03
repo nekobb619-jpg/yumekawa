@@ -1545,11 +1545,7 @@ window.renderExpeditionPanel = function () {
 window.uiAutoFormAndDispatchExpedition = function () {
   const team = window.autoFormExpeditionTeam();
   if (!team) { alert("🏕️ 余剰アバターが3種そろっていないよ！ガチャで重複キャラを増やそう！"); return; }
-  const stars = window.computeExpeditionTotalStars(team);
-  const survival = window.computeExpeditionSurvivalChance(team);
-  const pred = window.computeExpeditionPredictedRewards(team);
-  const quizCount = window.computeExpeditionQuizQuestionCount(team);
-  if (!confirm(`🏕️ この3体を探検隊に送り込むよ！\n合計★${stars}／生還率${survival}%\n予測: +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個\n🔍 出動前に探偵ラボの問題を${quizCount}問といてね！\nいいかな？`)) return;
+  // ★2026-08-04 修正：確認ポップアップ（いいかな？）が問題画面を邪魔するため撤去し、即クイズ開始する
   window.startExpeditionQuiz(team);
 };
 
