@@ -185,7 +185,8 @@
       window.currentActiveStageIsMaster = stg.isMaster || false;
       window.quizPool = bundle;
       var show = (stg.showCount && stg.showCount > 0) ? stg.showCount : 10;
-      window.currentQuestions = bundle.slice().sort(function () { return Math.random() - 0.5; }).slice(0, show);
+      // ★2026-08-03 変更：thinking:true（思考力・推論問題）の単元は最低1問を保証しつつ抽出する
+      window.currentQuestions = window.pickBalancedQuestions(bundle, show);
       document.getElementById("game-screen").style.display = "block";
       var invBtn = document.getElementById("item-use-in-game-btn");
       if (invBtn) invBtn.style.display = (window.saveData.inventory && window.saveData.inventory.length >= 1) ? "block" : "none";

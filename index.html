@@ -460,6 +460,9 @@
     <button class="btn-sm" onclick="window.exchangePtsToQ()">🪙 20pts を 1Q に両替</button>
   </div>
   <div class="flex-row">
+    <button class="btn-sm" style="background:var(--pastel-pink);" onclick="window.exchangePtsToQBulk()">🪙 まとめて一括交換！</button>
+  </div>
+  <div class="flex-row">
     <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openTreasureBookModal()">🏆 お宝図鑑</button>
     <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openGachaModal()">🥚 ガチャ</button>
   </div>
@@ -683,10 +686,10 @@
         <div style="font-size:12px; font-weight:700; color:#94a3b8;">↑ たまごをタップしてガチャを引こう！</div>
       </div>
       <div class="gacha-rate-table">
-        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム</div>
-        <div class="gacha-rate-row r2">★★レア　キャラ6種 ＋ 強力バフ <span>25%</span></div>
-        <div class="gacha-rate-row r3">★★★超レア　キャラ4種 <span>8%</span></div>
-        <div class="gacha-rate-row r4">★★★★伝説　まぼろしニコ <span>2%</span></div>
+        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム <span>68%</span></div>
+        <div class="gacha-rate-row r2">★★レア　キャラ6種 ＋ 強力バフ <span>26%</span></div>
+        <div class="gacha-rate-row r3">★★★超レア　キャラ4種 <span>5%</span></div>
+        <div class="gacha-rate-row r4">★★★★伝説　まぼろしニコ <span>1%</span></div>
       </div>
     </div>
     <div id="gacha-panel-book" style="display:none;">
@@ -1371,11 +1374,97 @@ window.genShakaiReverseGeo = function() {
   };
 };
 
+/* ---------- 思考力・推論クイズ（2026-08-03 追加：条件整理・法則性発見型） ---------- */
+// 算数：条件整理（2つの条件から2けたの数を特定する）
+window.genMathThinkingCondition = function () {
+  const tens = 1 + Math.floor(Math.random() * 9); // 十の位：1〜9
+  let ones = Math.floor(Math.random() * 10); // 一の位：0〜9（十の位と異なる値になるまで引き直す）
+  while (ones === tens) ones = Math.floor(Math.random() * 10);
+  const diff = Math.abs(ones - tens);
+  const relation = ones > tens ? `十の位より ${diff} 大きい` : `十の位より ${diff} 小さい`;
+  const answer = tens * 10 + ones;
+  const distractors = [ones * 10 + tens, tens * 10 + (9 - ones), (tens < 9 ? tens + 1 : tens - 1) * 10 + ones].map(String);
+  const { a, c } = window._buildChoices(String(answer), distractors);
+  return {
+    q: `つぎの 2つの じょうけんに あう 2けたの 数は どれでしょう？\n・十の位（じゅうのくらい）は ${tens}\n・一の位（いちのくらい）は ${relation}`,
+    hint: `十の位が${tens}ということは「${tens}◯」という数だね。一の位を計算してみよう！`,
+    job_desc: `十の位が${tens}、一の位は${relation}なので${ones}。2つのじょうけんを順番に整理すると「${answer}」が見つかるね！`,
+    a, c, speech_text: "2つのじょうけんを整理して、あてはまる数を見つけよう！", job_title: "【じょうけん整理はかせ】", thinking: true
+  };
+};
+// 国語：条件整理（2つのヒントから3人の順位を推理する）
+window.genKokugoThinkingLogic = function () {
+  const namesPool = ["りく", "さくら", "はると", "みお", "ゆうと", "あかり"];
+  const names = namesPool.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+  // ★正解の「せいくらべ」順位を先に決め、ヒントは必ず「隣どうし」を比較する形で作る。
+  //   （ランダムな2人の組み合わせを比較すると、3人目の順位が決まらず答えが一意にならない
+  //   ケースがあったため、A＞B・B＞Cの連鎖になる比較だけを使う）
+  const orderedNames = names.slice().sort(() => Math.random() - 0.5);
+  const askTallest = Math.random() < 0.5;
+  const target = askTallest ? orderedNames[0] : orderedNames[2];
+  const clue1 = `${orderedNames[0]}は${orderedNames[1]}より せが たかい。`;
+  const clue2 = `${orderedNames[1]}は${orderedNames[2]}より せが たかい。`;
+  const clues = [clue1, clue2].sort(() => Math.random() - 0.5); // 提示する順番だけシャッフル
+  const distractors = names.filter(n => n !== target).concat(["3人とも同じ"]).slice(0, 3);
+  const { a, c } = window._buildChoices(target, distractors);
+  return {
+    q: `${names[0]}さん・${names[1]}さん・${names[2]}さんの 3人が せいくらべを しました。\n・${clues[0]}\n・${clues[1]}\n\nこの ヒントから わかる、いちばん${askTallest ? "せが たかい" : "せが ひくい"}人は だれでしょう？`,
+    hint: "2つのヒントを つなげて、3人の じゅんばんを かんがえてみよう！",
+    rescue_hint: `${clue1} ${clue2} を つなげると「${orderedNames.join(" ＞ ")}」の じゅんばんに なるよ。`,
+    job_desc: `${clue1} ${clue2} を つなげると「${orderedNames.join(" ＞ ")}」の じゅんばんが わかるね。だから答えは「${target}」！`,
+    a, c, speech_text: "2つのヒントをつなげて、じゅんばんを考えよう！", job_title: "【じょうほう整理たんてい】", thinking: true
+  };
+};
+// 理科：条件整理（対照実験＝変えた条件だけが原因という考え方）
+window.genScienceThinkingCondition = function () {
+  const setups = [
+    { theme: "植物の成長", A: "日光に当てた", B: "日光に当てなかった", sameCond: "水と土の量は同じにした", result: "Aだけ よく育った", correct: "日光の 有無", distractors: ["水の量", "土の種類", "植木ばちの色"] },
+    { theme: "氷のとけかた", A: "あたたかい部屋に置いた", B: "冷蔵庫に置いた", sameCond: "氷の大きさと形は同じにした", result: "Aだけ 早くとけた", correct: "まわりの温度", distractors: ["氷の形", "置いた時間帯", "容器の色"] },
+    { theme: "豆電球の明るさ", A: "電池を2こ使った", B: "電池を1こ使った", sameCond: "豆電球と導線は同じものを使った", result: "Aだけ 明るく光った", correct: "電池の数", distractors: ["導線の長さ", "豆電球の形", "スイッチの位置"] }
+  ];
+  const s = setups[Math.floor(Math.random() * setups.length)];
+  const { a, c } = window._buildChoices(s.correct, s.distractors);
+  return {
+    q: `【${s.theme}の じっけん】\nグループA：${s.A}\nグループB：${s.B}\n（${s.sameCond}）\n\nけっか：${s.result}\n\nこの ちがいを 生んだ「じょうけん」は どれでしょう？`,
+    hint: "AとBで『ちがう部分』だけに注目しよう。同じにそろえた部分は原因ではないよ！",
+    rescue_hint: "AとBの説明を見比べて、変えている条件が1つだけあるはずだよ。",
+    job_desc: `AとBで ちがうのは「${s.correct}」だけ。ほかの じょうけんは 同じにそろえてあるから、けっかのちがいの原因は「${s.correct}」だとわかるね！`,
+    a, c, speech_text: "AとBで、ちがう条件はどれか考えよう！", job_title: "【じっけん条件たんてい】", thinking: true
+  };
+};
+// 社会：条件整理（複数ヒントの絞り込みで都道府県を特定）
+window.genShakaiThinkingClues = function () {
+  const items = [
+    { name: "北海道", clues: ["日本で いちばん 面積が 広い", "雪まつりで 有名", "じゃがいもの 生産量が 日本一"] },
+    { name: "沖縄県", clues: ["1年中 あたたかい 気候", "さとうきびの 生産が さかん", "日本で いちばん 南に ある"] },
+    { name: "愛知県", clues: ["自動車工業が さかん", "中部地方に ある", "名古屋城で 有名"] },
+    { name: "静岡県", clues: ["富士山の ふもとに ある", "うなぎの 養しょくが さかん（浜名湖）", "お茶の 生産が さかん"] }
+  ];
+  const pool = items.slice().sort(() => Math.random() - 0.5);
+  const target = pool[0];
+  const distractorNames = pool.slice(1, 4).map(p => p.name);
+  const usedClues = target.clues.slice().sort(() => Math.random() - 0.5).slice(0, 2);
+  const { a, c } = window._buildChoices(target.name, distractorNames);
+  return {
+    q: `つぎの 2つの ヒントに 両方 当てはまる 都道府県は どこでしょう？\n・${usedClues[0]}\n・${usedClues[1]}`,
+    hint: "2つのヒントを両方満たす都道府県を考えよう！1つだけでは他の都道府県も当てはまるかも。",
+    job_desc: `「${usedClues[0]}」「${usedClues[1]}」の 両方に あてはまるのは「${target.name}」だよ！`,
+    a, c, speech_text: "2つのヒントを両方満たす都道府県はどこ？", job_title: "【都道府県すいり隊】", thinking: true
+  };
+};
+
 window.DYNAMIC_GENERATORS = {
-  math:   { normal: [window.genMathShoppingStory, window.genMathGroupStory], boss: [window.genMathReverseMulti] },
-  kokugo: { normal: [window.genKokugoAntonym, window.genKokugoKanjiReading], boss: [window.genKokugoTypoFix] },
-  science:{ normal: [window.genScienceMelting, window.genScienceCircuit], boss: [window.genScienceReverseResult] },
-  shakai: { normal: [window.genShakaiPrefecture, window.genShakaiRegion], boss: [window.genShakaiReverseGeo] }
+  math:   { normal: [window.genMathShoppingStory, window.genMathGroupStory, window.genMathThinkingCondition], boss: [window.genMathReverseMulti] },
+  kokugo: { normal: [window.genKokugoAntonym, window.genKokugoKanjiReading, window.genKokugoThinkingLogic], boss: [window.genKokugoTypoFix] },
+  science:{ normal: [window.genScienceMelting, window.genScienceCircuit, window.genScienceThinkingCondition], boss: [window.genScienceReverseResult] },
+  shakai: { normal: [window.genShakaiPrefecture, window.genShakaiRegion, window.genShakaiThinkingClues], boss: [window.genShakaiReverseGeo] }
+};
+// 思考力ジェネレーター単体マップ（startDetectiveLabで「毎回1問は思考力問題を保証する」ために使用）
+window.DETECTIVE_LAB_THINKING_GENERATOR = {
+  math: window.genMathThinkingCondition,
+  kokugo: window.genKokugoThinkingLogic,
+  science: window.genScienceThinkingCondition,
+  shakai: window.genShakaiThinkingClues
 };
 
 // ★2026-08-03 拡張：探偵ラボの subject キー → 実問題データの id プレフィックス（stages.js の subject と一致させる）
@@ -1401,6 +1490,23 @@ window._shuffleQuestionChoices = function (q) {
   clone.a = withFlag.map(function (o) { return o.txt; });
   clone.c = withFlag.findIndex(function (o) { return o.correct; });
   return clone;
+};
+
+// ★2026-08-03 追加：通常ステージ／通常ドリルの抽出でも思考力問題(thinking:true)をバランスよく
+//   出現させるための共通ヘルパー。showCount<全問題数の単元では、thinking:trueの問題が
+//   単元内にあれば最低1問は必ず含めてから残りをランダム抽出する（launchQuestから利用）。
+window.pickBalancedQuestions = function (bundle, count) {
+  if (!bundle || !bundle.length) return [];
+  if (bundle.length <= count) return bundle.slice();
+  const thinking = bundle.filter(function (q) { return q.thinking; });
+  const others = bundle.filter(function (q) { return !q.thinking; });
+  const shuffledOthers = others.slice().sort(function () { return Math.random() - 0.5; });
+  const shuffledThinking = thinking.slice().sort(function () { return Math.random() - 0.5; });
+  const picks = [];
+  if (shuffledThinking.length) picks.push(shuffledThinking[0]);
+  const fillPool = shuffledOthers.concat(shuffledThinking.slice(1));
+  picks.push.apply(picks, fillPool.slice(0, count - picks.length));
+  return picks.sort(function () { return Math.random() - 0.5; });
 };
 
 window.DETECTIVE_LAB_DAILY_MAX = 5;
@@ -1459,18 +1565,22 @@ window.startDetectiveLab = function(subject) {
   window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
   window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
 
-  // ★CLI生成済みの実問題データ（js/quizzes/*.js＝その教科の全単元）から5問をランダム抽出し、
+  // ★CLI生成済みの実問題データ（js/quizzes/*.js＝その教科の全単元）から4問をランダム抽出し、
   //   regen対応問題は数値を再生成、それ以外も含め選択肢の並び順をシャッフルして「通常問題化」する
   const rawPool = window._buildDetectiveNormalPool(subject);
   const shuffledPool = rawPool.slice().sort(function () { return Math.random() - 0.5; });
-  let normalQs = shuffledPool.slice(0, 5).map(function (q) {
+  let normalQs = shuffledPool.slice(0, 4).map(function (q) {
     const regenApplied = q.regen ? window.regenerateQuestion(q) : q;
     return window._shuffleQuestionChoices(regenApplied);
   });
-  // 保険：その教科の実問題が5問に満たない場合だけ、従来のテンプレ生成で埋める
-  if (normalQs.length < 5 && genFns.normal && genFns.normal.length) {
-    while (normalQs.length < 5) normalQs.push(genFns.normal[Math.floor(Math.random() * genFns.normal.length)]());
+  // 保険：その教科の実問題が4問に満たない場合だけ、従来のテンプレ生成で埋める
+  if (normalQs.length < 4 && genFns.normal && genFns.normal.length) {
+    while (normalQs.length < 4) normalQs.push(genFns.normal[Math.floor(Math.random() * genFns.normal.length)]());
   }
+  // ★思考力問題を1問、必ず追加する（教科ごとの専用ジェネレーターをその場で実行）
+  const thinkingGen = window.DETECTIVE_LAB_THINKING_GENERATOR[subject];
+  if (thinkingGen) normalQs.push(thinkingGen());
+  normalQs = normalQs.sort(function () { return Math.random() - 0.5; });
 
   // ★6・7問目＝ボスは、既存の逆推論テンプレ生成をそのまま流用（実データ非依存でその場生成）を2問連続で出題する。
   //   ボス中はアイテム使用不可（showQuestionStep側の分岐で制御）。
@@ -1997,7 +2107,7 @@ window.checkAutoLoginBonus = function() {
 
   const currentCount = window.saveData.loginStampCount;
   const isComplete = (currentCount >= 7);
-  const earnedQ = isComplete ? 2 : 1;
+  const earnedQ = isComplete ? 3 : 2; // ★2026-08-03変更：通常+1Q→+2Q、7日目+2Q→+3Q
   window.saveData.q += earnedQ;
 
   window.saveGame();
@@ -2014,12 +2124,12 @@ window.checkAutoLoginBonus = function() {
 
     setTimeout(() => {
       if (isComplete) {
-        alert(`🎉 1週間スタンプコンプリート！\nログインボーナスご褒美【＋2Q】を自動ゲットしたぞ！\n明日からまた新しいスタンプ帳がはじまるよ！`);
+        alert(`🎉 1週間スタンプコンプリート！\nログインボーナスご褒美【＋3Q】を自動ゲットしたぞ！\n明日からまた新しいスタンプ帳がはじまるよ！`);
         window.saveData.loginStampCount = 0;
         window.saveGame();
         window.renderStampCard();
       } else {
-        alert(`💮 今日のログインボーナス【＋1Q】を自動ゲットしたよ！\n（スタンプ ${currentCount}/7日目・あと ${7 - currentCount}回でコンプリートボーナス！）`);
+        alert(`💮 今日のログインボーナス【＋2Q】を自動ゲットしたよ！\n（スタンプ ${currentCount}/7日目・あと ${7 - currentCount}回でコンプリートボーナス！）`);
       }
     }, 600);
   }, 500);
@@ -2042,7 +2152,7 @@ window.renderStampCard = function() {
     let mark = "";
     if (i <= count) { slot.classList.add("stamped"); mark = i === 7 ? "👑" : "💮"; }
     else if (i === count + 1 && !alreadyStampedToday) { slot.classList.add("today"); }
-    let rewardText = i === 7 ? "🎁+2Q" : "🪙+1Q";
+    let rewardText = i === 7 ? "🎁+3Q" : "🪙+2Q";
     slot.innerHTML = `Day ${i}<br><span style="color:#ef4444; font-size:9px;">${rewardText}</span><span class="stamp-mark" id="stamp-mark-${i}">${mark}</span>`;
     grid.appendChild(slot);
   }
@@ -2655,7 +2765,7 @@ window.doGachaPull = function() {
 window.rollGacha = function() {
   if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
   const r = Math.random();
-  const rarity = r < 0.65 ? 1 : (r < 0.90 ? 2 : (r < 0.98 ? 3 : 4));
+  const rarity = r < 0.68 ? 1 : (r < 0.94 ? 2 : (r < 0.99 ? 3 : 4)); // ★1:68% ★2:26% ★3:5% ★4:1%（2026-08-03改定）
   // レアリティ内でキャラとアイテムの比率（★1は20%アイテム、★2は20%アイテム）
   const pool = window.GACHA_EGG_LIST.filter(e => e.rarity === rarity);
   const picked = pool[Math.floor(Math.random() * pool.length)];
@@ -3165,6 +3275,17 @@ window.applyAvatar = function() {
 };
 /* ★クロぽんごはん・アバター ここまで ------------------- */
 window.exchangePtsToQ = function() { if(window.saveData.pts < 20) { alert("🪙 20pts必要です。"); return; } window.saveData.pts -= 20; window.saveData.q += 1; window.saveGame(); alert("🪙 両替しました！"); };
+// ★2026-08-03 追加：pt→Qの一括交換（Math.floor(pts/20)で最大Q数を算出し、端数ptsは保持する）
+window.exchangePtsToQBulk = function() {
+  const maxQ = Math.floor((window.saveData.pts || 0) / 20);
+  if (maxQ <= 0) { alert("🪙 20pts必要です。"); return; }
+  const usedPts = maxQ * 20;
+  if (!confirm(`🪙 ${usedPts}ptsを使って ${maxQ}Q に一括交換するよ！\nいいかな？`)) return;
+  window.saveData.pts -= usedPts;
+  window.saveData.q += maxQ;
+  window.saveGame();
+  alert(`🪙 ${usedPts}pts → ${maxQ}Q に一括両替したよ！`);
+};
 window.claimRobux = function(qCost, rAmt) { if(window.saveData.q < qCost) { alert(`💸 あと ${qCost - window.saveData.q}Q 必要です！`); return; } window.saveData.q -= qCost; window.saveData.robux += rAmt; window.saveGame(); alert("🎟️ 交換申請完了！"); window.syncWithGoogleSpreadsheet("CLAIM", { robux: rAmt, cost: qCost }); };
 /* ★きょうだい対抗バトル（2026-07-24 追加）：オンライン対人機能は今回やらない方針のため、
    家庭内2人（りお・りさ）限定の「今週のクリア数」を見せ合う、安全な対戦要素。
