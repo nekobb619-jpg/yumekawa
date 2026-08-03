@@ -3233,6 +3233,25 @@ window.showGachaResult = function(result) {
   `;
   if (window.speakText) window.speakText(isDupe ? 'また出たよ' : egg.rarity >= 3 ? '超レアキャラゲット！' : '新しいニコのたまごゲット！', 'ja-JP');
 };
+
+// ★超EXレア★5「もちくん」専用カットイン演出（モーダルHTMLは既存だが表示関数が未実装だったため追加）
+window.showMochikunCutIn = function(egg) {
+  const iconEl = document.getElementById('mochikun-cutin-icon');
+  const nameEl = document.getElementById('mochikun-cutin-name');
+  const descEl = document.getElementById('mochikun-cutin-desc');
+  if (iconEl) iconEl.textContent = (egg && egg.icon) || '🦭';
+  if (nameEl) nameEl.textContent = (egg && egg.name) || 'もちくん';
+  if (descEl) descEl.textContent = (egg && egg.desc) || '';
+  if (window.speakText) window.speakText('超EXレア、もちくんが出た！', 'ja-JP');
+  setTimeout(() => {
+    const modal = document.getElementById('mochikun-cutin-modal');
+    if (modal) modal.style.display = 'flex';
+  }, 400);
+};
+window.closeMochikunCutIn = function() {
+  const modal = document.getElementById('mochikun-cutin-modal');
+  if (modal) modal.style.display = 'none';
+};
 /* ★ガチャシステム ここまで ------------------- */
 
 /* ★クロぽんごはん・アバター 2026-07-25 ここから ------------------- */
@@ -4572,6 +4591,12 @@ window.showQuestionStep = function() {
   if (regenBadgeEl) regenBadgeEl.style.display = current._regenBadge ? "inline-block" : "none";
   const thinkingBadgeEl = document.getElementById("thinking-badge");
   if (thinkingBadgeEl) thinkingBadgeEl.style.display = current.thinking ? "inline-block" : "none";
+  // ★QAモード：思考力クイズ(thinking:true)の出現率をリアルタイム集計・可視化する
+  if (window.QA_MODE) {
+    window.QA_STATS.questionsShown++;
+    if (current.thinking) window.QA_STATS.thinkingShown++;
+    window.qaLog(`出題: ${(window.currentStage && window.currentStage.id) || "?"} Q${window.currentQIdx + 1} thinking=${!!current.thinking}`);
+  }
   let qNumberStr = window.weakAttackModeActive ? `にがて復元Q.${window.currentQIdx+1}` : `Q.${window.currentQIdx+1}`;
   document.getElementById("game-q-text").textContent = `【${qNumberStr}】\n${current.q ? current.q.replace(/【Q\.\d+】/g, '') : ""}`;
   document.getElementById("game-hint-text").textContent = current.hint || "よく読んで考えてみてね！";
@@ -4819,6 +4844,11 @@ window.triggerCorrectAnswer = function(current) {
         window.saveData.kakera += 1;
         thinkingBonusMsg += " ＋🧩1個";
       }
+      // ★QAモード：ひらめきボーナスの発火をカウント・ログ表示する
+      if (window.QA_MODE) {
+        window.QA_STATS.thinkingBonusFired++;
+        window.qaLog(`ひらめきボーナス発火: ${thinkingBonusMsg.replace(/\n/g, " ")}`);
+      }
     }
     let processedDesc = (current.job_desc || "").replace(/\n/g, "<br>");
     processedDesc = processedDesc.replace(/\b[1-9]\d*Q\b/gi, `${finalEarnedQ}Q`); processedDesc = processedDesc.replace(/\b[1-9]\d*pt(s)?\b/gi, `${finalEarnedPts}pts`);
@@ -4983,7 +5013,76 @@ window.triggerForcedClear = function() { window.exitToMainMenu(); };
 //   （dynamicPracticeModeActiveは元々ここでリセットされておらず、新設のrescueQuizModeActiveも
 //   同じ穴になるところだったため、あわせて修正した）
 window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
+
+/* ★2026-08-03 追加：実機QAモード -------------------
+   通常プレイヤーには一切見えないよう、URLに ?qa=1 を付けて開いた場合のみ有効化する。
+   一度有効化するとlocalStorageに記憶され、以後は?qa=1を付けなくてもQAパネルが出る
+   （テスト端末側でOFFにしたい場合はlocalStorage.removeItem('yumekawa_qa_mode')）。 */
+window.QA_MODE = false;
+window.QA_STATS = { questionsShown: 0, thinkingShown: 0, thinkingBonusFired: 0 };
+window.qaLogEntries = [];
+window.qaLog = function(msg) {
+  if (!window.QA_MODE) return;
+  const ts = new Date().toLocaleTimeString('ja-JP', { hour12: false });
+  window.qaLogEntries.push(`[${ts}] ${msg}`);
+  if (window.qaLogEntries.length > 50) window.qaLogEntries.shift();
+  console.log('[QA]', msg);
+  const listEl = document.getElementById('qa-log-list');
+  if (listEl) listEl.innerHTML = window.qaLogEntries.slice().reverse().map(e => `<div>${e}</div>`).join('');
+  const statsEl = document.getElementById('qa-log-stats');
+  if (statsEl) {
+    const shown = window.QA_STATS.questionsShown;
+    const rate = shown ? (window.QA_STATS.thinkingShown / shown * 100).toFixed(1) : '0.0';
+    statsEl.textContent = `💡出現率: ${window.QA_STATS.thinkingShown}/${shown} (${rate}%) ／ ひらめきボーナス発火: ${window.QA_STATS.thinkingBonusFired}回`;
+  }
+};
+
+window.qaCompleteExpeditionNow = function() {
+  if (!window.saveData.expedition) { alert('QA: 進行中の探検隊がありません'); return; }
+  window.saveData.expedition.startTime = (window.currentServerTime || Date.now()) - window.saveData.expedition.durationMs - 1000;
+  window.saveGame();
+  if (window.renderExpeditionPanel) window.renderExpeditionPanel();
+  window.qaLog('⏩ 探検隊タイマーを即時完了させました');
+};
+window.qaAdjustComfort = function(delta) {
+  if (window.saveData.mainAvatarComfort === undefined) window.saveData.mainAvatarComfort = 100;
+  window.saveData.mainAvatarComfort = Math.max(0, Math.min(100, window.saveData.mainAvatarComfort + delta));
+  window.saveGame();
+  if (window.renderMainAvatarComfort) window.renderMainAvatarComfort();
+  window.qaLog(`🛌 快適度を${delta > 0 ? '+' : ''}${delta}して ${window.saveData.mainAvatarComfort} にしました`);
+};
+window.qaTriggerMochikunCutIn = function() {
+  const def = (window.GACHA_EGG_LIST || []).find(e => e.id === 'e_ex_mochi') || { icon: '🦭', name: 'もちくん', desc: '' };
+  if (window.showMochikunCutIn) window.showMochikunCutIn(def);
+  window.qaLog('🦭 もちくんカットインをテスト表示しました');
+};
+
+window.initQAMode = function() {
+  try {
+    const params = new URLSearchParams(location.search);
+    window.QA_MODE = params.get('qa') === '1' || localStorage.getItem('yumekawa_qa_mode') === '1';
+  } catch (e) { window.QA_MODE = false; }
+  if (!window.QA_MODE) return;
+  try { localStorage.setItem('yumekawa_qa_mode', '1'); } catch (e) {}
+  const panelHtml = `
+    <div id="qa-panel" style="position:fixed; bottom:8px; right:8px; z-index:9999; background:rgba(15,23,42,0.95); color:#e2e8f0; font-family:monospace; font-size:11px; padding:10px; border-radius:10px; width:280px; max-height:360px; overflow-y:auto; border:2px solid #38bdf8; box-shadow:0 4px 16px rgba(0,0,0,0.4);">
+      <div style="font-weight:900; color:#38bdf8; margin-bottom:6px;">🧪 QAモード（実機確認用）</div>
+      <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">
+        <button onclick="window.qaCompleteExpeditionNow()" style="font-size:10px; padding:4px 6px;">⏩探検隊タイマー即完了</button>
+        <button onclick="window.qaAdjustComfort(-20)" style="font-size:10px; padding:4px 6px;">🛌快適度-20</button>
+        <button onclick="window.qaAdjustComfort(20)" style="font-size:10px; padding:4px 6px;">🛌快適度+20</button>
+        <button onclick="window.qaTriggerMochikunCutIn()" style="font-size:10px; padding:4px 6px;">🦭もちくんカットイン表示</button>
+      </div>
+      <div id="qa-log-stats" style="margin-bottom:4px; color:#a5f3fc;">💡出現率: 0/0 (0.0%) ／ ひらめきボーナス発火: 0回</div>
+      <div id="qa-log-list" style="max-height:180px; overflow-y:auto; border-top:1px solid #334155; padding-top:4px;"></div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', panelHtml);
+  window.qaLog('QAモードを起動しました（?qa=1 または localStorageで有効化）');
+};
+/* ★実機QAモード ここまで ------------------- */
+
 window.initApp();
+window.initQAMode();
 </script>
 <script src="./js/stages.js"></script>
 <script src="./js/quizzes/math.js"></script>
