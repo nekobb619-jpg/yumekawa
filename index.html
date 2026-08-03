@@ -1306,11 +1306,23 @@ window.EXPEDITION_TEAM_SIZE = 3;
 window.EXPEDITION_DURATION_MS = 18000000; // 5時間 = 18000秒
 window.EXPEDITION_PREMIUM_CHANCE = 0.03;   // 合計★6以上で抽選する未所持プレミアムお宝の確率
 window.EXPEDITION_MOCHIKUN_CHANCE = 0.001; // もちくん連れ帰り確率（ガチャ経由と別枠）
-// ★2026-08-04 追加：探検隊の出動条件＝その日のうちに探偵ラボを規定回数クリアしていること
-window.EXPEDITION_REQUIRED_DETECTIVE_LAB_CLEARS = 1;
-window.hasMetExpeditionDailyCondition = function () {
-  window.ensureDetectiveLabDailyReset();
-  return (window.saveData.detectiveLabDailyCount || 0) >= window.EXPEDITION_REQUIRED_DETECTIVE_LAB_CLEARS;
+// ★2026-08-04 訂正：出動条件＝編成した3体の合計★数ぶん、探偵ラボと同じシャッフル問題プールから出題する確認クイズに答えること
+window.EXPEDITION_QUIZ_MAX_QUESTIONS = 10; // 極端な高★編成でも出題数が際限なく増えないようにする上限
+window.computeExpeditionQuizQuestionCount = function (teamIds) {
+  const totalStars = window.computeExpeditionTotalStars(teamIds);
+  return Math.max(1, Math.min(totalStars, window.EXPEDITION_QUIZ_MAX_QUESTIONS));
+};
+// 探偵ラボと同じ「CLI生成済みの実問題プール」を全教科ぶんまとめてシャッフルし、指定数だけ抜き出す
+window.buildExpeditionQuizQuestions = function (count) {
+  let pool = [];
+  Object.keys(window.DETECTIVE_LAB_SUBJECT_PREFIX || {}).forEach(function (subject) {
+    pool = pool.concat(window._buildDetectiveNormalPool(subject));
+  });
+  const shuffledPool = pool.slice().sort(function () { return Math.random() - 0.5; });
+  return shuffledPool.slice(0, count).map(function (q) {
+    const regenApplied = q.regen ? window.regenerateQuestion(q) : q;
+    return window._shuffleQuestionChoices(regenApplied);
+  });
 };
 
 // 送り込める「余剰アバター」一覧（所持数2枚以上＝1枚は手元に残る）
@@ -1356,10 +1368,6 @@ window.computeExpeditionPredictedRewards = function (teamIds) {
 
 window.dispatchExpeditionTeam = function (teamIds) {
   if (window.saveData.expedition) { alert("🏕️ すでに探検隊が出発中だよ！帰りを待とう！"); return false; }
-  if (!window.hasMetExpeditionDailyCondition()) {
-    alert(`🔍 探検隊を出動させるには、まず今日の探偵ラボを${window.EXPEDITION_REQUIRED_DETECTIVE_LAB_CLEARS}回クリアしてね！`);
-    return false;
-  }
   if (!teamIds || teamIds.length !== window.EXPEDITION_TEAM_SIZE) { alert(`🏕️ ${window.EXPEDITION_TEAM_SIZE}体えらんでね！`); return false; }
   for (const id of teamIds) {
     const owned = window.saveData.gachaEggs[id];
@@ -1526,14 +1534,11 @@ window.renderExpeditionPanel = function () {
     return;
   }
   const surplus = window.getSurplusAvatarsForExpedition();
-  const conditionMet = window.hasMetExpeditionDailyCondition();
-  const conditionBanner = conditionMet
-    ? `<div style="font-size:11px; font-weight:900; color:#16a34a; margin-bottom:6px;">✅ 出動条件クリア済み（今日の探偵ラボ${window.EXPEDITION_REQUIRED_DETECTIVE_LAB_CLEARS}回以上）</div>`
-    : `<div style="font-size:11px; font-weight:900; color:#dc2626; margin-bottom:6px;">🔍 出動条件：今日の探偵ラボを${window.EXPEDITION_REQUIRED_DETECTIVE_LAB_CLEARS}回クリアしてね！（まだ未達成）</div>`;
-  area.innerHTML = `${conditionBanner}<div style="font-size:11px; color:var(--text-soft); margin-bottom:6px;">余剰アバター（2枚以上持っているキャラ）：${surplus.length}種</div>
+  area.innerHTML = `<div style="font-size:11px; font-weight:900; color:#7c3aed; margin-bottom:6px;">🔍 出動条件：編成した3体の合計★数ぶん、探偵ラボの問題に答えてね！（★が多いほど問題数UP）</div>
+    <div style="font-size:11px; color:var(--text-soft); margin-bottom:6px;">余剰アバター（2枚以上持っているキャラ）：${surplus.length}種</div>
     <div class="flex-row" style="justify-content:center;">
-      <button class="btn-sm" ${conditionMet ? '' : 'disabled'} onclick="window.uiAutoFormAndDispatchExpedition()">🏕️ おまかせ編成で出発！</button>
-      <button class="btn-sm" style="background:#e0f2fe;" ${conditionMet ? '' : 'disabled'} onclick="window.openExpeditionTeamModal()">✋ 手動で編成する</button>
+      <button class="btn-sm" onclick="window.uiAutoFormAndDispatchExpedition()">🏕️ おまかせ編成で出発！</button>
+      <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openExpeditionTeamModal()">✋ 手動で編成する</button>
     </div>`;
 };
 window.uiAutoFormAndDispatchExpedition = function () {
@@ -1542,8 +1547,9 @@ window.uiAutoFormAndDispatchExpedition = function () {
   const stars = window.computeExpeditionTotalStars(team);
   const survival = window.computeExpeditionSurvivalChance(team);
   const pred = window.computeExpeditionPredictedRewards(team);
-  if (!confirm(`🏕️ この3体を探検隊に送り込むよ！\n合計★${stars}／生還率${survival}%\n予測: +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個\nいいかな？`)) return;
-  if (window.dispatchExpeditionTeam(team)) { window.renderExpeditionPanel(); alert("🏕️ 探検隊、出発！5時間後の帰りを待とう！"); }
+  const quizCount = window.computeExpeditionQuizQuestionCount(team);
+  if (!confirm(`🏕️ この3体を探検隊に送り込むよ！\n合計★${stars}／生還率${survival}%\n予測: +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個\n🔍 出動前に探偵ラボの問題を${quizCount}問といてね！\nいいかな？`)) return;
+  window.startExpeditionQuiz(team);
 };
 
 /* ---------- 手動編成UI（余剰アバター一覧からタップで3体選ぶ） ---------- */
@@ -1590,7 +1596,8 @@ window.renderExpeditionTeamModal = function () {
     const stars = window.computeExpeditionTotalStars(window.expeditionManualSelection);
     const survival = window.computeExpeditionSurvivalChance(window.expeditionManualSelection);
     const pred = window.computeExpeditionPredictedRewards(window.expeditionManualSelection);
-    if (info) info.textContent = `合計★${stars}／生還率${survival}%／予測 +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個`;
+    const quizCount = window.computeExpeditionQuizQuestionCount(window.expeditionManualSelection);
+    if (info) info.textContent = `合計★${stars}／生還率${survival}%／予測 +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個／🔍出動前クイズ${quizCount}問`;
     if (confirmBtn) confirmBtn.disabled = false;
   } else {
     if (info) info.textContent = `あと${window.EXPEDITION_TEAM_SIZE - window.expeditionManualSelection.length}体えらんでね（${window.expeditionManualSelection.length}/${window.EXPEDITION_TEAM_SIZE}）`;
@@ -1600,11 +1607,39 @@ window.renderExpeditionTeamModal = function () {
 window.confirmExpeditionManualDispatch = function () {
   if (window.expeditionManualSelection.length !== window.EXPEDITION_TEAM_SIZE) return;
   const team = window.expeditionManualSelection.slice();
-  if (window.dispatchExpeditionTeam(team)) {
-    window.closeExpeditionTeamModal();
-    window.renderExpeditionPanel();
-    alert("🏕️ 探検隊、出発！5時間後の帰りを待とう！");
-  }
+  window.closeExpeditionTeamModal();
+  window.startExpeditionQuiz(team);
+};
+
+/* ---------- 出動前クイズ（編成★合計ぶんの探偵ラボ問題に正解要らずで答える） ---------- */
+window.expeditionQuizModeActive = false;
+window._pendingExpeditionTeam = null;
+
+window.startExpeditionQuiz = function (teamIds) {
+  if (window.saveData.expedition) { alert("🏕️ すでに探検隊が出発中だよ！帰りを待とう！"); return; }
+  const count = window.computeExpeditionQuizQuestionCount(teamIds);
+  const questions = window.buildExpeditionQuizQuestions(count);
+  if (!questions.length) { alert("🔍 出題できる問題が見つからなかったよ……"); return; }
+
+  window._pendingExpeditionTeam = teamIds.slice();
+  window.expeditionQuizModeActive = true;
+  window.currentQIdx = 0; window.totalMistakes = 0;
+  window.currentQuestions = questions;
+
+  document.getElementById("game-screen").style.display = "block";
+  const itemBtn = document.getElementById("item-use-in-game-btn");
+  if (itemBtn) itemBtn.style.display = "none"; // ★出動前クイズ中はアイテム使用不可
+  window.showQuestionStep();
+};
+
+window.finishExpeditionQuiz = function () {
+  window.expeditionQuizModeActive = false;
+  const team = window._pendingExpeditionTeam;
+  window._pendingExpeditionTeam = null;
+  document.getElementById("game-screen").style.display = "none";
+  const dispatched = team && window.dispatchExpeditionTeam(team);
+  window.renderExpeditionPanel();
+  if (dispatched) alert("🏕️ クイズおつかれさま！探検隊、出発！5時間後の帰りを待とう！");
 };
 /* ★5時間危険探検隊システム ここまで ------------------- */
 
@@ -2049,13 +2084,7 @@ window.finishDynamicPractice = function() {
   window.saveGame();
   window.updateUI();
   document.getElementById("game-screen").style.display = "none";
-  // ★探検隊の出動条件（今日の探偵ラボクリア回数）が変わるので、KuroPon部屋が裏で開いていれば即反映
-  if (window.renderExpeditionPanel) window.renderExpeditionPanel();
-  const justMetExpeditionCondition = window.hasMetExpeditionDailyCondition && window.hasMetExpeditionDailyCondition()
-    && (window._detectiveLabRunIndexToday || 1) === window.EXPEDITION_REQUIRED_DETECTIVE_LAB_CLEARS;
-  let finishMsg = `🔍 探偵ラボ、おつかれさま！\n正解 ${correctCount}/${totalCount} 問\n【+${earnedQ}Q】獲得！`;
-  if (justMetExpeditionCondition) finishMsg += `\n🏕️ 探検隊の出動条件をクリアしたよ！KuroPonの部屋から出動できるよ！`;
-  alert(finishMsg);
+  alert(`🔍 探偵ラボ、おつかれさま！\n正解 ${correctCount}/${totalCount} 問\n【+${earnedQ}Q】獲得！`);
   if (premiumResult) window.showTreasureReveal(premiumResult.treasure, premiumResult.isDupe);
 };
 
@@ -4581,6 +4610,7 @@ window.showQuestionStep = function() {
   if (window.currentQIdx >= window.currentQuestions.length) {
     if (window.dynamicPracticeModeActive) { window.finishDynamicPractice(); return; }
     if (window.rescueQuizModeActive) { window.finishExpeditionRescue(); return; }
+    if (window.expeditionQuizModeActive) { window.finishExpeditionQuiz(); return; }
     // ★2026-07-20 修正：スコア加算・saveGame・スプレッドシートへのログ送信は、
     //   ふりかえりチャットを最後までクリックしたかどうかに関係なく、問題セットが終わった
     //   瞬間に必ず実行する（以前はチャットを最後まで見ないと保存されず、子どもが
@@ -4601,10 +4631,10 @@ window.showQuestionStep = function() {
   }
   window.currentWeakQuestionObj = current;
   // ★2026-08-03 追加：探偵ラボのボス問題（isDetectiveBoss）中はアイテム使用不可にする
-  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive) {
+  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive) {
     const detectiveItemBtn = document.getElementById("item-use-in-game-btn");
     if (detectiveItemBtn) {
-      const canUseItem = !window.rescueQuizModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
+      const canUseItem = !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
       detectiveItemBtn.style.display = canUseItem ? "block" : "none";
     }
   }
@@ -4738,7 +4768,7 @@ window.triggerWrongAnswer = function(current) {
 
   window.speakText("ざんねん！", "ja-JP");
 
-  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive) {
+  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive && !window.expeditionQuizModeActive) {
     if (!window.sessionMissedQuestions) window.sessionMissedQuestions = [];
     if (!window.sessionMissedQuestions.some(m => m._qIdx === window.currentQIdx)) {
       window.sessionMissedQuestions.push({
@@ -4803,6 +4833,15 @@ window.triggerCorrectAnswer = function(current) {
   if (window.rescueQuizModeActive) {
     // ★探検隊SOS救出クイズ：ステージ非依存のため、正解演出のみ行う（復元処理はfinishExpeditionRescue側）
     document.getElementById("job-title").textContent = current.job_title || "きゅうしゅつ せいこう！";
+    document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
+    const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
+    document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
+    setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
+    return;
+  }
+  if (window.expeditionQuizModeActive) {
+    // ★探検隊出動前クイズ：ステージ非依存のため、正解演出のみ行う（実際の出動処理はfinishExpeditionQuiz側）
+    document.getElementById("job-title").textContent = current.job_title || "正解！";
     document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
     const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
     document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
@@ -5032,8 +5071,8 @@ window.exitToMainMenu = function() {
 window.triggerForcedClear = function() { window.exitToMainMenu(); };
 // ★2026-08-03修正：探偵ラボ/救出クイズ中に「やめる」を押すとモードフラグが残り続けるバグを修正
 //   （dynamicPracticeModeActiveは元々ここでリセットされておらず、新設のrescueQuizModeActiveも
-//   同じ穴になるところだったため、あわせて修正した）
-window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
+//   同じ穴になるところだったため、あわせて修正した。expeditionQuizModeActiveも同様に対応）
+window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; window.expeditionQuizModeActive = false; window._pendingExpeditionTeam = null; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
 
 /* ★2026-08-03 追加：実機QAモード -------------------
    通常プレイヤーには一切見えないよう、URLに ?qa=1 を付けて開いた場合のみ有効化する。
