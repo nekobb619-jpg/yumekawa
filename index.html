@@ -314,7 +314,7 @@
   .gacha-result-dupe { font-size: 11px; font-weight: 900; color: #b45309; background: #fef3c7; border-radius: 10px; padding: 5px 10px; margin-bottom: 8px; display: none; }
   .gacha-rate-table { background: #f8fafc; border-radius: 12px; padding: 10px 12px; margin: 10px 0; text-align: left; font-size: 11px; }
   .gacha-rate-row { display: flex; justify-content: space-between; font-weight: 700; color: #64748b; margin-bottom: 2px; }
-  .gacha-rate-row.r2 { color: #2563eb; } .gacha-rate-row.r3 { color: #d97706; } .gacha-rate-row.r4 { color: #a21caf; }
+  .gacha-rate-row.r2 { color: #2563eb; } .gacha-rate-row.r3 { color: #d97706; } .gacha-rate-row.r4 { color: #a21caf; } .gacha-rate-row.r5 { color: #0891b2; }
   .gacha-btn-row { display: flex; gap: 8px; margin-top: 12px; }
   .gacha-btn { flex: 1; padding: 13px; border: none; border-radius: 14px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: all 0.1s; }
   .gacha-btn:active { transform: translateY(3px); box-shadow: none; }
@@ -356,6 +356,15 @@
   .food-icon { font-size: 26px; display: block; margin-bottom: 2px; }
   .food-name { font-size: 10px; font-weight: 900; color: #334155; }
   .food-cost { font-size: 9px; font-weight: 700; color: #7c3aed; }
+  /* ★もちくんカットイン・危険探検隊 手動編成モーダル 2026-08-03 */
+  #mochikun-cutin-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 910; display: none; justify-content: center; align-items: center; padding: 16px; }
+  #expedition-team-modal { position: fixed; inset: 0; background: rgba(30, 10, 40, 0.9); z-index: 620; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .expedition-member-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 8px 4px; text-align: center; cursor: pointer; background: #fff; }
+  .expedition-member-card.selected { border-color: #0891b2; background: #ecfeff; }
+  .expedition-member-icon { font-size: 26px; }
+  .expedition-member-name { font-size: 9.5px; font-weight: 700; color: #334155; }
+  .expedition-member-star { font-size: 10px; color: #f59e0b; }
+  .expedition-member-count { font-size: 10px; color: #64748b; }
   /* ★プレミアムガチャモーダル */
   #premium-gacha-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.97); z-index: 900; display: none; justify-content: center; align-items: center; padding: 16px; }
   .premium-gacha-box { background: linear-gradient(160deg, #0a0a1a, #1a0a2e, #0a1a0a); border-radius: 26px; width: 100%; max-width: 380px; padding: 26px 20px 22px; text-align: center; box-shadow: 0 0 80px rgba(255, 215, 0, 0.6), 0 0 30px rgba(200, 100, 255, 0.5), 0 12px 40px rgba(0,0,0,0.9); animation: premiumIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid rgba(255,215,0,0.4); }
@@ -686,10 +695,11 @@
         <div style="font-size:12px; font-weight:700; color:#94a3b8;">↑ たまごをタップしてガチャを引こう！</div>
       </div>
       <div class="gacha-rate-table">
-        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム <span>68%</span></div>
+        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム <span>67.9%</span></div>
         <div class="gacha-rate-row r2">★★レア　キャラ6種 ＋ 強力バフ <span>26%</span></div>
         <div class="gacha-rate-row r3">★★★超レア　キャラ4種 <span>5%</span></div>
         <div class="gacha-rate-row r4">★★★★伝説　まぼろしニコ <span>1%</span></div>
+        <div class="gacha-rate-row r5">★★★★★超EXレア　もちくん <span>0.1%</span></div>
       </div>
     </div>
     <div id="gacha-panel-book" style="display:none;">
@@ -728,7 +738,37 @@
     <div class="avatar-section-title">👤 じぶんのアバターをえらぼう</div>
     <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:8px;">ガチャで集めたニコのたまごからアバターを選べるよ！</div>
     <div class="avatar-grid" id="avatar-grid-el"></div>
+    <div class="avatar-section-title">🏕️ 危険探検隊</div>
+    <div id="expedition-panel-area" style="text-align:center; margin-bottom:10px;"></div>
+    <div class="avatar-section-title">🛌 メインアバターの快適度</div>
+    <div class="kuropon-hunger-bar"><div class="kuropon-hunger-fill" id="avatar-comfort-fill" style="width:100%"></div></div>
+    <div class="kuropon-hunger-label" id="avatar-comfort-label">快適度：100 / 100</div>
     <button class="br-btn close" style="margin-top:4px;" onclick="window.closeKuroPonModal()">とじる</button>
+  </div>
+</div>
+<!-- ★もちくん(超EXレア★5)カットイン演出モーダル 2026-08-03 -->
+<div id="mochikun-cutin-modal">
+  <div class="premium-gacha-box" style="background:linear-gradient(135deg,#e0f2fe,#f0f9ff); border:3px solid #7dd3fc;">
+    <span class="premium-gacha-crown">🦭</span>
+    <div class="premium-gacha-title">超EXレア★5！！</div>
+    <div class="premium-gacha-sub">ガチャ史上さいレア、まさかの出会い……！</div>
+    <div class="premium-gacha-reward">
+      <div class="premium-gacha-avatar-icon" id="mochikun-cutin-icon">🦭</div>
+      <div class="premium-gacha-avatar-name" id="mochikun-cutin-name">もちくん</div>
+      <div class="premium-gacha-avatar-desc" id="mochikun-cutin-desc"></div>
+    </div>
+    <button class="br-btn" style="background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#0c4a6e; font-weight:900; width:100%;" onclick="window.closeMochikunCutIn()">なかまになった！🎊</button>
+  </div>
+</div>
+<!-- ★危険探検隊：手動編成モーダル 2026-08-03 -->
+<div id="expedition-team-modal">
+  <div class="kuropon-box" style="max-width:480px;">
+    <div class="kuropon-title">🏕️ 手動で編成</div>
+    <div class="kuropon-subtitle">余剰アバター（2枚以上持っているキャラ）から3体えらぼう！</div>
+    <div id="expedition-team-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px;"></div>
+    <div style="font-size:12px; font-weight:900; color:#334155; margin-bottom:8px;" id="expedition-team-modal-info"></div>
+    <button class="br-btn start" id="expedition-team-confirm-btn" disabled onclick="window.confirmExpeditionManualDispatch()">この編成で出発！</button>
+    <button class="br-btn close" onclick="window.closeExpeditionTeamModal()">とじる</button>
   </div>
 </div>
 <!-- ★アイテム選択モーダル -->
@@ -982,6 +1022,11 @@ window.normalizeSaveData = function(data) {
   normalized.battleLastWeekKey = normalized.battleLastWeekKey || "";
   normalized.battleLastWeekLabel = normalized.battleLastWeekLabel || "";
   normalized.battleLastCounts = normalized.battleLastCounts || {};
+  // ★2026-08-03 追加：5時間危険探検隊、メインアバター快適度
+  normalized.expedition = normalized.expedition || null;
+  normalized.expeditionLostTeamIds = normalized.expeditionLostTeamIds || null;
+  normalized.mainAvatarComfort = (normalized.mainAvatarComfort !== undefined) ? normalized.mainAvatarComfort : 100;
+  normalized.lastComfortUpkeepDate = normalized.lastComfortUpkeepDate || "";
   // ★端末の時計ずれ等で、reviewDates等のタイムスタンプ（エポックms）が「未来」の値に
   //   なっていることがある（例：1785333384036 → 7/30 23:43）。放置すると復習判定の
   //   経過日数計算がマイナスになったり、この値を信じた別の処理が混乱する可能性があるため、
@@ -1005,7 +1050,7 @@ window.normalizeSaveData = function(data) {
   return normalized;
 };
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", lastStudyDate: "", streakCount: 0, skillTickets: 0, allowance: { yen: 0, memo: "", history: [], weeks: {} }, detectiveLabDailyCount: 0, detectiveLabDailyDate: "", battleHistory: [], battleLastWeekKey: "", battleLastWeekLabel: "", battleLastCounts: {} };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", lastStudyDate: "", streakCount: 0, skillTickets: 0, allowance: { yen: 0, memo: "", history: [], weeks: {} }, detectiveLabDailyCount: 0, detectiveLabDailyDate: "", battleHistory: [], battleLastWeekKey: "", battleLastWeekLabel: "", battleLastCounts: {}, expedition: null, expeditionLostTeamIds: null, mainAvatarComfort: 100, lastComfortUpkeepDate: "" };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -1061,7 +1106,8 @@ window.STAR_UPGRADE_RULES_BY_RARITY = {
   1: { 2: { cost: 1, minIslandLevel: 2 }, 3: { cost: 2, minIslandLevel: 5 } },
   2: { 2: { cost: 2, minIslandLevel: 2 }, 3: { cost: 3, minIslandLevel: 5 } },
   3: { 2: { cost: 3, minIslandLevel: 2 }, 3: { cost: 4, minIslandLevel: 5 } },
-  4: { 2: { cost: 4, minIslandLevel: 2 }, 3: { cost: 5, minIslandLevel: 5 } }
+  4: { 2: { cost: 4, minIslandLevel: 2 }, 3: { cost: 5, minIslandLevel: 5 } },
+  5: { 2: { cost: 5, minIslandLevel: 2 }, 3: { cost: 6, minIslandLevel: 5 } }
 };
 // ★2026-08-03 変更：Qバフの「上限」もベースレア別にする。
 //   従来はどのベースレアでも★3到達で一律+30%が頭打ちになり、
@@ -1073,7 +1119,8 @@ window.STAR_Q_BUFF_BY_RARITY = {
   1: { 1: 0, 2: 0,    3: 0.15 },
   2: { 1: 0, 2: 0,    3: 0.20 },
   3: { 1: 0, 2: 0.10, 3: 0.25 },
-  4: { 1: 0, 2: 0.10, 3: 0.35 }
+  4: { 1: 0, 2: 0.10, 3: 0.35 },
+  5: { 1: 0.35, 2: 0.35, 3: 0.35 } // 実質未使用（もちくんはgetStarBuffMultiplierで無条件+35%固定のため）
 };
 
 window.canUpgradeStar = function(eggId, method) {
@@ -1115,11 +1162,15 @@ window.upgradeEggStar = function(eggId, method) {
 
 // バフ対象は新規フィールドを作らず、既存の選択中アバター(selectedAvatar)のキャラで代用する
 // ★2026-08-03変更：STAR_Q_BUFF(一律表)ではなく、装備中アバターのベースレア別テーブルを参照する
+// ★2026-08-03追加：もちくん(e_ex_mochi)はランクに関係なく常に+35%固定（★5効果）。
+//   メインアバターの快適度が「おでかけ中」の場合はバフを一時停止する。
 window.getStarBuffMultiplier = function() {
+  if (window.getMainAvatarIsOut && window.getMainAvatarIsOut()) return 1;
   const activeEgg = window.GACHA_EGG_LIST.find(e => e.icon === window.saveData.selectedAvatar);
   if (!activeEgg) return 1;
   const owned = window.saveData.gachaEggs[activeEgg.id];
   if (!owned) return 1;
+  if (activeEgg.id === 'e_ex_mochi') return 1.35;
   const byRarity = window.STAR_Q_BUFF_BY_RARITY[activeEgg.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
   return 1 + (byRarity[owned.starRank || 1] || 0);
 };
@@ -1177,6 +1228,368 @@ window.closeStreakCelebrationModal = function() {
   const modal = document.getElementById("streak-celebration-modal");
   if (modal) modal.style.display = "none";
 };
+
+/* ★2026-08-03 追加：メインアバター快適度システム ------------------- */
+window.COMFORT_DAILY_UPKEEP_Q = 3;       // 1日の維持費（Q）
+window.COMFORT_NEGLECT_PENALTY = 10;      // weakQuestions放置時の追加減衰
+window.COMFORT_NEGLECT_THRESHOLD = 5;     // 何件たまったら「放置」とみなすか
+window.COMFORT_UPKEEP_FAIL_PENALTY = 15;  // Q不足で維持費を払えなかった時の減衰
+window.COMFORT_DAILY_RECOVERY = 5;        // 維持費を払えて、放置もない日の自然回復
+window.COMFORT_OUT_THRESHOLD = 30;        // これ以下で「おでかけ中」（Qバフ停止）
+window.COMFORT_RESCUE_RECOVERY = 15;      // 苦手問題を1問クリアするごとの回復量
+
+window.getMainAvatarIsOut = function () {
+  return (window.saveData.mainAvatarComfort !== undefined) && window.saveData.mainAvatarComfort <= window.COMFORT_OUT_THRESHOLD;
+};
+
+// 日次の維持費処理（ログイン時・アプリ起動時に1回呼ぶ。同日2回目以降は内部でスキップ）
+window.processDailyAvatarComfortUpkeep = function () {
+  const sd = new Date(window.currentServerTime);
+  const todayStr = `${sd.getFullYear()}-${sd.getMonth() + 1}-${sd.getDate()}`;
+  if (window.saveData.lastComfortUpkeepDate === todayStr) return;
+  window.saveData.lastComfortUpkeepDate = todayStr;
+
+  if (window.saveData.mainAvatarComfort === undefined) window.saveData.mainAvatarComfort = 100;
+  const wasOut = window.getMainAvatarIsOut();
+
+  // ★もちくんがマイアバターのときは減衰が大幅軽減される（★5効果）
+  const activeEgg = window.GACHA_EGG_LIST.find(e => e.icon === window.saveData.selectedAvatar);
+  const isMochikunMain = activeEgg && activeEgg.id === 'e_ex_mochi';
+  const decayScale = isMochikunMain ? 0.4 : 1.0;
+
+  let delta = 0;
+  if ((window.saveData.q || 0) >= window.COMFORT_DAILY_UPKEEP_Q) {
+    window.saveData.q -= window.COMFORT_DAILY_UPKEEP_Q;
+    delta += window.COMFORT_DAILY_RECOVERY;
+  } else {
+    delta -= window.COMFORT_UPKEEP_FAIL_PENALTY * decayScale;
+  }
+  if ((window.saveData.weakQuestions || []).length >= window.COMFORT_NEGLECT_THRESHOLD) {
+    delta -= window.COMFORT_NEGLECT_PENALTY * decayScale;
+  }
+  window.saveData.mainAvatarComfort = Math.max(0, Math.min(100, window.saveData.mainAvatarComfort + delta));
+
+  const isOutNow = window.getMainAvatarIsOut();
+  if (!wasOut && isOutNow) {
+    setTimeout(() => alert(`😿 アバターのきげんが 悪くなって、おでかけしてしまったみたい……\n苦手問題をクリアすると、きげんが なおって もどってくるよ！`), 400);
+  }
+  window.saveGame();
+};
+
+// 苦手問題を1問クリアするたびに呼ぶ（快適度回復＋「おでかけ中」からの復帰演出）
+window.recoverAvatarComfortOnWeakClear = function () {
+  if (window.saveData.mainAvatarComfort === undefined) window.saveData.mainAvatarComfort = 100;
+  const wasOut = window.getMainAvatarIsOut();
+  window.saveData.mainAvatarComfort = Math.min(100, window.saveData.mainAvatarComfort + window.COMFORT_RESCUE_RECOVERY);
+  if (wasOut && !window.getMainAvatarIsOut()) {
+    setTimeout(() => alert(`😻 アバターのきげんが なおって、もどってきたよ！\nまたQバフが 効くようになったよ！`), 400);
+  }
+};
+
+window.renderMainAvatarComfort = function () {
+  const comfort = (window.saveData.mainAvatarComfort !== undefined) ? window.saveData.mainAvatarComfort : 100;
+  const fill = document.getElementById("avatar-comfort-fill");
+  const label = document.getElementById("avatar-comfort-label");
+  if (fill) fill.style.width = comfort + "%";
+  if (label) {
+    const isOut = window.getMainAvatarIsOut();
+    label.textContent = isOut ? `快適度：${comfort} / 100（😿 おでかけ中・Qバフ停止）` : `快適度：${comfort} / 100`;
+  }
+};
+/* ★メインアバター快適度システム ここまで ------------------- */
+
+/* ★2026-08-03 追加：5時間危険探検隊システム ------------------- */
+window.EXPEDITION_TEAM_SIZE = 3;
+window.EXPEDITION_DURATION_MS = 18000000; // 5時間 = 18000秒
+window.EXPEDITION_PREMIUM_CHANCE = 0.03;   // 合計★6以上で抽選する未所持プレミアムお宝の確率
+window.EXPEDITION_MOCHIKUN_CHANCE = 0.001; // もちくん連れ帰り確率（ガチャ経由と別枠）
+
+// 送り込める「余剰アバター」一覧（所持数2枚以上＝1枚は手元に残る）
+window.getSurplusAvatarsForExpedition = function () {
+  if (!window.saveData.gachaEggs) return [];
+  return window.GACHA_EGG_LIST
+    .filter(e => e.type === 'char')
+    .map(e => ({ id: e.id, name: e.name, icon: e.icon, rarity: e.rarity, count: (window.saveData.gachaEggs[e.id] && window.saveData.gachaEggs[e.id].count) || 0 }))
+    .filter(e => e.count >= 2);
+};
+
+// おまかせ編成：ベースレア度が高い順に3体を自動選出（3体そろわなければnull）
+window.autoFormExpeditionTeam = function () {
+  const surplus = window.getSurplusAvatarsForExpedition().slice().sort((a, b) => b.rarity - a.rarity);
+  if (surplus.length < window.EXPEDITION_TEAM_SIZE) return null;
+  return surplus.slice(0, window.EXPEDITION_TEAM_SIZE).map(e => e.id);
+};
+
+window.computeExpeditionTotalStars = function (teamIds) {
+  return teamIds.reduce((sum, id) => {
+    const def = window.GACHA_EGG_LIST.find(e => e.id === id);
+    return sum + (def ? def.rarity : 0);
+  }, 0);
+};
+
+// 生還率＝基本60%＋合計★数×5%（上限90%）＋もちくんがチームにいれば+10%（合計は99%キャップ）
+window.computeExpeditionSurvivalChance = function (teamIds) {
+  const totalStars = window.computeExpeditionTotalStars(teamIds);
+  const base = Math.min(90, 60 + totalStars * 5);
+  const hasMochikun = teamIds.indexOf('e_ex_mochi') !== -1;
+  return Math.min(99, base + (hasMochikun ? 10 : 0));
+};
+
+// 予測獲得Q/カケラ数（表示用のレンジ）
+window.computeExpeditionPredictedRewards = function (teamIds) {
+  const totalStars = window.computeExpeditionTotalStars(teamIds);
+  return {
+    qMin: Math.min(35, Math.round(totalStars * 3)),
+    qMax: Math.min(35, Math.round(totalStars * 5)),
+    kakeraMin: 2, kakeraMax: 3
+  };
+};
+
+window.dispatchExpeditionTeam = function (teamIds) {
+  if (window.saveData.expedition) { alert("🏕️ すでに探検隊が出発中だよ！帰りを待とう！"); return false; }
+  if (!teamIds || teamIds.length !== window.EXPEDITION_TEAM_SIZE) { alert(`🏕️ ${window.EXPEDITION_TEAM_SIZE}体えらんでね！`); return false; }
+  for (const id of teamIds) {
+    const owned = window.saveData.gachaEggs[id];
+    if (!owned || owned.count < 2) { alert("🏕️ 余剰（2枚以上持っている）アバターしか送り込めないよ！"); return false; }
+  }
+  teamIds.forEach(id => { window.saveData.gachaEggs[id].count -= 1; });
+  window.saveData.expedition = {
+    teamIds: teamIds,
+    totalStars: window.computeExpeditionTotalStars(teamIds),
+    survivalChance: window.computeExpeditionSurvivalChance(teamIds),
+    startTime: window.currentServerTime || Date.now(),
+    durationMs: window.EXPEDITION_DURATION_MS,
+    resolved: false
+  };
+  window.saveGame();
+  return true;
+};
+
+// 宝箱：既存のTREASURE_LISTから100%（必ず）1個引く。重複時は宝島EXPに変換（既存rollTreasureDropと同じ思想）。
+window.rollExpeditionTreasureChest = function () {
+  let r = Math.random();
+  let rarity = r < 0.65 ? 1 : (r < 0.90 ? 2 : (r < 0.98 ? 3 : 4));
+  let pool = window.TREASURE_LIST.filter(t => t.rarity === rarity);
+  if (!pool.length) return null;
+  let picked = pool[Math.floor(Math.random() * pool.length)];
+  if (!window.saveData.treasureBook) window.saveData.treasureBook = {};
+  let isDupe = !!window.saveData.treasureBook[picked.id];
+  if (!isDupe) {
+    window.saveData.treasureBook[picked.id] = { count: 1, firstGotDate: window.currentServerTime || "" };
+  } else {
+    window.saveData.treasureBook[picked.id].count = (window.saveData.treasureBook[picked.id].count || 1) + 1;
+    if (!window.saveData.islandBuildLog) window.saveData.islandBuildLog = [];
+    window.saveData.islandBuildLog.push('treasure_exp');
+  }
+  return { treasure: picked, isDupe: isDupe };
+};
+
+// 5時間経過チェック＆結果確定（KuroPon部屋を開くたびに呼ぶ。未経過なら何もしない）
+window.checkExpeditionResolution = function () {
+  const exp = window.saveData.expedition;
+  if (!exp || exp.resolved) return null;
+  const elapsed = (window.currentServerTime || Date.now()) - exp.startTime;
+  if (elapsed < exp.durationMs) return null; // まだ探検中
+
+  const survived = Math.random() * 100 < exp.survivalChance;
+  const result = { survived: survived, teamIds: exp.teamIds, totalStars: exp.totalStars };
+
+  if (survived) {
+    exp.teamIds.forEach(id => {
+      if (!window.saveData.gachaEggs[id]) window.saveData.gachaEggs[id] = { count: 0, starRank: 1 };
+      window.saveData.gachaEggs[id].count += 1;
+    });
+    const perStarQ = 3 + Math.random() * 2; // 3〜5Q
+    const earnedQ = Math.min(35, Math.round(exp.totalStars * perStarQ));
+    const earnedKakera = 2 + Math.floor(Math.random() * 2); // 2〜3個確定
+    window.saveData.q += earnedQ;
+    window.saveData.kakera = (window.saveData.kakera || 0) + earnedKakera;
+    const chest = window.rollExpeditionTreasureChest();
+
+    let premiumResult = null;
+    let mochikunGained = false;
+    if (exp.totalStars >= 6) {
+      if (Math.random() < window.EXPEDITION_PREMIUM_CHANCE && window.rollPremiumTreasureInDetectiveLab) {
+        premiumResult = window.rollPremiumTreasureInDetectiveLab();
+      }
+      if (Math.random() < window.EXPEDITION_MOCHIKUN_CHANCE) {
+        mochikunGained = true;
+        if (!window.saveData.gachaEggs['e_ex_mochi']) window.saveData.gachaEggs['e_ex_mochi'] = { count: 1, starRank: 1, firstGotDate: window.currentServerTime || '' };
+        else window.saveData.gachaEggs['e_ex_mochi'].count += 1;
+      }
+    }
+    result.earnedQ = earnedQ; result.earnedKakera = earnedKakera; result.chest = chest;
+    result.premiumResult = premiumResult; result.mochikunGained = mochikunGained;
+  } else {
+    // ★失敗：送り込んだ3体まとめて「迷子」に。SOS救出クイズに正解すると3体まとめて戻る。
+    window.saveData.expeditionLostTeamIds = exp.teamIds.slice();
+  }
+
+  exp.resolved = true;
+  window.saveData.expedition = null;
+  window.saveGame();
+  return result;
+};
+
+/* ---------- SOS・救出クイズ ---------- */
+window.rescueQuizModeActive = false;
+
+window.startExpeditionRescueQuiz = function () {
+  if (!window.saveData.expeditionLostTeamIds || !window.saveData.expeditionLostTeamIds.length) return;
+  let question = null;
+
+  if (window.saveData.weakQuestions && window.saveData.weakQuestions.length > 0) {
+    const weakId = window.saveData.weakQuestions[Math.floor(Math.random() * window.saveData.weakQuestions.length)];
+    let stId = null, qid = null;
+    if (weakId.indexOf("::") !== -1) {
+      const sep = weakId.indexOf("::"); stId = weakId.slice(0, sep); qid = weakId.slice(sep + 2);
+    }
+    const bundle = stId && window.CONTENT && window.CONTENT.quizzes ? window.CONTENT.quizzes[stId] : null;
+    const hit = bundle ? bundle.find(q => q.qid === qid) : null;
+    if (hit) {
+      question = Object.assign({}, hit);
+      question._rescueRawWeakId = weakId; question._rescueOriginStgId = stId;
+    }
+  }
+  if (!question) {
+    // ★苦手問題が無い場合：探偵ラボのボス生成関数からランダムに1問出題する
+    const subjects = Object.keys(window.DYNAMIC_GENERATORS);
+    const subject = subjects[Math.floor(Math.random() * subjects.length)];
+    const bossFns = window.DYNAMIC_GENERATORS[subject].boss;
+    question = bossFns[Math.floor(Math.random() * bossFns.length)]();
+  }
+
+  window.rescueQuizModeActive = true;
+  window.currentQIdx = 0; window.totalMistakes = 0;
+  window.currentQuestions = [question];
+  document.getElementById("game-screen").style.display = "block";
+  const itemBtn = document.getElementById("item-use-in-game-btn");
+  if (itemBtn) itemBtn.style.display = "none"; // ★救出クイズ中はアイテム使用不可
+  window.showQuestionStep();
+};
+
+window.finishExpeditionRescue = function () {
+  window.rescueQuizModeActive = false;
+  const lostIds = window.saveData.expeditionLostTeamIds || [];
+  lostIds.forEach(id => {
+    if (!window.saveData.gachaEggs[id]) window.saveData.gachaEggs[id] = { count: 0, starRank: 1 };
+    window.saveData.gachaEggs[id].count += 1;
+  });
+  window.saveData.expeditionLostTeamIds = null;
+  window.saveGame();
+  window.updateUI();
+  document.getElementById("game-screen").style.display = "none";
+  alert("🎉 迷子だった探検隊メンバーを無傷できゅうしゅつできたよ！おかえりなさい！");
+};
+
+/* ---------- KuroPon部屋UI：探検隊パネル ---------- */
+window.renderExpeditionPanel = function () {
+  const area = document.getElementById("expedition-panel-area");
+  if (!area) return;
+
+  const pendingResult = window.checkExpeditionResolution();
+  if (pendingResult) {
+    window.updateUI();
+    let msg = pendingResult.survived
+      ? `🎉 探検隊が無事きかんしたよ！\n＋${pendingResult.earnedQ}Q ＋🧩${pendingResult.earnedKakera}個`
+      : `😢 探検隊が時間になっても もどってこなかった……SOSを送って きゅうしゅつしよう！`;
+    if (pendingResult.survived && pendingResult.chest) msg += `\n🎁 宝箱から「${pendingResult.chest.treasure.name}」を見つけたよ！`;
+    if (pendingResult.premiumResult) msg += `\n✨ プレミアムお宝「${pendingResult.premiumResult.treasure.name}」も発見！`;
+    if (pendingResult.mochikunGained) msg += `\n🦭 なんと、もちくんを連れて帰ってきた……！？`;
+    setTimeout(() => alert(msg), 300);
+  }
+
+  if (window.saveData.expeditionLostTeamIds && window.saveData.expeditionLostTeamIds.length) {
+    area.innerHTML = `<div style="font-size:12px; font-weight:900; color:#dc2626; margin-bottom:6px;">🆘 探検隊が迷子になっています！</div>
+      <button class="btn-sm" style="background:#fecaca; color:#991b1b;" onclick="window.startExpeditionRescueQuiz()">🆘 SOS！助けに行く</button>`;
+    return;
+  }
+  if (window.saveData.expedition) {
+    const exp = window.saveData.expedition;
+    const remainMs = Math.max(0, exp.startTime + exp.durationMs - (window.currentServerTime || Date.now()));
+    const h = Math.floor(remainMs / 3600000), m = Math.floor((remainMs % 3600000) / 60000);
+    area.innerHTML = `<div style="font-size:12px; font-weight:900; color:#334155;">🏕️ 探検中…残り ${h}時間${m}分</div>
+      <div style="font-size:11px; color:var(--text-soft);">生還率 ${exp.survivalChance}%／合計★${exp.totalStars}</div>`;
+    return;
+  }
+  const surplus = window.getSurplusAvatarsForExpedition();
+  area.innerHTML = `<div style="font-size:11px; color:var(--text-soft); margin-bottom:6px;">余剰アバター（2枚以上持っているキャラ）：${surplus.length}種</div>
+    <div class="flex-row" style="justify-content:center;">
+      <button class="btn-sm" onclick="window.uiAutoFormAndDispatchExpedition()">🏕️ おまかせ編成で出発！</button>
+      <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openExpeditionTeamModal()">✋ 手動で編成する</button>
+    </div>`;
+};
+window.uiAutoFormAndDispatchExpedition = function () {
+  const team = window.autoFormExpeditionTeam();
+  if (!team) { alert("🏕️ 余剰アバターが3種そろっていないよ！ガチャで重複キャラを増やそう！"); return; }
+  const stars = window.computeExpeditionTotalStars(team);
+  const survival = window.computeExpeditionSurvivalChance(team);
+  const pred = window.computeExpeditionPredictedRewards(team);
+  if (!confirm(`🏕️ この3体を探検隊に送り込むよ！\n合計★${stars}／生還率${survival}%\n予測: +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個\nいいかな？`)) return;
+  if (window.dispatchExpeditionTeam(team)) { window.renderExpeditionPanel(); alert("🏕️ 探検隊、出発！5時間後の帰りを待とう！"); }
+};
+
+/* ---------- 手動編成UI（余剰アバター一覧からタップで3体選ぶ） ---------- */
+window.expeditionManualSelection = [];
+
+window.openExpeditionTeamModal = function () {
+  window.expeditionManualSelection = [];
+  window.renderExpeditionTeamModal();
+  document.getElementById('expedition-team-modal').style.display = 'flex';
+};
+window.closeExpeditionTeamModal = function () {
+  document.getElementById('expedition-team-modal').style.display = 'none';
+};
+window.toggleExpeditionMemberSelection = function (id) {
+  const idx = window.expeditionManualSelection.indexOf(id);
+  if (idx !== -1) {
+    window.expeditionManualSelection.splice(idx, 1);
+  } else {
+    if (window.expeditionManualSelection.length >= window.EXPEDITION_TEAM_SIZE) {
+      alert(`🏕️ ${window.EXPEDITION_TEAM_SIZE}体までしか選べないよ！`);
+      return;
+    }
+    window.expeditionManualSelection.push(id);
+  }
+  window.renderExpeditionTeamModal();
+};
+window.renderExpeditionTeamModal = function () {
+  const surplus = window.getSurplusAvatarsForExpedition();
+  const grid = document.getElementById('expedition-team-grid');
+  if (grid) {
+    grid.innerHTML = '';
+    surplus.forEach(e => {
+      const selected = window.expeditionManualSelection.indexOf(e.id) !== -1;
+      const card = document.createElement('div');
+      card.className = 'expedition-member-card' + (selected ? ' selected' : '');
+      card.innerHTML = `<div class="expedition-member-icon">${e.icon}</div><div class="expedition-member-name">${e.name}</div><div class="expedition-member-star">${'★'.repeat(e.rarity)}</div><div class="expedition-member-count">×${e.count}</div>`;
+      card.onclick = () => window.toggleExpeditionMemberSelection(e.id);
+      grid.appendChild(card);
+    });
+  }
+  const info = document.getElementById('expedition-team-modal-info');
+  const confirmBtn = document.getElementById('expedition-team-confirm-btn');
+  if (window.expeditionManualSelection.length === window.EXPEDITION_TEAM_SIZE) {
+    const stars = window.computeExpeditionTotalStars(window.expeditionManualSelection);
+    const survival = window.computeExpeditionSurvivalChance(window.expeditionManualSelection);
+    const pred = window.computeExpeditionPredictedRewards(window.expeditionManualSelection);
+    if (info) info.textContent = `合計★${stars}／生還率${survival}%／予測 +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個`;
+    if (confirmBtn) confirmBtn.disabled = false;
+  } else {
+    if (info) info.textContent = `あと${window.EXPEDITION_TEAM_SIZE - window.expeditionManualSelection.length}体えらんでね（${window.expeditionManualSelection.length}/${window.EXPEDITION_TEAM_SIZE}）`;
+    if (confirmBtn) confirmBtn.disabled = true;
+  }
+};
+window.confirmExpeditionManualDispatch = function () {
+  if (window.expeditionManualSelection.length !== window.EXPEDITION_TEAM_SIZE) return;
+  const team = window.expeditionManualSelection.slice();
+  if (window.dispatchExpeditionTeam(team)) {
+    window.closeExpeditionTeamModal();
+    window.renderExpeditionPanel();
+    alert("🏕️ 探検隊、出発！5時間後の帰りを待とう！");
+  }
+};
+/* ★5時間危険探検隊システム ここまで ------------------- */
 
 // --- 動的問題生成エンジン：共通ヘルパー（正解+ダミー候補をシャッフルしてa/c形式に変換） ---
 window._buildChoices = function(correctText, distractors) {
@@ -1920,6 +2333,7 @@ window.performLogin = function(id) {
        if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
        if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
+       if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
        // ★端末側の記録を正として使った場合は、あらためてクラウドへの再送を試みる
        //   （成功すれば "unsynced" フラグは saveGame() 内で自動的に解除される）。
@@ -1986,6 +2400,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
   if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
+  if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
   // ★2026-07-29修正：以前はここで window.checkAutoLoginBonus() も呼んでいたが、
   //   loadGameLocal()は「本物のGAS LOGINが失敗したときのオフライン救済」専用の経路
@@ -2631,7 +3046,9 @@ window.GACHA_EGG_LIST = [
   { id: 'e17', name: 'うちゅうニコ',   icon: '🚀', rarity: 3, type: 'char', desc: '宇宙まで飛び出したニコ。星と星のあいだから応援してくれる。' },
   { id: 'e18', name: 'りゅうのニコ',   icon: '🐲', rarity: 3, type: 'char', desc: '龍の力を持つニコ。最強の学びの友。' },
   // ★4（伝説）キャラ1種
-  { id: 'e19', name: 'まぼろしにじニコ', icon: '🦄', rarity: 4, type: 'char', desc: 'ガチャ史上最大のレア！虹色の翼を持つ、伝説の中の伝説のニコ。' }
+  { id: 'e19', name: 'まぼろしにじニコ', icon: '🦄', rarity: 4, type: 'char', desc: 'ガチャ史上最大のレア！虹色の翼を持つ、伝説の中の伝説のニコ。' },
+  // ★5（超EXレア）2026-08-03追加：危険探検隊の実装とあわせて登場
+  { id: 'e_ex_mochi', name: 'もちくん', icon: '🦭', rarity: 5, type: 'char', desc: '真っ白なゴマフアザラシの赤ちゃん。ガチャ史上いちばん出会うことが難しいと言われる、幻の中の幻。' }
 ];
 
 window.GACHA_FOOD_LIST = [
@@ -2765,7 +3182,7 @@ window.doGachaPull = function() {
 window.rollGacha = function() {
   if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
   const r = Math.random();
-  const rarity = r < 0.68 ? 1 : (r < 0.94 ? 2 : (r < 0.99 ? 3 : 4)); // ★1:68% ★2:26% ★3:5% ★4:1%（2026-08-03改定）
+  const rarity = r < 0.679 ? 1 : (r < 0.939 ? 2 : (r < 0.989 ? 3 : (r < 0.999 ? 4 : 5))); // ★1:67.9% ★2:26% ★3:5% ★4:1% ★5:0.1%（2026-08-03改定：もちくん追加）
   // レアリティ内でキャラとアイテムの比率（★1は20%アイテム、★2は20%アイテム）
   const pool = window.GACHA_EGG_LIST.filter(e => e.rarity === rarity);
   const picked = pool[Math.floor(Math.random() * pool.length)];
@@ -2797,8 +3214,9 @@ window.showGachaResult = function(result) {
   const zone = document.getElementById('gacha-result-zone');
   if (!zone) return;
   const { egg, isDupe, isItem } = result;
-  const rarityLabel = egg.rarity===4?'★★★★ 伝説！！':egg.rarity===3?'★★★ 超レア！':egg.rarity===2?'★★ レア！':'★ ふつう';
-  const rarityColor = egg.rarity===4?'#a21caf':egg.rarity===3?'#d97706':egg.rarity===2?'#2563eb':'#64748b';
+  const rarityLabel = egg.rarity===5?'★★★★★ 超EXレア！！！':egg.rarity===4?'★★★★ 伝説！！':egg.rarity===3?'★★★ 超レア！':egg.rarity===2?'★★ レア！':'★ ふつう';
+  const rarityColor = egg.rarity===5?'#0891b2':egg.rarity===4?'#a21caf':egg.rarity===3?'#d97706':egg.rarity===2?'#2563eb':'#64748b';
+  if (egg.rarity === 5 && !isDupe && window.showMochikunCutIn) window.showMochikunCutIn(egg);
   let dupeHtml = '';
   if (isDupe) dupeHtml = `<div class="gacha-result-dupe" style="display:block;">🧩 すでにゲット済みキャラ！重複するとそのキャラの強化用カウントが+1増えるよ！</div>`;
   if (isItem && (egg.itemKey==='gachaQ1'||egg.itemKey==='gachaQ3')) {
@@ -2870,6 +3288,8 @@ window.openKuroPonModal = function() {
   document.getElementById('kuropon-modal').style.display = 'flex';
   // モーダルを開いたときにプレミアムガチャチェック（少し遅延して演出）
   setTimeout(() => window.checkPremiumGacha(), 800);
+  if (window.renderExpeditionPanel) window.renderExpeditionPanel();
+  if (window.renderMainAvatarComfort) window.renderMainAvatarComfort();
 };
 window.closeKuroPonModal = function() { document.getElementById('kuropon-modal').style.display = 'none'; };
 
@@ -4118,6 +4538,7 @@ window.showQuestionStep = function() {
 
   if (window.currentQIdx >= window.currentQuestions.length) {
     if (window.dynamicPracticeModeActive) { window.finishDynamicPractice(); return; }
+    if (window.rescueQuizModeActive) { window.finishExpeditionRescue(); return; }
     // ★2026-07-20 修正：スコア加算・saveGame・スプレッドシートへのログ送信は、
     //   ふりかえりチャットを最後までクリックしたかどうかに関係なく、問題セットが終わった
     //   瞬間に必ず実行する（以前はチャットを最後まで見ないと保存されず、子どもが
@@ -4138,10 +4559,10 @@ window.showQuestionStep = function() {
   }
   window.currentWeakQuestionObj = current;
   // ★2026-08-03 追加：探偵ラボのボス問題（isDetectiveBoss）中はアイテム使用不可にする
-  if (window.dynamicPracticeModeActive) {
+  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive) {
     const detectiveItemBtn = document.getElementById("item-use-in-game-btn");
     if (detectiveItemBtn) {
-      const canUseItem = !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
+      const canUseItem = !window.rescueQuizModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
       detectiveItemBtn.style.display = canUseItem ? "block" : "none";
     }
   }
@@ -4265,7 +4686,7 @@ window.triggerWrongAnswer = function(current) {
 
   window.speakText("ざんねん！", "ja-JP");
 
-  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive) {
+  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive) {
     if (!window.sessionMissedQuestions) window.sessionMissedQuestions = [];
     if (!window.sessionMissedQuestions.some(m => m._qIdx === window.currentQIdx)) {
       window.sessionMissedQuestions.push({
@@ -4327,9 +4748,19 @@ window.triggerCorrectAnswer = function(current) {
     setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
     return;
   }
+  if (window.rescueQuizModeActive) {
+    // ★探検隊SOS救出クイズ：ステージ非依存のため、正解演出のみ行う（復元処理はfinishExpeditionRescue側）
+    document.getElementById("job-title").textContent = current.job_title || "きゅうしゅつ せいこう！";
+    document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
+    const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
+    document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
+    setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
+    return;
+  }
   if (window.weakAttackModeActive) {
      if (current.isRealWeak && current.rawWeakId) {
         window.saveData.weakQuestions = window.saveData.weakQuestions.filter(id => id !== current.rawWeakId);
+        window.recoverAvatarComfortOnWeakClear();
         if (window.weakInitialCountAtLaunch >= 2 && window.weakEarnedQInSession < 5) { finalEarnedQ = 1; window.saveData.q += finalEarnedQ; window.weakEarnedQInSession += finalEarnedQ; }
         finalEarnedPts = 5; window.saveData.pts += finalEarnedPts;
         if (current._originStgId) { window.saveData.clearedStages[current._originStgId] = true; }
@@ -4531,7 +4962,10 @@ window.exitToMainMenu = function() {
     }
 };
 window.triggerForcedClear = function() { window.exitToMainMenu(); };
-window.quitQuest = function() { window.weakAttackModeActive = false; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
+// ★2026-08-03修正：探偵ラボ/救出クイズ中に「やめる」を押すとモードフラグが残り続けるバグを修正
+//   （dynamicPracticeModeActiveは元々ここでリセットされておらず、新設のrescueQuizModeActiveも
+//   同じ穴になるところだったため、あわせて修正した）
+window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
 window.initApp();
 </script>
 <script src="./js/stages.js"></script>
