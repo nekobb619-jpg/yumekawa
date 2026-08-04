@@ -150,7 +150,7 @@
         job_desc:"『⺅（にんべん）』は「人」の 姿からできた 部首。人の 動作や 体に かかわる 漢字に つくよ。" },
 
       { q:"下の 図は 漢字の 部首の 位置（①左、②右、③上、④下）です。\n漢字「休」の「⺅（にんべん）」のように、漢字の『左側』につく 部首の位置①を 何という？",
-        canvas_code:"var w=canvas.width,h=canvas.height;ctx.fillStyle='#fffdf5';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#7f8c8d';ctx.lineWidth=2;ctx.strokeRect(30,30,w-60,h-60);ctx.beginPath();ctx.moveTo(w/2,30);ctx.lineTo(w/2,h-30);ctx.moveTo(30,h/2);ctx.lineTo(w-30,h/2);ctx.stroke();ctx.fillStyle='#e74c3c';ctx.font='bold 16px sans-serif';ctx.fillText('①偏(へん)',40,h/2-10);ctx.fillStyle='#2c3e50';ctx.fillText('②旁(つくり)',w/2+10,h/2-10);ctx.fillText('③冠(かんむり)',w/2-40,50);ctx.fillText('④脚(あし)',w/2-30,h-40);",
+        canvas_code:"var w=canvas.width,h=canvas.height;ctx.fillStyle='#fffdf5';ctx.fillRect(0,0,w,h);var boxSize=70,gap=10,startX=(w-(4*boxSize+3*gap))/2,y0=10;var items=[{label:'①偏(へん)',shade:'left'},{label:'②旁(つくり)',shade:'right'},{label:'③冠(かんむり)',shade:'top'},{label:'④脚(あし)',shade:'bottom'}];ctx.font='bold 11px sans-serif';ctx.textAlign='center';for(var i=0;i<items.length;i++){var item=items[i];var bx=startX+i*(boxSize+gap);ctx.fillStyle='#ffffff';ctx.fillRect(bx,y0,boxSize,boxSize);ctx.fillStyle='#e74c3c';if(item.shade==='left'){ctx.fillRect(bx,y0,boxSize/2,boxSize);}if(item.shade==='right'){ctx.fillRect(bx+boxSize/2,y0,boxSize/2,boxSize);}if(item.shade==='top'){ctx.fillRect(bx,y0,boxSize,boxSize/2);}if(item.shade==='bottom'){ctx.fillRect(bx,y0+boxSize/2,boxSize,boxSize/2);}ctx.strokeStyle='#7f8c8d';ctx.lineWidth=1.5;ctx.strokeRect(bx,y0,boxSize,boxSize);ctx.fillStyle='#2c3e50';ctx.fillText(item.label,bx+boxSize/2,y0+boxSize+16);}",
         a:["へん（偏）","つくり（旁）","かんむり（冠）","あし（脚）"], c:0,
         hint:"左が『へん』、右が『つくり』だよ。",
         job_title:"図解で 部首の位置！",
@@ -208,7 +208,7 @@
         job_desc:"ねらいは『漢字の意味や 使い方を 理解して 文章の中で 使えるか』。単に 形を 覚えるだけでなく、文章で 使えることが 大切なんだ。" },
 
       { q:"「必ず」という 漢字の ひらがなの 読み方を 書こう。",
-        type:"text_input", correct_answers:["かならず"],
+        type:"text_input", correct_answers:["かならず","かなら"],
         hint:"『か◯らず』。『必要』の『必』だよ。",
         rescue_hint:"『かならず』だよ。",
         job_title:"読み方 パーフェクト！",

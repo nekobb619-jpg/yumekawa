@@ -4899,7 +4899,9 @@ window.triggerCorrectAnswer = function(current) {
       const loopCountToday = (window.saveData.lastLoopDate === todayStr2 && window.saveData.dailyLoopCounts && window.currentActiveStageId) ? (window.saveData.dailyLoopCounts[window.currentActiveStageId] || 0) : 0;
       kakeraCapped = loopCountToday >= 3;
     }
-    if(window.currentFirstTry && Math.random() < 0.4 && !window.weakAttackModeActive && !kakeraCapped) {
+    // ★2026-08-04 修正：通常ステージで欠片が見つかりすぎる報告を受け、出現率を0.4→0.15へ引き下げ
+    //   （「センサー作動」演出が特別感を持てる頻度に調整。dailyLoopCounts等の既存の周回上限ロジックは変更なし）
+    if(window.currentFirstTry && Math.random() < 0.15 && !window.weakAttackModeActive && !kakeraCapped) {
       if(!window.saveData.kakera) window.saveData.kakera = 0; window.saveData.kakera += 1; window.speakText("欠片発見", "ja-JP"); document.getElementById("job-title").textContent = "🧩 【欠片センサー作動！】 " + (current.job_title || "クリア！");
     }
     let thinkingBonusMsg = "";
