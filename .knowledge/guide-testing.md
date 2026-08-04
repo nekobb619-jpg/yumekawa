@@ -16,6 +16,13 @@
 - 新しいデータ配列（`TREASURE_LIST`など）を追加したときは、id重複がないか、想定件数と一致するか、
   必須フィールドが全件そろっているかをNodeスクリプトで機械チェックする。
 
+## 1.5 実ブラウザでの機能テスト時の注意（Claude Code `mcp__Claude_Browser`等）
+- `window.CHILD_ID`（既定値「りお」）が自動ログインされた状態のまま`window.saveData`を
+  直接書き換えるテストをしないこと。ネットワークが遮断されている「はず」という思い込みで
+  本番識別子のまま検証すると、万一クラウド同期が生きていた場合に実在の子どものセーブデータを
+  汚染する（2026-08-04、`.knowledge/postmortems.md`参照）。テスト前に`read_network_requests`で
+  `script.google.com`宛の通信が発生していないか確認するか、テスト専用IDに差し替えてから行う。
+
 ## 2. Playwrightヘッドレスでの実ブラウザ検証（できれば必須）
 - 本リポジトリのChromiumは `/opt/pw-browsers/chromium` にプリインストール済み
   （`playwright install`は不要・実行しないこと）。`chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })`
