@@ -77,8 +77,13 @@
         updated = true;
         return;
       }
+      // ★2026-08-05修正：以前はここでclearedStages[stageId]を削除していたが、
+      //   window.hasNewQuestionsSinceCleared / clearedQuestionCounts / clearedQuestionQids
+      //   （index.html側）による「未クリア扱い」判定と2機構が並存し、報酬計算がどちらの
+      //   経路を通るかでQ過剰付与（例：+10Qのはずが+19Q）が起きていた。
+      //   clearedStages自体はもう書き換えず、通知アラートとstageQuestionCountsの
+      //   ブックキーピングだけ行う（済バッジ表示・報酬分岐はhasNewQuestionsSinceCleared側に一本化）。
       if (count > prevCount && window.saveData.clearedStages[stageId]) {
-        delete window.saveData.clearedStages[stageId];
         updated = true;
         var stgMeta = null;
         if (window.CONTENT.stages) {

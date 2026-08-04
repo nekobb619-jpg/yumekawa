@@ -972,6 +972,7 @@ window.normalizeSaveData = function(data) {
   normalized.robux = Number(normalized.robux || 0);
   normalized.clearedStages = normalized.clearedStages || {};
   normalized.clearedQuestionCounts = normalized.clearedQuestionCounts || {};
+  normalized.clearedQuestionQids = normalized.clearedQuestionQids || {};
   normalized.reviewDates = normalized.reviewDates || {};
   normalized.reviewCounts = normalized.reviewCounts || {};
   normalized.lastRewardedMasterCount = Number(normalized.lastRewardedMasterCount || 0);
@@ -1053,7 +1054,7 @@ window.normalizeSaveData = function(data) {
   return normalized;
 };
 // 互換性維持のため初期値だけ残します
-window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", lastStudyDate: "", streakCount: 0, skillTickets: 0, allowance: { yen: 0, memo: "", history: [], weeks: {} }, detectiveLabDailyCount: 0, detectiveLabDailyDate: "", battleHistory: [], battleLastWeekKey: "", battleLastWeekLabel: "", battleLastCounts: {}, expedition: null, expeditionLostTeamIds: null, mainAvatarComfort: 100, lastComfortUpkeepDate: "" };
+window.saveData = { pts: 0, q: 0, robux: 0, clearedStages: {}, clearedQuestionCounts: {}, clearedQuestionQids: {}, reviewDates: {}, reviewCounts: {}, lastRewardedMasterCount: 0, masterPromotedStages: {}, dailyMasterQEarned: 0, lastMasterQDate: "", dailyLoopCounts: {}, lastLoopDate: "", weakQuestions: [] , kakera: 0, inventory: [], islandStatus: "", islandStatusDate: "", loginStampCount: 0, lastStampDate: "", dailyHakushiCount: 0, lastHakushiDate: "", bookLastReadDate: "", bookStreak: 0, bookReadCount: 0, treasureBook: {}, islandBuildLog: [], gachaEggs: {}, kuroPonFriendship: 0, kuroPonHunger: 100, kuroPonLastFedDate: "", kuroPonFedToday: {}, selectedAvatar: "🐣", lastStudyDate: "", streakCount: 0, skillTickets: 0, allowance: { yen: 0, memo: "", history: [], weeks: {} }, detectiveLabDailyCount: 0, detectiveLabDailyDate: "", battleHistory: [], battleLastWeekKey: "", battleLastWeekLabel: "", battleLastCounts: {}, expedition: null, expeditionLostTeamIds: null, mainAvatarComfort: 100, lastComfortUpkeepDate: "" };
 // ★2026-07-20 追加：本物のセーブデータを読み込めたことが確認できるまでのフラグ。
 //   "server"＝クラウド(GAS)のLOGINが成功して読み込めた／"local"＝この端末のlocalStorageに
 //   前回のセーブが残っていて読み込めた／null＝まだどちらも確認できていない（＝今のwindow.saveDataは
@@ -2378,6 +2379,7 @@ window.performLogin = function(id) {
        if(!window.saveData.lastMasterQDate) window.saveData.lastMasterQDate = "";
        if(!window.saveData.clearedStages) window.saveData.clearedStages = {};
        if(!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
+       if(!window.saveData.clearedQuestionQids) window.saveData.clearedQuestionQids = {};
        if(!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
        if(!window.saveData.weakQuestions) window.saveData.weakQuestions = [];
        if(!window.saveData.inventory) window.saveData.inventory = [];
@@ -2451,6 +2453,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.inventory) window.saveData.inventory = [];
   if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
   if(!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
+  if(!window.saveData.clearedQuestionQids) window.saveData.clearedQuestionQids = {};
   if(window.saveData.loginStampCount === undefined) window.saveData.loginStampCount = 0;
   if(!window.saveData.lastStampDate) window.saveData.lastStampDate = "";
   if(!window.saveData.bookLastReadDate) window.saveData.bookLastReadDate = "";
@@ -4021,6 +4024,74 @@ window.hasNewQuestionsSinceCleared = function(stageId) {
   const clearedCount = window.saveData.clearedQuestionCounts ? window.saveData.clearedQuestionCounts[stageId] : undefined;
   return typeof clearedCount === "number" && currentCount > clearedCount;
 };
+// ★2026-08-05追加：最後にクリアした時点のqidスナップショット（clearedQuestionQids）と
+//   今回のセッションで出題されたqidを比べ、「本当に新規追加された問題」だけを特定する。
+//   スナップショット未記録（この仕組み導入前のセーブ等）の場合は新規判定ができないため、
+//   空配列を返す（＝呼び出し側は「再コンプリート」の穏当な扱いに倒す）。
+window.getNewlyAddedQidsInSession = function(stageId, sessionQids) {
+  const prevQids = (window.saveData && window.saveData.clearedQuestionQids) ? window.saveData.clearedQuestionQids[stageId] : undefined;
+  if (!Array.isArray(prevQids)) return [];
+  const prevSet = new Set(prevQids);
+  return (sessionQids || []).filter(function (qid) { return qid && !prevSet.has(qid); });
+};
+// ★2026-08-05追加：exitToMainMenuの報酬計算をDOM非依存の純粋関数として切り出したもの。
+//   「済ステージに通常問題が追加された」ケースのQ付与を厳格化する：
+//   ・追加された新規の通常問題を今回のセッションでクリア → +10Q固定
+//   ・新規問題自体は今回引かなかったが、済解除済みカテゴリを全問再コンプリート → +2Q固定
+//   （いずれもボーナス（動画/実験/パーフェクト）は加算しない。以前はここが!isClearedの
+//   フラグだけで判定されており、既存ボーナスが重複して乗ることで過剰付与
+//   （例：+10Qのはずが+19Q）が起きていた）。
+//   MASTER/REVIEWステージは対象外（既存の別経路の固定報酬をそのまま維持）。
+window.computeStageClearReward = function(stageId, opts) {
+  opts = opts || {};
+  const isMaster = !!opts.isMaster;
+  const isReview = !!opts.isReview;
+  const boostMultiplier = (typeof opts.activeBoostMultiplier === "number") ? opts.activeBoostMultiplier : 1;
+  const starBuffMultiplier = (typeof opts.starBuffMultiplier === "number") ? opts.starBuffMultiplier : 1;
+  const sd = new Date(opts.currentServerTime || Date.now());
+  const todayStr = `${sd.getFullYear()}-${sd.getMonth() + 1}-${sd.getDate()}`;
+
+  const wasAlreadyCleared = !!window.saveData.clearedStages[stageId];
+  const hasNewQ = window.hasNewQuestionsSinceCleared(stageId);
+  const isCleared = wasAlreadyCleared && !hasNewQ;
+  const isRecompleteAfterNewQuestion = !isMaster && !isReview && wasAlreadyCleared && hasNewQ;
+  const newQidsInSession = isRecompleteAfterNewQuestion ? window.getNewlyAddedQidsInSession(stageId, opts.sessionQids) : [];
+  const caseType = isRecompleteAfterNewQuestion ? (newQidsInSession.length > 0 ? "new_question" : "recomplete") : null;
+
+  let baseReward = isCleared ? 2 : opts.currentActiveStageReward;
+  let masterCapHit = false;
+
+  if (isMaster) {
+    if (window.saveData.lastMasterQDate !== todayStr) { window.saveData.lastMasterQDate = todayStr; window.saveData.dailyMasterQEarned = 0; }
+    if (!window.saveData.dailyMasterQEarned) window.saveData.dailyMasterQEarned = 0;
+    const remainingCap = Math.max(0, opts.MASTER_DAILY_Q_CAP - window.saveData.dailyMasterQEarned);
+    baseReward = Math.min(opts.MASTER_LOOP_REWARD_Q, remainingCap);
+    if (baseReward < opts.MASTER_LOOP_REWARD_Q) masterCapHit = true;
+    window.saveData.dailyMasterQEarned += baseReward;
+  } else if (isReview) {
+    baseReward = Math.floor(opts.currentActiveStageReward / 2);
+  } else if (isRecompleteAfterNewQuestion) {
+    baseReward = (caseType === "new_question") ? 10 : 2;
+  }
+
+  if (isCleared && !isReview && !isMaster) {
+    if (!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
+    if (window.saveData.lastLoopDate !== todayStr) { window.saveData.lastLoopDate = todayStr; window.saveData.dailyLoopCounts = {}; }
+    if (!window.saveData.dailyLoopCounts[stageId]) window.saveData.dailyLoopCounts[stageId] = 0;
+    window.saveData.dailyLoopCounts[stageId]++;
+    if (window.saveData.dailyLoopCounts[stageId] > 3) baseReward = 0;
+  }
+
+  const bonusEligible = !isCleared && !isRecompleteAfterNewQuestion;
+  const vBonus = (opts.bonusVideoUsed && bonusEligible) ? 5 : 0;
+  const lBonus = (opts.bonusLabUsed && opts.totalMistakes === 0 && bonusEligible) ? 15 : 0;
+  const isPerfect = (bonusEligible && opts.totalMistakes === 0 && !isReview && !isMaster);
+  const pBonus = isPerfect ? 5 : 0;
+
+  const earnedQ = isMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * boostMultiplier * starBuffMultiplier);
+
+  return { isCleared, isRecompleteAfterNewQuestion, caseType, newQidsInSession, baseReward, vBonus, lBonus, pBonus, earnedQ, masterCapHit };
+};
 // ★NEW / 復習しよう の判定を一か所にまとめる（ステージ一覧とアコーディオン見出しの両方から使う）
 window.computeStageBadgeFlags = function(stg) {
   const rawIsCleared = (stg.id) ? window.saveData.clearedStages[stg.id] : false;
@@ -4984,41 +5055,41 @@ window.exitToMainMenu = function() {
     if (window.weakAttackModeActive) { window.saveGame(); alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`); window.weakAttackModeActive = false; window.quitQuest(); return; }
     let targetStageId = window.currentActiveStageId;
     if (!targetStageId) { window.quitQuest(); return; }
-    // ★問題が追加された済ステージは、初回クリア報酬を正しく付与するため「未クリア扱い」に戻す
-    let isCleared = window.saveData.clearedStages[targetStageId] && !window.hasNewQuestionsSinceCleared(targetStageId);
-    let baseReward = isCleared ? 2 : window.currentActiveStageReward;
-    let masterCapHit = false;
-    if (window.currentActiveStageIsMaster) {
-      // ★殿堂入り後の周回Qは「デイリー上限(MASTER_DAILY_Q_CAP)Q」の枠内に必ず収める。
-      //   ブースト倍率の影響も受けない固定少額報酬とすることで、無限周回ファームを構造的に防止する。
-      const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
-      if (window.saveData.lastMasterQDate !== todayStr) { window.saveData.lastMasterQDate = todayStr; window.saveData.dailyMasterQEarned = 0; }
-      if (!window.saveData.dailyMasterQEarned) window.saveData.dailyMasterQEarned = 0;
-      const remainingCap = Math.max(0, window.MASTER_DAILY_Q_CAP - window.saveData.dailyMasterQEarned);
-      baseReward = Math.min(window.MASTER_LOOP_REWARD_Q, remainingCap);
-      if (baseReward < window.MASTER_LOOP_REWARD_Q) masterCapHit = true;
-      window.saveData.dailyMasterQEarned += baseReward;
-    } else if (window.currentActiveStageIsReview) { baseReward = Math.floor(window.currentActiveStageReward / 2); }
-    if (isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster) {
-      if (!window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts = {};
-      const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
-      if (window.saveData.lastLoopDate !== todayStr) { window.saveData.lastLoopDate = todayStr; window.saveData.dailyLoopCounts = {}; }
-      if (!window.saveData.dailyLoopCounts[targetStageId]) window.saveData.dailyLoopCounts[targetStageId] = 0;
-      window.saveData.dailyLoopCounts[targetStageId]++;
-      if (window.saveData.dailyLoopCounts[targetStageId] > 3) baseReward = 0;
-    }
-
-    let vBonus = (window.bonusVideoUsed && !isCleared) ? 5 : 0; let lBonus = (window.bonusLabUsed && window.totalMistakes === 0 && !isCleared) ? 15 : 0;
-    let isPerfect = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
-    let pBonus = isPerfect ? 5 : 0;
-    // ★殿堂入り周回の報酬はデイリー上限で既に確定額なので、ブースト倍率をかけない（他の報酬経路と分離）
-    let earnedQ = window.currentActiveStageIsMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * window.activeBoostMultiplier * window.getStarBuffMultiplier());
+    // ★2026-08-05修正：報酬計算はcomputeStageClearReward（DOM非依存の純粋関数、Node単体テスト対象）に
+    //   集約した。済ステージに通常問題が追加された場合、「新規問題を今回クリア＝+10Q」「新規問題は
+    //   引かなかったが全問再コンプリート＝+2Q」に厳格化し、いずれもボーナス（動画/実験/パーフェクト）は
+    //   加算しない（旧実装は!isClearedフラグのみで判定しておりボーナスが重複加算され得た）。
+    const sessionQids = (window.currentQuestions || []).map(function (q) { return q && q.qid; }).filter(Boolean);
+    const rewardResult = window.computeStageClearReward(targetStageId, {
+      isMaster: window.currentActiveStageIsMaster,
+      isReview: window.currentActiveStageIsReview,
+      currentActiveStageReward: window.currentActiveStageReward,
+      sessionQids: sessionQids,
+      bonusVideoUsed: window.bonusVideoUsed,
+      bonusLabUsed: window.bonusLabUsed,
+      totalMistakes: window.totalMistakes,
+      activeBoostMultiplier: window.activeBoostMultiplier,
+      starBuffMultiplier: window.getStarBuffMultiplier(),
+      currentServerTime: window.currentServerTime,
+      MASTER_DAILY_Q_CAP: window.MASTER_DAILY_Q_CAP,
+      MASTER_LOOP_REWARD_Q: window.MASTER_LOOP_REWARD_Q
+    });
+    let isCleared = rewardResult.isCleared;
+    let baseReward = rewardResult.baseReward;
+    let masterCapHit = rewardResult.masterCapHit;
+    let vBonus = rewardResult.vBonus;
+    let lBonus = rewardResult.lBonus;
+    let pBonus = rewardResult.pBonus;
+    let earnedQ = rewardResult.earnedQ;
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
-    // ★クリア時点の問題数を記録しておき、あとで問題が追加されたかどうかの判定に使う（hasNewQuestionsSinceCleared）
+    // ★クリア時点の問題数・qidを記録しておき、あとで問題が追加されたかどうか／どの問題が新規かの
+    //   判定に使う（hasNewQuestionsSinceCleared / getNewlyAddedQidsInSession）
     if (window.CONTENT && window.CONTENT.quizzes && window.CONTENT.quizzes[targetStageId]) {
       if (!window.saveData.clearedQuestionCounts) window.saveData.clearedQuestionCounts = {};
       window.saveData.clearedQuestionCounts[targetStageId] = window.CONTENT.quizzes[targetStageId].length;
+      if (!window.saveData.clearedQuestionQids) window.saveData.clearedQuestionQids = {};
+      window.saveData.clearedQuestionQids[targetStageId] = window.CONTENT.quizzes[targetStageId].map(function (q) { return q && q.qid; }).filter(Boolean);
     }
     if (!window.saveData.reviewDates) window.saveData.reviewDates = {}; window.saveData.reviewDates[targetStageId] = window.currentServerTime;
 
@@ -5057,6 +5128,9 @@ window.exitToMainMenu = function() {
     }
 
     let msg = `🎉 ミッションコンプリート！\n\n・基本クリア: +${window.currentActiveStageIsMaster ? baseReward : Math.floor(baseReward * window.activeBoostMultiplier)}Q\n`;
+    // ★2026-08-05追加：済ステージへの通常問題追加に伴う2ケースを区別して演出する。
+    if (rewardResult.caseType === "new_question") msg += `🆕 ニコ「新しい問題が仲間入りしたね！さっそくクリアしてくれてありがとう！」\n`;
+    else if (rewardResult.caseType === "recomplete") msg += `🔄 クロぽん「新しい問題が増えたから、もう一度ぜんぶチャレンジしてくれたんだね！」\n`;
     if(pBonus > 0) msg += `・✨ ノーミスパーフェクト: +${Math.floor(pBonus * window.activeBoostMultiplier)}Q\n`;
     if(vBonus > 0) msg += `・📺 予習ボーナス: +${Math.floor(vBonus * window.activeBoostMultiplier)}Q\n`;
     if(lBonus > 0) msg += `・🔬 実験ボーナス: +${Math.floor(lBonus * window.activeBoostMultiplier)}Q\n`;
