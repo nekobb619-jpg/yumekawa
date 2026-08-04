@@ -4037,7 +4037,9 @@ window.getNewlyAddedQidsInSession = function(stageId, sessionQids) {
 // ★2026-08-05追加：exitToMainMenuの報酬計算をDOM非依存の純粋関数として切り出したもの。
 //   「済ステージに通常問題が追加された」ケースのQ付与を厳格化する：
 //   ・追加された新規の通常問題を今回のセッションでクリア → +10Q固定
-//   ・新規問題自体は今回引かなかったが、済解除済みカテゴリを全問再コンプリート → +2Q固定
+//   ・新規問題自体は今回引かなかったが、済解除済みカテゴリを全問再コンプリート → +5Q固定
+//   （2026-08-05: ユーザーフィードバックにより再コンプリート報酬を+2Q→+5Qへ引き上げ。
+//     「+2Qではやる気が出ない」ため、達成感とのバランスを見て調整）
 //   （いずれもボーナス（動画/実験/パーフェクト）は加算しない。以前はここが!isClearedの
 //   フラグだけで判定されており、既存ボーナスが重複して乗ることで過剰付与
 //   （例：+10Qのはずが+19Q）が起きていた）。
@@ -4071,7 +4073,7 @@ window.computeStageClearReward = function(stageId, opts) {
   } else if (isReview) {
     baseReward = Math.floor(opts.currentActiveStageReward / 2);
   } else if (isRecompleteAfterNewQuestion) {
-    baseReward = (caseType === "new_question") ? 10 : 2;
+    baseReward = (caseType === "new_question") ? 10 : 5;
   }
 
   if (isCleared && !isReview && !isMaster) {
@@ -5057,7 +5059,7 @@ window.exitToMainMenu = function() {
     if (!targetStageId) { window.quitQuest(); return; }
     // ★2026-08-05修正：報酬計算はcomputeStageClearReward（DOM非依存の純粋関数、Node単体テスト対象）に
     //   集約した。済ステージに通常問題が追加された場合、「新規問題を今回クリア＝+10Q」「新規問題は
-    //   引かなかったが全問再コンプリート＝+2Q」に厳格化し、いずれもボーナス（動画/実験/パーフェクト）は
+    //   引かなかったが全問再コンプリート＝+5Q」に厳格化し、いずれもボーナス（動画/実験/パーフェクト）は
     //   加算しない（旧実装は!isClearedフラグのみで判定しておりボーナスが重複加算され得た）。
     const sessionQids = (window.currentQuestions || []).map(function (q) { return q && q.qid; }).filter(Boolean);
     const rewardResult = window.computeStageClearReward(targetStageId, {
