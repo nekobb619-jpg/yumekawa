@@ -1484,6 +1484,9 @@ window.startExpeditionRescueQuiz = function () {
   window.rescueQuizModeActive = true;
   window.currentQIdx = 0; window.totalMistakes = 0;
   window.currentQuestions = [question];
+  // ★2026-08-04 修正：クロぽんの部屋（#kuropon-modal, z-index:610）が#game-screen（z-index:100）より
+  //   手前に居座ったままでクイズが見えなくなるバグを修正。部屋を明示的に閉じてから問題画面を開く。
+  if (window.closeKuroPonModal) window.closeKuroPonModal();
   document.getElementById("game-screen").style.display = "block";
   const itemBtn = document.getElementById("item-use-in-game-btn");
   if (itemBtn) itemBtn.style.display = "none"; // ★救出クイズ中はアイテム使用不可
@@ -1545,7 +1548,11 @@ window.renderExpeditionPanel = function () {
 window.uiAutoFormAndDispatchExpedition = function () {
   const team = window.autoFormExpeditionTeam();
   if (!team) { alert("🏕️ 余剰アバターが3種そろっていないよ！ガチャで重複キャラを増やそう！"); return; }
-  // ★2026-08-04 修正：確認ポップアップ（いいかな？）が問題画面を邪魔するため撤去し、即クイズ開始する
+  const stars = window.computeExpeditionTotalStars(team);
+  const survival = window.computeExpeditionSurvivalChance(team);
+  const pred = window.computeExpeditionPredictedRewards(team);
+  const quizCount = window.computeExpeditionQuizQuestionCount(team);
+  if (!confirm(`🏕️ この3体を探検隊に送り込むよ！\n合計★${stars}／生還率${survival}%\n予測: +${pred.qMin}〜${pred.qMax}Q ＋🧩${pred.kakeraMin}〜${pred.kakeraMax}個\n🔍 出動前に探偵ラボの問題を${quizCount}問といてね！\nいいかな？`)) return;
   window.startExpeditionQuiz(team);
 };
 
@@ -1623,6 +1630,9 @@ window.startExpeditionQuiz = function (teamIds) {
   window.currentQIdx = 0; window.totalMistakes = 0;
   window.currentQuestions = questions;
 
+  // ★2026-08-04 修正：クロぽんの部屋（#kuropon-modal, z-index:610）が#game-screen（z-index:100）より
+  //   手前に居座ったままでクイズが見えなくなるバグを修正。部屋を明示的に閉じてから問題画面を開く。
+  if (window.closeKuroPonModal) window.closeKuroPonModal();
   document.getElementById("game-screen").style.display = "block";
   const itemBtn = document.getElementById("item-use-in-game-btn");
   if (itemBtn) itemBtn.style.display = "none"; // ★出動前クイズ中はアイテム使用不可
