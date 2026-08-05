@@ -1351,11 +1351,20 @@ window.computeExpeditionTotalStars = function (teamIds) {
 };
 
 // 生還率＝基本60%＋合計★数×5%（上限90%）＋もちくんがチームにいれば+10%（合計は99%キャップ）
+// ★2026-08-05追加：宝島が濃い霧で見つからない日（saveData.islandStatus === "close"）は、
+//   「霧で視界が悪く探検が危険」という設定に合わせ、生還率に-15%のペナルティを課す（下限20%）。
+//   出動時点のislandStatusで判定し、その値をdispatchExpeditionTeamがsurvivalChanceとして
+//   そのままsaveData.expeditionに固定保存するため、探検中に霧が晴れても結果には影響しない
+//   （既存のtotalStars等と同じく「出動時点のスナップショット」方式に揃えている）。
 window.computeExpeditionSurvivalChance = function (teamIds) {
   const totalStars = window.computeExpeditionTotalStars(teamIds);
   const base = Math.min(90, 60 + totalStars * 5);
   const hasMochikun = teamIds.indexOf('e_ex_mochi') !== -1;
-  return Math.min(99, base + (hasMochikun ? 10 : 0));
+  let chance = Math.min(99, base + (hasMochikun ? 10 : 0));
+  if (window.saveData && window.saveData.islandStatus === "close") {
+    chance = Math.max(20, chance - 15);
+  }
+  return chance;
 };
 
 // 予測獲得Q/カケラ数（表示用のレンジ）
