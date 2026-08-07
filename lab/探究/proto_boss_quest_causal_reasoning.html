@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ボスクエスト プロトタイプ（原因をつきとめよう）</title>
+<style>
+  :root{
+    --pink:#ff8fb1; --pink-dark:#ff5c8a;
+    --blue:#7dd3fc; --purple:#c4b5fd;
+    --bg1:#fff0f5; --bg2:#f0f4ff;
+    --ink:#4a4458; --card:#ffffff;
+    --ok:#4ade80; --ng:#f87171;
+  }
+  * { box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; font-family:"Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+    background:linear-gradient(160deg, var(--bg1), var(--bg2));
+    color:var(--ink); display:flex; justify-content:center; padding:16px;
+  }
+  #app{ width:100%; max-width:480px; }
+  .progress{ display:flex; justify-content:center; gap:8px; margin-bottom:14px; }
+  .progress .dot{ width:10px; height:10px; border-radius:50%; background:#e5deed; transition:.2s; }
+  .progress .dot.active{ background:var(--pink-dark); transform:scale(1.3); }
+  .progress .dot.done{ background:var(--purple); }
+
+  .card{
+    background:var(--card); border-radius:22px; padding:22px 18px;
+    box-shadow:0 8px 24px rgba(140,110,160,.15);
+  }
+  .nico-bubble{
+    background:#fff7fa; border:2px solid #ffd7e6; border-radius:16px;
+    padding:12px 14px; font-size:15px; line-height:1.6; margin-bottom:16px;
+    position:relative;
+  }
+  .nico-bubble b{ color:var(--pink-dark); }
+  h2.title{ font-size:18px; margin:0 0 4px; }
+
+  .choice-grid{ display:flex; flex-direction:column; gap:10px; margin:14px 0; }
+  .choice-card{
+    display:flex; align-items:center; gap:10px;
+    border:2px solid #eee3f0; background:#fff; border-radius:14px;
+    padding:12px 14px; font-size:15px; cursor:pointer; user-select:none;
+    transition:.15s;
+  }
+  .choice-card:active{ transform:scale(0.98); }
+  .choice-card .icon{ font-size:22px; }
+  .choice-card.selected{ border-color:var(--pink-dark); background:#fff0f5; font-weight:bold; }
+  .choice-card.collected{ border-color:var(--purple); background:#f5f2ff; }
+  .choice-card.disabled{ opacity:.4; pointer-events:none; }
+
+  .fact-list{ margin-top:10px; padding:0; list-style:none; }
+  .fact-list li{
+    background:#f5f2ff; border-radius:10px; padding:8px 12px; margin-bottom:6px;
+    font-size:13px; color:#6b5b8a;
+  }
+
+  .block-group{ margin-bottom:16px; }
+  .block-label{ font-size:12px; font-weight:bold; color:#a78bc9; margin-bottom:6px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    border:2px solid #eee3f0; background:#fff; border-radius:999px;
+    padding:8px 14px; font-size:13px; cursor:pointer; transition:.15s;
+  }
+  .chip.selected{ border-color:var(--pink-dark); background:var(--pink-dark); color:#fff; font-weight:bold; }
+
+  .sentence-preview{
+    margin-top:6px; padding:14px; border-radius:14px; background:#fffaf0;
+    border:2px dashed #ffd28a; font-size:15px; line-height:1.7; min-height:52px;
+  }
+  .sentence-preview .blank{ color:#c9bfd6; }
+
+  button.main-btn{
+    width:100%; margin-top:16px; padding:14px; border:none; border-radius:16px;
+    background:var(--pink-dark); color:#fff; font-size:16px; font-weight:bold;
+    cursor:pointer; box-shadow:0 6px 0 #d94c76;
+  }
+  button.main-btn:disabled{ background:#e5deed; box-shadow:0 6px 0 #cfc6db; cursor:not-allowed; }
+  button.main-btn:active:not(:disabled){ transform:translateY(4px); box-shadow:0 2px 0 #d94c76; }
+  button.sub-btn{
+    width:100%; margin-top:8px; padding:10px; border:none; border-radius:14px;
+    background:#fff; border:2px solid #eee3f0; color:#a78bc9; font-size:14px; cursor:pointer;
+  }
+
+  .hint-banner{
+    margin-top:12px; padding:12px 14px; border-radius:14px; font-size:14px;
+    background:#fff3f3; border:2px solid #ffc9c9; color:#c0392b; display:none;
+  }
+  .hint-banner.show{ display:block; }
+
+  .clear-screen{ text-align:center; }
+  .clear-screen .big-icon{ font-size:56px; }
+  .token-count{ font-size:28px; font-weight:bold; color:var(--pink-dark); margin:10px 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="progress" id="progress"></div>
+  <div class="card" id="stage"></div>
+</div>
+
+<script>
+/* =====================================================================
+   ボスクエスト・プロトタイプ：因果関係の構築を「選択式パズル」で練習させるミッション。
+   問題データ（MISSION_DATA）を差し替えるだけで別の単元（理科・社会など）に転用できるよう、
+   画面ロジックとデータを分離してある。
+   ===================================================================== */
+
+// ---- 1. 問題データ（JSON。ここを差し替えれば別の単元のミッションになる） ----
+const MISSION_DATA = {
+  id: "suisou_genki_nai_01",
+  step1: {
+    icon: "🐟",
+    problemText: "すいそうの魚が、なんだか元気がないよ…。いったい何が起きているんだろう？"
+  },
+  step2: {
+    prompt: "まず、原因はなんだと思う？よそうしてみよう（ここは自由に選んでOK）。",
+    hypotheses: [
+      { id: "h_water", icon: "💧", text: "水が よごれているのかも" },
+      { id: "h_temp",  icon: "🌡️", text: "水の おんどが おかしいのかも" },
+      { id: "h_food",  icon: "🍚", text: "エサが たりないのかも" }
+    ]
+  },
+  step3: {
+    prompt: "道具をつかって、すいそうをしらべてみよう。ぜんぶタップしてね。",
+    tools: [
+      { id: "tool_water",  icon: "🧪", name: "水質チェッカー", factId: "fact_water_dirty" },
+      { id: "tool_temp",   icon: "🌡️", name: "水温計",         factId: "fact_temp_normal" },
+      { id: "tool_food",   icon: "🍚", name: "エサばこチェック", factId: "fact_food_enough" }
+    ],
+    // factId -> 実際に画面に出す「事実カード」の文章
+    facts: {
+      fact_water_dirty: "水質チェッカーの けっか：水が よごれている（きけんな数字）",
+      fact_temp_normal: "水温計の けっか：水の おんどは ちょうどよい",
+      fact_food_enough: "エサばこの けっか：エサは じゅうぶん のこっている"
+    }
+  },
+  step4: {
+    prompt: "集めた事実から、正しい文章を組み立てよう！",
+    // 【根拠】は factId をキーに「理由の言い方」へ変換する（＝Step3で集めた事実だけが選択肢になる）
+    reasonPhrasing: {
+      fact_water_dirty: "水が よごれている",
+      fact_temp_normal: "水の おんどが おかしい",
+      fact_food_enough: "エサが たりない"
+    },
+    // ★2026-08-08修正：接続詞（「ので」/「けれど」）の使い分けは国語の助詞知識であり、
+    //   このミッションで鍛えたい「因果関係の構築力」とは別スキルのため選択式から外し、
+    //   ミッションデータ側の固定文言として自動表示する（ユーザーからのフィードバックで確定）。
+    connectorText: "ので、",
+    actions: [
+      { id: "a_change_water", text: "水を きれいに かえてあげよう" },
+      { id: "a_add_food",     text: "エサを もっと あげよう" },
+      { id: "a_add_heater",   text: "ヒーターを 入れよう" }
+    ],
+    // 正解の組み合わせ（複数正解を許す場合はここに配列で追加できる）
+    solutions: [
+      { reasonFactId: "fact_water_dirty", actionId: "a_change_water" }
+    ],
+    hints: {
+      reason: "その根拠、すいそうをしらべた結果と ちがう気がするよ。もう一回、事実カードを見なおしてみよう！",
+      action: "そのたいさく、根拠と つながっていないかも？もう一回、考えてみよう。"
+    }
+  },
+  step5: {
+    clearText: "げんいんを つきとめて、魚をたすけたね！",
+    rewardToken: 10
+  }
+};
+
+// ---- 2. 状態管理 ----
+const state = {
+  step: 1,
+  hypothesisId: null,
+  collectedFacts: [],       // 集めたfactIdの配列
+  selection: { reasonFactId: null, actionId: null },
+  tokens: 0
+};
+
+const STEP_COUNT = 5;
+const stageEl = document.getElementById("stage");
+const progressEl = document.getElementById("progress");
+
+function renderProgress() {
+  progressEl.innerHTML = "";
+  for (let i = 1; i <= STEP_COUNT; i++) {
+    const dot = document.createElement("div");
+    dot.className = "dot" + (i === state.step ? " active" : i < state.step ? " done" : "");
+    progressEl.appendChild(dot);
+  }
+}
+
+function goToStep(n) {
+  state.step = n;
+  render();
+}
+
+function render() {
+  renderProgress();
+  if (state.step === 1) renderStep1();
+  else if (state.step === 2) renderStep2();
+  else if (state.step === 3) renderStep3();
+  else if (state.step === 4) renderStep4();
+  else if (state.step === 5) renderStep5();
+}
+
+// ---- Step1：課題提示 ----
+function renderStep1() {
+  const d = MISSION_DATA.step1;
+  stageEl.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:64px;">${d.icon}</div>
+      <div class="nico-bubble">${d.problemText}</div>
+    </div>
+    <button class="main-btn" id="btn-start">さぐってみる！</button>
+  `;
+  document.getElementById("btn-start").onclick = () => goToStep(2);
+}
+
+// ---- Step2：仮説選択（正誤なし。自由に予想させる） ----
+function renderStep2() {
+  const d = MISSION_DATA.step2;
+  stageEl.innerHTML = `
+    <div class="nico-bubble">${d.prompt}</div>
+    <div class="choice-grid" id="hyp-list"></div>
+    <button class="main-btn" id="btn-next" disabled>しらべに行く</button>
+  `;
+  const list = document.getElementById("hyp-list");
+  d.hypotheses.forEach(h => {
+    const el = document.createElement("div");
+    el.className = "choice-card" + (state.hypothesisId === h.id ? " selected" : "");
+    el.innerHTML = `<span class="icon">${h.icon}</span><span>${h.text}</span>`;
+    el.onclick = () => { state.hypothesisId = h.id; renderStep2(); };
+    list.appendChild(el);
+  });
+  document.getElementById("btn-next").disabled = !state.hypothesisId;
+  document.getElementById("btn-next").onclick = () => goToStep(3);
+}
+
+// ---- Step3：情報収集（道具タップで事実カード獲得） ----
+function renderStep3() {
+  const d = MISSION_DATA.step3;
+  const allCollected = d.tools.every(t => state.collectedFacts.includes(t.factId));
+  stageEl.innerHTML = `
+    <div class="nico-bubble">${d.prompt}</div>
+    <div class="choice-grid" id="tool-list"></div>
+    <ul class="fact-list" id="fact-list"></ul>
+    <button class="main-btn" id="btn-next" disabled>けつろんを かんがえる</button>
+  `;
+  const toolList = document.getElementById("tool-list");
+  d.tools.forEach(t => {
+    const collected = state.collectedFacts.includes(t.factId);
+    const el = document.createElement("div");
+    el.className = "choice-card" + (collected ? " collected" : "");
+    el.innerHTML = `<span class="icon">${t.icon}</span><span>${t.name}</span>${collected ? " ✅" : ""}`;
+    el.onclick = () => {
+      if (!state.collectedFacts.includes(t.factId)) state.collectedFacts.push(t.factId);
+      renderStep3();
+    };
+    toolList.appendChild(el);
+  });
+  const factList = document.getElementById("fact-list");
+  state.collectedFacts.forEach(factId => {
+    const li = document.createElement("li");
+    li.textContent = "📋 " + d.facts[factId];
+    factList.appendChild(li);
+  });
+  const btn = document.getElementById("btn-next");
+  btn.disabled = !allCollected;
+  btn.textContent = allCollected ? "けつろんを かんがえる" : `あと ${d.tools.length - state.collectedFacts.length} つ しらべよう`;
+  btn.onclick = () => goToStep(4);
+}
+
+// ---- Step4：結論作成（論理パズル） ----
+function renderStep4() {
+  const d = MISSION_DATA.step4;
+  stageEl.innerHTML = `
+    <div class="nico-bubble">${d.prompt}</div>
+
+    <div class="block-group">
+      <div class="block-label">①【根拠】あつめた事実から えらぶ</div>
+      <div class="chip-row" id="reason-row"></div>
+    </div>
+    <div class="block-group">
+      <div class="block-label">②【たいさく】</div>
+      <div class="chip-row" id="action-row"></div>
+    </div>
+
+    <div class="block-label">できあがった文章</div>
+    <div class="sentence-preview" id="sentence-preview"></div>
+
+    <div class="hint-banner" id="hint-banner"></div>
+    <button class="main-btn" id="btn-judge" disabled>この文章で けってい！</button>
+  `;
+
+  // ①根拠：Step3で実際に集めた事実だけが選択肢になる
+  const reasonRow = document.getElementById("reason-row");
+  state.collectedFacts.forEach(factId => {
+    const chip = document.createElement("div");
+    chip.className = "chip" + (state.selection.reasonFactId === factId ? " selected" : "");
+    chip.textContent = d.reasonPhrasing[factId];
+    chip.onclick = () => { state.selection.reasonFactId = factId; renderStep4(); };
+    reasonRow.appendChild(chip);
+  });
+
+  // ②たいさく（★接続詞は選択式から外し、下記プレビューに固定文言として自動表示する）
+  const actionRow = document.getElementById("action-row");
+  d.actions.forEach(a => {
+    const chip = document.createElement("div");
+    chip.className = "chip" + (state.selection.actionId === a.id ? " selected" : "");
+    chip.textContent = a.text;
+    chip.onclick = () => { state.selection.actionId = a.id; renderStep4(); };
+    actionRow.appendChild(chip);
+  });
+
+  // 文章プレビュー
+  const preview = document.getElementById("sentence-preview");
+  const reasonText = state.selection.reasonFactId ? d.reasonPhrasing[state.selection.reasonFactId] : null;
+  const actionText = state.selection.actionId ? d.actions.find(a => a.id === state.selection.actionId).text : null;
+  preview.innerHTML =
+    (reasonText ? reasonText : `<span class="blank">（①をえらぶ）</span>`) +
+    d.connectorText + " " +
+    (actionText ? actionText : `<span class="blank">（②をえらぶ）</span>`);
+
+  const allSelected = reasonText && actionText;
+  document.getElementById("btn-judge").disabled = !allSelected;
+  document.getElementById("btn-judge").onclick = judgeStep4;
+}
+
+function judgeStep4() {
+  const d = MISSION_DATA.step4;
+  const sel = state.selection;
+  const isMatch = (sol) =>
+    sol.reasonFactId === sel.reasonFactId &&
+    sol.actionId === sel.actionId;
+
+  const correct = d.solutions.some(isMatch);
+  const banner = document.getElementById("hint-banner");
+
+  if (correct) {
+    state.tokens += MISSION_DATA.step5.rewardToken;
+    goToStep(5);
+    return;
+  }
+
+  // ★1回のヒントは「最初に間違っている1パーツ」だけを指摘する（同時に2つ指摘すると情報過多になるため）
+  const bestGuess = d.solutions[0];
+  let hintKey = null;
+  if (sel.reasonFactId !== bestGuess.reasonFactId) hintKey = "reason";
+  else if (sel.actionId !== bestGuess.actionId) hintKey = "action";
+
+  banner.textContent = "🤔 " + d.hints[hintKey];
+  banner.classList.add("show");
+}
+
+// ---- Step5：報酬演出 ----
+function renderStep5() {
+  const d = MISSION_DATA.step5;
+  stageEl.innerHTML = `
+    <div class="clear-screen">
+      <div class="big-icon">🎉</div>
+      <div class="nico-bubble">${d.clearText}</div>
+      <div class="token-count">🪙 +${d.rewardToken}</div>
+      <button class="main-btn" id="btn-restart">もう一度あそぶ（動作確認用）</button>
+    </div>
+  `;
+  document.getElementById("btn-restart").onclick = () => {
+    state.step = 1;
+    state.hypothesisId = null;
+    state.collectedFacts = [];
+    state.selection = { reasonFactId: null, actionId: null };
+    render();
+  };
+}
+
+render();
+</script>
+</body>
+</html>

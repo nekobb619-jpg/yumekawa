@@ -321,7 +321,79 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
 - 新ユニットを作るときはこの型（体験→canvas図解問題→ねらいを見ぬこう→教えてあげよう→text_input復習）
   を踏襲し、事実確認が必要な内容は必ずWeb検索で複数ソースをクロスチェックしてから出題する。
 
-## 13. ディレクトリ構成（実際の状態）
+## 12.5 まる暗記対策：「問題数 > showCount」が周回のランダム抽選を発火させる（2026-08-08）
+`window.pickBalancedQuestions(bundle, showCount)`（index.html）は、`bundle.length <= showCount`の
+ときは**全問をそのまま返す**（シャッフルもされない＝毎回100%同じ問題・同じ並び）。`bundle.length >
+showCount`のときだけランダム抽選になる。つまり「周回してもまる暗記できない」ようにする一番手軽な方法は、
+各単元の`QUIZZES`をshowCountより多めに作っておくことで、`regen`（数値の作り直し、9.参照）のような
+専用ロジックを書かなくても自動的に効く。
+
+- **2026-08-08時点の状況**：45ステージ中、`社会/地図/nairiku01`と`算数/面積/menseki_1〜3`の
+  4ステージが`total<=showCount`（バリエーションゼロ、うち3つは`showCount`が実際の問題数を
+  上回る設定ミスもあった）になっていたため、各ステージに2〜3問を事実確認済みで追加し解消した
+  （nairiku01は+7問、menseki_1〜3は各+3問）。残り41ステージも大半は余剰+1問程度の薄い状態
+  （`showCount+1`が最頻値）なので、まる暗記対策として今後さらに問題を足していく余地がある
+  （優先順位・ペースは要相談。全ステージ一気にはコンテンツ精査の負荷が大きすぎる）。
+- **新しい単元・問題を追加するとき**は、可能な範囲でshowCountに対して+2〜3問程度の余剰を持たせておくと、
+  最初からこの恩恵を受けられる（3.5の内容精査チェックリストは通常どおり適用する）。
+- **`問題管理台帳.html`のLEDGER**（`totalQuestions`/`mcCount`/`textCount`）は、単元に問題を
+  追加するたびに必ず同時更新すること（AGENTS.mdクリティカル・ルール4）。
+- **累計周回数の記録**：`window.saveData.loopCounts[stageId]`（2026-08-08追加、`triggerCorrectAnswer`
+  内で`isCleared && !isReview && !isMaster`の済クリア時にインクリメント）。日付が変わるとリセットされる
+  既存の`dailyLoopCounts`とは別で、こちらは一切リセットされない。報酬計算には使っておらず、
+  今のところ「このステージを通算何周したか」を後から参照するための記録用データ。
+
+## 13. 苦手分野AI問題生成（`js/adaptive-question-generator.js`、2026-08-08 追加）
+ログ（正誤・解答時間・ヒントアイテム使用状況）から苦手カテゴリを算出し、Gemini APIで
+克服用の練習問題を自動生成する機能。`js/patch.js`の後に読み込む（`window.CONTENT.quizzes`・
+`window.postToGAS`・`window.saveGame`に依存するため）。
+
+- **`window.analyzeWeakAreas(logs, thresholds?)`**：ログ配列（各要素
+  `{category, correct, answerTimeMs?, hintItemUsed?}`）を集計し、①正答率が
+  `lowAccuracyRate`（既定0.6）未満、②正解時のヒント使用率が`highHintUsageRate`
+  （既定0.5）以上、のいずれかに該当するカテゴリを`weaknessScore`降順で返す（挑戦回数が
+  `minAttempts`＝既定3未満のカテゴリは判定材料不足として除外）。
+- **`window.buildWeakAreaGeminiRequest(weakAreas, opts?)`**：苦手カテゴリからシステム
+  プロンプト・ユーザープロンプトを生成。学年相応の表現・答え漏れ禁止・4択固定・厳格JSON出力
+  （`{generated_questions:[{question_id, category, question_text, options, correct_index,
+  explanation}]}`）を明記する。
+- **`window.generateWeakAreaQuestions(weakAreas, opts?)`**：Gemini APIは直接呼ばない
+  （**AGENTS.md絶対禁止事項＝フロントエンドにAPIキーを置かない**ため）。既存の
+  `window.postToGAS()`経由でGASプロキシの新アクション`"GENERATE_WEAK_QUESTIONS"`を叩く想定
+  （GAS側でスクリプトプロパティのGemini APIキーを使って中継する）。**GAS側
+  （`コード.gs`）へのこのアクションの追加は未実施**で、追加にはAGENTS.md 6の方針通り
+  ユーザーの別途の許可が必要（他機能同様、貼り付け用スニペットを別ファイルで納品する想定。
+  8.6のきょうだい対抗バトル追加時の前例を踏襲）。GAS未対応の間は`postToGAS`が失敗し、
+  `{generated_questions:[], error:"communication_failed"}`にフォールバックする。
+- **`window.parseGeneratedQuestionsResponse(raw)`**：APIレスポンスのJSONパース失敗
+  （`error:"invalid_json"`）、想定外の形（`error:"invalid_shape"`）、および要素ごとの
+  スキーマ検証（`options`が4つ・`correct_index`が0〜3の数値・`category`/`question_text`が
+  空でない文字列、のいずれかを満たさない要素は無音で除外）を行う。有効な問題が0件なら
+  `error:"no_valid_questions"`。
+- **`window.addGeneratedQuestionsToQuizzes(generatedQuestions, stageId)`**：検証済みの
+  生成問題を`window.convertGeneratedQuestionToQuizFormat()`で既存の問題データ形式
+  （`{q,a,c,hint,job_title,job_desc,qid}`、`qid`は`"ai_"+question_id`、`job_title`固定文言
+  「AI特訓もんだい」、`aiGenerated:true`フラグ付き）に変換し、`window.CONTENT.quizzes[stageId]`
+  （ライブの合流済み問題プール）へ`push`すると同時に`window.saveData.aiGeneratedQuizzes[stageId]`
+  にも保存して`window.saveGame()`を呼ぶ（`qid`重複はスキップ＝再生成しても増殖しない）。
+- **`window.reinjectSavedAiQuestions()`**：`window.saveData.aiGeneratedQuizzes`に保存済みの
+  AI生成問題を、起動時に`window.CONTENT.quizzes`へ再合流させる（`js/quizzes/*.js`由来の
+  静的データはリロードで消えないが、AI生成問題はセーブデータ側にしか永続化されていないため必要）。
+  `window.migrateWeakQuestionIds()`と同じタイミング（`loadGameLocal()`・`performLogin()`成功後）
+  で`index.html`から呼び出す（呼び出し漏れがあると、保存はされているのにリロード後は問題が
+  出題されない状態になる）。
+- **`window.runAdaptiveQuestionGeneration(logs, stageId, opts?)`**：上記4関数を
+  分析→生成→検証→追加保存の順に一括実行するオーケストレーター。
+- **既存の内容精査チェックリスト（AGENTS.md 3.5）との関係**：この機能はGemini出力を
+  スキーマ的には検証するが、教科書レベルの正確性・学年適合・ふりがな運用までは検証しない
+  （AIの生成物のため）。生成された問題（`aiGenerated:true`）を本番の子どもに見せる前の
+  内容レビュー運用（誰がいつ確認するか）は今回のスコアでは未決定・未実装。運用に組み込む前に
+  ユーザーと方針を確認すること。
+- **UI・ゲームループへの統合は未実装**：ログの記録元（実際に`answerTimeMs`・
+  `hintItemUsed`を記録するトラッキング）、生成トリガーのUI導線、生成問題をどのステージに
+  紐付けるかの選定ロジックは、今回のスコープ外（関数群のみ提供）。
+
+## 14. ディレクトリ構成（実際の状態）
 ```
 （リポジトリ直下）
   index.html         … アプリ本体（1ファイル、Vite等のビルド無し）
@@ -337,6 +409,7 @@ GASに貼るコードは `/home/claude/gas_battle_stats_addition.gs.txt`（納�
   js/patch.js          … 上記を全部合流させる自動パッチ処理・既存エンジンへの統合ロジック
                           （2026-07-29に旧content.js 1ファイルから3分割 → 同日中に問題データを
                           教科ごとへ再分割。上記「1.」参照）
+  js/adaptive-question-generator.js … 苦手分野分析＋Gemini APIでの練習問題自動生成（上記「13.」参照）
   images/              … 画像アセット
   lab/教科/xxx.html    … 各単元の体験・実験ラボ（個別ファイル）
   算数/ 国語/ 理科/ 社会/ 外国語/ 探究/ … 過去（content.js/js分割方式より前）の個別 questions.js が残っている場合がある。

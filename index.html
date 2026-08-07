@@ -981,7 +981,9 @@ window.normalizeSaveData = function(data) {
   normalized.lastMasterQDate = normalized.lastMasterQDate || "";
   normalized.dailyLoopCounts = normalized.dailyLoopCounts || {};
   normalized.lastLoopDate = normalized.lastLoopDate || "";
+  normalized.loopCounts = normalized.loopCounts || {};
   normalized.weakQuestions = normalized.weakQuestions || [];
+  normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
   normalized.kakera = Number(normalized.kakera || 0);
   normalized.inventory = normalized.inventory || [];
   normalized.islandStatus = normalized.islandStatus || "";
@@ -2402,6 +2404,7 @@ window.performLogin = function(id) {
        if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
        if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
        if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
+       if (window.reinjectSavedAiQuestions) window.reinjectSavedAiQuestions();
        if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
        if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
        window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
@@ -2471,6 +2474,7 @@ window.loadGameLocal = function() {
   if(!window.saveData.treasureBook) window.saveData.treasureBook = {};
   if(!window.saveData.islandBuildLog) window.saveData.islandBuildLog = []; if (!window.saveData.allowance) window.saveData.allowance = { yen: 0, memo: "", history: [], weeks: {} };
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
+  if (window.reinjectSavedAiQuestions) window.reinjectSavedAiQuestions();
   if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
   window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
   // ★2026-07-29修正：以前はここで window.checkAutoLoginBonus() も呼んでいたが、
@@ -4091,6 +4095,11 @@ window.computeStageClearReward = function(stageId, opts) {
     if (!window.saveData.dailyLoopCounts[stageId]) window.saveData.dailyLoopCounts[stageId] = 0;
     window.saveData.dailyLoopCounts[stageId]++;
     if (window.saveData.dailyLoopCounts[stageId] > 3) baseReward = 0;
+    // ★2026-08-08追加：dailyLoopCountsは日付が変わるとリセットされるため、
+    //   「この単元を通算何周したか」が分からなかった。まる暗記対策の判定材料として、
+    //   リセットされない累計カウントを別途持つ（報酬計算には使わない＝日次上限ロジックは変更なし）。
+    if (!window.saveData.loopCounts) window.saveData.loopCounts = {};
+    window.saveData.loopCounts[stageId] = (window.saveData.loopCounts[stageId] || 0) + 1;
   }
 
   const bonusEligible = !isCleared && !isRecompleteAfterNewQuestion;
@@ -5247,6 +5256,7 @@ window.initQAMode();
 <script src="./js/quizzes/inquiry.js"></script>
 <script src="./js/quizzes/english.js"></script>
 <script src="./js/patch.js"></script>
+<script src="./js/adaptive-question-generator.js"></script>
 <script src="./book.js"></script>
 </body>
 </html>

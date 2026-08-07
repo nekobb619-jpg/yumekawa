@@ -121,6 +121,7 @@
 ## 5. ナレッジファイルの参照指示
 タスクに応じて、以下のファイルを明示的に読み込んで作業すること。
 - `js/stages.js`・`js/quizzes/*.js`・`js/patch.js` の詳細構造・既存機能の内部動作・新ステージ追加のパターン ➔ `.knowledge/architecture-content.js.md`
+- 苦手分野のログ分析・Gemini APIでの問題自動生成（`js/adaptive-question-generator.js`） ➔ `.knowledge/architecture-content.js.md` 13.
 - 過去の重大バグ（セーブ消失・保存スキップ等）の背景・教訓 ➔ `.knowledge/postmortems.md`
 - 漢検10級コンテンツの作成・追加 ➔ `.knowledge/roadmap-kanken.md`
 - 検証コード・Playwrightテストの実行手順 ➔ `.knowledge/guide-testing.md`
