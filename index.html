@@ -982,6 +982,7 @@ window.normalizeSaveData = function(data) {
   normalized.dailyLoopCounts = normalized.dailyLoopCounts || {};
   normalized.lastLoopDate = normalized.lastLoopDate || "";
   normalized.loopCounts = normalized.loopCounts || {};
+  normalized.lastContentRefreshLoopCount = normalized.lastContentRefreshLoopCount || {};
   normalized.weakQuestions = normalized.weakQuestions || [];
   normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
   normalized.kakera = Number(normalized.kakera || 0);
@@ -5103,6 +5104,12 @@ window.exitToMainMenu = function() {
     let earnedQ = rewardResult.earnedQ;
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
+    // ★2026-08-08追加：まる暗記対策。済単元の周回プレイ（isCleared）のときだけ、
+    //   周回数（loopCounts）を見て問題内容の自動リフレッシュを検討する（js/adaptive-question-generator.js）。
+    //   通信はバックグラウンドで行い、このクリア処理自体はブロックしない。
+    if (isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster && window.maybeTriggerUnitContentRefresh) {
+      window.maybeTriggerUnitContentRefresh(targetStageId);
+    }
     // ★クリア時点の問題数・qidを記録しておき、あとで問題が追加されたかどうか／どの問題が新規かの
     //   判定に使う（hasNewQuestionsSinceCleared / getNewlyAddedQidsInSession）
     if (window.CONTENT && window.CONTENT.quizzes && window.CONTENT.quizzes[targetStageId]) {

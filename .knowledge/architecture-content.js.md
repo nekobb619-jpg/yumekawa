@@ -359,11 +359,13 @@ showCount`のときだけランダム抽選になる。つまり「周回して�
   explanation}]}`）を明記する。
 - **`window.generateWeakAreaQuestions(weakAreas, opts?)`**：Gemini APIは直接呼ばない
   （**AGENTS.md絶対禁止事項＝フロントエンドにAPIキーを置かない**ため）。既存の
-  `window.postToGAS()`経由でGASプロキシの新アクション`"GENERATE_WEAK_QUESTIONS"`を叩く想定
-  （GAS側でスクリプトプロパティのGemini APIキーを使って中継する）。**GAS側
-  （`コード.gs`）へのこのアクションの追加は未実施**で、追加にはAGENTS.md 6の方針通り
-  ユーザーの別途の許可が必要（他機能同様、貼り付け用スニペットを別ファイルで納品する想定。
-  8.6のきょうだい対抗バトル追加時の前例を踏襲）。GAS未対応の間は`postToGAS`が失敗し、
+  `window.postToGAS()`経由でGASプロキシの汎用アクション`"GENERATE_QUIZ_QUESTIONS"`を叩く想定
+  （GAS側でスクリプトプロパティのGemini APIキーを使って中継する。このアクションは
+  下記13.5の単元リフレッシュ機能とも共有する＝systemPrompt/userPromptをそのまま
+  Geminiへ中継して返すだけの汎用ハンドラなので1本でよい）。**GAS側（`コード.gs`）への
+  このアクションの追加は未実施**で、追加にはAGENTS.md 6の方針通りユーザーの別途の許可が
+  必要（他機能同様、貼り付け用スニペットを別ファイルで納品する想定。8.6のきょうだい対抗
+  バトル追加時の前例を踏襲）。GAS未対応の間は`postToGAS`が失敗し、
   `{generated_questions:[], error:"communication_failed"}`にフォールバックする。
 - **`window.parseGeneratedQuestionsResponse(raw)`**：APIレスポンスのJSONパース失敗
   （`error:"invalid_json"`）、想定外の形（`error:"invalid_shape"`）、および要素ごとの
@@ -389,9 +391,45 @@ showCount`のときだけランダム抽選になる。つまり「周回して�
   （AIの生成物のため）。生成された問題（`aiGenerated:true`）を本番の子どもに見せる前の
   内容レビュー運用（誰がいつ確認するか）は今回のスコアでは未決定・未実装。運用に組み込む前に
   ユーザーと方針を確認すること。
-- **UI・ゲームループへの統合は未実装**：ログの記録元（実際に`answerTimeMs`・
+- **苦手分野側のゲームループへの統合は未実装**：ログの記録元（実際に`answerTimeMs`・
   `hintItemUsed`を記録するトラッキング）、生成トリガーのUI導線、生成問題をどのステージに
-  紐付けるかの選定ロジックは、今回のスコープ外（関数群のみ提供）。
+  紐付けるかの選定ロジックは、今回のスコープ外（関数群のみ提供）。まる暗記対策側
+  （下記13.5）は`exitToMainMenu`に組み込み済み。
+
+## 13.5 まる暗記対策：済単元の周回プレイに対する問題内容の自動リフレッシュ（2026-08-08追加）
+`js/adaptive-question-generator.js`に、13.の苦手分野生成と同じGASプロキシ基盤（`postToGAS`・
+`GENERATE_QUIZ_QUESTIONS`アクション・`parseGeneratedQuestionsResponse`・
+`addGeneratedQuestionsToQuizzes`）を共有する形で追加。狙いは「済（クリア済み）単元を
+何度も周回するうちに、問題文と答えをまる暗記してしまい、読解・理解なしで解けてしまう」問題への対策
+（45単元の`showCount`と実際の問題数を比較したところ、大半の単元がバリエーションに乏しいことが
+判明。全単元へ手作業で問題を足すのは内容精査の負荷が大きすぎるため、済単元だけ自動生成で
+補う方針にした）。
+
+- **`window.saveData.loopCounts[stageId]`**（12.5参照）を判定材料にする。対象は
+  「初回クリア後の周回プレイ」のみ（`index.html`の`exitToMainMenu`内、`isCleared &&
+  !currentActiveStageIsReview && !currentActiveStageIsMaster`のときだけ呼ぶ＝初回学習中の
+  単元・苦手撃破ラボ・レビュー・マスター周回は対象外）。
+- **`window.maybeTriggerUnitContentRefresh(stageId)`**：`loopCounts[stageId]`が
+  `UNIT_REFRESH_LOOP_INTERVAL`（既定3）**より多く**（3ちょうどでは発火しない）、かつ
+  前回リフレッシュ時の周回数からさらに`UNIT_REFRESH_LOOP_INTERVAL`より多く進んでいれば、
+  バックグラウンドで生成を1回だけ実行する（`window.saveData.lastContentRefreshLoopCount[stageId]`
+  で二重発火を防止。通信を待たずに先に記録するので、通信中に何度もクリアしても多重発火しない）。
+  1ステージあたりのAI生成問題数が`UNIT_REFRESH_MAX_AI_QUESTIONS`（既定6）に達したら、
+  それ以上は生成しない（際限のない増殖・API消費を防ぐ）。
+- **`window.buildUnitRefreshGeminiRequest(stage, sampleQuestions, opts?)`**：対象ステージの
+  既存問題を最大3問サンプルとしてプロンプトに含め、「同じ単元・同じねらいだが、事実や数値・
+  言い回しが重ならない新しい問題」を3問作るよう指示する（13.の苦手分野向けプロンプトと違い、
+  対象は苦手カテゴリではなく単元そのもの）。
+- **`window.generateUnitRefreshQuestions(stage, sampleQuestions, opts?)`**：13.と同じ
+  `GENERATE_QUIZ_QUESTIONS`アクションでGASプロキシを呼び、`parseGeneratedQuestionsResponse`で
+  検証。GAS未対応の間は`{generated_questions:[], error:"communication_failed"}`に
+  フォールバックする（クリア処理自体は止まらない＝呼び出しは`await`せずfire-and-forget）。
+  生成された問題は`addGeneratedQuestionsToQuizzes`でそのままライブの問題プールへ追加される
+  （13.と同じ経路なので`aiGenerated:true`・`qid`重複排除・`reinjectSavedAiQuestions`による
+  リロード後の復元もそのまま効く）。
+- **未解決の前提**：13.と同じく、GAS側`GENERATE_QUIZ_QUESTIONS`ハンドラ本体は未実装。
+  また、AI生成問題の内容レビュー運用（3.5チェックリスト相当をAI生成物にどう適用するか）も
+  13.と同様に未決定。
 
 ## 14. ディレクトリ構成（実際の状態）
 ```
