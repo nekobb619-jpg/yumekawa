@@ -359,14 +359,26 @@ showCount`のときだけランダム抽選になる。つまり「周回して�
   explanation}]}`）を明記する。
 - **`window.generateWeakAreaQuestions(weakAreas, opts?)`**：Gemini APIは直接呼ばない
   （**AGENTS.md絶対禁止事項＝フロントエンドにAPIキーを置かない**ため）。既存の
-  `window.postToGAS()`経由でGASプロキシの汎用アクション`"GENERATE_QUIZ_QUESTIONS"`を叩く想定
-  （GAS側でスクリプトプロパティのGemini APIキーを使って中継する。このアクションは
+  `window.postToGAS()`経由でGASプロキシの汎用アクション`"GENERATE_QUIZ_QUESTIONS"`を叩く
+  （GAS側でスクリプトプロパティのGemini APIキー`GEMINI_API_KEY`を使って中継する。このアクションは
   下記13.5の単元リフレッシュ機能とも共有する＝systemPrompt/userPromptをそのまま
-  Geminiへ中継して返すだけの汎用ハンドラなので1本でよい）。**GAS側（`コード.gs`）への
-  このアクションの追加は未実施**で、追加にはAGENTS.md 6の方針通りユーザーの別途の許可が
-  必要（他機能同様、貼り付け用スニペットを別ファイルで納品する想定。8.6のきょうだい対抗
-  バトル追加時の前例を踏襲）。GAS未対応の間は`postToGAS`が失敗し、
-  `{generated_questions:[], error:"communication_failed"}`にフォールバックする。
+  Geminiへ中継して返すだけの汎用ハンドラなので1本でよい）。**2026-08-08、GAS側
+  （`コード.gs`）への実装・デプロイ・実際のGemini APIまでのエンドツーエンド動作確認が完了**
+  （モデルは`gemini-3.6-flash`。ユーザーの許可を得た上で実施。8.6のきょうだい対抗
+  バトル追加時の前例を踏襲）。通信が何らかの理由で失敗した場合は`postToGAS`側のリトライを経て、
+  `{generated_questions:[], error:"communication_failed"}`にフォールバックする（未対応時代の
+  設計をそのまま安全網として残している）。
+  - **デプロイ時のハマりどころ**（2026-08-08に実際に発生・解決した順）：
+    ①保存しただけでは既存のWebアプリURLに反映されない（「デプロイを管理」→既存デプロイを編集→
+    新バージョン、が必要）。②新しいAPI（`UrlFetchApp`等）を使うコードを追加すると、
+    プロジェクトの認可スコープが古いままで`You do not have permission to call ...`という
+    実行時例外になることがある（`myaccount.google.com/permissions`で対象プロジェクトの
+    アクセス権を一度削除し、該当APIを使う関数をエディタから直接実行し直すと再認可できる）。
+    ③納品したスニペットファイル（コメントで囲んだdoPost内挿入例を含む）を、追記ではなく
+    誤って`コード.gs`全体の置き換えとして貼り付けてしまうと、元の`doPost`/`LOGIN`/`SAVE`等が
+    消えて`スクリプト関数が見つかりません: doPost`になる（元のコード全体をユーザーから
+    再取得し、追加分を正しく組み込んだ完全版を作り直して復旧した）。以後、GAS本体に渡す
+    納品物は「追記用パッチ」ではなく「置き換え用の完全なファイル」で渡す方が事故が少ない。
 - **`window.parseGeneratedQuestionsResponse(raw)`**：APIレスポンスのJSONパース失敗
   （`error:"invalid_json"`）、想定外の形（`error:"invalid_shape"`）、および要素ごとの
   スキーマ検証（`options`が4つ・`correct_index`が0〜3の数値・`category`/`question_text`が
@@ -422,13 +434,13 @@ showCount`のときだけランダム抽選になる。つまり「周回して�
   対象は苦手カテゴリではなく単元そのもの）。
 - **`window.generateUnitRefreshQuestions(stage, sampleQuestions, opts?)`**：13.と同じ
   `GENERATE_QUIZ_QUESTIONS`アクションでGASプロキシを呼び、`parseGeneratedQuestionsResponse`で
-  検証。GAS未対応の間は`{generated_questions:[], error:"communication_failed"}`に
+  検証。通信失敗時は`{generated_questions:[], error:"communication_failed"}`に
   フォールバックする（クリア処理自体は止まらない＝呼び出しは`await`せずfire-and-forget）。
   生成された問題は`addGeneratedQuestionsToQuizzes`でそのままライブの問題プールへ追加される
   （13.と同じ経路なので`aiGenerated:true`・`qid`重複排除・`reinjectSavedAiQuestions`による
-  リロード後の復元もそのまま効く）。
-- **未解決の前提**：13.と同じく、GAS側`GENERATE_QUIZ_QUESTIONS`ハンドラ本体は未実装。
-  また、AI生成問題の内容レビュー運用（3.5チェックリスト相当をAI生成物にどう適用するか）も
+  リロード後の復元もそのまま効く）。GAS側ハンドラ実装後、社会/地図/nairiku01を対象に
+  実際にGeminiまで通したエンドツーエンドテストで正しく動作することを確認済み（2026-08-08）。
+- **未解決の前提**：AI生成問題の内容レビュー運用（3.5チェックリスト相当をAI生成物にどう適用するか）も
   13.と同様に未決定。
 
 ## 14. ディレクトリ構成（実際の状態）
