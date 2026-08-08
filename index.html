@@ -429,6 +429,42 @@
   .item-card-desc { font-size: 10px; color: #94a3b8; line-height: 1.5; }
   .item-card-use-btn { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; border: none; border-radius: 10px; padding: 8px 14px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 12px; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 0 #5b21b6; transition: all 0.1s; }
   .item-card-use-btn:active { transform: translateY(2px); box-shadow: none; }
+
+  /* ★2026-08-08追加：ボスクエスト（因果推論ミッション）。プロトタイプ(lab/探究/proto_boss_quest_causal_reasoning.html)
+     のクラス名はすべて bq- 接頭辞を付けて移植し、既存クラスとの衝突を避ける。 */
+  .boss-quest-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fff7cd, #ffe08a); border: 2px solid #f59e0b; border-radius: var(--radius); box-shadow: 0 5px 0 #b45309; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #92400e; text-align: center; cursor: pointer; margin-bottom: 14px; transition: all 0.1s; }
+  .boss-quest-banner:active { transform: translateY(3px); box-shadow: 0 2px 0 #b45309; }
+  #boss-quest-modal { position: fixed; inset: 0; background: rgba(74, 44, 58, 0.85); z-index: 850; display: none; justify-content: center; align-items: center; padding: 16px; }
+  #boss-quest-modal.open { display: flex; }
+  .bq-app { width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
+  .bq-progress { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+  .bq-dot { width: 10px; height: 10px; border-radius: 50%; background: #f3e6ee; transition: .2s; }
+  .bq-dot.active { background: #ff5c8a; transform: scale(1.3); }
+  .bq-dot.done { background: #c4b5fd; }
+  .bq-card { background: #fffaf9; border-radius: 22px; padding: 22px 18px; box-shadow: 0 8px 24px rgba(140,110,160,.25); }
+  .bq-nico-bubble { background: #fff7fa; border: 2px solid #ffd7e6; border-radius: 16px; padding: 12px 14px; font-size: 15px; line-height: 1.6; margin-bottom: 16px; }
+  .bq-choice-grid { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+  .bq-choice-card { display: flex; align-items: center; gap: 10px; border: 2px solid #eee3f0; background: #fff; border-radius: 14px; padding: 12px 14px; font-size: 15px; cursor: pointer; user-select: none; transition: .15s; }
+  .bq-choice-card .bq-icon { font-size: 22px; }
+  .bq-choice-card.selected { border-color: #ff5c8a; background: #fff0f5; font-weight: bold; }
+  .bq-choice-card.collected { border-color: #c4b5fd; background: #f5f2ff; }
+  .bq-fact-list { margin-top: 10px; padding: 0; list-style: none; }
+  .bq-fact-list li { background: #f5f2ff; border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; color: #6b5b8a; }
+  .bq-block-group { margin-bottom: 16px; }
+  .bq-block-label { font-size: 12px; font-weight: bold; color: #a78bc9; margin-bottom: 6px; }
+  .bq-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bq-chip { border: 2px solid #eee3f0; background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; transition: .15s; }
+  .bq-chip.selected { border-color: #ff5c8a; background: #ff5c8a; color: #fff; font-weight: bold; }
+  .bq-sentence-preview { margin-top: 6px; padding: 14px; border-radius: 14px; background: #fffaf0; border: 2px dashed #ffd28a; font-size: 15px; line-height: 1.7; min-height: 52px; }
+  .bq-sentence-preview .bq-blank { color: #c9bfd6; }
+  .bq-main-btn { width: 100%; margin-top: 16px; padding: 14px; border: none; border-radius: 16px; background: #ff5c8a; color: #fff; font-family: 'Zen Maru Gothic'; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 #d94c76; }
+  .bq-main-btn:disabled { background: #e5deed; box-shadow: 0 6px 0 #cfc6db; cursor: not-allowed; }
+  .bq-sub-btn { width: 100%; margin-top: 8px; padding: 10px; border: none; border-radius: 14px; background: #fff; border: 2px solid #eee3f0; color: #a78bc9; font-family: 'Zen Maru Gothic'; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .bq-hint-banner { margin-top: 12px; padding: 12px 14px; border-radius: 14px; font-size: 14px; background: #fff3f3; border: 2px solid #ffc9c9; color: #c0392b; display: none; }
+  .bq-hint-banner.show { display: block; }
+  .bq-clear-screen { text-align: center; }
+  .bq-big-icon { font-size: 56px; }
+  .bq-token-count { font-size: 28px; font-weight: bold; color: #ff5c8a; margin: 10px 0; }
 </style>
 </head>
 <body>
@@ -503,6 +539,10 @@
   </div>
   <div id="weak-attack-btn-banner" class="weak-attack-banner" onclick="window.launchWeakAttackLab()">
     💔 苦手撃破ラボに挑戦する！ (あと <span id="weak-count-badge">0</span> 問たまってるぞ) ⚡
+  </div>
+  <!-- ★2026-08-08追加：ボスクエスト（因果推論ミッション、ステージ非依存・js/boss-quest.js） -->
+  <div class="boss-quest-banner" onclick="window.launchBossQuest()">
+    🌻 ボスクエストに ちょうせん！（げんいんを つきとめよう）
   </div>
   <!-- ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン、ステージ非依存） -->
   <div class="detective-lab-menu">
@@ -821,6 +861,13 @@
     <button class="br-btn" style="background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#1a0a00; font-weight:900; width:100%;" onclick="window.closePremiumGacha()">うけとる！🎊</button>
   </div>
 </div>
+<!-- ★2026-08-08追加：ボスクエスト（因果推論ミッション）モーダル。中身はjs/boss-quest.jsが描画する -->
+<div id="boss-quest-modal">
+  <div class="bq-app">
+    <div class="bq-progress" id="bq-progress"></div>
+    <div class="bq-card" id="bq-stage"></div>
+  </div>
+</div>
 <div id="game-screen">
   <div class="game-container">
     <div class="navi-box">
@@ -985,6 +1032,7 @@ window.normalizeSaveData = function(data) {
   normalized.lastContentRefreshLoopCount = normalized.lastContentRefreshLoopCount || {};
   normalized.weakQuestions = normalized.weakQuestions || [];
   normalized.answerLogs = normalized.answerLogs || []; // ★2026-08-08追加：解答時間・ヒント使用ログ（js/adaptive-question-generator.js）
+  normalized.bossQuestCleared = normalized.bossQuestCleared || {}; // ★2026-08-08追加：ボスクエストの非消費型クリアフラグ（js/boss-quest.js）
   normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
   normalized.kakera = Number(normalized.kakera || 0);
   normalized.inventory = normalized.inventory || [];
@@ -5285,6 +5333,7 @@ window.initQAMode();
 <script src="./js/quizzes/english.js"></script>
 <script src="./js/patch.js"></script>
 <script src="./js/adaptive-question-generator.js"></script>
+<script src="./js/boss-quest.js"></script>
 <script src="./book.js"></script>
 </body>
 </html>
