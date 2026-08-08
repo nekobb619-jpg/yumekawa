@@ -160,6 +160,13 @@
   .blank-chip.correct { background: #dcfce7; border-color: #86efac; color: #15803d; }
   .blank-chip.wrong { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
   .branch-diagram-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+  /* ★2026-08-08追加：漢字パーツ組み立て問題（type:"kanji_build"）。パーツ選択は既存の
+     .blank-picker-*/.blank-chip をそのまま再利用し、ここでは「組み立て中の漢字」を
+     見せる箱だけを追加する。 */
+  .kb-assembly { display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 14px; }
+  .kb-assembly.vertical { flex-direction: column; }
+  .kb-slot-box { width: 84px; height: 84px; border-radius: 12px; border: 3px solid #ddd6fe; background: #f5f3ff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; color: #a78bfa; font-family: serif; transition: all 0.2s; }
+  .kb-slot-box.filled { border-color: #86efac; background: #f0fdf4; color: #15803d; }
   .regen-badge { display: inline-block; font-size: 11.5px; font-weight: 900; color: #b45309; background: #fef3c7; border: 2px solid #fde68a; border-radius: 20px; padding: 4px 10px; margin-bottom: 8px; }
   .thinking-badge { display: inline-block; font-size: 11.5px; font-weight: 900; color: #7c3aed; background: #f3e8ff; border: 2px solid #d8b4fe; border-radius: 20px; padding: 4px 10px; margin-bottom: 8px; margin-left: 6px; }
   /* ★お宝図鑑（コレクション）システム 2026-07-21 追加 */
@@ -4675,6 +4682,81 @@ window.redrawBranchDiagram = function() {
   }
 };
 
+// ===== 漢字パーツ組み立て問題（type:"kanji_build"） =====
+// ★2026-08-08追加。既存の「書取」（読みから かん字を 四択で選ぶだけ）より一歩踏み込み、
+// かん字を2〜3パーツに分解して、正しいパーツを正しい位置にタップで組み立てさせる問題タイプ。
+// 手書き入力（フリーハンド認識）は精度・低学年での操作性の問題があるため採用せず、
+// 「パーツを選ぶ」方式にした（AGENTS.md 3.5の内容精査済み：分解は学校でも教える標準的な部首＋つくり）。
+// 1パーツ＝1blankとして扱い、タップの正誤判定・weakQuestions/answerLogs連携は
+// 既存のtriggerCorrectAnswer/triggerWrongAnswerにそのまま乗せる（branch_diagramと同じ設計方針）。
+window.renderKanjiBuildQuestion = function(current, zone) {
+  const spec = current.kanjiBuild;
+  window._kbFilled = {};
+  window._kbSpec = spec;
+
+  const assembly = document.createElement("div");
+  assembly.className = "kb-assembly" + (spec.layout === "horizontal" ? "" : " vertical");
+  spec.blanks.forEach(blank => {
+    const box = document.createElement("div");
+    box.className = "kb-slot-box";
+    box.id = "kb-box-" + blank.id;
+    box.textContent = "？";
+    assembly.appendChild(box);
+  });
+  zone.appendChild(assembly);
+
+  spec.blanks.forEach(blank => {
+    const group = document.createElement("div");
+    group.className = "blank-picker-group";
+    group.id = "kb-group-" + blank.id;
+    const label = document.createElement("div");
+    label.className = "blank-picker-label";
+    label.textContent = blank.promptLabel;
+    group.appendChild(label);
+    const chipsRow = document.createElement("div");
+    chipsRow.className = "blank-picker-chips";
+    blank.options.forEach((opt, i) => {
+      const chip = document.createElement("button");
+      chip.className = "blank-chip";
+      chip.textContent = opt;
+      chip.onclick = () => window.handleKanjiBuildTap(current, blank, i, chip, group);
+      chipsRow.appendChild(chip);
+    });
+    group.appendChild(chipsRow);
+    zone.appendChild(group);
+  });
+
+  const submitBtn = document.createElement("button");
+  submitBtn.className = "submit-btn branch-diagram-submit";
+  submitBtn.id = "kb-submit-btn";
+  submitBtn.textContent = "ぜんぶ できた！かんせい！";
+  submitBtn.disabled = true;
+  submitBtn.onclick = () => { window.triggerCorrectAnswer(current); };
+  zone.appendChild(submitBtn);
+};
+window.handleKanjiBuildTap = function(current, blank, choiceIdx, chipEl, groupEl) {
+  if (window._kbFilled[blank.id]) return;
+  const box = document.getElementById("kb-box-" + blank.id);
+  if (blank.options[choiceIdx] === blank.correctText) {
+    window._kbFilled[blank.id] = blank.options[choiceIdx];
+    chipEl.classList.add("correct");
+    Array.from(groupEl.querySelectorAll(".blank-chip")).forEach(c => { if (c !== chipEl) { c.disabled = true; c.style.opacity = "0.35"; } });
+    groupEl.classList.add("solved");
+    if (box) { box.textContent = blank.correctText; box.classList.add("filled"); }
+    window.speakText("まる！大正解！", "ja-JP");
+    const total = window._kbSpec.blanks.length;
+    const doneCount = Object.keys(window._kbFilled).length;
+    if (doneCount >= total) {
+      const btn = document.getElementById("kb-submit-btn");
+      if (btn) btn.disabled = false;
+    }
+  } else {
+    chipEl.classList.add("wrong");
+    setTimeout(() => chipEl.classList.remove("wrong"), 600);
+    window.triggerWrongAnswer(current);
+  }
+};
+
 // ===== 周回プレイ時の「数値を その場で 再生成」エンジン（regen対応の問題のみ） =====
 // クリア済みステージを周回すると、同じ問題がずっと同じ数値で出続けて飽きやすい。
 // canvas図解つきの「筆算」系の問題に regen:{kind:"hissan_divide"} をつけておくと、
@@ -4865,6 +4947,8 @@ window.showQuestionStep = function() {
   }
   if (current.type === "branch_diagram") {
     window.renderBranchDiagramQuestion(current, zone);
+  } else if (current.type === "kanji_build") {
+    window.renderKanjiBuildQuestion(current, zone);
   } else if (current.type === "text_input") {
     const inputBox = document.createElement("input");
     inputBox.type = "text"; inputBox.className = "free-text-input"; inputBox.placeholder = "ここに入力してね";

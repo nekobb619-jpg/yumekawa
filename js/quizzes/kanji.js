@@ -113,7 +113,28 @@
         hint:"4＋7を 計算してみよう。",
         job_title:"画数すいり名人！",
         job_desc:"4画＋7画＝11画。「王」と「貝」の画数をあわせると11画になるね！",
-        thinking: true }
+        thinking: true },
+
+      // --- パーツ組み立て（2問・新規。分解は部首＋つくりの標準的な解釈のみ採用） ---
+      { q:"「おと」を あらわす かん字を、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji10_dai1_build_oto",
+        kanjiBuild:{ layout:"vertical", blanks:[
+          { id:"top", promptLabel:"① 上の パーツは？", correctText:"立", options:["立","六","主"] },
+          { id:"bottom", promptLabel:"② 下の パーツは？", correctText:"日", options:["白","日","目"] }
+        ] },
+        hint:"上下2つのパーツを あわせた かん字だよ。上は「たつ」、下は「ひ」だよ。",
+        job_title:"「音」を くみたてた！",
+        job_desc:"「音」は「立（たつ）」＋「日（ひ）」で できているよ。「立っている人が 日（太陽）に むかって 声を出す」と おぼえよう！ 「おと・おん」と 読むよ。" },
+
+      { q:"「はな」を あらわす かん字を、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji10_dai1_build_hana",
+        kanjiBuild:{ layout:"vertical", blanks:[
+          { id:"top", promptLabel:"① 上の パーツは？（くさかんむり）", correctText:"艹", options:["竹","艹","宀"] },
+          { id:"bottom", promptLabel:"② 下の パーツは？", correctText:"化", options:["化","北","比"] }
+        ] },
+        hint:"上下2つのパーツを あわせた かん字だよ。上は くさかんむり、下は「化」だよ。",
+        job_title:"「花」を くみたてた！",
+        job_desc:"「花」は「艹（くさかんむり）」＋「化」で できているよ。くさかんむりが つく かん字は、植物に かんけいすることが 多いんだ。「はな・か」と 読むよ。" }
     ],
 
     // ★だい2回：学・気・九・休・玉・金・空・月・犬・見。画数・書き順は kakijun.jp / kanji.jitenon.jp /
