@@ -201,6 +201,77 @@
   };
 
   /* ---------------------------------------------------------------------
+     (3.5) 苦手撃破ラボ終了時のトリガー：weakQuestionsのカテゴリ別滞留数を弱点シグナルとして使う
+     ★2026-08-08追加。本来はanswerTimeMs/hintItemUsedを使った実ログ分析（analyzeWeakAreas）が
+     理想だが、その記録の仕組み（残タスク優先度2）がまだ無いため、暫定的に
+     「まだ克服できていないweakQuestions（saveData.weakQuestions）がカテゴリ内に何件たまっているか」
+     を弱点シグナルの代用にする。優先度2が実装されたら、こちらもanalyzeWeakAreas経由へ切り替えること。
+     --------------------------------------------------------------------- */
+  // weakQuestionsの各id（"stageId::qid" or "stageId_q_N"）からstageIdを取り出し、
+  // ステージのcategory（無ければsubject）ごとに滞留数を集計する。
+  window.summarizeWeakQuestionsByCategory = function () {
+    var byCategory = {};
+    var categoryToStageId = {};
+    var weakQuestions = (window.saveData && window.saveData.weakQuestions) || [];
+    if (!window.CONTENT || !Array.isArray(window.CONTENT.stages) || weakQuestions.length === 0) {
+      return { byCategory: byCategory, categoryToStageId: categoryToStageId };
+    }
+    weakQuestions.forEach(function (weakId) {
+      var stageId = weakId.indexOf("::") !== -1 ? weakId.split("::")[0] : weakId.split("_q_")[0];
+      var stage = window.CONTENT.stages.filter(function (s) { return s.id === stageId; })[0];
+      if (!stage) return;
+      var cat = stage.category || stage.subject || stageId;
+      byCategory[cat] = (byCategory[cat] || 0) + 1;
+      if (!categoryToStageId[cat]) categoryToStageId[cat] = stageId; // 生成問題の追加先stageIdは、そのカテゴリの最初のステージにする
+    });
+    return { byCategory: byCategory, categoryToStageId: categoryToStageId };
+  };
+
+  // index.htmlのexitToMainMenu内、苦手撃破ラボ（weakAttackModeActive）終了時に呼ぶこと。
+  // 通信はバックグラウンドで行い、呼び出し元の処理をブロックしない（maybeTriggerUnitContentRefreshと同じ方針）。
+  window.maybeGenerateWeakAreaPractice = function () {
+    if (!window.saveData || !window.CONTENT || !window.CONTENT.quizzes) return;
+
+    var summary = window.summarizeWeakQuestionsByCategory();
+    var minAttempts = (window.WEAK_AREA_THRESHOLDS && window.WEAK_AREA_THRESHOLDS.minAttempts) || 3;
+    var maxAiQuestions = window.UNIT_REFRESH_MAX_AI_QUESTIONS || 6; // ステージあたりのAI生成問題数上限はまる暗記対策機能と共有
+
+    var candidates = Object.keys(summary.byCategory).filter(function (cat) {
+      if (summary.byCategory[cat] < minAttempts) return false;
+      var stageId = summary.categoryToStageId[cat];
+      var bundle = window.CONTENT.quizzes[stageId] || [];
+      var aiCount = bundle.filter(function (q) { return q && q.aiGenerated; }).length;
+      return aiCount < maxAiQuestions;
+    });
+    if (candidates.length === 0) return;
+
+    var weakAreas = candidates.map(function (cat) {
+      return {
+        category: cat,
+        totalAttempts: summary.byCategory[cat],
+        correctCount: 0,
+        correctRate: 0,
+        hintUsageRateOnCorrect: 0,
+        avgAnswerTimeMs: null,
+        reasons: ["low_accuracy"],
+        isWeak: true,
+        weaknessScore: 1
+      };
+    });
+
+    window.generateWeakAreaQuestions(weakAreas).then(function (result) {
+      if (!result.generated_questions || result.generated_questions.length === 0) return;
+      candidates.forEach(function (cat) {
+        var stageId = summary.categoryToStageId[cat];
+        var qsForCat = result.generated_questions.filter(function (q) { return q.category === cat; });
+        if (stageId && qsForCat.length > 0) {
+          window.addGeneratedQuestionsToQuizzes(qsForCat, stageId); // 内部でsaveGame()も呼ばれる
+        }
+      });
+    });
+  };
+
+  /* ---------------------------------------------------------------------
      (4) 生成された問題を既存の問題データ配列へ追加・保存
      --------------------------------------------------------------------- */
   window.convertGeneratedQuestionToQuizFormat = function (genQ) {

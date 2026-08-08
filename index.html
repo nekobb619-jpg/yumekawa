@@ -5073,7 +5073,17 @@ window.reviewChatNext = function() {
 };
 window.nextQuestStep = function() { window.currentQIdx++; window.showQuestionStep(); };
 window.exitToMainMenu = function() {
-    if (window.weakAttackModeActive) { window.saveGame(); alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`); window.weakAttackModeActive = false; window.quitQuest(); return; }
+    if (window.weakAttackModeActive) {
+      window.saveGame();
+      alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`);
+      window.weakAttackModeActive = false;
+      // ★2026-08-08追加：残った苦手（weakQuestions）がカテゴリ内に一定数たまっていれば、
+      //   AIによる克服問題の生成をバックグラウンドで検討する（js/adaptive-question-generator.js）。
+      //   通信中でもこのクリア処理・画面遷移はブロックしない。
+      if (window.maybeGenerateWeakAreaPractice) window.maybeGenerateWeakAreaPractice();
+      window.quitQuest();
+      return;
+    }
     let targetStageId = window.currentActiveStageId;
     if (!targetStageId) { window.quitQuest(); return; }
     // ★2026-08-05修正：報酬計算はcomputeStageClearReward（DOM非依存の純粋関数、Node単体テスト対象）に
