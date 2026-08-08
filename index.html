@@ -439,8 +439,18 @@
 
   /* ★2026-08-08追加：ボスクエスト（因果推論ミッション）。プロトタイプ(lab/探究/proto_boss_quest_causal_reasoning.html)
      のクラス名はすべて bq- 接頭辞を付けて移植し、既存クラスとの衝突を避ける。 */
-  .boss-quest-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fff7cd, #ffe08a); border: 2px solid #f59e0b; border-radius: var(--radius); box-shadow: 0 5px 0 #b45309; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #92400e; text-align: center; cursor: pointer; margin-bottom: 14px; transition: all 0.1s; }
-  .boss-quest-banner:active { transform: translateY(3px); box-shadow: 0 2px 0 #b45309; }
+  /* ★2026-08-08追加：1日1題の「なぞとき」バナー。book-bannerと同じ構造・置き場（すぐ下）だが
+     色味は変えて区別する（book-bannerはオレンジ系、こちらはインディゴ系）。 */
+  .dailymission-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: linear-gradient(135deg, #eef2ff, #c7d2fe); border: 2px solid #6366f1; border-radius: var(--radius); box-shadow: 0 5px 0 #4338ca; margin-bottom: 12px; cursor: pointer; transition: all 0.1s; }
+  .dailymission-banner:active { transform: translateY(3px); box-shadow: 0 2px 0 #4338ca; }
+  .dailymission-banner.done-today { background: linear-gradient(135deg, #f0fdf4, #bbf7d0); border-color: #22c55e; box-shadow: 0 5px 0 #15803d; }
+  .dailymission-banner-icon { font-size: 30px; flex-shrink: 0; }
+  .dailymission-banner-text { flex: 1; min-width: 0; }
+  .dailymission-banner-title { font-size: 12px; font-weight: 900; color: #4338ca; }
+  .dailymission-banner.done-today .dailymission-banner-title { color: #166534; }
+  .dailymission-banner-sub { font-size: 13px; font-weight: 700; color: #4f46e5; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dailymission-banner.done-today .dailymission-banner-sub { color: #15803d; }
+  .dailymission-banner-badge { font-size: 10.5px; font-weight: 900; color: #4338ca; background: #fff; border-radius: 10px; padding: 5px 8px; white-space: nowrap; flex-shrink: 0; }
   #boss-quest-modal { position: fixed; inset: 0; background: rgba(74, 44, 58, 0.85); z-index: 850; display: none; justify-content: center; align-items: center; padding: 16px; }
   #boss-quest-modal.open { display: flex; }
   .bq-app { width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
@@ -455,6 +465,7 @@
   .bq-choice-card .bq-icon { font-size: 22px; }
   .bq-choice-card.selected { border-color: #ff5c8a; background: #fff0f5; font-weight: bold; }
   .bq-choice-card.collected { border-color: #c4b5fd; background: #f5f2ff; }
+  .bq-choice-card.wrong { border-color: #fca5a5; background: #fee2e2; }
   .bq-fact-list { margin-top: 10px; padding: 0; list-style: none; }
   .bq-fact-list li { background: #f5f2ff; border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; color: #6b5b8a; }
   .bq-block-group { margin-bottom: 16px; }
@@ -509,6 +520,16 @@
     </div>
     <div class="book-banner-streak" id="book-banner-streak"></div>
   </div>
+  <!-- ★2026-08-08追加：1日1題の「なぞとき」（因果推論ミッション、js/boss-quest.js）。今日のおはなしの
+       すぐ下に設置。タイトルは「ボスクエスト」ではなく4年生が取り組みたくなる呼び方にしてある。 -->
+  <div id="dailymission-banner" class="dailymission-banner" onclick="window.launchBossQuest()">
+    <div class="dailymission-banner-icon">🧩</div>
+    <div class="dailymission-banner-text">
+      <div class="dailymission-banner-title">今日のなぞとき</div>
+      <div class="dailymission-banner-sub" id="dailymission-banner-sub">よみこみ中…</div>
+    </div>
+    <div class="dailymission-banner-badge" id="dailymission-banner-badge"></div>
+  </div>
   <div class="flex-row">
     <button class="btn-sm" onclick="window.openStampModal()">💮 ログインスタンプ</button>
     <button class="btn-sm" onclick="window.exchangePtsToQ()">🪙 20pts を 1Q に両替</button>
@@ -546,10 +567,6 @@
   </div>
   <div id="weak-attack-btn-banner" class="weak-attack-banner" onclick="window.launchWeakAttackLab()">
     💔 苦手撃破ラボに挑戦する！ (あと <span id="weak-count-badge">0</span> 問たまってるぞ) ⚡
-  </div>
-  <!-- ★2026-08-08追加：ボスクエスト（因果推論ミッション、ステージ非依存・js/boss-quest.js） -->
-  <div class="boss-quest-banner" onclick="window.launchBossQuest()">
-    🌻 ボスクエストに ちょうせん！（げんいんを つきとめよう）
   </div>
   <!-- ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン、ステージ非依存） -->
   <div class="detective-lab-menu">
@@ -1040,6 +1057,8 @@ window.normalizeSaveData = function(data) {
   normalized.weakQuestions = normalized.weakQuestions || [];
   normalized.answerLogs = normalized.answerLogs || []; // ★2026-08-08追加：解答時間・ヒント使用ログ（js/adaptive-question-generator.js）
   normalized.bossQuestCleared = normalized.bossQuestCleared || {}; // ★2026-08-08追加：ボスクエストの非消費型クリアフラグ（js/boss-quest.js）
+  normalized.bossQuestUnlockedCount = normalized.bossQuestUnlockedCount || 1; // ★2026-08-08追加：1日1題の解放数（0にはならないため`||`で安全）
+  normalized.bossQuestLastUnlockDate = normalized.bossQuestLastUnlockDate || "";
   normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
   normalized.kakera = Number(normalized.kakera || 0);
   normalized.inventory = normalized.inventory || [];
@@ -1056,7 +1075,10 @@ window.normalizeSaveData = function(data) {
   normalized.islandBuildLog = normalized.islandBuildLog || [];
   normalized.gachaEggs = normalized.gachaEggs || {};
   normalized.kuroPonFriendship = Number(normalized.kuroPonFriendship || 0);
-  normalized.kuroPonHunger = Number(normalized.kuroPonHunger || 100);
+  // ★2026-08-08修正：`|| 100`だと満腹度が正しく0（ぺこぺこ）になっている時にも
+  //   「0は falsy」としてここで100（満腹）に巻き戻ってしまい、給餌できないバグがあった。
+  //   未設定（null/undefined）の時だけ100を補うようにする。
+  normalized.kuroPonHunger = (normalized.kuroPonHunger === undefined || normalized.kuroPonHunger === null) ? 100 : Number(normalized.kuroPonHunger);
   normalized.kuroPonLastFedDate = normalized.kuroPonLastFedDate || "";
   normalized.kuroPonFedToday = normalized.kuroPonFedToday || {};
   normalized.selectedAvatar = normalized.selectedAvatar || "🐣";
@@ -2406,7 +2428,7 @@ window.performLogin = function(id) {
         try { window.saveData = window.normalizeSaveData(Object.assign(window.saveData, JSON.parse(candidate))); } catch (e) {}
       }
     }
-    window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+    window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); if (window.refreshDailyMissionBanner) window.refreshDailyMissionBanner(); window.refreshIslandStatusUI();
   };
   window.postToGAS({ action: "LOGIN", playerId: id })
   .then(res => {
@@ -2465,7 +2487,7 @@ window.performLogin = function(id) {
        if (window.reinjectSavedAiQuestions) window.reinjectSavedAiQuestions();
        if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
        if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
-       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
+       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); if (window.refreshDailyMissionBanner) window.refreshDailyMissionBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
        // ★端末側の記録を正として使った場合は、あらためてクラウドへの再送を試みる
        //   （成功すれば "unsynced" フラグは saveGame() 内で自動的に解除される）。
        if (usedLocalOverride) { window.saveGame(); }
@@ -2534,7 +2556,7 @@ window.loadGameLocal = function() {
   if (window.migrateWeakQuestionIds) window.migrateWeakQuestionIds();
   if (window.reinjectSavedAiQuestions) window.reinjectSavedAiQuestions();
   if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
-  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); if (window.refreshDailyMissionBanner) window.refreshDailyMissionBanner(); window.refreshIslandStatusUI();
   // ★2026-07-29修正：以前はここで window.checkAutoLoginBonus() も呼んでいたが、
   //   loadGameLocal()は「本物のGAS LOGINが失敗したときのオフライン救済」専用の経路
   //   （performLoginのfallbackLocalからしか呼ばれない）。この状態でログインスタンプを
@@ -2553,7 +2575,7 @@ window.saveGame = function() {
   if (window.playerId === "りお" || window.playerId === "りさ") {
     localStorage.setItem("kids_lab_v12_pro_papa", snapshot);
   }
-  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); window.refreshIslandStatusUI();
+  window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); if (window.refreshDailyMissionBanner) window.refreshDailyMissionBanner(); window.refreshIslandStatusUI();
   // ★2026-07-20 追加：本物のセーブデータを一度も確認できていない状態（LOGINが失敗し、
   //   この端末にも前回のセーブが残っていない状態）でクラウドに保存しようとすると、
   //   通信エラーなどで「空っぽの初期値」が本物の記録の上に上書きされて消えてしまう事故が起きる。
@@ -3458,7 +3480,9 @@ window.updateKuroPonModal = function() {
     const lastFed = new Date(sd.kuroPonLastFedDate);
     const daysPassed = Math.max(1, Math.floor((now - lastFed) / 86400000));
     // おなか減少（1日40%、最大100%まで）
-    sd.kuroPonHunger = Math.max(0, (sd.kuroPonHunger || 100) - 40 * daysPassed);
+    // ★2026-08-08修正：`|| 100`だと、既に0（ぺこぺこ）の時にここで100扱いされてしまい、
+    //   給餌せず日数が経つほど逆に満腹度が回復して見えるバグがあった（0 - 40 → ではなく 100 - 40 になる）。
+    sd.kuroPonHunger = Math.max(0, Number(sd.kuroPonHunger || 0) - 40 * daysPassed);
     // 仲良し度も日数に応じて減少（1日3、2日目以降は+5ずつ加速）
     const friendshipDrop = Math.min(sd.kuroPonFriendship || 0, 3 + (daysPassed - 1) * 5);
     if (friendshipDrop > 0) {

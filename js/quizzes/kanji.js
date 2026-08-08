@@ -347,6 +347,190 @@
         job_desc:"3画＋5画＝8画。「子」と「四」の画数をあわせると8画になるね！",
         thinking: true }
     ],
+
+    // ★2026-08-08追加：小学3年生配当漢字（漢検8級相当）。だい1回は「動・進・集・岸・波」の5字。
+    // 訓読み書き（type:text_input、送りがなを含む自然な表記ゆれを許容）と、
+    // 熟語書き（type:kanji_build を「1文字の部品」ではなく「熟語を作る2文字」の組み立てに流用）で構成。
+    // 訓読み・熟語は複数辞書で確認ずみ（AGENTS.md 3.5適用）。誤答の部品には既習の10級かん字を優先使用。
+    "漢検/8級/dai1kai": [
+      // --- 訓読み書き（5問） ---
+      { q:"「動く」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["うごく","うご"],
+        hint:"体を うごかす とき に つかう ことばだよ。",
+        rescue_hint:"「うごく」だよ。",
+        job_title:"「動」の 訓読みバッチリ！",
+        job_desc:"「動」は「うごく」と 読むよ。「運動（うんどう）」のように「どう」と 読む ときも あるよ。" },
+
+      { q:"「進む」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["すすむ","すす"],
+        hint:"前に むかって 行く ことだよ。",
+        rescue_hint:"「すすむ」だよ。",
+        job_title:"「進」の 訓読みバッチリ！",
+        job_desc:"「進」は「すすむ」と 読むよ。「前進（ぜんしん）」のように「しん」と 読む ときも あるよ。" },
+
+      { q:"「集める」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["あつめる","あつめ"],
+        hint:"バラバラの ものを 1つに まとめる ことだよ。",
+        rescue_hint:"「あつめる」だよ。",
+        job_title:"「集」の 訓読みバッチリ！",
+        job_desc:"「集」は「あつめる」と 読むよ。「集合（しゅうごう）」のように「しゅう」と 読む ときも あるよ。" },
+
+      { q:"「岸」の 読み方を ひらがなで 書こう。",
+        type:"text_input", correct_answers:["きし"],
+        hint:"海や 川の、水と 陸の さかいめだよ。",
+        rescue_hint:"「きし」だよ。",
+        job_title:"「岸」の 訓読みバッチリ！",
+        job_desc:"「岸」は「きし」と 読むよ。「海岸（かいがん）」のように「がん」と 読む ときも あるよ。" },
+
+      { q:"「波」の 読み方を ひらがなで 書こう。",
+        type:"text_input", correct_answers:["なみ"],
+        hint:"海や 湖の 水面が ゆれる ようすだよ。",
+        rescue_hint:"「なみ」だよ。",
+        job_title:"「波」の 訓読みバッチリ！",
+        job_desc:"「波」は「なみ」と 読むよ。「電波（でんぱ）」のように「は」と 読む ときも あるよ。" },
+
+      // --- 熟語書き（5問。kanji_buildを2文字の熟語組み立てに流用。誤答は既習の10級かん字を活用） ---
+      { q:"「うんどう」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji8_dai1_build_undou",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"運", options:["運","右","雨"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"動", options:["動","休","見"] }
+        ] },
+        hint:"「はこぶ」の「運」＋「うごく」の「動」だよ。",
+        job_title:"「運動」を くみたてた！",
+        job_desc:"「運動（うんどう）」は「運（はこぶ）」＋「動（うごく）」で できているよ。体を うごかす ことを 「運動」と いうよ。" },
+
+      { q:"「ぜんしん」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji8_dai1_build_zenshin",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"前", options:["前","右","下"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"進", options:["進","休","玉"] }
+        ] },
+        hint:"「まえ」の「前」＋「すすむ」の「進」だよ。",
+        job_title:"「前進」を くみたてた！",
+        job_desc:"「前進（ぜんしん）」は「前（まえ）」＋「進（すすむ）」で できているよ。前に すすむ ことを 「前進」と いうよ。" },
+
+      { q:"「しゅうごう」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji8_dai1_build_shuugou",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"集", options:["集","火","花"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"合", options:["合","九","月"] }
+        ] },
+        hint:"「あつめる」の「集」＋「あう」の「合」だよ。",
+        job_title:"「集合」を くみたてた！",
+        job_desc:"「集合（しゅうごう）」は「集（あつめる）」＋「合（あう）」で できているよ。1つの ばしょに あつまる ことを 「集合」と いうよ。" },
+
+      { q:"「かいがん」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji8_dai1_build_kaigan",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"海", options:["海","王","円"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"岸", options:["岸","貝","九"] }
+        ] },
+        hint:"「うみ」の「海」＋「きし」の「岸」だよ。",
+        job_title:"「海岸」を くみたてた！",
+        job_desc:"「海岸（かいがん）」は「海（うみ）」＋「岸（きし）」で できているよ。海と 陸の さかいめを 「海岸」と いうよ。" },
+
+      { q:"「でんぱ」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji8_dai1_build_denpa",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"電", options:["電","雨","金"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"波", options:["波","花","水"] }
+        ] },
+        hint:"「でんき」の「電」＋「なみ」の「波」だよ。",
+        job_title:"「電波」を くみたてた！",
+        job_desc:"「電波（でんぱ）」は「電（でんき）」＋「波（なみ）」で できているよ。テレビや スマホの つうしんに つかう「なみ」を 「電波」と いうよ。" }
+    ],
+
+    // ★2026-08-08追加：小学4年生配当漢字（漢検7級相当）。だい1回は「争・覚・続・果・飛」の5字。
+    // 8級だい1回と同じ構成（訓読み書き5問＋熟語書き5問）。訓読み・熟語は複数辞書で確認ずみ（AGENTS.md 3.5適用）。
+    "漢検/7級/dai1kai": [
+      // --- 訓読み書き（5問） ---
+      { q:"「争う」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["あらそう","あらそ"],
+        hint:"勝ち負けを かけて たたかう ことだよ。",
+        rescue_hint:"「あらそう」だよ。",
+        job_title:"「争」の 訓読みバッチリ！",
+        job_desc:"「争」は「あらそう」と 読むよ。「競争（きょうそう）」のように「そう」と 読む ときも あるよ。" },
+
+      { q:"「覚える」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["おぼえる","おぼえ"],
+        hint:"べんきょうした ことを わすれないように する ことだよ。",
+        rescue_hint:"「おぼえる」だよ。",
+        job_title:"「覚」の 訓読みバッチリ！",
+        job_desc:"「覚」は「おぼえる」と 読むよ。「感覚（かんかく）」のように「かく」と 読む ときも あるよ。" },
+
+      { q:"「続く」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["つづく","つづ"],
+        hint:"とちゅうで やめずに、ずっと おなじ ことが おこる ことだよ。",
+        rescue_hint:"「つづく」だよ。",
+        job_title:"「続」の 訓読みバッチリ！",
+        job_desc:"「続」は「つづく」と 読むよ。「連続（れんぞく）」のように「ぞく」と 読む ときも あるよ。" },
+
+      { q:"「果たす」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["はたす","はた"],
+        hint:"やくそくや やくわりを、さいごまで やりとげる ことだよ。",
+        rescue_hint:"「はたす」だよ。",
+        job_title:"「果」の 訓読みバッチリ！",
+        job_desc:"「果」は「はたす」と 読むよ。「結果（けっか）」のように「か」と 読む ときも あるよ。" },
+
+      { q:"「飛ぶ」を ぜんぶ ひらがなで 書こう。",
+        type:"text_input", correct_answers:["とぶ"],
+        hint:"空を、鳥や 飛行機のように 進む ことだよ。",
+        rescue_hint:"「とぶ」だよ。",
+        job_title:"「飛」の 訓読みバッチリ！",
+        job_desc:"「飛」は「とぶ」と 読むよ。「飛行機（ひこうき）」のように「ひ」と 読む ときも あるよ。" },
+
+      // --- 熟語書き（5問。kanji_buildを2文字の熟語組み立てに流用。誤答は既習の10級かん字を活用） ---
+      { q:"「きょうそう」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji7_dai1_build_kyousou",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"競", options:["競","休","見"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"争", options:["争","九","玉"] }
+        ] },
+        hint:"「きそう」の「競」＋「あらそう」の「争」だよ。",
+        job_title:"「競争」を くみたてた！",
+        job_desc:"「競争（きょうそう）」は「競（きそう）」＋「争（あらそう）」で できているよ。だれが 1番か くらべあう ことを 「競争」と いうよ。" },
+
+      { q:"「かんかく」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji7_dai1_build_kankaku",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"感", options:["感","火","花"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"覚", options:["覚","王","円"] }
+        ] },
+        hint:"「かんじる」の「感」＋「おぼえる」の「覚」だよ。",
+        job_title:"「感覚」を くみたてた！",
+        job_desc:"「感覚（かんかく）」は「感（かんじる）」＋「覚（おぼえる）」で できているよ。目や 耳、はだで かんじとる ことを 「感覚」と いうよ。" },
+
+      { q:"「れんぞく」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji7_dai1_build_renzoku",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"連", options:["連","右","雨"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"続", options:["続","九","月"] }
+        ] },
+        hint:"「つらなる」の「連」＋「つづく」の「続」だよ。",
+        job_title:"「連続」を くみたてた！",
+        job_desc:"「連続（れんぞく）」は「連（つらなる）」＋「続（つづく）」で できているよ。とぎれずに つづく ことを 「連続」と いうよ。" },
+
+      { q:"「けっか」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji7_dai1_build_kekka",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"結", options:["結","休","見"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"果", options:["果","玉","金"] }
+        ] },
+        hint:"「むすぶ」の「結」＋「はたす」の「果」だよ。",
+        job_title:"「結果」を くみたてた！",
+        job_desc:"「結果（けっか）」は「結（むすぶ）」＋「果（はたす）」で できているよ。なにかを やった あとの ようすを 「結果」と いうよ。" },
+
+      { q:"「ひこう」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji7_dai1_build_hikou",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"first", promptLabel:"① 1文字目は？", correctText:"飛", options:["飛","右","下"] },
+          { id:"second", promptLabel:"② 2文字目は？", correctText:"行", options:["行","九","休"] }
+        ] },
+        hint:"「とぶ」の「飛」＋「行く」の「行」だよ。",
+        job_title:"「飛行」を くみたてた！",
+        job_desc:"「飛行（ひこう）」は「飛（とぶ）」＋「行（いく）」で できているよ。空を とんで 進む ことを 「飛行」と いうよ。「飛行機（ひこうき）」の「飛行」だね。" }
+    ]
   };
 
   window.CONTENT_QUIZZES_KANJI = QUIZZES;
