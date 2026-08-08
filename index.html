@@ -984,6 +984,7 @@ window.normalizeSaveData = function(data) {
   normalized.loopCounts = normalized.loopCounts || {};
   normalized.lastContentRefreshLoopCount = normalized.lastContentRefreshLoopCount || {};
   normalized.weakQuestions = normalized.weakQuestions || [];
+  normalized.answerLogs = normalized.answerLogs || []; // ★2026-08-08追加：解答時間・ヒント使用ログ（js/adaptive-question-generator.js）
   normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
   normalized.kakera = Number(normalized.kakera || 0);
   normalized.inventory = normalized.inventory || [];
@@ -1069,6 +1070,7 @@ window.currentActiveSubject = "japanese";
 window.currentGradeFilter = "4年生";
 window.currentQIdx = 0; window.currentStage = null; window.currentQuestions = [];
 window.currentFirstTry = true; window.availableSubjects = [];
+window.currentQuestionStartedAt = null; window.currentQuestionHintUsed = false; // ★2026-08-08追加：解答時間・ヒント使用ログ用
 window.bonusVideoUsed = false; window.bonusLabUsed = false; window.totalMistakes = 0;
 window.sessionMissedQuestions = []; window.reviewChatIdx = 0;
 window.activeBoostMultiplier = 1.0;
@@ -4464,6 +4466,8 @@ window.activateItem = function(itemKey) {
           btn.style.opacity = "0.2"; btn.style.pointerEvents = "none"; btn.textContent = "❌ レンズ消去"; deleted = true;
         }
       });
+      // ★2026-08-08追加：この問題でヒントアイテムを使ったことを記録（answerLogsのhintItemUsedに反映）
+      if (deleted) window.currentQuestionHintUsed = true;
       alert("🔍 【予言のレンズ発動！】\nハズレの選択肢を1つ消したぞ！のこりから正解を選ぼう！");
     } else {
       alert("🔍 予言のレンズ：今の問題には使えないタイプだったにゃ…（アイテムは返却されるよ！）");
@@ -4705,6 +4709,9 @@ window.regenerateQuestion = function (original) {
 
 window.showQuestionStep = function() {
   window.currentFirstTry = true; document.getElementById("feedback-box").style.display = "none"; document.getElementById("next-btn").style.display = "none"; document.getElementById("scroll-target-card").scrollTop = 0; document.getElementById("quit-game-btn").style.display = "block";
+  // ★2026-08-08追加：新しい問題を表示するたび、解答時間の計測開始・ヒント使用フラグをリセットする
+  window.currentQuestionStartedAt = Date.now();
+  window.currentQuestionHintUsed = false;
 
   if (window.currentQIdx >= window.currentQuestions.length) {
     if (window.dynamicPracticeModeActive) { window.finishDynamicPractice(); return; }
@@ -4854,6 +4861,8 @@ window.showQuestionStep = function() {
   } else { const passBtn = document.createElement("button"); passBtn.className = "choice-btn correct"; passBtn.textContent = "✨ 実験に成功したらここを押して次へ！"; passBtn.onclick = () => { window.triggerCorrectAnswer(current); }; zone.appendChild(passBtn); }
 };
 window.triggerWrongAnswer = function(current) {
+  // ★2026-08-08追加：解答時間・ヒント使用込みのログを記録（js/adaptive-question-generator.js側で分析に使う）
+  if (window.recordAnswerLog) window.recordAnswerLog(current, false);
   window.currentFirstTry = false;
   window.totalMistakes++;
 
@@ -4917,6 +4926,8 @@ window.triggerPassAnswer = function(current) {
   setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
 };
 window.triggerCorrectAnswer = function(current) {
+  // ★2026-08-08追加：解答時間・ヒント使用込みのログを記録（js/adaptive-question-generator.js側で分析に使う）
+  if (window.recordAnswerLog) window.recordAnswerLog(current, true);
   let finalEarnedQ = 0; let finalEarnedPts = 5;
   if (window.dynamicPracticeModeActive) {
     // ★特訓ラボはステージ非依存（window.currentStageがnull）なので、既存のelse節（.id/.isMaster等参照）を
