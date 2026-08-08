@@ -245,7 +245,28 @@
         hint:"5＋4を 計算してみよう。",
         job_title:"画数すいり名人！",
         job_desc:"5画＋4画＝9画。「玉」と「月」の画数をあわせると9画になるね！",
-        thinking: true }
+        thinking: true },
+
+      // --- パーツ組み立て（2問・新規。分解は部首＋つくりの標準的な解釈のみ採用） ---
+      { q:"「やすむ」を あらわす かん字を、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji10_dai2_build_yasumu",
+        kanjiBuild:{ layout:"horizontal", blanks:[
+          { id:"left", promptLabel:"① 左の パーツは？（にんべん）", correctText:"イ", options:["彳","イ","人"] },
+          { id:"right", promptLabel:"② 右の パーツは？", correctText:"木", options:["末","木","本"] }
+        ] },
+        hint:"左右2つのパーツを あわせた かん字だよ。左は「にんべん」、右は「木」だよ。",
+        job_title:"「休」を くみたてた！",
+        job_desc:"「休」は「イ（にんべん）」＋「木」で できているよ。「人が 木の そばで 休む」と おぼえよう！ 「やすむ・きゅう」と 読むよ。" },
+
+      { q:"「みる」を あらわす かん字を、パーツを くみたてて つくろう！",
+        type:"kanji_build", qid:"kanji10_dai2_build_miru",
+        kanjiBuild:{ layout:"vertical", blanks:[
+          { id:"top", promptLabel:"① 上の パーツは？", correctText:"目", options:["目","日","貝"] },
+          { id:"bottom", promptLabel:"② 下の パーツは？（ひとあし）", correctText:"儿", options:["儿","几","人"] }
+        ] },
+        hint:"上下2つのパーツを あわせた かん字だよ。上は「目」、下は「儿（ひとあし）」だよ。",
+        job_title:"「見」を くみたてた！",
+        job_desc:"「見」は「目」＋「儿（ひとあし＝人の あし）」で できているよ。「目が 大きく なった 人が 見ている」と おぼえよう！「みる・けん」と 読むよ。" }
     ],
 
     "漢検/10級/dai3kai": [
