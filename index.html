@@ -212,6 +212,10 @@
   .egg-card-upgrade-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
   .egg-card-reason { font-size: 8.5px; color: #ef4444; font-weight: 700; margin-top: 2px; line-height: 1.3; }
   .egg-card-maxed { font-size: 10px; font-weight: 900; color: #a21caf; margin-top: 2px; }
+  /* ★2026-08-08追加：累計獲得回数バッジ・★強化の利点表示 */
+  .egg-card-total-badge { position: absolute; top: 4px; left: 6px; font-size: 9px; font-weight: 900; color: #7c3aed; background: rgba(255,255,255,0.85); border-radius: 8px; padding: 1px 5px; }
+  .egg-card-buff { font-size: 8.5px; font-weight: 900; color: #059669; margin-top: 2px; line-height: 1.3; }
+  .egg-card-buff-hint { font-size: 8.5px; font-weight: 700; color: #94a3b8; margin-top: 2px; line-height: 1.3; }
   #treasure-book-modal { position: fixed; inset: 0; background: rgba(74, 59, 82, 0.85); z-index: 270; display: none; justify-content: center; align-items: center; padding: 20px; }
   .treasure-book-box { background: #fff; border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; animation: fadeUp 0.3s ease; }
   .treasure-book-box h2 { margin: 0 0 4px; color: #0369a1; font-size: 20px; }
@@ -808,7 +812,10 @@
     </div>
     <div id="gacha-panel-book" style="display:none;">
       <div class="gacha-cost-badge" style="background:linear-gradient(135deg,#7e22ce,#a855f7); box-shadow:0 3px 0 #6b21a8;">🎟️ スキルチケット：<span id="gacha-ticket-count">0</span>枚</div>
-      <div style="font-size:12.5px; font-weight:900; color:#7c3aed; margin-bottom:8px;" id="gacha-book-progress">0 / 0 コレクション</div>
+      <div style="font-size:12.5px; font-weight:900; color:#7c3aed; margin-bottom:4px;" id="gacha-book-progress">0 / 0 コレクション</div>
+      <div style="font-size:10.5px; color:#94a3b8; font-weight:700; margin-bottom:8px; line-height:1.5;">
+        ×は今の所持数（★強化・探検隊に送ると へるよ）／累計は これまでゲットした回数（へらないよ）
+      </div>
       <div class="gacha-book-grid" id="gacha-book-grid"></div>
     </div>
     <div class="gacha-btn-row">
@@ -1156,6 +1163,12 @@ window.normalizeSaveData = function(data) {
       if (normalized.gachaEggs[k] && !normalized.gachaEggs[k].starRank) {
         normalized.gachaEggs[k].starRank = 1;
       }
+      // ★2026-08-08追加：totalObtained（★強化・探検隊で減らない累計獲得回数）。
+      //   既存プレイヤーは正確な過去分が分からないため、今の所持数を下限として補う
+      //   （count以上は必ず引いたことがあるはずなので、これが一番マシな近似値）。
+      if (normalized.gachaEggs[k] && !normalized.gachaEggs[k].totalObtained) {
+        normalized.gachaEggs[k].totalObtained = normalized.gachaEggs[k].count || 1;
+      }
     });
   }
   normalized.allowance = Object.assign({ yen: 0, robux: 0, memo: "", history: [], weeks: {} }, normalized.allowance || {});
@@ -1272,6 +1285,15 @@ window.STAR_Q_BUFF_BY_RARITY = {
   3: { 1: 0, 2: 0.10, 3: 0.25 },
   4: { 1: 0, 2: 0.10, 3: 0.35 },
   5: { 1: 0.35, 2: 0.35, 3: 0.35 } // 実質未使用（もちくんはgetStarBuffMultiplierで無条件+35%固定のため）
+};
+
+// ★2026-08-08追加：指定ランクでのQブースト率(%)を返す。もちくんはランクに関係なく常に+35%固定
+//   （getStarBuffMultiplierと同じ特別扱いをここでも踏襲）。ガチャ図鑑で「強化の利点」を見せるために使う。
+window.getStarBuffPercentForRank = function(eggDef, rank) {
+  if (!eggDef) return 0;
+  if (eggDef.id === 'e_ex_mochi') return 35;
+  const byRarity = window.STAR_Q_BUFF_BY_RARITY[eggDef.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
+  return Math.round((byRarity[rank] || 0) * 100);
 };
 
 window.canUpgradeStar = function(eggId, method) {
@@ -1593,8 +1615,11 @@ window.checkExpeditionResolution = function () {
       }
       if (Math.random() < window.EXPEDITION_MOCHIKUN_CHANCE) {
         mochikunGained = true;
-        if (!window.saveData.gachaEggs['e_ex_mochi']) window.saveData.gachaEggs['e_ex_mochi'] = { count: 1, starRank: 1, firstGotDate: window.currentServerTime || '' };
-        else window.saveData.gachaEggs['e_ex_mochi'].count += 1;
+        if (!window.saveData.gachaEggs['e_ex_mochi']) window.saveData.gachaEggs['e_ex_mochi'] = { count: 1, totalObtained: 1, starRank: 1, firstGotDate: window.currentServerTime || '' };
+        else {
+          window.saveData.gachaEggs['e_ex_mochi'].count += 1;
+          window.saveData.gachaEggs['e_ex_mochi'].totalObtained = (window.saveData.gachaEggs['e_ex_mochi'].totalObtained || 1) + 1;
+        }
       }
     }
     result.earnedQ = earnedQ; result.earnedKakera = earnedKakera; result.chest = chest;
@@ -3343,6 +3368,21 @@ window.renderGachaBook = function() {
     const starHtml = "★".repeat(rank) + "☆".repeat(3 - rank);
     const checkCount = window.canUpgradeStar(egg.id, 'count');
     const checkTicket = window.canUpgradeStar(egg.id, 'ticket');
+    // ★2026-08-08追加：★強化の「利点」（Qブースト率）を見える化する。
+    //   低レアは★2到達時点ではバフ0%（★3で初めて乗る設計）なので、次ランクだけでなく
+    //   最終★3の数値も見せて「上げる意味」が常に伝わるようにする。
+    const currentBuffPct = window.getStarBuffPercentForRank(egg, rank);
+    const maxRankBuffPct = window.getStarBuffPercentForRank(egg, 3);
+    let buffHtml;
+    if (egg.id === 'e_ex_mochi') {
+      buffHtml = `<div class="egg-card-buff">✨ そうび中は常に+35%Q</div>`;
+    } else if (currentBuffPct > 0) {
+      buffHtml = `<div class="egg-card-buff">✨ そうび中+${currentBuffPct}%Q${(currentBuffPct < maxRankBuffPct) ? `（★3で+${maxRankBuffPct}%）` : ''}</div>`;
+    } else if (maxRankBuffPct > 0) {
+      buffHtml = `<div class="egg-card-buff-hint">★3まで上げると そうび中+${maxRankBuffPct}%Q ブースト！</div>`;
+    } else {
+      buffHtml = '';
+    }
     let upgradeHtml;
     if (checkCount.maxed) {
       upgradeHtml = `<div class="egg-card-maxed">👑 最大強化済み</div>`;
@@ -3354,7 +3394,8 @@ window.renderGachaBook = function() {
       `;
     }
     slot.innerHTML = `
-      <div class="egg-card-count-badge">×${owned.count}</div>
+      <div class="egg-card-count-badge" title="今の所持数（★強化・探検隊に送ると減るよ）">×${owned.count}</div>
+      <div class="egg-card-total-badge" title="これまでに このキャラを ゲットした回数（減らないよ）">累計${owned.totalObtained || owned.count}</div>${buffHtml}
       <div class="gacha-book-icon">${egg.icon}</div>
       <div class="gacha-book-name">${egg.name}</div>
       <div class="egg-card-star-badge">${starHtml}</div>
@@ -3420,11 +3461,13 @@ window.rollGacha = function() {
   // キャラ
   const isDupe = !!window.saveData.gachaEggs[picked.id];
   if (!isDupe) {
-    window.saveData.gachaEggs[picked.id] = { count: 1, firstGotDate: window.currentServerTime || '' };
+    // ★2026-08-08追加：totalObtainedは★強化・探検隊で count が減っても増え続ける「累計獲得回数」
+    window.saveData.gachaEggs[picked.id] = { count: 1, totalObtained: 1, firstGotDate: window.currentServerTime || '' };
     // アバターグリッドに新キャラが追加されたことを反映するため
   } else {
     // ★2026-08-03 変更：キャラ重複は欠片ではなく、そのキャラ専用の重複カウント（★強化の素材）として蓄積する
     window.saveData.gachaEggs[picked.id].count = (window.saveData.gachaEggs[picked.id].count || 1) + 1;
+    window.saveData.gachaEggs[picked.id].totalObtained = (window.saveData.gachaEggs[picked.id].totalObtained || 1) + 1;
     window.updateUI();
   }
   return { egg: picked, isDupe, isItem: false };
