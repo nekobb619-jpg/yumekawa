@@ -236,6 +236,10 @@
     var startedAt = window.currentQuestionStartedAt;
     var answerTimeMs = (typeof startedAt === "number") ? Math.max(0, Date.now() - startedAt) : null;
 
+    // ★2026-08-08追加：answerLogs本体は直近MAX_ANSWER_LOGS件だけ保持（trimされる）ので、
+    //   「せいちょうきろく」画面の総チャレンジ数はtrimされない専用カウンタで別管理する。
+    window.saveData.totalAnswersCount = (window.saveData.totalAnswersCount || 0) + 1;
+
     window.saveData.answerLogs.push({
       category: category,
       correct: !!correct,
@@ -461,6 +465,83 @@
       }
       return { weakAreas: weakAreas, generated_questions: result.generated_questions, error: result.error, addedCount: addedCount };
     });
+  };
+
+  /* ---------------------------------------------------------------------
+     (6) 「せいちょうきろく」画面 ★2026-08-08追加
+     行動経済学・自己決定理論の考え方（結果だけでなくプロセスを可視化し、失敗しても
+     安心できる指標を見せる）を反映。answerLogs（解答時間）を使い、「はじめのころ」と
+     「さいきん」の平均解答時間を比べて速くなったことを見せる。遅くなっていても
+     責めるトーンにはせず、「じっくり考えるようになったのかも」と中立的に伝える。
+     --------------------------------------------------------------------- */
+  window.GROWTH_MIN_TIMED_LOGS = 6; // これ未満の解答時間データしかない場合は「まだ足りない」表示にする
+
+  window.computeGrowthStats = function () {
+    var logs = (window.saveData && window.saveData.answerLogs) || [];
+    var totalCount = (window.saveData && window.saveData.totalAnswersCount) || logs.length;
+    var timed = logs.filter(function (l) { return l && typeof l.answerTimeMs === "number" && l.answerTimeMs > 0; });
+
+    if (timed.length < window.GROWTH_MIN_TIMED_LOGS) {
+      return { totalCount: totalCount, hasEnoughSpeedData: false };
+    }
+
+    // 解答順（古い→新しい）の先頭1/4と末尾1/4を比較する
+    var chunkSize = Math.max(3, Math.floor(timed.length / 4));
+    var earliest = timed.slice(0, chunkSize);
+    var latest = timed.slice(-chunkSize);
+    function avgMs(arr) { return arr.reduce(function (s, l) { return s + l.answerTimeMs; }, 0) / arr.length; }
+    var earliestAvgSec = Math.round((avgMs(earliest) / 1000) * 10) / 10;
+    var latestAvgSec = Math.round((avgMs(latest) / 1000) * 10) / 10;
+    var improvedPct = earliestAvgSec > 0 ? Math.round((1 - latestAvgSec / earliestAvgSec) * 100) : 0;
+
+    return {
+      totalCount: totalCount,
+      hasEnoughSpeedData: true,
+      earliestAvgSec: earliestAvgSec,
+      latestAvgSec: latestAvgSec,
+      improvedPct: improvedPct
+    };
+  };
+
+  window.openGrowthModal = function () {
+    var modal = document.getElementById("growth-modal");
+    if (!modal) return;
+    window.renderGrowthModal();
+    modal.style.display = "flex";
+  };
+
+  window.closeGrowthModal = function () {
+    var modal = document.getElementById("growth-modal");
+    if (modal) modal.style.display = "none";
+  };
+
+  window.renderGrowthModal = function () {
+    var stats = window.computeGrowthStats();
+
+    var totalEl = document.getElementById("growth-total-count");
+    if (totalEl) totalEl.innerHTML = stats.totalCount + "<span>問</span>";
+
+    var speedBody = document.getElementById("growth-speed-body");
+    if (!speedBody) return;
+
+    if (!stats.hasEnoughSpeedData) {
+      speedBody.innerHTML = '<div class="growth-speed-empty">まだ データが すこし たりないみたい。もっと 問題を といて、はやさの へんかを たしかめよう！</div>';
+      return;
+    }
+
+    var maxSec = Math.max(stats.earliestAvgSec, stats.latestAvgSec, 0.1);
+    var earliestPct = Math.min(100, (stats.earliestAvgSec / maxSec) * 100);
+    var latestPct = Math.min(100, (stats.latestAvgSec / maxSec) * 100);
+    var improvedText = stats.improvedPct > 0
+      ? ("🎉 はじめのころより <b>" + stats.improvedPct + "%</b> はやく なったよ！")
+      : (stats.improvedPct < 0
+          ? "さいきんは、じっくり 考える もんだいが 多いのかもね。あわてなくて 大丈夫だよ！"
+          : "はやさは、はじめのころと あまり かわっていないみたい。");
+
+    speedBody.innerHTML =
+      '<div class="growth-speed-row"><span style="width:66px; flex-shrink:0;">はじめの頃</span><div class="growth-speed-bar-track"><div class="growth-speed-bar-fill" style="width:' + earliestPct + '%;"></div></div><span style="flex-shrink:0;">' + stats.earliestAvgSec + '秒</span></div>' +
+      '<div class="growth-speed-row"><span style="width:66px; flex-shrink:0;">さいきん</span><div class="growth-speed-bar-track"><div class="growth-speed-bar-fill" style="width:' + latestPct + '%;"></div></div><span style="flex-shrink:0;">' + stats.latestAvgSec + '秒</span></div>' +
+      '<div style="margin-top:10px; font-size:13px; font-weight:800; color:#065f46;">' + improvedText + '</div>';
   };
 
 })();
