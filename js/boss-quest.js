@@ -75,7 +75,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、ひまわりを たすけたね！",
-        clearTextRepeat: "げんいんを つきとめて、ひまわりを たすけたね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、ひまわりを たすけたね！"
       }
     },
     {
@@ -133,7 +133,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、かい中電灯を なおしたね！",
-        clearTextRepeat: "げんいんを つきとめて、かい中電灯を なおしたね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、かい中電灯を なおしたね！"
       }
     },
     {
@@ -190,7 +190,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、れいぞうこを 元どおりに したね！",
-        clearTextRepeat: "げんいんを つきとめて、れいぞうこを 元どおりに したね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、れいぞうこを 元どおりに したね！"
       }
     },
     {
@@ -246,7 +246,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、自転車を なおしたね！",
-        clearTextRepeat: "げんいんを つきとめて、自転車を なおしたね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、自転車を なおしたね！"
       }
     },
     {
@@ -302,7 +302,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、せんたく物を かわかせたね！",
-        clearTextRepeat: "げんいんを つきとめて、せんたく物を かわかせたね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、せんたく物を かわかせたね！"
       }
     },
     {
@@ -360,7 +360,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、空気でっぽうを なおしたね！",
-        clearTextRepeat: "げんいんを つきとめて、空気でっぽうを なおしたね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、空気でっぽうを なおしたね！"
       }
     },
     {
@@ -417,7 +417,7 @@
       },
       step5: {
         clearText: "げんいんを つきとめて、気温を 正しく はかれたね！",
-        clearTextRepeat: "げんいんを つきとめて、気温を 正しく はかれたね！（れんしゅうプレイ）"
+        clearTextRepeat: "げんいんを つきとめて、気温を 正しく はかれたね！"
       }
     },
 
@@ -441,7 +441,7 @@
       explanation: "こたえは「フライパン」！ 名前に「パン」が つくけど、たべものの パンじゃないよね。ことばの おもしろさを つかった「だじゃれなぞなぞ」だよ。",
       step5: {
         clearText: "なぞなぞ かいけつ！ たのしかったね！",
-        clearTextRepeat: "なぞなぞ かいけつ！（れんしゅうプレイ）"
+        clearTextRepeat: "なぞなぞ かいけつ！"
       }
     },
     {
@@ -461,7 +461,7 @@
       explanation: "こたえは「人間（にんげん）」！ 赤ちゃんの ときは はいはいで 4本あし（朝）、おとなに なると 2本あしで あるき（昼）、としを とると つえを ついて 3本あしに なる（夜）ことを たとえているよ。大むかしの ギリシャの「スフィンクス」が 出した なぞなぞとして 有名だよ。",
       step5: {
         clearText: "なぞなぞ かいけつ！ たのしかったね！",
-        clearTextRepeat: "なぞなぞ かいけつ！（れんしゅうプレイ）"
+        clearTextRepeat: "なぞなぞ かいけつ！"
       }
     },
     {
@@ -481,7 +481,7 @@
       explanation: "こたえは「かめ（亀）」！ たまごから うまれて、せなかに かたい こうらが あって、水の中でも 陸の上でも いきられる いきものだよ。",
       step5: {
         clearText: "なぞなぞ かいけつ！ たのしかったね！",
-        clearTextRepeat: "なぞなぞ かいけつ！（れんしゅうプレイ）"
+        clearTextRepeat: "なぞなぞ かいけつ！"
       }
     }
   ];
@@ -678,7 +678,8 @@
     stageEl.innerHTML =
       '<div class="bq-nico-bubble">' + d.prompt + '</div>' +
       '<div class="bq-choice-grid" id="bq-hyp-list"></div>' +
-      '<button class="bq-main-btn" id="bq-btn-next" disabled>しらべに行く</button>';
+      '<button class="bq-main-btn" id="bq-btn-next" disabled>しらべに行く</button>' +
+      '<button class="bq-sub-btn" id="bq-btn-back">← もどる</button>';
     var list = document.getElementById("bq-hyp-list");
     d.hypotheses.forEach(function (h) {
       var el = document.createElement("div");
@@ -689,6 +690,7 @@
     });
     document.getElementById("bq-btn-next").disabled = !state.hypothesisId;
     document.getElementById("bq-btn-next").onclick = function () { goToStep(3); };
+    document.getElementById("bq-btn-back").onclick = function () { goToStep(1); };
   }
 
   function renderStep3() {
@@ -699,7 +701,8 @@
       '<div class="bq-nico-bubble">' + d.prompt + '</div>' +
       '<div class="bq-choice-grid" id="bq-tool-list"></div>' +
       '<ul class="bq-fact-list" id="bq-fact-list"></ul>' +
-      '<button class="bq-main-btn" id="bq-btn-next" disabled></button>';
+      '<button class="bq-main-btn" id="bq-btn-next" disabled></button>' +
+      '<button class="bq-sub-btn" id="bq-btn-back">← もどる</button>';
     var toolList = document.getElementById("bq-tool-list");
     d.tools.forEach(function (t) {
       var collected = state.collectedFacts.indexOf(t.factId) !== -1;
@@ -722,6 +725,7 @@
     btn.disabled = !allCollected;
     btn.textContent = allCollected ? "けつろんを かんがえる" : ("あと " + (d.tools.length - state.collectedFacts.length) + " つ しらべよう");
     btn.onclick = function () { goToStep(4); };
+    document.getElementById("bq-btn-back").onclick = function () { goToStep(2); };
   }
 
   function renderStep4() {
@@ -740,7 +744,8 @@
       '<div class="bq-block-label">できあがった文章</div>' +
       '<div class="bq-sentence-preview" id="bq-sentence-preview"></div>' +
       '<div class="bq-hint-banner" id="bq-hint-banner"></div>' +
-      '<button class="bq-main-btn" id="bq-btn-judge" disabled>この文章で けってい！</button>';
+      '<button class="bq-main-btn" id="bq-btn-judge" disabled>この文章で けってい！</button>' +
+      '<button class="bq-sub-btn" id="bq-btn-back">← もどる</button>';
 
     var reasonRow = document.getElementById("bq-reason-row");
     state.collectedFacts.forEach(function (factId) {
@@ -771,6 +776,7 @@
 
     document.getElementById("bq-btn-judge").disabled = !(reasonText && actionText);
     document.getElementById("bq-btn-judge").onclick = judgeStep4;
+    document.getElementById("bq-btn-back").onclick = function () { goToStep(3); };
   }
 
   function judgeStep4() {
