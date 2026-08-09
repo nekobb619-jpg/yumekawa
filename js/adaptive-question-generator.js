@@ -544,4 +544,193 @@
       '<div style="margin-top:10px; font-size:13px; font-weight:800; color:#065f46;">' + improvedText + '</div>';
   };
 
+  /* ---------------------------------------------------------------------
+     (7) 「ほごしゃレポート」画面 ★2026-08-08追加
+     自走支援フレームワーク④番（環境構造化・見守り）に対応。answerLogsから
+     「何をどれだけ勉強したか」「どの分野が得意/苦戦しているか」を集計し、
+     保護者がひと目でチェックできるようにする。ねらいは「干渉を減らし、
+     困った時だけヘルプを出せる・成長した部分だけを褒められる状態を作る」こと
+     （ユーザー共有のフレームワーク原文より）なので、苦戦分野は責めるトーンにせず
+     「サポートのヒント」、得意分野は「ほめてあげよう」という前向きな見出しにしてある。
+     --------------------------------------------------------------------- */
+  // ★2026-08-08修正：papa専用の「りお/りさ、どちらの成績を見るか」タブに対応するため、
+  //   対象のsaveDataを明示的に受け取れるようにした（省略時はwindow.saveData＝自分の成績）。
+  window.computeParentReport = function (targetSaveData) {
+    var sd = targetSaveData || window.saveData;
+    var logs = (sd && sd.answerLogs) || [];
+    var totalCount = (sd && sd.totalAnswersCount) || logs.length;
+
+    // 直近7日間、日付ごとの挑戦数・時間を集計する
+    var now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+    var days = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      days.push({ key: d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(), label: (d.getMonth() + 1) + "/" + d.getDate(), count: 0, timeMs: 0 });
+    }
+    var dayMap = {};
+    days.forEach(function (dd) { dayMap[dd.key] = dd; });
+
+    logs.forEach(function (l) {
+      if (!l || !l.ts) return;
+      var d = new Date(l.ts);
+      var key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+      if (dayMap[key]) {
+        dayMap[key].count += 1;
+        if (typeof l.answerTimeMs === "number") dayMap[key].timeMs += l.answerTimeMs;
+      }
+    });
+
+    var weekCount = days.reduce(function (s, dd) { return s + dd.count; }, 0);
+    var weekTimeMin = Math.round(days.reduce(function (s, dd) { return s + dd.timeMs; }, 0) / 60000);
+
+    // 苦戦している分野（既存のanalyzeWeakAreasをそのまま再利用）
+    var weakAreas = window.analyzeWeakAreas ? window.analyzeWeakAreas(logs) : [];
+
+    // 得意な分野（3回以上挑戦・正答率85%以上のカテゴリを上位3件）
+    var byCategory = {};
+    logs.forEach(function (l) {
+      if (!l || !l.category) return;
+      if (!byCategory[l.category]) byCategory[l.category] = { category: l.category, total: 0, correct: 0 };
+      byCategory[l.category].total += 1;
+      if (l.correct) byCategory[l.category].correct += 1;
+    });
+    var strongAreas = Object.keys(byCategory).map(function (cat) {
+      var s = byCategory[cat];
+      return { category: cat, total: s.total, correctRate: s.total > 0 ? s.correct / s.total : 0 };
+    }).filter(function (s) { return s.total >= 3 && s.correctRate >= 0.85; })
+      .sort(function (a, b) { return b.correctRate - a.correctRate; })
+      .slice(0, 3);
+
+    return {
+      totalCount: totalCount,
+      weekCount: weekCount,
+      weekTimeMin: weekTimeMin,
+      days: days,
+      weakAreas: weakAreas.slice(0, 3),
+      strongAreas: strongAreas,
+      streakCount: (sd && sd.streakCount) || 0
+    };
+  };
+
+  // ★2026-08-08追加：りお・りさ、それぞれのクラウド保存データをpapaアカウントから“覗き見”するための
+  //   キャッシュ。ログインを切り替えるわけではなく、GASの LOGIN アクション（playerIdを渡すと
+  //   そのプレイヤーのセーブデータを返す、読み取り専用で安全）を一時的に叩くだけ。
+  window.PARENT_REPORT_KID_IDS = ["りお", "りさ"];
+  var parentReportKidCache_ = {};
+  var parentReportActiveKid_ = null;
+
+  function fetchKidSaveDataForReport_(kidPlayerId) {
+    if (typeof window.postToGAS !== "function") return Promise.resolve(null);
+    return window.postToGAS({ action: "LOGIN", playerId: kidPlayerId })
+      .then(function (res) {
+        return (res && res.status === "SUCCESS" && res.playerData) ? res.playerData : null;
+      })
+      .catch(function (err) {
+        console.error("[parent-report] failed to fetch " + kidPlayerId + "'s data", err);
+        return null;
+      });
+  }
+
+  // ★2026-08-08追加：ほごしゃレポートは「papaアカウントでログイン中」＋「おうちの人のパスワード」の
+  //   二重チェックで保護する（index.htmlのアカウント切替(window.logout)と同じSWITCH_PASSWORD・
+  //   同じprompt方式を踏襲）。りお・りさ自身のログイン中は使えない（自己分析はせいちょうきろくの役割）。
+  window.openParentReportModal = function () {
+    var modal = document.getElementById("parent-report-modal");
+    if (!modal) return;
+
+    if (window.playerId !== "papa") {
+      alert("👨 この機能は「papa」アカウントでログインしているときだけ 使えるよ。");
+      return;
+    }
+
+    var pass = prompt("👨 おうちの人のパスワードを入れてください（ほごしゃレポート）：");
+    if (pass === null) return;
+    if (pass !== window.SWITCH_PASSWORD) { alert("❌ パスワードが ちがいます。"); return; }
+
+    var body = document.getElementById("parent-report-body");
+    if (body) body.innerHTML = '<div class="pr-empty">よみこみ中…</div>';
+    var tabsEl = document.getElementById("pr-kid-tabs");
+    if (tabsEl) tabsEl.style.display = "none";
+    modal.style.display = "flex";
+
+    Promise.all(window.PARENT_REPORT_KID_IDS.map(fetchKidSaveDataForReport_)).then(function (results) {
+      window.PARENT_REPORT_KID_IDS.forEach(function (kidId, i) { parentReportKidCache_[kidId] = results[i]; });
+      parentReportActiveKid_ = window.PARENT_REPORT_KID_IDS[0];
+      window.renderParentReportTabs_();
+      window.renderParentReportModal();
+    });
+  };
+
+  window.renderParentReportTabs_ = function () {
+    var tabsEl = document.getElementById("pr-kid-tabs");
+    if (!tabsEl) return;
+    tabsEl.style.display = "flex";
+    tabsEl.innerHTML = window.PARENT_REPORT_KID_IDS.map(function (kidId) {
+      var cls = "pr-kid-tab" + (kidId === parentReportActiveKid_ ? " active" : "");
+      return '<button class="' + cls + '" onclick="window.switchParentReportKid(\'' + kidId + '\')">👧 ' + kidId + '</button>';
+    }).join("");
+  };
+
+  window.switchParentReportKid = function (kidId) {
+    parentReportActiveKid_ = kidId;
+    window.renderParentReportTabs_();
+    window.renderParentReportModal();
+  };
+
+  window.closeParentReportModal = function () {
+    var modal = document.getElementById("parent-report-modal");
+    if (modal) modal.style.display = "none";
+  };
+
+  window.renderParentReportModal = function () {
+    var body = document.getElementById("parent-report-body");
+    if (!body) return;
+
+    var kidId = parentReportActiveKid_;
+    var kidSaveData = kidId ? parentReportKidCache_[kidId] : null;
+    if (kidId && !kidSaveData) {
+      body.innerHTML = '<div class="pr-empty">' + kidId + 'の データを 読み込めなかったよ。とじて、もう一度 開いてみてね。</div>';
+      return;
+    }
+
+    var r = window.computeParentReport(kidSaveData);
+
+    var maxCount = Math.max.apply(null, r.days.map(function (dd) { return dd.count; }).concat([1]));
+    var barsHtml = r.days.map(function (dd) {
+      var pct = Math.max(4, Math.round((dd.count / maxCount) * 100));
+      return '<div class="pr-day-col"><div class="pr-day-bar-track"><div class="pr-day-bar-fill" style="height:' + pct + '%;"></div></div><div class="pr-day-count">' + dd.count + '</div><div class="pr-day-label">' + dd.label + '</div></div>';
+    }).join('');
+
+    var weakHtml = r.weakAreas.length > 0
+      ? r.weakAreas.map(function (w) {
+          return '<div class="pr-list-item pr-weak"><span>' + w.category + '</span><span class="pr-list-badge">正答率 ' + Math.round(w.correctRate * 100) + '%</span></div>';
+        }).join('')
+      : '<div class="pr-empty">今のところ とくに気になる分野は 無いみたい！</div>';
+
+    var strongHtml = r.strongAreas.length > 0
+      ? r.strongAreas.map(function (s) {
+          return '<div class="pr-list-item pr-strong"><span>' + s.category + '</span><span class="pr-list-badge">正答率 ' + Math.round(s.correctRate * 100) + '%</span></div>';
+        }).join('')
+      : '<div class="pr-empty">データが たまってくると ここに表示されます</div>';
+
+    body.innerHTML =
+      '<div class="growth-stat-card">' +
+        '<div class="growth-stat-label">今週の学習量（直近7日間）</div>' +
+        '<div class="growth-stat-value">' + r.weekCount + '<span>問</span> <span style="font-size:15px;">（約' + r.weekTimeMin + '分）</span></div>' +
+        '<div class="pr-day-chart">' + barsHtml + '</div>' +
+      '</div>' +
+      '<div class="growth-stat-card">' +
+        '<div class="growth-stat-label">🌟 得意な分野（ほめてあげよう）</div>' +
+        strongHtml +
+      '</div>' +
+      '<div class="growth-stat-card">' +
+        '<div class="growth-stat-label">💪 苦戦している分野（サポートのヒント）</div>' +
+        weakHtml +
+      '</div>' +
+      '<div class="growth-stat-card">' +
+        '<div class="growth-stat-label">連続がんばり日数 / これまでの総チャレンジ数</div>' +
+        '<div class="growth-stat-value">' + r.streakCount + '<span>日連続</span> ／ ' + r.totalCount + '<span>問</span></div>' +
+      '</div>';
+  };
+
 })();
