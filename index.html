@@ -799,11 +799,11 @@
         <div style="font-size:12px; font-weight:700; color:#94a3b8;">↑ たまごをタップしてガチャを引こう！</div>
       </div>
       <div class="gacha-rate-table">
-        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム <span>67.9%</span></div>
+        <div class="gacha-rate-row">★ふつう　キャラ8種 ＋ バフアイテム <span>67.12%</span></div>
         <div class="gacha-rate-row r2">★★レア　キャラ6種 ＋ 強力バフ <span>26%</span></div>
         <div class="gacha-rate-row r3">★★★超レア　キャラ4種 <span>5%</span></div>
         <div class="gacha-rate-row r4">★★★★伝説　まぼろしニコ <span>1%</span></div>
-        <div class="gacha-rate-row r5">★★★★★超EXレア　もちくん <span>0.1%</span></div>
+        <div class="gacha-rate-row r5">★★★★★超EXレア　もちくん <span>0.88%</span></div>
       </div>
     </div>
     <div id="gacha-panel-book" style="display:none;">
@@ -3402,7 +3402,7 @@ window.doGachaPull = function() {
 window.rollGacha = function() {
   if (!window.saveData.gachaEggs) window.saveData.gachaEggs = {};
   const r = Math.random();
-  const rarity = r < 0.679 ? 1 : (r < 0.939 ? 2 : (r < 0.989 ? 3 : (r < 0.999 ? 4 : 5))); // ★1:67.9% ★2:26% ★3:5% ★4:1% ★5:0.1%（2026-08-03改定：もちくん追加）
+  const rarity = r < 0.6712 ? 1 : (r < 0.9312 ? 2 : (r < 0.9812 ? 3 : (r < 0.9912 ? 4 : 5))); // ★1:67.12% ★2:26% ★3:5% ★4:1% ★5:0.88%（2026-08-08改定：もちくんの確率を0.1%→0.88%に引き上げ、差分は★1から吸収）
   // レアリティ内でキャラとアイテムの比率（★1は20%アイテム、★2は20%アイテム）
   const pool = window.GACHA_EGG_LIST.filter(e => e.rarity === rarity);
   const picked = pool[Math.floor(Math.random() * pool.length)];
