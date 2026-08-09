@@ -56,8 +56,8 @@
         // （事実と矛盾する言い回しにしない＝AGENTS.md 3.5の「誤答が明確に誤りか」に対応）。
         reasonPhrasing: {
           fact_soil_dry: "土が カラカラに かわいている",
-          fact_light_ok: "日当たりは じゅうぶんだった（問題なし）",
-          fact_fert_ok: "ひりょうは じゅうぶんだった（問題なし）"
+          fact_light_ok: "日当たりは じゅうぶんだった",
+          fact_fert_ok: "ひりょうは じゅうぶんだった"
         },
         connectorText: "ので、",
         actions: [
@@ -113,9 +113,9 @@
       step4: {
         prompt: "集めた事実から、正しい文章を組み立てよう！",
         reasonPhrasing: {
-          fact_battery_ok: "電池は げんきだった（問題なし）",
+          fact_battery_ok: "電池は げんきだった",
           fact_wire_broken: "どうせんが とちゅうで ちぎれていた",
-          fact_bulb_ok: "豆電球は せいじょうだった（問題なし）"
+          fact_bulb_ok: "豆電球は せいじょうだった"
         },
         connectorText: "ので、",
         actions: [
@@ -171,8 +171,8 @@
         prompt: "集めた事実から、正しい文章を組み立てよう！",
         reasonPhrasing: {
           fact_door_open: "ドアが すこし あいていた（半ドア状態）",
-          fact_temp_ok: "おんどは いつもどおりだった（問題なし）",
-          fact_date_ok: "しょうみきげんは きれていなかった（問題なし）"
+          fact_temp_ok: "おんどは いつもどおりだった",
+          fact_date_ok: "しょうみきげんは きれていなかった"
         },
         connectorText: "ので、",
         actions: [
@@ -227,8 +227,8 @@
         prompt: "集めた事実から、正しい文章を組み立てよう！",
         reasonPhrasing: {
           fact_nail_found: "小さな くぎのような ものが ささっていた",
-          fact_pump_ok: "空気入れの つかいかたは 正しかった（問題なし）",
-          fact_valve_ok: "バルブは しっかり しまっていた（問題なし）"
+          fact_pump_ok: "空気入れの つかいかたは 正しかった",
+          fact_valve_ok: "バルブは しっかり しまっていた"
         },
         connectorText: "ので、",
         actions: [
@@ -283,8 +283,8 @@
         prompt: "集めた事実から、正しい文章を組み立てよう！",
         reasonPhrasing: {
           fact_humidity_high: "しつどが とても 高かった",
-          fact_sun_ok: "日当たりは いつもどおり よかった（問題なし）",
-          fact_wind_ok: "風通しは いつもどおり よかった（問題なし）"
+          fact_sun_ok: "日当たりは いつもどおり よかった",
+          fact_wind_ok: "風通しは いつもどおり よかった"
         },
         connectorText: "ので、",
         actions: [
@@ -341,8 +341,8 @@
         prompt: "集めた事実から、正しい文章を組み立てよう！",
         reasonPhrasing: {
           fact_gap_found: "つつと おしぼうの あいだに すきまが あった",
-          fact_ball_ok: "玉の 大きさは ちょうど よかった（問題なし）",
-          fact_push_ok: "おす 力は じゅうぶん あった（問題なし）"
+          fact_ball_ok: "玉の 大きさは ちょうど よかった",
+          fact_push_ok: "おす 力は じゅうぶん あった"
         },
         connectorText: "ので、",
         actions: [
@@ -398,8 +398,8 @@
         prompt: "集めた事実から、正しい文章を組み立てよう！",
         reasonPhrasing: {
           fact_sun_direct: "温度計に 日光が 直接 当たっていた",
-          fact_broken_ok: "温度計は こわれていなかった（問題なし）",
-          fact_time_ok: "いつもと おなじ 時間帯だった（問題なし）"
+          fact_broken_ok: "温度計は こわれていなかった",
+          fact_time_ok: "いつもと おなじ 時間帯だった"
         },
         connectorText: "ので、",
         actions: [
