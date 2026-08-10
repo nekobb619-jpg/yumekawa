@@ -519,8 +519,10 @@
       body.innerHTML =
         '<div class="book-story-title">🎉 きょうの おはなし、よみおわり！</div>' +
         '<div style="font-size:13px; font-weight:700; margin-bottom:12px;">' + st.correctCount + " / " + st.story.quiz.length + ' もん せいかい！</div>' +
-        '<div style="font-size:15px; font-weight:900; color:#c2410c; background:#fff7ed; border-radius:10px; padding:10px; margin-bottom:12px;">🔥 ' + window.saveData.bookStreak + '日 れんぞく よんでるよ！</div>' +
-        '<button class="br-btn start" onclick="window.closeBookModal()">とじる</button>';
+        '<div style="font-size:15px; font-weight:900; color:#c2410c; background:#fff7ed; border-radius:10px; padding:10px; margin-bottom:12px;">🔥 ' + window.saveData.bookStreak + '日 れんぞく よんでるよ！</div>';
+      // ★2026-08-08修正：ここで独自の「とじる」ボタンを描画すると、モーダル外枠に常設の
+      //   「とじる」ボタン（index.html側）と直後に並んで被って見えるバグがあった。
+      //   外枠のボタンで閉じられるので、ここでは追加しない。
     }
     if (typeof window.saveGame === "function") window.saveGame();
     if (typeof window.speakText === "function") window.speakText("よくできました", "ja-JP");
