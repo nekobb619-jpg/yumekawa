@@ -988,7 +988,7 @@
     </div>
     <div class="action-row">
       <button class="action-btn" id="item-use-in-game-btn" style="background:#0284c7; box-shadow: 0 5px 0 #0369a1; display:none;" onclick="window.triggerItemInGame()">✨ アイテム使用</button>
-      <button class="action-btn" id="quit-game-btn" onclick="window.quitQuest()">🛑 やめる</button>
+      <button class="action-btn" id="quit-game-btn" onclick="window.abortQuest()">🛑 やめる</button>
       <button class="action-btn nav-next" id="next-btn" onclick="window.nextQuestStep()" style="display:none;">つぎへ進む 🎀</button>
     </div>
   </div>
@@ -4474,6 +4474,7 @@ window.closeBriefing = function() { document.getElementById("briefing-modal").st
 window.launchQuest = function() {
   window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
   window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
+  window.sessionEarnedPts = 0; // ★2026-08-08追加：セコ技（途中でやめてptだけ稼ぐ）対策。abortQuest()で使う
   window.currentActiveStageId = window.currentStage.id;
   window.currentActiveStageReward = (window.currentStage.reward !== undefined && window.currentStage.reward !== "") ? Number(window.currentStage.reward) : 10;
   window.currentActiveStageIsReview = window.currentStage.isReview || false;
@@ -4506,6 +4507,7 @@ window.launchWeakAttackLab = function() {
   window.totalMistakes = 0;
   window.weakInitialCountAtLaunch = window.saveData.weakQuestions.length;
   window.weakEarnedQInSession = 0;
+  window.sessionEarnedPts = 0; // ★2026-08-08追加：セコ技（途中でやめてptだけ稼ぐ）対策。abortQuest()で使う
   window.activeItemBuff = null;
   window.activeBoostMultiplier = 1.0;
   window.currentActiveStageId = stageId;
@@ -5227,7 +5229,7 @@ window.triggerCorrectAnswer = function(current) {
         window.saveData.weakQuestions = window.saveData.weakQuestions.filter(id => id !== current.rawWeakId);
         window.recoverAvatarComfortOnWeakClear();
         if (window.weakInitialCountAtLaunch >= 2 && window.weakEarnedQInSession < 5) { finalEarnedQ = 1; window.saveData.q += finalEarnedQ; window.weakEarnedQInSession += finalEarnedQ; }
-        finalEarnedPts = 5; window.saveData.pts += finalEarnedPts;
+        finalEarnedPts = 5; window.saveData.pts += finalEarnedPts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + finalEarnedPts;
         if (current._originStgId) { window.saveData.clearedStages[current._originStgId] = true; }
         document.getElementById("job-title").textContent = "⚔️ にがてモンスター撃破成功！";
         let rewardReportStr = "";
@@ -5244,13 +5246,13 @@ window.triggerCorrectAnswer = function(current) {
     if (window.currentStage.isMaster) { basePts = 0; finalEarnedPts = 0; window.saveData.pts += basePts; } else if (isCleared && !window.currentStage.isReview && window.activeItemBuff !== 'hourglass') {
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
       let n = 1; if (window.saveData.dailyLoopCounts && window.saveData.dailyLoopCounts[window.currentStage.id]) { n = window.saveData.dailyLoopCounts[window.currentStage.id] + 1; }
-      let penalty = n * n; let finalPts = basePts - penalty; if (finalPts < 0) finalPts = 0; finalEarnedPts = finalPts; window.saveData.pts += finalPts;
+      let penalty = n * n; let finalPts = basePts - penalty; if (finalPts < 0) finalPts = 0; finalEarnedPts = finalPts; window.saveData.pts += finalPts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + finalPts;
     } else {
       let stgReward = (window.currentStage.reward !== undefined && window.currentStage.reward !== "") ? Number(window.currentStage.reward) : 10;
       finalEarnedQ = isCleared ? 2 : stgReward;
       let isPerfectForDisplay = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
       if (isPerfectForDisplay) { finalEarnedQ += 5; }
-      finalEarnedQ = Math.floor(finalEarnedQ * window.activeBoostMultiplier); finalEarnedPts = basePts; window.saveData.pts += basePts;
+      finalEarnedQ = Math.floor(finalEarnedQ * window.activeBoostMultiplier); finalEarnedPts = basePts; window.saveData.pts += basePts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + basePts;
     }
     document.getElementById("job-title").textContent = current.job_title || "クリア！";
     // ★2026-08-03 修正：欠片だけはdailyLoopCounts/MASTER日次上限の対象外で、周回で無制限に稼げてしまっていたバグ修正。
@@ -5468,6 +5470,20 @@ window.triggerForcedClear = function() { window.exitToMainMenu(); };
 //   （dynamicPracticeModeActiveは元々ここでリセットされておらず、新設のrescueQuizModeActiveも
 //   同じ穴になるところだったため、あわせて修正した。expeditionQuizModeActiveも同様に対応）
 window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; window.expeditionQuizModeActive = false; window._pendingExpeditionTeam = null; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
+// ★2026-08-08追加：「🛑やめる」ボタン専用。セコ技（1問だけ正解してptをもらい、
+//   単元を完走せずに離脱するのを繰り返してptを稼ぐ）対策として、このセッション中に
+//   triggerCorrectAnswerで加算されたpts（sessionEarnedPts）をここで没収してからquitQuestへ渡す。
+//   正常にクリアしてexitToMainMenuの最後でquitQuestが呼ばれる経路はここを通らないため、
+//   まっとうにクリアした分のptsは没収されない。
+window.abortQuest = function() {
+  const earned = window.sessionEarnedPts || 0;
+  if (earned > 0 && window.saveData) {
+    window.saveData.pts = Math.max(0, (window.saveData.pts || 0) - earned);
+    window.sessionEarnedPts = 0;
+    window.saveGame();
+  }
+  window.quitQuest();
+};
 
 /* ★2026-08-03 追加：実機QAモード -------------------
    通常プレイヤーには一切見えないよう、URLに ?qa=1 を付けて開いた場合のみ有効化する。
