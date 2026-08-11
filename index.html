@@ -1263,6 +1263,14 @@ window.getIslandLevel = function() {
   return Math.floor((window.saveData.islandBuildLog || []).length / 5) + 1;
 };
 
+// ★2026-08-11追加：宝島レベルが高いほど「探検隊のプレミアム宝出現率」「クイズの欠片発見率」が
+//   伸びるボーナス。Lv1で+0%、Lv.ISLAND_LEVEL_MAXで頭打ち（+1%刻み、MAX時+9%）。
+window.ISLAND_LEVEL_MAX = 10;
+window.getIslandLevelBonus = function() {
+  const lvl = window.getIslandLevel();
+  return Math.min(lvl - 1, window.ISLAND_LEVEL_MAX - 1) * 0.01;
+};
+
 // --- ★強化システム ---
 // ★2026-08-03 変更：強化コストをベースレアリティ別に設定（従来はレア度問わず一律だった）。
 //   宝島レベル制限（★2:Lv2/★3:Lv5）は据え置き。
@@ -1610,7 +1618,9 @@ window.checkExpeditionResolution = function () {
     let premiumResult = null;
     let mochikunGained = false;
     if (exp.totalStars >= 6) {
-      if (Math.random() < window.EXPEDITION_PREMIUM_CHANCE && window.rollPremiumTreasureInDetectiveLab) {
+      // ★2026-08-11追加：宝島レベルボーナス（getIslandLevelBonus）を加算し、宝島を育てるほど
+      //   プレミアム宝が出やすくなるようにする。
+      if (Math.random() < window.EXPEDITION_PREMIUM_CHANCE + window.getIslandLevelBonus() && window.rollPremiumTreasureInDetectiveLab) {
         premiumResult = window.rollPremiumTreasureInDetectiveLab();
       }
       if (Math.random() < window.EXPEDITION_MOCHIKUN_CHANCE) {
@@ -5270,7 +5280,9 @@ window.triggerCorrectAnswer = function(current) {
     }
     // ★2026-08-04 修正：通常ステージで欠片が見つかりすぎる報告を受け、出現率を0.4→0.15へ引き下げ
     //   （「センサー作動」演出が特別感を持てる頻度に調整。dailyLoopCounts等の既存の周回上限ロジックは変更なし）
-    if(window.currentFirstTry && Math.random() < 0.15 && !window.weakAttackModeActive && !kakeraCapped) {
+    // ★2026-08-11追加：宝島レベルボーナス（getIslandLevelBonus）を加算し、宝島を育てるほど
+    //   欠片も見つけやすくなるようにする（探検隊のプレミアム宝ボーナスと同じ思想）。
+    if(window.currentFirstTry && Math.random() < 0.15 + window.getIslandLevelBonus() && !window.weakAttackModeActive && !kakeraCapped) {
       if(!window.saveData.kakera) window.saveData.kakera = 0; window.saveData.kakera += 1; window.speakText("欠片発見", "ja-JP"); document.getElementById("job-title").textContent = "🧩 【欠片センサー作動！】 " + (current.job_title || "クリア！");
     }
     let thinkingBonusMsg = "";
