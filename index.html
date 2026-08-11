@@ -4871,11 +4871,14 @@ window.renderKanjiBuildQuestion = function(current, zone) {
     group.appendChild(label);
     const chipsRow = document.createElement("div");
     chipsRow.className = "blank-picker-chips";
-    blank.options.forEach((opt, i) => {
+    // ★2026-08-11修正：データ側のoptions配列が正解を先頭に置いたまま作られていることが多く、
+    //   シャッフルせずに描画すると「常に左が正解」になるバグがあった。表示直前にシャッフルする。
+    const shuffledOptions = [...blank.options].sort(() => Math.random() - 0.5);
+    shuffledOptions.forEach((opt) => {
       const chip = document.createElement("button");
       chip.className = "blank-chip";
       chip.textContent = opt;
-      chip.onclick = () => window.handleKanjiBuildTap(current, blank, i, chip, group);
+      chip.onclick = () => window.handleKanjiBuildTap(current, blank, opt, chip, group);
       chipsRow.appendChild(chip);
     });
     group.appendChild(chipsRow);
@@ -4890,11 +4893,11 @@ window.renderKanjiBuildQuestion = function(current, zone) {
   submitBtn.onclick = () => { window.triggerCorrectAnswer(current); };
   zone.appendChild(submitBtn);
 };
-window.handleKanjiBuildTap = function(current, blank, choiceIdx, chipEl, groupEl) {
+window.handleKanjiBuildTap = function(current, blank, chosenText, chipEl, groupEl) {
   if (window._kbFilled[blank.id]) return;
   const box = document.getElementById("kb-box-" + blank.id);
-  if (blank.options[choiceIdx] === blank.correctText) {
-    window._kbFilled[blank.id] = blank.options[choiceIdx];
+  if (chosenText === blank.correctText) {
+    window._kbFilled[blank.id] = chosenText;
     chipEl.classList.add("correct");
     Array.from(groupEl.querySelectorAll(".blank-chip")).forEach(c => { if (c !== chipEl) { c.disabled = true; c.style.opacity = "0.35"; } });
     groupEl.classList.add("solved");
