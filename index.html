@@ -1092,6 +1092,18 @@
 window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzO9Ju2xrzQuHpeYAnxIvRtBkY8sPGpyDe4Y1lSlf9QQJmtT6cYCvtI_hGzzcAAlIXS/exec";
 // ★ふだん自動ログインする子どものID（GASの ALLOWED_PLAYERS と同じ名前にしてね）
 window.CHILD_ID = "りお";
+// ★2026-08-11追加：テスト用URLパラメータ（例：?playerId=テストくん）が付いているときだけ
+//   自動ログイン先を上書きする。パラメータが無い通常アクセスは今まで通りCHILD_IDのまま
+//   （りおの普段の体験には一切影響しない）。ブラウザ自動化でのアカウント切替（prompt()非対応環境）にも使う。
+try {
+  const testPlayerId = new URLSearchParams(window.location.search).get('playerId');
+  if (testPlayerId) {
+    window.CHILD_ID = testPlayerId;
+    // ★このブラウザに前回セッション分のplayerIdキャッシュが残っていても、
+    //   テストパラメータ指定時は必ずそちらを優先させる（下のwindow.playerId初期化より前に上書き）。
+    localStorage.setItem("kids_lab_playerId", testPlayerId);
+  }
+} catch (e) {}
 // ★アカウント切替に必要な おうちの人のパスワード
 window.SWITCH_PASSWORD = "papa8888";
 window.TREASURE_ISLAND_SPAWN_CHANCE = 0.5;
