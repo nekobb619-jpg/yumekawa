@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>電気回路じっけんラボ | ゆめかわ★学びアドベンチャー</title>
+  <style>
+    :root {
+      --primary: #ff6b9d;
+      --bg: #fff0f5;
+      --card: #ffffff;
+      --accent: #4ecdc4;
+      --yellow: #ffe66d;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: #333;
+      text-align: center;
+    }
+    h1 {
+      color: #d81b60;
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(255, 107, 157, 0.2);
+    }
+    .circuit-canvas {
+      width: 100%;
+      height: 260px;
+      background: #1e1e2f;
+      border-radius: 12px;
+      position: relative;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .btn {
+      background: white;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    .info-box {
+      background: #f0f7ff;
+      border-left: 4px solid #2196f3;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      text-align: left;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ 電気回路（でんきかいろ）じっけんラボ</h1>
+    <p style="font-size:0.85rem; color:#666;">かん電池のつなぎ方や 向きを かえて、明かりや モーターの 動きを 観察しよう！</p>
+
+    <div class="circuit-canvas">
+      <canvas id="circuitCanvas" width="560" height="260"></canvas>
+    </div>
+
+    <div class="controls">
+      <button class="btn active" id="btn-single" onclick="setMode('single')">🔋 かん電池 1こ</button>
+      <button class="btn" id="btn-series" onclick="setMode('series')">🔋🔋 直列（ちょくれつ）つなぎ</button>
+      <button class="btn" id="btn-parallel" onclick="setMode('parallel')">🔋∥🔋 並列（へいれつ）つなぎ</button>
+      <button class="btn" id="btn-reverse" onclick="toggleReverse()">🔄 電池の向きを反対</button>
+      <button class="btn" id="btn-switch" onclick="toggleSwitch()">🔌 スイッチ: <span id="sw-status">ON</span></button>
+    </div>
+
+    <div class="info-box" id="info-desc">
+      💡 <b>観察ポイント:</b> かん電池1この回路。電流がぐるっと輪になって流れ、豆電球が点灯します。
+    </div>
+  </div>
+
+  <script>
+    let mode = 'single'; // 'single', 'series', 'parallel'
+    let reverse = false;
+    let switchOn = true;
+    let currentAnimFrame = 0;
+
+    const canvas = document.getElementById('circuitCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.btn').forEach(b => {
+        if (b.id.startsWith('btn-single') || b.id.startsWith('btn-series') || b.id.startsWith('btn-parallel')) {
+          b.classList.remove('active');
+        }
+      });
+      document.getElementById('btn-' + m).classList.add('active');
+      updateInfo();
+    }
+
+    function toggleReverse() {
+      reverse = !reverse;
+      document.getElementById('btn-reverse').classList.toggle('active', reverse);
+      updateInfo();
+    }
+
+    function toggleSwitch() {
+      switchOn = !switchOn;
+      document.getElementById('sw-status').textContent = switchOn ? 'ON' : 'OFF';
+      document.getElementById('btn-switch').classList.toggle('active', !switchOn);
+      updateInfo();
+    }
+
+    function updateInfo() {
+      const box = document.getElementById('info-desc');
+      if (!switchOn) {
+        box.innerHTML = '⚠️ <b>スイッチOFF:</b> 回路が途切れているため、電流は流れず、豆電球もつきません。';
+        return;
+      }
+      let text = '';
+      if (mode === 'single') {
+        text = '💡 <b>かん電池1こ:</b> 基準の明るさとモーターの速さです。';
+      } else if (mode === 'series') {
+        text = '🚀 <b>直列つなぎ:</b> 電池のパワーが合わさって電流が強くなり、<b>豆電球がとても明るく</b>、モーターが速く回ります！';
+      } else if (mode === 'parallel') {
+        text = '🔋 <b>並列つなぎ:</b> 明るさは1この時と同じですが、<b>電池が長持ち</b>します！';
+      }
+      if (reverse) {
+        text += '<br>🔄 <b>電池反対:</b> 電流が反対向きに流れるため、<b>プロペラ（モーター）が逆回転</b>します！';
+      }
+      box.innerHTML = text;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      currentAnimFrame += switchOn ? (mode === 'series' ? 0.15 : 0.08) * (reverse ? -1 : 1) : 0;
+
+      // 回路の描画
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = switchOn ? '#ffd54f' : '#666';
+
+      // 導線枠
+      ctx.beginPath();
+      ctx.rect(80, 40, 400, 180);
+      ctx.stroke();
+
+      // 電池の描画 (下側の線の中央)
+      if (mode === 'single') {
+        drawBattery(280, 220, reverse);
+      } else if (mode === 'series') {
+        drawBattery(230, 220, reverse);
+        drawBattery(330, 220, reverse);
+      } else if (mode === 'parallel') {
+        drawBattery(280, 200, reverse);
+        drawBattery(280, 240, reverse);
+      }
+
+      // スイッチ (左側)
+      drawSwitch(80, 130, switchOn);
+
+      // 豆電球 (上側中央)
+      drawBulb(280, 40, switchOn, mode === 'series' ? 1.8 : 1.0);
+
+      // モーター/プロペラ (右側)
+      drawMotor(480, 130, switchOn, currentAnimFrame);
+
+      // 電流の粒々アニメーション
+      if (switchOn) {
+        drawCurrentDots(reverse);
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    function drawBattery(x, y, rev) {
+      ctx.fillStyle = '#ff9800';
+      ctx.fillRect(x - 35, y - 12, 70, 24);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(rev ? '- 🔋 +' : '+ 🔋 -', x, y + 4);
+    }
+
+    function drawSwitch(x, y, on) {
+      ctx.fillStyle = '#1e1e2f';
+      ctx.fillRect(x - 10, y - 20, 20, 40);
+      ctx.strokeStyle = on ? '#ffd54f' : '#ef5350';
+      ctx.beginPath();
+      ctx.moveTo(x, y + 15);
+      ctx.lineTo(on ? x : x + 15, y - 15);
+      ctx.stroke();
+    }
+
+    function drawBulb(x, y, on, brightness) {
+      if (on) {
+        const grad = ctx.createRadialGradient(x, y, 5, x, y, 35 * brightness);
+        grad.addColorStop(0, 'rgba(255, 235, 59, 1)');
+        grad.addColorStop(1, 'rgba(255, 235, 59, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(x, y, 35 * brightness, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = on ? '#fff59d' : '#888';
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+    }
+
+    function drawMotor(x, y, on, angle) {
+      ctx.fillStyle = '#90caf9';
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // プロペラ
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillStyle = on ? '#e91e63' : '#777';
+      ctx.fillRect(-25, -4, 50, 8);
+      ctx.fillRect(-4, -25, 8, 50);
+      ctx.restore();
+    }
+
+    function drawCurrentDots(rev) {
+      ctx.fillStyle = '#4fc3f7';
+      const step = (Date.now() / 15 * (rev ? -1 : 1)) % 20;
+      for (let p = 0; p < 1160; p += 30) {
+        let pos = (p + step + 1160) % 1160;
+        let dx = 0, dy = 0;
+        if (pos < 400) { dx = 80 + pos; dy = 40; }
+        else if (pos < 580) { dx = 480; dy = 40 + (pos - 400); }
+        else if (pos < 980) { dx = 480 - (pos - 580); dy = 220; }
+        else { dx = 80; dy = 220 - (pos - 980); }
+
+        ctx.beginPath();
+        ctx.arc(dx, dy, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    draw();
+  </script>
+</body>
+</html>

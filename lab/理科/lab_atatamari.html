@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>もののあたたまり方 じっけんラボ | ゆめかわ★学びアドベンチャー</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: #fff3e0;
+      color: #333;
+      text-align: center;
+    }
+    h1 {
+      color: #e65100;
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(230, 81, 0, 0.15);
+    }
+    canvas {
+      width: 100%;
+      height: 240px;
+      background: #263238;
+      border-radius: 12px;
+      display: block;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: white;
+      border: 2px solid #ff9800;
+      color: #e65100;
+      padding: 8px 14px;
+      border-radius: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .btn.active {
+      background: #ff9800;
+      color: white;
+    }
+    .info {
+      background: #fff8e1;
+      border-left: 4px solid #ffa000;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 12px;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 もののあたたまり方 じっけんラボ</h1>
+    <p style="font-size:0.85rem; color:#666;">金属（熱伝導）・水（対流）・空気のあたたまり方を比べよう！</p>
+
+    <canvas id="heatCanvas" width="560" height="240"></canvas>
+
+    <div class="controls">
+      <button class="btn active" id="btn-metal" onclick="setSubject('metal')">🧱 金属の板（端から）</button>
+      <button class="btn" id="btn-water" onclick="setSubject('water')">🧪 水（下から温める）</button>
+      <button class="btn" id="btn-air" onclick="setSubject('air')">🏠 部屋の空気（エアコン）</button>
+      <button class="btn" style="background:#e53935; color:white; border:none;" onclick="toggleHeat()">🔥 加熱スタート/ストップ</button>
+    </div>
+
+    <div class="info" id="info-text">
+      💡 <b>金属の伝わり方:</b> 熱した場所から順に隣へ熱が伝わっていきます（伝導）。
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('heatCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let mode = 'metal'; // metal, water, air
+    let isHeating = false;
+    let heatTime = 0;
+
+    function setSubject(m) {
+      mode = m;
+      isHeating = false;
+      heatTime = 0;
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + m).classList.add('active');
+
+      const info = document.getElementById('info-text');
+      if (m === 'metal') {
+        info.innerHTML = '💡 <b>金属（伝導）:</b> 熱した部分から放射状に隣へ順にあたたまります。';
+      } else if (m === 'water') {
+        info.innerHTML = '💡 <b>水（対流）:</b> あたたまった水が上へあがり、上の冷たい水が下へさがって全体が回ります。';
+      } else if (m === 'air') {
+        info.innerHTML = '💡 <b>空気（対流）:</b> あたたかい空気は上へあがり、冷たい空気は下にたまります（エアコンの仕組み）。';
+      }
+    }
+
+    function toggleHeat() {
+      isHeating = !isHeating;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (isHeating) heatTime += 0.02;
+
+      if (mode === 'metal') {
+        // 金属板
+        ctx.fillStyle = '#78909c';
+        ctx.fillRect(80, 60, 400, 120);
+
+        // 熱伝導円
+        for (let r = 0; r < 350; r += 5) {
+          let temp = Math.max(0, 1 - (r / (heatTime * 80 + 10)));
+          if (temp > 0) {
+            ctx.fillStyle = `rgba(244, 67, 54, ${temp * 0.7})`;
+            ctx.beginPath();
+            ctx.arc(100, 120, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        // 火
+        ctx.fillStyle = '#ff5722';
+        ctx.fillText('🔥 アルコールランプ', 70, 210);
+
+      } else if (mode === 'water') {
+        // ビーカー
+        ctx.strokeStyle = '#b0bec5';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(180, 40, 200, 150);
+
+        // 対流グラデーション
+        let heatProgress = Math.min(1, heatTime * 0.2);
+        ctx.fillStyle = `rgba(33, 150, 243, ${0.4 - heatProgress * 0.2})`;
+        ctx.fillRect(182, 42, 196, 146);
+
+        // 上昇流
+        if (heatProgress > 0) {
+          ctx.fillStyle = `rgba(244, 67, 54, ${heatProgress * 0.8})`;
+          ctx.fillRect(260, 42 + (1 - heatProgress) * 140, 40, heatProgress * 140);
+        }
+
+        ctx.fillStyle = '#ff5722';
+        ctx.fillText('🔥 下から加熱', 240, 215);
+
+      } else if (mode === 'air') {
+        // 部屋
+        ctx.strokeStyle = '#cfd8dc';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(80, 30, 400, 170);
+
+        // 上部があたたまる
+        let airHeat = Math.min(1, heatTime * 0.25);
+        ctx.fillStyle = `rgba(244, 67, 54, ${airHeat * 0.6})`;
+        ctx.fillRect(82, 32, 396, 85 * airHeat + 10);
+
+        ctx.fillStyle = `#2196f3`;
+        ctx.fillRect(82, 117, 396, 81);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '14px sans-serif';
+        ctx.fillText('🔴 あたたかい空気（上へいく）', 120, 70);
+        ctx.fillText('🔵 つめたい空気（下にたまる）', 120, 160);
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>

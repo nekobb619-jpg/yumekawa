@@ -61,7 +61,9 @@
       grade: "4年生",
       id: "理科/電気/denki01",
       name: "電気のはたらき（かん電池と回路）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "",
+      // ★電気回路 じっけんラボ（回路切替、明るさ、電流方向、モーター逆回転）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_denki_circuit.html",
       created: "2026-07-18"
     },
     {
@@ -240,7 +242,9 @@
       category: "もののあたたまり方（4年）",
       id: "理科/あたたまり方/atatamari01",
       name: "もののあたたまり方（金属・水・空気）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "",
+      // ★もののあたたまり方 じっけんラボ（熱伝導・対流サーモグラフィー）
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_atatamari.html",
       created: "2026-07-25"
     },
     {
@@ -447,7 +451,9 @@
       grade: "4年生",
       id: "探究/プログラミング/prog01",
       name: "プログラミングの思考（順次・条件・繰り返し）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "",
+      // ★ビジュアルプログラミングブロック じっけんラボ
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/探究/lab_programming_block.html",
       created: "2026-08-11"
     },
     {
@@ -475,6 +481,34 @@
       grade: "4年生",
       id: "理科/実験計画/exp_design01",
       name: "実験の計画と条件そろえ（理科の探究）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
+    },
+    // ★算数発展：今後拡大する主要3単元（2桁わり算筆算・がい数・分数）
+    {
+      subject: "算数",
+      category: "わり算の発展（4年）",
+      grade: "4年生",
+      id: "算数/わり算/hissan_2digit01",
+      name: "２けたでわるわり算の筆算（見当の商と修正）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
+    },
+    {
+      subject: "算数",
+      category: "がい数（4年）",
+      grade: "4年生",
+      id: "算数/がい数/gaisu01",
+      name: "がい数と四捨五入（およそ数と概算）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
+    },
+    {
+      subject: "算数",
+      category: "分数（4年）",
+      grade: "4年生",
+      id: "算数/分数/bunsu01",
+      name: "分数のしくみと計算（真・仮・帯分数と同分母の計算）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
       created: "2026-08-11"
     }

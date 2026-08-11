@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ビジュアルプログラミングじっけんラボ | ゆめかわ★学びアドベンチャー</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      text-align: center;
+    }
+    h1 {
+      color: #00897b;
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0, 137, 123, 0.15);
+    }
+    .game-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 55px);
+      grid-template-rows: repeat(4, 55px);
+      gap: 4px;
+      background: #37474f;
+      padding: 6px;
+      border-radius: 12px;
+    }
+    .cell {
+      background: #eceff1;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      position: relative;
+    }
+    .cell.wall { background: #78909c; }
+    .cell.goal { background: #ffe082; }
+
+    .block-palette, .command-program {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      min-height: 48px;
+      background: #f5f5f5;
+      padding: 8px;
+      border-radius: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .cmd-btn {
+      background: #00bfa5;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 0 #00897b;
+    }
+    .cmd-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #00897b;
+    }
+    .run-btn {
+      background: #ff4081;
+      box-shadow: 0 4px 0 #c2185b;
+      padding: 10px 24px;
+      font-size: 1rem;
+    }
+    .clear-btn {
+      background: #78909c;
+      box-shadow: 0 4px 0 #455a64;
+    }
+    .msg-box {
+      font-weight: bold;
+      color: #00897b;
+      min-height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 プログラミングブロックじっけんラボ</h1>
+    <p style="font-size:0.85rem; color:#666;">命令ブロックをならべて、ニコ🦄をゴール🚩まで動かそう！</p>
+
+    <div class="game-area">
+      <div class="grid" id="grid"></div>
+
+      <div class="msg-box" id="msg">命令ブロックをタップしてプログラムを作ってね！</div>
+
+      <div style="font-size:0.85rem; font-weight:bold; color:#555;">【命令ブロック】（タップで追加）</div>
+      <div class="block-palette">
+        <button class="cmd-btn" onclick="addCmd('MOVE')">⬆️ 1歩進む</button>
+        <button class="cmd-btn" onclick="addCmd('RIGHT')">↪️ 右を向く</button>
+        <button class="cmd-btn" onclick="addCmd('LEFT')">↩️ 左を向く</button>
+      </div>
+
+      <div style="font-size:0.85rem; font-weight:bold; color:#555;">【きみのプログラム】</div>
+      <div class="command-program" id="program-list">
+        <span style="color:#aaa; font-size:0.85rem;" id="empty-hint">（ここに命令がならびます）</span>
+      </div>
+
+      <div>
+        <button class="cmd-btn run-btn" onclick="runProgram()">▶️ プログラム実行！</button>
+        <button class="cmd-btn clear-btn" onclick="resetAll()">🔄 やりなおす</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Grid: 4x4
+    // 0: empty, 1: wall, 2: goal
+    const map = [
+      [0, 0, 0, 2],
+      [0, 1, 0, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0]
+    ];
+
+    let playerPos = { r: 3, c: 0, dir: 0 }; // dir: 0:Up, 1:Right, 2:Down, 3:Left
+    const dirIcons = ['⬆️', '➡️', '⬇️', '⬅️'];
+    let program = [];
+    let isRunning = false;
+
+    function renderGrid() {
+      const gridEl = document.getElementById('grid');
+      gridEl.innerHTML = '';
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          if (map[r][c] === 1) cell.classList.add('wall');
+          if (map[r][c] === 2) cell.classList.add('goal');
+
+          if (r === playerPos.r && c === playerPos.c) {
+            cell.textContent = '🦄' + dirIcons[playerPos.dir];
+            cell.style.fontSize = '1.1rem';
+          } else if (map[r][c] === 2) {
+            cell.textContent = '🚩';
+          } else if (map[r][c] === 1) {
+            cell.textContent = '🪨';
+          }
+          gridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function addCmd(cmd) {
+      if (isRunning || program.length >= 8) return;
+      program.push(cmd);
+      renderProgram();
+    }
+
+    function renderProgram() {
+      const listEl = document.getElementById('program-list');
+      if (program.length === 0) {
+        listEl.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">（ここに命令がならびます）</span>';
+        return;
+      }
+      listEl.innerHTML = '';
+      program.forEach((cmd, idx) => {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'background:#00897b; color:white; padding:4px 8px; border-radius:10px; font-size:0.8rem;';
+        let label = cmd === 'MOVE' ? '進む' : (cmd === 'RIGHT' ? '右向く' : '左向く');
+        badge.textContent = `${idx + 1}. ${label}`;
+        listEl.appendChild(badge);
+      });
+    }
+
+    async function runProgram() {
+      if (isRunning || program.length === 0) return;
+      isRunning = true;
+      document.getElementById('msg').textContent = '🤖 プログラムを実行中...';
+
+      for (let i = 0; i < program.length; i++) {
+        const cmd = program[i];
+        await new Promise(res => setTimeout(res, 600));
+
+        if (cmd === 'RIGHT') {
+          playerPos.dir = (playerPos.dir + 1) % 4;
+        } else if (cmd === 'LEFT') {
+          playerPos.dir = (playerPos.dir + 3) % 4;
+        } else if (cmd === 'MOVE') {
+          let dr = 0, dc = 0;
+          if (playerPos.dir === 0) dr = -1;
+          if (playerPos.dir === 1) dc = 1;
+          if (playerPos.dir === 2) dr = 1;
+          if (playerPos.dir === 3) dc = -1;
+
+          let nr = playerPos.r + dr;
+          let nc = playerPos.c + dc;
+
+          if (nr >= 0 && nr < 4 && nc >= 0 && nc < 4 && map[nr][nc] !== 1) {
+            playerPos.r = nr;
+            playerPos.c = nc;
+          } else {
+            document.getElementById('msg').textContent = '💥 岩にぶつかったか、画面外だよ！';
+            isRunning = false;
+            return;
+          }
+        }
+        renderGrid();
+
+        if (map[playerPos.r][playerPos.c] === 2) {
+          document.getElementById('msg').textContent = '🎉 ゴール達成！すばらしいプログラムだね！';
+          isRunning = false;
+          return;
+        }
+      }
+
+      if (map[playerPos.r][playerPos.c] !== 2) {
+        document.getElementById('msg').textContent = '🤔 あと少し！プログラムを修正してみよう。';
+      }
+      isRunning = false;
+    }
+
+    function resetAll() {
+      if (isRunning) return;
+      playerPos = { r: 3, c: 0, dir: 0 };
+      program = [];
+      document.getElementById('msg').textContent = '命令ブロックをタップしてプログラムを作ってね！';
+      renderGrid();
+      renderProgram();
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
