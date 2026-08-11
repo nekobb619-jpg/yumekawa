@@ -439,6 +439,44 @@
       name: "人の体のつくりと運動（骨と筋肉）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
       created: "2026-07-28"
+    },
+    // ★STEAM補強：T (Technology) 領域
+    {
+      subject: "探究",
+      category: "プログラミング（4年）",
+      grade: "4年生",
+      id: "探究/プログラミング/prog01",
+      name: "プログラミングの思考（順次・条件・繰り返し）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
+    },
+    {
+      subject: "探究",
+      category: "情報モラル（4年）",
+      grade: "4年生",
+      id: "探究/情報/net_ethics01",
+      name: "ネットと情報モラル（パスワードとマナー）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
+    },
+    // ★STEAM補強：E (Engineering) 領域
+    {
+      subject: "探究",
+      category: "ものづくり設計（4年）",
+      grade: "4年生",
+      id: "探究/設計/engineering01",
+      name: "ものづくりと設計思考（かんがえて作ろう）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
+    },
+    {
+      subject: "理科",
+      category: "実験の設計（4年）",
+      grade: "4年生",
+      id: "理科/実験計画/exp_design01",
+      name: "実験の計画と条件そろえ（理科の探究）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-11"
     }
   ];
 
