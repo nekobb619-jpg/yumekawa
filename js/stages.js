@@ -87,6 +87,7 @@
     {
       subject: "国語",
       category: "漢字（4年）",
+      grade: "4年生",
       id: "国語/漢字/kanji01",
       name: "漢字と部首",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -95,6 +96,7 @@
     {
       subject: "国語",
       category: "漢字（4年）",
+      grade: "4年生",
       id: "国語/漢字/jukugo01",
       name: "漢字の組み立て（熟語）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -103,6 +105,7 @@
     {
       subject: "国語",
       category: "言葉の表現（4年）",
+      grade: "4年生",
       id: "国語/慣用句/kanyoku01",
       name: "慣用句・ことわざ（言葉の味わい）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -111,6 +114,7 @@
     {
       subject: "国語",
       category: "文のしくみ（4年）",
+      grade: "4年生",
       id: "国語/修飾語/shushoku01",
       name: "主語・述語・修飾語（文の組み立て）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -119,6 +123,7 @@
     {
       subject: "算数",
       category: "面積の変身ラボ（4年）",
+      grade: "4年生",
       id: "算数/面積/menseki_1",
       name: "面積の変身 ① 初級",
       reward: 10, showCount: 8, video_url: "",
@@ -128,6 +133,7 @@
     {
       subject: "算数",
       category: "面積の変身ラボ（4年）",
+      grade: "4年生",
       id: "算数/面積/menseki_2",
       name: "面積の変身 ② 中級",
       reward: 10, showCount: 8, video_url: "",
@@ -137,6 +143,7 @@
     {
       subject: "算数",
       category: "面積の変身ラボ（4年）",
+      grade: "4年生",
       id: "算数/面積/menseki_3",
       name: "面積の変身 ③ 上級",
       reward: 10, showCount: 8, video_url: "",
@@ -146,6 +153,7 @@
     {
       subject: "算数",
       category: "図形（垂直・平行と四角形）4年",
+      grade: "4年生",
       id: "算数/図形/suichoku_heikou01",
       name: "垂直と平行（すいちょくとへいこう）",
       reward: 10, showCount: 5, video_url: "",
@@ -156,6 +164,7 @@
     {
       subject: "算数",
       category: "図形（垂直・平行と四角形）4年",
+      grade: "4年生",
       id: "算数/図形/shikakukei_bunrui01",
       name: "四角形の仲間分け（台形・平行四辺形・ひし形）",
       reward: 10, showCount: 5, video_url: "",
@@ -166,6 +175,7 @@
     {
       subject: "算数",
       category: "図形（垂直・平行と四角形）4年",
+      grade: "4年生",
       id: "算数/図形/taikakusen01",
       name: "四角形の対角線（長さ・二等分・垂直）",
       reward: 10, showCount: 5, video_url: "",
@@ -176,6 +186,7 @@
     {
       subject: "算数",
       category: "図形（三角形の仲間分け）4年",
+      grade: "4年生",
       id: "算数/図形/sankaku_bunrui01",
       name: "三角形の仲間分け（正三角形・二等辺三角形・直角三角形）",
       reward: 10, showCount: 5, video_url: "",
@@ -186,6 +197,7 @@
     {
       subject: "算数",
       category: "図形（三角形の仲間分け）4年",
+      grade: "4年生",
       id: "算数/図形/naikaku_wa01",
       name: "三角形の内角の和",
       reward: 10, showCount: 5, video_url: "",
@@ -196,6 +208,7 @@
     {
       subject: "算数",
       category: "図形（三角形の仲間分け）4年",
+      grade: "4年生",
       id: "算数/図形/nakama_sagashi01",
       name: "三角形と四角形の仲間さがし（まとめ）",
       reward: 15, showCount: 4, video_url: "",
@@ -206,6 +219,7 @@
     {
       subject: "算数",
       category: "小数（4年）",
+      grade: "4年生",
       id: "算数/小数/shosu01",
       name: "小数のしくみと計算",
       reward: 10, showCount: 5, video_url: "", lab_url: "",
@@ -214,6 +228,7 @@
     {
       subject: "理科",
       category: "星と月（4年）",
+      grade: "4年生",
       id: "理科/星/hoshi01",
       name: "夏の星空と月の動き",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -222,6 +237,7 @@
     {
       subject: "理科",
       category: "季節と生き物（4年）",
+      grade: "4年生",
       id: "理科/季節と生き物/kisetsu01",
       name: "季節と生き物のようす",
       reward: 10, showCount: 11, video_url: "", lab_url: "",
@@ -230,6 +246,7 @@
     {
       subject: "理科",
       category: "空気と水の性質（4年）",
+      grade: "4年生",
       id: "理科/空気と水/kuki_mizu01",
       name: "空気と水の力（とじこめた空気と水）",
       reward: 10, showCount: 8, video_url: "",
@@ -240,6 +257,7 @@
     {
       subject: "理科",
       category: "もののあたたまり方（4年）",
+      grade: "4年生",
       id: "理科/あたたまり方/atatamari01",
       name: "もののあたたまり方（金属・水・空気）",
       reward: 10, showCount: 8, video_url: "",
@@ -250,6 +268,7 @@
     {
       subject: "社会",
       category: "ごみとくらし（4年）",
+      grade: "4年生",
       id: "社会/ごみ/gomi01",
       name: "ごみのゆくえ（分別とリサイクル）",
       reward: 10, showCount: 5, video_url: "", lab_url: "",
@@ -258,6 +277,7 @@
     {
       subject: "社会",
       category: "都道府県（4年）",
+      grade: "4年生",
       id: "社会/都道府県/todofuken01",
       name: "都道府県と地方区分",
       reward: 10, showCount: 11, video_url: "", lab_url: "",
@@ -266,6 +286,7 @@
     {
       subject: "社会",
       category: "都道府県（4年）",
+      grade: "4年生",
       id: "社会/都道府県/todofuken02",
       name: "都道府県の位置・地形・産業の特色",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -278,6 +299,7 @@
       //   読み・書きを産出する練習という住み分け）。
       subject: "国語",
       category: "漢字を書く（1年・10級だい1回）",
+      grade: "1年生",
       id: "漢検/10級/dai1kai",
       name: "10級 だい1回：一・右・雨・円・王・音・下・火・花・貝",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -288,6 +310,7 @@
       // （九＝1画目と2画目の順、玉・犬＝てんは最後、金＝たて線の位置。いずれも複数サイトで確認ずみ）。
       subject: "国語",
       category: "漢字を書く（1年・10級だい2回）",
+      grade: "1年生",
       id: "漢検/10級/dai2kai",
       name: "10級 だい2回：学・気・九・休・玉・金・空・月・犬・見",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -297,6 +320,7 @@
       // ★分岐図解トレーニング（考えを図にする汎用ツール）。もし〜なら図（if_then）とマインドマップの2テンプレート。
       subject: "探究",
       category: "図解トレーニング",
+      grade: "4年生",
       id: "探究/分岐図解/bunki01",
       name: "分岐図解トレーニング①（もしなら図・マインドマップ）",
       reward: 10, showCount: 4, video_url: "", lab_url: "",
@@ -305,6 +329,7 @@
     {
       subject: "算数",
       category: "折れ線グラフ（4年）",
+      grade: "4年生",
       id: "算数/グラフ/oresen01",
       name: "折れ線グラフと変化（変わり方）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -313,6 +338,7 @@
     {
       subject: "国語",
       category: "漢字の特長（4年）",
+      grade: "4年生",
       id: "国語/漢字/onyomi_kunyomi01",
       name: "漢字の音と訓（音読み・訓読み）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -321,6 +347,7 @@
     {
       subject: "理科",
       category: "水のゆくえ（4年）",
+      grade: "4年生",
       id: "理科/雨水/amamizu01",
       name: "雨水のゆくえと地面（水たまりと土の粒）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -329,6 +356,7 @@
     {
       subject: "社会",
       category: "くらしと水（4年）",
+      grade: "4年生",
       id: "社会/水道/josuijo01",
       name: "水はどこから（浄水場と安全な水）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -409,6 +437,7 @@
     {
       subject: "国語",
       category: "漢字を書く（1年・10級だい3回）",
+      grade: "1年生",
       id: "漢検/10級/dai3kai",
       name: "10級 だい3回：口・校・左・三・山・子・四・糸・字・耳",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -417,8 +446,47 @@
     {
       subject: "国語",
       category: "漢字を書く（1年・10級だい4回）",
+      grade: "1年生",
       id: "漢検/10級/dai4kai",
       name: "10級 だい4回：七・車・手・十・出・女・小・上・森・人",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-12"
+    },
+    {
+      // ★2026-08-12追加：漢字検定10級 対策 だい5回〜8回（8/20の試験にむけて残り40字を追加、
+      // これでdai1〜8であわせて80字＝10級の配当漢字を完全にカバー）。
+      subject: "国語",
+      category: "漢字を書く（1年・10級だい5回）",
+      grade: "1年生",
+      id: "漢検/10級/dai5kai",
+      name: "10級 だい5回：五・水・正・生・青・夕・石・赤・先・千",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-12"
+    },
+    {
+      subject: "国語",
+      category: "漢字を書く（1年・10級だい6回）",
+      grade: "1年生",
+      id: "漢検/10級/dai6kai",
+      name: "10級 だい6回：川・早・草・足・村・大・男・竹・中・虫",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-12"
+    },
+    {
+      subject: "国語",
+      category: "漢字を書く（1年・10級だい7回）",
+      grade: "1年生",
+      id: "漢検/10級/dai7kai",
+      name: "10級 だい7回：町・天・田・土・二・日・入・年・白・八",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-08-12"
+    },
+    {
+      subject: "国語",
+      category: "漢字を書く（1年・10級だい8回）",
+      grade: "1年生",
+      id: "漢検/10級/dai8kai",
+      name: "10級 だい8回：百・文・木・本・名・目・立・力・林・六",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
       created: "2026-08-12"
     },
@@ -461,6 +529,7 @@
       // 訓読み・熟語ともに複数辞書で確認ずみ（AGENTS.md 3.5適用）。
       subject: "国語",
       category: "漢字を書く（3年）",
+      grade: "3年生",
       id: "漢検/8級/dai1kai",
       name: "8級 だい1回：動・進・集・岸・波",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
@@ -471,6 +540,7 @@
       // 訓読み・熟語ともに複数辞書で確認ずみ（AGENTS.md 3.5適用）。
       subject: "国語",
       category: "漢字を書く（4年）",
+      grade: "4年生",
       id: "漢検/7級/dai1kai",
       name: "7級 だい1回：争・覚・続・果・飛",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
