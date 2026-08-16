@@ -4166,9 +4166,13 @@ window.closeAdmin = function() { document.getElementById("admin-zone").style.dis
 window.speakText = function(txt, lang = 'ja-JP') { if (!window.speechSynthesis) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = lang; u.rate = 0.85; window.speechSynthesis.speak(u); };
 window.openHybridContent = function(url, title, isCleared) {
   if (!url) return; const targetUrl = url.trim();
-  const isExternalBlockSite = targetUrl.includes("youtube.com") || targetUrl.includes("youtu.be") || targetUrl.includes("nhk.or.jp") || targetUrl.includes("http://") || targetUrl.includes("https://");
-  const isLocalFile = targetUrl.startsWith("./");
-  if (isExternalBlockSite && !isLocalFile) {
+  // ★2026-08-16修正：以前はvideo_urlが常にYouTube等だったため「httpを含む＝別タブ」で
+  //   十分だったが、lab_url（実験ラボ）も自社ドメインの絶対URLで運用するようになり、
+  //   同じ判定に巻き込まれて別タブで開いていた。iPhoneのSafariで新しいタブに戻る導線が
+  //   無く「戻れない」事故になっていたため、動画サイト（YouTube/NHK）だけを別タブ、
+  //   それ以外（実験ラボの自社ホストページ等）は常にiframeで開くよう変更する。
+  const isVideoSite = targetUrl.includes("youtube.com") || targetUrl.includes("youtu.be") || targetUrl.includes("nhk.or.jp");
+  if (isVideoSite) {
     if (!isCleared) { window.bonusVideoUsed = true; }
     alert(`🚀 「${title}」のページを、新しい大きなタブでひらきます！\nしっかりお勉強して戻ってきてね！`); window.open(targetUrl, "_blank");
   } else {
@@ -4475,8 +4479,9 @@ window.openBriefing = function(stg) {
 
   if (stg.lab_url) {
     const lBtn = document.createElement("button"); lBtn.className = "br-btn lab";
-    let isLocalHtml = stg.lab_url.startsWith("./");
-    let btnText = isLocalHtml ? "🔬 実験室を開く (アプリ内)" : "🔬 実験室リンクを開く (別タブ)";
+    // ★lab_urlは動画サイトを指さない方針（openHybridContent側で常にiframe扱い）なので
+    //   別タブ分岐の表示は不要。常に同じ文言にする。
+    let btnText = "🔬 実験室を開く (アプリ内)";
     if (!isCleared && stg.id) btnText += " (満点ボーナス発生!)"; else btnText += " (あそぶ)";
     lBtn.textContent = btnText;
     lBtn.onclick = () => { window.openHybridContent(stg.lab_url, "本格実験ラボ", isCleared); };
