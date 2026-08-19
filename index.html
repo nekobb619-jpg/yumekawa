@@ -1128,8 +1128,8 @@ window.normalizeSaveData = function(data) {
   normalized.answerLogs = normalized.answerLogs || []; // ★2026-08-08追加：解答時間・ヒント使用ログ（js/adaptive-question-generator.js）
   normalized.totalAnswersCount = normalized.totalAnswersCount || 0; // ★2026-08-08追加：せいちょうきろく用の総チャレンジ数（answerLogsは件数上限があるため別カウンタ）
   normalized.bossQuestCleared = normalized.bossQuestCleared || {}; // ★2026-08-08追加：ボスクエストの非消費型クリアフラグ（js/boss-quest.js）
-  normalized.bossQuestUnlockedCount = normalized.bossQuestUnlockedCount || 1; // ★2026-08-08追加：1日1題の解放数（0にはならないため`||`で安全）
-  normalized.bossQuestLastUnlockDate = normalized.bossQuestLastUnlockDate || "";
+  // ★2026-08-19廃止：bossQuestUnlockedCount/bossQuestLastUnlockDate（解放数を貯める旧方式）は
+  //   book.jsと同じ「日付%件数」の巡回方式に置き換えたため、js/boss-quest.jsはもう参照しない。
   normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
   normalized.kakera = Number(normalized.kakera || 0);
   normalized.inventory = normalized.inventory || [];

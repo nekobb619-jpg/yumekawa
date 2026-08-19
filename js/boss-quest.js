@@ -15,6 +15,11 @@
    （saveData.bossQuestUnlockedCount/bossQuestLastUnlockDate）。遊ばなかった日があっても
    解放ぶんは貯まるので取りこぼしにはならない。メインメニューのバナーは「ボスクエスト」ではなく
    「今日のなぞとき」表記（book-bannerのすぐ下、#dailymission-banner）。
+   ★2026-08-19変更：件数固定の「解放ぶんが貯まる」方式だと、MISSION_LIST.length（当時10件）を
+   遊びつくすと以降ずっと同じ最後の1問がループするだけになる不具合があった（りお：全10問クリア後、
+   毎日同じ最終問題が出続けていた）。book.js（おはなし）と同じ「日付 % 件数」の巡回方式に変更し、
+   ミッション数を増やせば増やすほど長く遊べる・尽きたら最初から巡回、という設計に統一した。
+   bossQuestUnlockedCount/bossQuestLastUnlockDateは廃止（新コードは参照しない）。
    新しいミッションを追加する場合は AGENTS.md 3.5（問題生成時の内容精査チェックリスト）を必ず適用すること。
    ===================================================================== */
 (function () {
@@ -499,38 +504,23 @@
     return now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
   }
 
-  // ★2026-08-08追加：1日1題ペース。「今日のおはなし」と同じ発想で、1日ごとに新しいミッションを
-  // 1つだけ解放する（saveData.bossQuestUnlockedCount）。遊ばなかった日があっても、解放ぶんは
-  // 貯まったままなので後からまとめて遊べる（＝取りこぼしにはならない）。
-  function ensureDailyUnlock_() {
-    if (!window.saveData) return;
-    var today = todayStr_();
-    var isFirstTime = window.saveData.bossQuestUnlockedCount === undefined || window.saveData.bossQuestUnlockedCount === null;
-    if (isFirstTime) {
-      window.saveData.bossQuestUnlockedCount = 1;
-      window.saveData.bossQuestLastUnlockDate = today;
-      if (window.saveGame) window.saveGame();
-      return;
-    }
-    if (window.saveData.bossQuestLastUnlockDate !== today) {
-      if (window.saveData.bossQuestUnlockedCount < MISSION_LIST.length) {
-        window.saveData.bossQuestUnlockedCount += 1;
-      }
-      window.saveData.bossQuestLastUnlockDate = today;
-      if (window.saveGame) window.saveGame();
-    }
+  // ★2026-08-19追加：book.jsのgetTodaysStoryと同じ「日付を通し日数に変換してmod」方式。
+  function dayIndexFromDateStr_(str) {
+    var parts = String(str).split("-").map(Number);
+    var y = parts[0], m = parts[1], d = parts[2];
+    if (!y || !m || !d) return 0;
+    return Math.floor(new Date(y, m - 1, d).getTime() / 86400000);
   }
 
-  function unlockedMissions_() {
-    ensureDailyUnlock_();
-    var unlockedCount = (window.saveData && window.saveData.bossQuestUnlockedCount) || 1;
-    return MISSION_LIST.slice(0, unlockedCount);
+  // ★2026-08-19変更：「今日のなぞとき」＝日付を件数で割った余りで決まる巡回方式（おはなしと同じ）。
+  // 解放数を貯める仕組みは廃止。ミッションを追加するほど、同じ問題に戻ってくるまでの周期が延びる。
+  function todaysMission_() {
+    var idx = ((dayIndexFromDateStr_(todayStr_()) % MISSION_LIST.length) + MISSION_LIST.length) % MISSION_LIST.length;
+    return MISSION_LIST[idx];
   }
 
   function pickMission() {
-    var unlocked = unlockedMissions_();
-    var uncleared = unlocked.filter(function (m) { return !isMissionCleared(m.id); });
-    return uncleared.length > 0 ? uncleared[0] : unlocked[unlocked.length - 1];
+    return todaysMission_();
   }
 
   // メインメニューのバナー（book-bannerのすぐ下）を更新する。index.htmlのrefreshBookBanner()と
@@ -541,13 +531,13 @@
     var badge = document.getElementById("dailymission-banner-badge");
     if (!banner || !window.saveData) return;
 
-    var unlocked = unlockedMissions_();
-    var uncleared = unlocked.filter(function (m) { return !isMissionCleared(m.id); });
+    var today = todaysMission_();
+    var todayCleared = isMissionCleared(today.id);
     var allDone = MISSION_LIST.every(function (m) { return isMissionCleared(m.id); });
 
-    if (uncleared.length > 0) {
+    if (!todayCleared) {
       banner.classList.remove("done-today");
-      if (sub) sub.textContent = uncleared[0].title;
+      if (sub) sub.textContent = today.title;
       if (badge) badge.textContent = "🆕 なぞ発生中";
     } else if (allDone) {
       banner.classList.add("done-today");
@@ -815,9 +805,7 @@
       if (window.updateUI) window.updateUI();
     }
 
-    // ★1日1題ペース：まだ解放されていない（＝明日以降の）ミッションは「つぎへ」で先出ししない
-    var hasNextMission = unlockedMissions_().some(function (m) { return !isMissionCleared(m.id); });
-
+    // ★2026-08-19変更：巡回方式では「今日のなぞとき」は常に1件だけなので、「つぎのミッションへ」は廃止。
     var stageEl = document.getElementById("bq-stage");
     stageEl.innerHTML =
       '<div class="bq-clear-screen">' +
@@ -829,13 +817,9 @@
         (currentMission.explanation ? '<div class="bq-nico-bubble">' + currentMission.explanation + '</div>' : '') +
         (firstClear ? '<div class="bq-token-count">🧩 +' + currentMission.rewardKakera + '</div>' : '') +
         '<button class="bq-main-btn" id="bq-btn-close2">とじる</button>' +
-        (hasNextMission ? '<button class="bq-sub-btn" id="bq-btn-nextmission">つぎの ミッションへ！</button>' : '') +
         '<button class="bq-sub-btn" id="bq-btn-restart">もう一度あそぶ</button>' +
       '</div>';
     document.getElementById("bq-btn-close2").onclick = window.closeBossQuest;
-    if (hasNextMission) {
-      document.getElementById("bq-btn-nextmission").onclick = function () { window.launchBossQuest(); };
-    }
     document.getElementById("bq-btn-restart").onclick = function () {
       state = freshState();
       render();
