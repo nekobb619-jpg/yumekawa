@@ -2586,7 +2586,11 @@ window.performLogin = function(id) {
        if (window.reinjectSavedAiQuestions) window.reinjectSavedAiQuestions();
        if (window.ensureStageQuestionCountTracking) window.ensureStageQuestionCountTracking();
        if (window.processDailyAvatarComfortUpkeep) window.processDailyAvatarComfortUpkeep();
-       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); if (window.refreshDailyMissionBanner) window.refreshDailyMissionBanner(); window.syncWithGoogleSpreadsheet("LOAD"); window.checkAutoLoginBonus();
+       window.updateUI(); window.updateInventoryUI(); window.refreshWeakBanner(); window.refreshBookBanner(); if (window.refreshDailyMissionBanner) window.refreshDailyMissionBanner(); window.syncWithGoogleSpreadsheet("LOAD");
+       // ★2026-08-19修正：ログインボーナスの自動付与を廃止。読み込みエラーで0状態になった直後に
+       //   自動でボーナス加算→即saveGame()されると、確認前の空データがそのままクラウドへ保存されて
+       //   しまう事故につながるため（りさのデータ消失の原因）。付与は画面上部の「💮 ログインスタンプ」
+       //   ボタン（openStampModal→executeStamp）から、子ども自身が手動で受け取る方式に統一する。
        // ★端末側の記録を正として使った場合は、あらためてクラウドへの再送を試みる
        //   （成功すれば "unsynced" フラグは saveGame() 内で自動的に解除される）。
        if (usedLocalOverride) { window.saveGame(); }
