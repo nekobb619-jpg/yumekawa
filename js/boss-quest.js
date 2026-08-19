@@ -488,6 +488,385 @@
         clearText: "なぞなぞ かいけつ！ たのしかったね！",
         clearTextRepeat: "なぞなぞ かいけつ！"
       }
+    },
+
+    // ★2026-08-19追加：巡回方式への変更にあわせてプールを10→20件に倍増（AGENTS.md 3.5チェック済み）。
+    {
+      id: "kingyo_genki_nai_01",
+      title: "🐠 金魚が 元気ない 事件",
+      rewardKakera: 5,
+      step1: {
+        icon: "🐠",
+        problemText: "水そうの 金魚が、なんだか 元気がないよ…。水面近くで じっとして あまり うごかないみたい。いったい 何が 起きているんだろう？"
+      },
+      step2: {
+        prompt: "まず、原因は なんだと思う？よそうしてみよう（ここは 自由に選んでOK）。",
+        hypotheses: [
+          { id: "h_water", icon: "💧", text: "水が よごれているのかも" },
+          { id: "h_food", icon: "🍚", text: "エサを あげすぎたのかも" },
+          { id: "h_temp", icon: "🌡️", text: "水の おんどが 高すぎるのかも" }
+        ]
+      },
+      step3: {
+        prompt: "道具を つかって、水そうを しらべてみよう。ぜんぶ タップしてね。",
+        tools: [
+          { id: "tool_water", icon: "🔍", name: "水の にごりぐあいを しらべる", factId: "fact_water_dirty" },
+          { id: "tool_food", icon: "🍚", name: "エサの りょうを かくにんする", factId: "fact_food_ok" },
+          { id: "tool_temp", icon: "🌡️", name: "水そうの おんどけいを みる", factId: "fact_temp_ok" }
+        ],
+        facts: {
+          fact_water_dirty: "しらべた けっか：水が にごっていて、ろか装置（そうち）が つまっていた",
+          fact_food_ok: "かくにんした けっか：エサの りょうは いつもどおりだった",
+          fact_temp_ok: "みた けっか：水の おんどは ちょうど よかった"
+        }
+      },
+      step4: {
+        prompt: "集めた事実から、正しい文章を組み立てよう！",
+        reasonPhrasing: {
+          fact_water_dirty: "水が にごっていて、ろか装置が つまっていた",
+          fact_food_ok: "エサの りょうは いつもどおりだった",
+          fact_temp_ok: "水の おんどは ちょうど よかった"
+        },
+        connectorText: "ので、",
+        actions: [
+          { id: "a_clean", text: "水を きれいに かえて、ろか装置も そうじする" },
+          { id: "a_less_food", text: "エサの りょうを へらす" },
+          { id: "a_adjust_temp", text: "水の おんどを ちょうせいする" }
+        ],
+        solutions: [
+          { reasonFactId: "fact_water_dirty", actionId: "a_clean" }
+        ],
+        hints: {
+          reason: "その理由、しらべた結果と ちがう気がするよ。もう一回、事実カードを見なおしてみよう！",
+          action: "そのたいさく、理由と つながっていないかも？水が よごれているなら、水を きれいに することが 先だよ。"
+        }
+      },
+      step5: {
+        clearText: "げんいんを つきとめて、金魚を げんきに したね！",
+        clearTextRepeat: "げんいんを つきとめて、金魚を げんきに したね！"
+      }
+    },
+    {
+      id: "jyuuden_dekinai_01",
+      title: "🔌 じゅうでんが できない 事件",
+      rewardKakera: 5,
+      step1: {
+        icon: "🔌",
+        problemText: "タブレットを じゅうでんしていたのに、あさに なっても バッテリーが ぜんぜん ふえていないよ…。いったい 何が 起きているんだろう？"
+      },
+      step2: {
+        prompt: "まず、原因は なんだと思う？よそうしてみよう（ここは 自由に選んでOK）。",
+        hypotheses: [
+          { id: "h_cable", icon: "🔌", text: "コードが きちんと ささっていないのかも" },
+          { id: "h_outlet", icon: "🏠", text: "コンセントの スイッチが 切れているのかも" },
+          { id: "h_battery", icon: "🔋", text: "タブレットの バッテリーが こわれているのかも" }
+        ]
+      },
+      step3: {
+        prompt: "道具を つかって、しらべてみよう。ぜんぶ タップしてね。",
+        tools: [
+          { id: "tool_cable", icon: "🔍", name: "コードが おくまで ささっているか たしかめる", factId: "fact_cable_loose" },
+          { id: "tool_outlet", icon: "🏠", name: "コンセントの スイッチを たしかめる", factId: "fact_outlet_ok" },
+          { id: "tool_battery", icon: "🔋", name: "べつの コードで じゅうでんできるか ためす", factId: "fact_battery_ok" }
+        ],
+        facts: {
+          fact_cable_loose: "たしかめた けっか：コードが とちゅうまでしか ささっておらず、ゆるんでいた",
+          fact_outlet_ok: "たしかめた けっか：コンセントの スイッチは ちゃんと 入っていた",
+          fact_battery_ok: "ためした けっか：べつの コードなら ふつうに じゅうでんできた（タブレット本体は こわれていない）"
+        }
+      },
+      step4: {
+        prompt: "集めた事実から、正しい文章を組み立てよう！",
+        reasonPhrasing: {
+          fact_cable_loose: "コードが とちゅうまでしか ささっておらず、ゆるんでいた",
+          fact_outlet_ok: "コンセントの スイッチは ちゃんと 入っていた",
+          fact_battery_ok: "べつの コードなら ふつうに じゅうでんできた"
+        },
+        connectorText: "ので、",
+        actions: [
+          { id: "a_replug", text: "コードを おくまで しっかり さしなおす" },
+          { id: "a_switch_on", text: "コンセントの スイッチを 入れる" },
+          { id: "a_new_tablet", text: "あたらしい タブレットに かえる" }
+        ],
+        solutions: [
+          { reasonFactId: "fact_cable_loose", actionId: "a_replug" }
+        ],
+        hints: {
+          reason: "その理由、しらべた結果と ちがう気がするよ。もう一回、事実カードを見なおしてみよう！",
+          action: "そのたいさく、理由と つながっていないかも？コードが ゆるんでいたなら、しっかり さしなおすことが 先だよ。"
+        }
+      },
+      step5: {
+        clearText: "げんいんを つきとめて、ちゃんと じゅうでんできるように したね！",
+        clearTextRepeat: "げんいんを つきとめて、ちゃんと じゅうでんできるように したね！"
+      }
+    },
+    {
+      id: "mushimegane_ookiku_mienai_01",
+      title: "🔍 虫めがねで 字が 見えない 事件",
+      rewardKakera: 5,
+      step1: {
+        icon: "🔍",
+        problemText: "虫めがねで きょうかしょの 字を 見ても、ぜんぜん 大きく 見えないよ…。いったい 何が 起きているんだろう？"
+      },
+      step2: {
+        prompt: "まず、原因は なんだと思う？よそうしてみよう（ここは 自由に選んでOK）。",
+        hypotheses: [
+          { id: "h_distance", icon: "📏", text: "虫めがねと 字の きょりが あっていないのかも" },
+          { id: "h_dirty", icon: "💧", text: "レンズが よごれているのかも" },
+          { id: "h_light", icon: "💡", text: "へやが くらいのかも" }
+        ]
+      },
+      step3: {
+        prompt: "道具を つかって、しらべてみよう。ぜんぶ タップしてね。",
+        tools: [
+          { id: "tool_distance", icon: "📏", name: "虫めがねと 字の きょりを 動かして たしかめる", factId: "fact_distance_wrong" },
+          { id: "tool_dirty", icon: "💧", name: "レンズの よごれを たしかめる", factId: "fact_lens_clean" },
+          { id: "tool_light", icon: "💡", name: "へやの 明るさを たしかめる", factId: "fact_room_bright" }
+        ],
+        facts: {
+          fact_distance_wrong: "たしかめた けっか：虫めがねを 字に くっつけすぎていて、ピントが あっていなかった",
+          fact_lens_clean: "たしかめた けっか：レンズは きれいで、よごれていなかった",
+          fact_room_bright: "たしかめた けっか：へやは じゅうぶん 明るかった"
+        }
+      },
+      step4: {
+        prompt: "集めた事実から、正しい文章を組み立てよう！",
+        reasonPhrasing: {
+          fact_distance_wrong: "虫めがねを 字に くっつけすぎていて、ピントが あっていなかった",
+          fact_lens_clean: "レンズは きれいで、よごれていなかった",
+          fact_room_bright: "へやは じゅうぶん 明るかった"
+        },
+        connectorText: "ので、",
+        actions: [
+          { id: "a_adjust_distance", text: "虫めがねを 字から 少し はなして、ピントを あわせる" },
+          { id: "a_clean_lens", text: "レンズを きれいに ふく" },
+          { id: "a_turn_light", text: "電気を つけて 明るく する" }
+        ],
+        solutions: [
+          { reasonFactId: "fact_distance_wrong", actionId: "a_adjust_distance" }
+        ],
+        hints: {
+          reason: "その理由、しらべた結果と ちがう気がするよ。もう一回、事実カードを見なおしてみよう！",
+          action: "そのたいさく、理由と つながっていないかも？ピントが あっていないなら、きょりを かえることが 先だよ。"
+        }
+      },
+      step5: {
+        clearText: "げんいんを つきとめて、虫めがねで 字を 大きく 見られるように したね！",
+        clearTextRepeat: "げんいんを つきとめて、虫めがねで 字を 大きく 見られるように したね！"
+      }
+    },
+    {
+      id: "ice_tokeru_01",
+      title: "🍦 アイスが すぐ とけた 事件",
+      rewardKakera: 5,
+      step1: {
+        icon: "🍦",
+        problemText: "れいとうこから 出した アイスクリームが、いつもより ずっと はやく とけてしまったよ…。いったい 何が 起きているんだろう？"
+      },
+      step2: {
+        prompt: "まず、原因は なんだと思う？よそうしてみよう（ここは 自由に選んでOK）。",
+        hypotheses: [
+          { id: "h_freezer_temp", icon: "🌡️", text: "れいとうこの おんどが 高いのかも" },
+          { id: "h_left_out", icon: "⏰", text: "出したまま 長い時間 おいていたのかも" },
+          { id: "h_flavor", icon: "🍨", text: "アイスの 種類（しゅるい）が ちがうのかも" }
+        ]
+      },
+      step3: {
+        prompt: "道具を つかって、しらべてみよう。ぜんぶ タップしてね。",
+        tools: [
+          { id: "tool_temp", icon: "🌡️", name: "れいとうこの おんどけいを みる", factId: "fact_freezer_temp_high" },
+          { id: "tool_time", icon: "⏰", name: "出してから どれくらい 時間が たったか かくにんする", factId: "fact_time_short" },
+          { id: "tool_flavor", icon: "🍨", name: "いつもと おなじ 種類か たしかめる", factId: "fact_flavor_same" }
+        ],
+        facts: {
+          fact_freezer_temp_high: "みた けっか：れいとうこの おんどが いつもより ずっと 高かった",
+          fact_time_short: "かくにんした けっか：出してから まだ 少ししか たっていなかった",
+          fact_flavor_same: "たしかめた けっか：いつもと おなじ 種類の アイスだった"
+        }
+      },
+      step4: {
+        prompt: "集めた事実から、正しい文章を組み立てよう！",
+        reasonPhrasing: {
+          fact_freezer_temp_high: "れいとうこの おんどが いつもより ずっと 高かった",
+          fact_time_short: "出してから まだ 少ししか たっていなかった",
+          fact_flavor_same: "いつもと おなじ 種類の アイスだった"
+        },
+        connectorText: "ので、",
+        actions: [
+          { id: "a_lower_temp", text: "れいとうこの おんどを もっと 下げる" },
+          { id: "a_eat_fast", text: "とける前に すぐ 食べる" },
+          { id: "a_change_flavor", text: "べつの 種類に かえる" }
+        ],
+        solutions: [
+          { reasonFactId: "fact_freezer_temp_high", actionId: "a_lower_temp" }
+        ],
+        hints: {
+          reason: "その理由、しらべた結果と ちがう気がするよ。もう一回、事実カードを見なおしてみよう！",
+          action: "そのたいさく、理由と つながっていないかも？おんどが 高いのが 原因なら、おんどを 下げることが 先だよ。"
+        }
+      },
+      step5: {
+        clearText: "げんいんを つきとめて、アイスを ちゃんと れいとうできるように したね！",
+        clearTextRepeat: "げんいんを つきとめて、アイスを ちゃんと れいとうできるように したね！"
+      }
+    },
+    {
+      // ★4年理科「月と星」単元対応。満月は日ぼつ前後に東からのぼり夜通し見えるが、雲でかくれる／
+      //   方角や時間がずれると見えない、という標準的な内容（複数教材で確認済み）。
+      id: "tsuki_mienai_01",
+      title: "🌕 まん月が 見えない 事件",
+      rewardKakera: 5,
+      step1: {
+        icon: "🌕",
+        problemText: "きょうは まん月のはずなのに、空を 見ても 月が ぜんぜん 見えないよ…。いったい 何が 起きているんだろう？"
+      },
+      step2: {
+        prompt: "まず、原因は なんだと思う？よそうしてみよう（ここは 自由に選んでOK）。",
+        hypotheses: [
+          { id: "h_cloud", icon: "☁️", text: "雲に かくれているのかも" },
+          { id: "h_direction", icon: "🧭", text: "見ている 方角が ちがうのかも" },
+          { id: "h_time", icon: "🕐", text: "月が のぼる 時間に なっていないのかも" }
+        ]
+      },
+      step3: {
+        prompt: "道具を つかって、しらべてみよう。ぜんぶ タップしてね。",
+        tools: [
+          { id: "tool_cloud", icon: "☁️", name: "空の ようすを たしかめる", factId: "fact_sky_cloudy" },
+          { id: "tool_direction", icon: "🧭", name: "ほういじしんで 見ている 方角を たしかめる", factId: "fact_direction_ok" },
+          { id: "tool_time", icon: "🕐", name: "今の 時こくを たしかめる", factId: "fact_time_ok" }
+        ],
+        facts: {
+          fact_sky_cloudy: "たしかめた けっか：空が あつい 雲で おおわれていた",
+          fact_direction_ok: "たしかめた けっか：見ている 方角は まちがっていなかった",
+          fact_time_ok: "たしかめた けっか：もう 月が のぼっている はずの 時こくだった"
+        }
+      },
+      step4: {
+        prompt: "集めた事実から、正しい文章を組み立てよう！",
+        reasonPhrasing: {
+          fact_sky_cloudy: "空が あつい 雲で おおわれていた",
+          fact_direction_ok: "見ている 方角は まちがっていなかった",
+          fact_time_ok: "もう 月が のぼっている はずの 時こくだった"
+        },
+        connectorText: "ので、",
+        actions: [
+          { id: "a_wait_cloud", text: "雲が なくなるまで まって、また 空を 見る" },
+          { id: "a_change_direction", text: "見る 方角を かえる" },
+          { id: "a_wait_more", text: "もっと おそい 時間まで まつ" }
+        ],
+        solutions: [
+          { reasonFactId: "fact_sky_cloudy", actionId: "a_wait_cloud" }
+        ],
+        hints: {
+          reason: "その理由、しらべた結果と ちがう気がするよ。もう一回、事実カードを見なおしてみよう！",
+          action: "そのたいさく、理由と つながっていないかも？雲に かくれているなら、雲が 晴れるのを まつことが 先だよ。"
+        }
+      },
+      step5: {
+        clearText: "げんいんを つきとめて、まん月を 見られたね！",
+        clearTextRepeat: "げんいんを つきとめて、まん月を 見られたね！"
+      }
+    },
+    {
+      id: "nazonazo_shashin_01",
+      type: "riddle",
+      title: "📷 なぞなぞ：なくならないもの",
+      rewardKakera: 5,
+      icon: "📷",
+      riddleText: "とっても とっても なくならない ものは なぁんだ？（「とる」を べつの いみで かんがえてみよう）",
+      choices: [
+        { id: "c1", text: "しゃしん" },
+        { id: "c2", text: "おかし" },
+        { id: "c3", text: "えんぴつ" },
+        { id: "c4", text: "けしゴム" }
+      ],
+      correctChoiceId: "c1",
+      explanation: "こたえは「しゃしん」！ 写真を「とる（撮る）」は、おかしなどを「とる（食べる・使う）」のとは ちがう いみだよ。写真は なんかい とっても、へらないよね。",
+      step5: {
+        clearText: "なぞなぞ かいけつ！ たのしかったね！",
+        clearTextRepeat: "なぞなぞ かいけつ！"
+      }
+    },
+    {
+      id: "nazonazo_shitajiki_01",
+      type: "riddle",
+      title: "📋 なぞなぞ：うえにあるのに",
+      rewardKakera: 5,
+      icon: "📋",
+      riddleText: "つくえの 上で つかうのに、名前に「下」の 字が つく ものは なぁんだ？",
+      choices: [
+        { id: "c1", text: "下じき" },
+        { id: "c2", text: "上ばき" },
+        { id: "c3", text: "じょうぎ" },
+        { id: "c4", text: "ノート" }
+      ],
+      correctChoiceId: "c1",
+      explanation: "こたえは「下じき」！ つくえの 上に おいて つかう どうぐなのに、名前に「下」の字が 入っているね。おもしろい 名前の なぞなぞだよ。",
+      step5: {
+        clearText: "なぞなぞ かいけつ！ たのしかったね！",
+        clearTextRepeat: "なぞなぞ かいけつ！"
+      }
+    },
+    {
+      id: "nazonazo_taiko_oto_01",
+      type: "riddle",
+      title: "🥁 なぞなぞ：たたくと出るもの",
+      rewardKakera: 5,
+      icon: "🥁",
+      riddleText: "たいこを たたけば たたくほど、たくさん 出てくる ものは なぁんだ？",
+      choices: [
+        { id: "c1", text: "おと" },
+        { id: "c2", text: "あな" },
+        { id: "c3", text: "けむり" },
+        { id: "c4", text: "水" }
+      ],
+      correctChoiceId: "c1",
+      explanation: "こたえは「音（おと）」！ たいこを たたくと、たたいた ぶんだけ 音が 出てくるね。",
+      step5: {
+        clearText: "なぞなぞ かいけつ！ たのしかったね！",
+        clearTextRepeat: "なぞなぞ かいけつ！"
+      }
+    },
+    {
+      id: "nazonazo_zou_01",
+      type: "riddle",
+      title: "🐘 なぞなぞ：わたしは だぁれ",
+      rewardKakera: 5,
+      icon: "🐘",
+      riddleText: "はなが とても 長くて、耳も 大きいよ。体も とても 大きいよ。鼻を つかって 水や 食べ物を つかむよ。わたしは だぁれ？",
+      choices: [
+        { id: "c1", text: "ぞう" },
+        { id: "c2", text: "カバ" },
+        { id: "c3", text: "サイ" },
+        { id: "c4", text: "キリン" }
+      ],
+      correctChoiceId: "c1",
+      explanation: "こたえは「ぞう（象）」！ 長い 鼻と 大きな 耳が とくちょうの どうぶつだよ。鼻を 手のように つかって、水を のんだり 食べ物を つかんだり できるよ。",
+      step5: {
+        clearText: "なぞなぞ かいけつ！ たのしかったね！",
+        clearTextRepeat: "なぞなぞ かいけつ！"
+      }
+    },
+    {
+      id: "nazonazo_kirin_01",
+      type: "riddle",
+      title: "🦒 なぞなぞ：わたしは だぁれ",
+      rewardKakera: 5,
+      icon: "🦒",
+      riddleText: "くびが とても 長いよ。高い 木の 上の 方の 葉っぱを たべるよ。体には あみの目みたいな もようが あるよ。わたしは だぁれ？",
+      choices: [
+        { id: "c1", text: "きりん" },
+        { id: "c2", text: "しまうま" },
+        { id: "c3", text: "らくだ" },
+        { id: "c4", text: "ぞう" }
+      ],
+      correctChoiceId: "c1",
+      explanation: "こたえは「きりん」！ 長い くびで 高い 木の 上の 方の 葉っぱを たべられるよ。あみの目の ような もようが とくちょうだよ。",
+      step5: {
+        clearText: "なぞなぞ かいけつ！ たのしかったね！",
+        clearTextRepeat: "なぞなぞ かいけつ！"
+      }
     }
   ];
 
