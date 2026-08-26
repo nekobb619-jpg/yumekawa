@@ -1000,7 +1000,14 @@
       '<div class="bq-hint-banner" id="bq-hint-banner"></div>' +
       '<button class="bq-sub-btn" id="bq-btn-close1">とじる</button>';
     var list = document.getElementById("bq-riddle-choices");
-    m.choices.forEach(function (c) {
+    var shuffledChoices = m.choices.slice();
+    for (var i = shuffledChoices.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = shuffledChoices[i];
+      shuffledChoices[i] = shuffledChoices[j];
+      shuffledChoices[j] = tmp;
+    }
+    shuffledChoices.forEach(function (c) {
       var el = document.createElement("div");
       el.className = "bq-choice-card";
       el.innerHTML = '<span>' + c.text + '</span>';
