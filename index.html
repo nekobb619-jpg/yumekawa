@@ -1638,6 +1638,15 @@ window.checkExpeditionResolution = function () {
     window.saveData.expeditionLostTeamIds = exp.teamIds.slice();
   }
 
+  // ★2026-08-27追加：探検隊の結果（特にもちくん獲得等のレア結果）もlog_dbに記録が
+  //   残っていなかったため、ここでLOGを送るようにする（doGachaPullのガチャログと同じ理由）。
+  window.syncWithGoogleSpreadsheet("LOG", {
+    stage: "危険探検隊",
+    msg: survived
+      ? `探検成功! +${result.earnedQ || 0}Q${result.mochikunGained ? ' ★もちくん獲得!★' : ''}${result.premiumResult ? ' プレミアムお宝獲得!' : ''}`
+      : "探検失敗…迷子発生"
+  });
+
   exp.resolved = true;
   window.saveData.expedition = null;
   window.saveGame();
@@ -3490,6 +3499,9 @@ window.showGachaResult = function(result) {
   const zone = document.getElementById('gacha-result-zone');
   if (!zone) return;
   const { egg, isDupe, isItem } = result;
+  // ★2026-08-27追加：ガチャ結果はlog_dbに記録が一切残っておらず、事故時にいつ何を
+  //   引いたか復元できなかった（もちくん消失インシデント）ため、ここでLOGを送るようにする。
+  window.syncWithGoogleSpreadsheet("LOG", { stage: "ガチャ", msg: `ガチャ結果: ${egg.name}${isDupe ? '(重複)' : isItem ? '(アイテム即時付与)' : '(新規ゲット!)'}` });
   const rarityLabel = egg.rarity===5?'★★★★★ 超EXレア！！！':egg.rarity===4?'★★★★ 伝説！！':egg.rarity===3?'★★★ 超レア！':egg.rarity===2?'★★ レア！':'★ ふつう';
   const rarityColor = egg.rarity===5?'#0891b2':egg.rarity===4?'#a21caf':egg.rarity===3?'#d97706':egg.rarity===2?'#2563eb':'#64748b';
   if (egg.rarity === 5 && !isDupe && window.showMochikunCutIn) window.showMochikunCutIn(egg);
