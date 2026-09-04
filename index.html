@@ -4334,7 +4334,11 @@ window.computeStageClearReward = function(stageId, opts) {
   } else if (isReview) {
     baseReward = Math.floor(opts.currentActiveStageReward / 2);
   } else if (isRecompleteAfterNewQuestion) {
-    baseReward = (caseType === "new_question") ? 10 : 5;
+    // ★2026-08-30修正：new_questionの報酬を10→3Qへ引き下げ。週次AI自動追加（question_drafts
+    //   経由）により、この「済ステージへの新問題追加」が稀なイベントから毎週定期的に起こる
+    //   ものへ変わったため、通常の周回報酬(+2Q)に近い水準へ調整（recompleteの+5Qは
+    //   2026-08-05のユーザーフィードバックに基づく既存の値のため維持）。
+    baseReward = (caseType === "new_question") ? 3 : 5;
   }
 
   if (isCleared && !isReview && !isMaster) {
