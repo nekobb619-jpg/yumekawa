@@ -2770,7 +2770,62 @@ window.refreshSummerTimeline = function() {
   var isSummer = (month === 7 && day >= 21) || month === 8;
   el.style.display = isSummer ? "block" : "none";
 };
+// ★2026-08-30追加：学期・学年をタイマー/スケジュール実行ではなく、今日の日付から毎回
+//   計算する純関数として用意する（refreshSummerTimelineと同じ考え方）。定期実行の
+//   仕組みを別途持たないため、「動かし忘れ」「何ヶ月か開かなかった間の反映漏れ」が
+//   構造的に起こらない。学期・長期休みの日付は`.knowledge/curriculum-grade4-by-term.md`
+//   の「実際の在校期間」の節と対応させること（値を変える場合は両方直す）。
+//
+//   学年は、入学年（4月に1年生になった年）を基準に、今日が何年目の4月1日以降かで
+//   自動計算する。ここでは家族の実際の入学年（2023年）を既定値にしているが、将来
+//   別の子どものデータでも使うことを見越して、優先的にsaveData側の値があればそちらを使う。
+window.SCHOOL_ENTRY_YEAR = 2023; // 2023年4月に1年生になった学年を既定値とする
+
+// 4/1基準の「学校年度」（3月は前年度扱い）と、その年度内の月日から学年・学期・休み期間を返す。
+window.getCurrentTermInfo = function(dateOverride) {
+  var now = dateOverride || new Date();
+  var month = now.getMonth() + 1; // 1-12
+  var day = now.getDate();
+  var calendarYear = now.getFullYear();
+  // 4月始まりの学校年度（1〜3月は前年度の続き）
+  var schoolYear = (month >= 4) ? calendarYear : (calendarYear - 1);
+
+  var entryYear = (window.saveData && window.saveData.schoolEntryYear) || window.SCHOOL_ENTRY_YEAR;
+  var grade = schoolYear - entryYear + 1;
+
+  var term = null;
+  var breakType = null;
+  if (month === 4 || month === 5 || month === 6 || (month === 7 && day <= 19)) {
+    term = 1;
+  } else if ((month === 7 && day >= 20) || month === 8) {
+    breakType = "summer";
+  } else if (month === 9 || month === 10 || month === 11 || (month === 12 && day <= 20)) {
+    term = 2;
+  } else if ((month === 12 && day >= 21) || (month === 1 && day <= 7)) {
+    breakType = "winter";
+  } else if ((month === 1 && day >= 8) || month === 2 || (month === 3 && day <= 24)) {
+    term = 3;
+  } else { // 3月25日〜3月31日
+    breakType = "spring";
+  }
+
+  var label = (grade >= 1 && grade <= 6) ? (grade + "年生") : (grade > 6 ? ("中学" + (grade - 6) + "年生") : (grade + "年生"));
+  if (term) {
+    label += " " + term + "学期";
+  } else if (breakType === "summer") {
+    label += " 夏休み";
+  } else if (breakType === "winter") {
+    label += " 冬休み";
+  } else if (breakType === "spring") {
+    label += " 春休み";
+  }
+
+  return { grade: grade, term: term, breakType: breakType, label: label };
+};
 window.initApp = function() {
+  // ★今日時点の学年・学期・休み期間を計算しておく（今のところUIでの利用箇所はまだ無いが、
+  //   今後の学期別コンテンツ出し分け・長期休みコーナー等はこれを参照する想定）。
+  window.currentTermInfo = window.getCurrentTermInfo();
   // ★ふだんは自動で子どものアカウントにログイン（ログイン画面＝アカウント作成の入り口は出さない）
   if (!window.playerId) {
     window.playerId = window.CHILD_ID;
