@@ -2512,9 +2512,12 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
     if (action === "LOAD" && res.status === "SUCCESS") {
       let incomingStages = res.stages || []; window.globalStageMaster = {}; let foundSubjects = new Set();
       const specCont = document.getElementById("special-missions-container"); if(specCont) specCont.innerHTML = "";
-      if (res.mission && res.mission.desc) {
-         const mCard = document.createElement("div"); mCard.style = "background: #faf5ff; border-left: 5px solid #d946ef; padding: 10px; border-radius: 8px;";
-         mCard.innerHTML = `<div style="font-weight: bold; color: #701a75; margin-bottom: 4px;">👑 【${res.mission.status_text || '特別指令'}】 ${res.mission.desc}</div><div style="font-size:12px; color:#65a30d; font-weight:bold;">🎁 クリア報酬: ${res.mission.rewardQ || 0} Q</div>`; specCont.appendChild(mCard);
+      const activeMissions = (res.missions && res.missions.length > 0) ? res.missions : (res.mission ? [res.mission] : []);
+      if (activeMissions.length > 0) {
+         activeMissions.forEach((m, idx) => {
+           const mCard = document.createElement("div"); mCard.style = `background: #faf5ff; border-left: 5px solid #d946ef; padding: 10px; border-radius: 8px;${idx > 0 ? " margin-top: 8px;" : ""}`;
+           mCard.innerHTML = `<div style="font-weight: bold; color: #701a75; margin-bottom: 4px;">👑 【${m.status_text || '特別指令'}】 ${m.desc}</div><div style="font-size:12px; color:#65a30d; font-weight:bold;">🎁 クリア報酬: ${m.rewardQ || 0} Q</div>`; specCont.appendChild(mCard);
+         });
       } else { if(specCont) specCont.innerHTML = `<div style="text-align:center; padding:16px; color:#94a3b8; font-size:12px;">今月の特別指令はおやすみ中です.</div>`; }
 
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
