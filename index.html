@@ -492,6 +492,23 @@
   .pr-kid-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
   .pr-kid-tab { flex: 1; padding: 9px 4px; border: 2px solid #bfdbfe; background: #fff; border-radius: 10px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 13px; color: #1e3a8a; cursor: pointer; }
   .pr-kid-tab.active { border-color: #2563eb; background: #dbeafe; }
+
+  /* ★2026-09-12追加：こんしゅうのもくひょう（教科ごとに軽く触れる週間ミッション、子ども向け） */
+  #weekly-mission-modal { position: fixed; inset: 0; background: rgba(124, 58, 237, 0.45); z-index: 800; display: none; justify-content: center; align-items: center; padding: 16px; }
+  .wm-subject-row { display: flex; align-items: center; gap: 10px; background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; text-align: left; }
+  .wm-subject-row.achieved { background: #f0fdf4; border-color: #bbf7d0; }
+  .wm-subject-icon { font-size: 22px; flex-shrink: 0; }
+  .wm-subject-main { flex: 1; min-width: 0; }
+  .wm-subject-name { font-size: 13px; font-weight: 900; color: #6b21a8; display: flex; align-items: center; gap: 4px; }
+  .wm-subject-row.achieved .wm-subject-name { color: #065f46; }
+  .wm-subject-check { font-size: 13px; }
+  .wm-subject-bar-track { height: 10px; background: #e9d5ff; border-radius: 8px; overflow: hidden; margin-top: 4px; }
+  .wm-subject-row.achieved .wm-subject-bar-track { background: #d1fae5; }
+  .wm-subject-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, #c084fc, #7c3aed); transition: width 0.5s ease; }
+  .wm-subject-row.achieved .wm-subject-bar-fill { background: linear-gradient(90deg, #34d399, #059669); }
+  .wm-subject-count { font-size: 12px; font-weight: 900; color: #6b21a8; flex-shrink: 0; }
+  .wm-subject-row.achieved .wm-subject-count { color: #065f46; }
+  #weekly-mission-footer { font-size: 12.5px; font-weight: 800; color: #6b21a8; margin-top: 10px; line-height: 1.6; }
   #boss-quest-modal { position: fixed; inset: 0; background: rgba(74, 44, 58, 0.85); z-index: 850; display: none; justify-content: center; align-items: center; padding: 16px; }
   #boss-quest-modal.open { display: flex; }
   .bq-app { width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
@@ -605,6 +622,10 @@
     <button class="btn-sm" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5); color:#065f46; font-weight:900;" onclick="window.openGrowthModal()">📈 せいちょうきろく</button>
     <!-- ★2026-08-08追加：ほごしゃレポート（週間の学習量・得意/苦戦分野。js/adaptive-question-generator.js） -->
     <button class="btn-sm" style="background:linear-gradient(135deg,#eff6ff,#dbeafe); color:#1e3a8a; font-weight:900;" onclick="window.openParentReportModal()">👨‍👩‍👧 ほごしゃレポート</button>
+  </div>
+  <div class="flex-row">
+    <!-- ★2026-09-12追加：こんしゅうのもくひょう（教科ごとに軽く触れる週間ミッション。js/adaptive-question-generator.js） -->
+    <button class="btn-sm" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff); color:#6b21a8; font-weight:900;" onclick="window.openWeeklyMissionModal()">📅 こんしゅうのもくひょう</button>
   </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
@@ -964,6 +985,16 @@
     <div class="pr-kid-tabs" id="pr-kid-tabs" style="display:none;"></div>
     <div id="parent-report-body"></div>
     <button class="br-btn close" onclick="window.closeParentReportModal()">とじる</button>
+  </div>
+</div>
+<!-- ★2026-09-12追加：こんしゅうのもくひょうモーダル。中身はjs/adaptive-question-generator.jsが描画する -->
+<div id="weekly-mission-modal">
+  <div class="growth-modal-box" style="max-width:380px;">
+    <div class="growth-modal-title">📅 こんしゅうのもくひょう</div>
+    <div class="growth-modal-sub">きょうかに、すこしずつ さわってみよう</div>
+    <div id="weekly-mission-body"></div>
+    <div id="weekly-mission-footer"></div>
+    <button class="br-btn close" onclick="window.closeWeeklyMissionModal()">とじる</button>
   </div>
 </div>
 <div id="game-screen">
@@ -5220,10 +5251,12 @@ window.showQuestionStep = function() {
     passBtn.style.cssText = "width: 100%; background: #e2e8f0; color: #64748b; margin-top: 8px; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 3px 0 #cbd5e1;";
     passBtn.textContent = "💡 わからない（パスして答えを見る）";
     passBtn.onclick = () => {
+      // ★2026-09-12変更：パスは「弱点」扱いにしないノーペナルティ仕様（子どもの心理的安全を優先）。
+      //   以前はここでtriggerWrongAnswerも呼び、パス＝不正解1回としてweakQuestionsに記録していたが、
+      //   「間違えても大丈夫」の思想と矛盾するため、記録に残さないtriggerSkipAnswerに一本化した。
       passBtn.style.transform = "translateY(3px)"; passBtn.style.boxShadow = "none";
-      window.triggerWrongAnswer(current);
       submitBtn.disabled = true; passBtn.disabled = true;
-      window.triggerPassAnswer(current);
+      window.triggerSkipAnswer(current);
     };
     submitBtn.onclick = () => {
       let val = inputBox.value.trim().replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
@@ -5245,10 +5278,23 @@ window.showQuestionStep = function() {
     zone.appendChild(submitBtn); zone.appendChild(passBtn);
   } else if (current.a && current.a.length > 0) {
     let opts = current.a.map((txt, idx) => ({ txt, originalIdx: idx })).sort(() => Math.random() - 0.5);
+    const choiceBtns = [];
     opts.forEach(o => {
       const b = document.createElement("button"); b.className = "choice-btn"; b.textContent = o.txt;
-      b.onclick = () => { if(o.originalIdx === current.c) { b.className = "choice-btn correct"; window.speakText("まる！大正解！", "ja-JP"); window.triggerCorrectAnswer(current); } else { b.className = "choice-btn wrong"; window.triggerWrongAnswer(current); b.disabled = true; } }; zone.appendChild(b);
+      b.onclick = () => { if(o.originalIdx === current.c) { b.className = "choice-btn correct"; window.speakText("まる！大正解！", "ja-JP"); window.triggerCorrectAnswer(current); choiceBtns.forEach(cb => cb.disabled = true); skipBtn.disabled = true; } else { b.className = "choice-btn wrong"; window.triggerWrongAnswer(current); b.disabled = true; } }; zone.appendChild(b); choiceBtns.push(b);
     });
+    // ★2026-09-12追加：選択式にもtext_inputと同じ「わからない」パス（ノーペナルティ）を追加。
+    //   weakQuestionsには記録せず、triggerSkipAnswerで答えだけ見せて次へ進める。
+    const skipBtn = document.createElement("button");
+    skipBtn.className = "btn-sm";
+    skipBtn.style.cssText = "width: 100%; background: #e2e8f0; color: #64748b; margin-top: 8px; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 3px 0 #cbd5e1;";
+    skipBtn.textContent = "💡 わからない（パスして答えを見る）";
+    skipBtn.onclick = () => {
+      choiceBtns.forEach(cb => cb.disabled = true);
+      skipBtn.disabled = true;
+      window.triggerSkipAnswer(current);
+    };
+    zone.appendChild(skipBtn);
   } else { const passBtn = document.createElement("button"); passBtn.className = "choice-btn correct"; passBtn.textContent = "✨ 実験に成功したらここを押して次へ！"; passBtn.onclick = () => { window.triggerCorrectAnswer(current); }; zone.appendChild(passBtn); }
 };
 window.triggerWrongAnswer = function(current) {
@@ -5295,7 +5341,8 @@ window.triggerPassAnswer = function(current) {
   window.speakText("正解を教えるね", "ja-JP");
   document.getElementById("job-title").textContent = "💡 答えと解説";
 
-  let ansText = current.correct_answers ? current.correct_answers.join(" または ") : "";
+  // ★2026-09-12修正：選択式問題は correct_answers を持たないため、current.a[current.c]（正解の選択肢文字列）へフォールバックする
+  let ansText = current.correct_answers ? current.correct_answers.join(" または ") : ((current.a && typeof current.c === "number") ? current.a[current.c] : "");
   let processedDesc = `<span style='color:#ef4444; font-weight:bold; font-size:15px;'>【正解： ${ansText} 】</span><br><br>` + (current.job_desc || "").replace(/\n/g, "<br>");
 
   const jobDescEl = document.getElementById("job-desc");
@@ -5315,6 +5362,18 @@ window.triggerPassAnswer = function(current) {
   nextBtn.style.display = "block";
 
   setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
+};
+// ★2026-09-12追加：「わからない」パスの本体。triggerWrongAnswerを呼ばないため、
+//   weakQuestions/answerLogs（＝ほごしゃレポートの苦戦分野判定や苦手撃破ラボの対象）には
+//   一切残らない、完全ノーペナルティの仕様（子どもの心理的安全を優先する方針）。
+//   パス回数だけは非難的でない形でsaveDataに残し、将来「せいちょうきろく」等で
+//   前向きに使えるようにしておく。
+window.triggerSkipAnswer = function(current) {
+  if (window.saveData) {
+    window.saveData.totalSkipsCount = (window.saveData.totalSkipsCount || 0) + 1;
+    if (window.saveGame) window.saveGame();
+  }
+  window.triggerPassAnswer(current);
 };
 window.triggerCorrectAnswer = function(current) {
   // ★2026-08-08追加：解答時間・ヒント使用込みのログを記録（js/adaptive-question-generator.js側で分析に使う）

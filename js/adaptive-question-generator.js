@@ -733,4 +733,102 @@
       '</div>';
   };
 
+  /* ---------------------------------------------------------------------
+     (8) 「今週のもくひょう」子ども向け週間ミッションチェックリスト ★2026-09-12追加
+     自走支援フレームワークの「環境構造化・見通しの可視化」に対応。answerLogsを
+     教科（subject）単位で直近7日間だけ集計し、「もう少しだけ挑戦してみよう」という
+     軽い見通しを子ども自身に見せる画面。ノルマ管理ではなく教科に少しずつ触れることが
+     目的なので目標は低め（既定3問）に設定し、未達でも責めるトーンにはしない
+     （footerの文言も「がんばれてないね」ではなく「むりしなくて大丈夫」で統一）。
+     --------------------------------------------------------------------- */
+  window.WEEKLY_MISSION_TARGET_PER_SUBJECT = 3; // 教科ごとの「今週の目標」問題数（低めに設定、無理をさせない）
+  window.WEEKLY_MISSION_SUBJECTS = [
+    { key: "算数", icon: "🔢" },
+    { key: "国語", icon: "📖" },
+    { key: "理科", icon: "🔬" },
+    { key: "社会", icon: "🌏" },
+    { key: "探究", icon: "🔎" },
+    { key: "英語", icon: "🔤" }
+  ];
+
+  // answerLogsのcategory（単元レベル、例:「わり算（4年）」）から教科レベル（例:「算数」）を逆引きする。
+  // CONTENT.stagesから一度だけマップを作ってキャッシュする（ステージ数が多いため毎回舐めない）。
+  var categorySubjectMap_ = null;
+  window.resolveCategorySubject = function (category) {
+    if (!category) return null;
+    if (!categorySubjectMap_) {
+      categorySubjectMap_ = {};
+      if (window.CONTENT && Array.isArray(window.CONTENT.stages)) {
+        window.CONTENT.stages.forEach(function (s) {
+          var cat = s.category || s.subject || s.id;
+          if (cat && s.subject && !categorySubjectMap_[cat]) categorySubjectMap_[cat] = s.subject;
+        });
+      }
+    }
+    return categorySubjectMap_[category] || null;
+  };
+
+  window.computeWeeklyMissionProgress = function (targetSaveData) {
+    var sd = targetSaveData || window.saveData;
+    var logs = (sd && sd.answerLogs) || [];
+    var now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+    var weekAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+    var countBySubject = {};
+    logs.forEach(function (l) {
+      if (!l || !l.ts || l.ts < weekAgo) return;
+      var subject = window.resolveCategorySubject(l.category);
+      if (!subject) return;
+      countBySubject[subject] = (countBySubject[subject] || 0) + 1;
+    });
+
+    return window.WEEKLY_MISSION_SUBJECTS.map(function (s) {
+      var count = countBySubject[s.key] || 0;
+      var target = window.WEEKLY_MISSION_TARGET_PER_SUBJECT;
+      return { key: s.key, icon: s.icon, count: count, target: target, achieved: count >= target };
+    });
+  };
+
+  window.openWeeklyMissionModal = function () {
+    var modal = document.getElementById("weekly-mission-modal");
+    if (!modal) return;
+    window.renderWeeklyMissionModal();
+    modal.style.display = "flex";
+  };
+
+  window.closeWeeklyMissionModal = function () {
+    var modal = document.getElementById("weekly-mission-modal");
+    if (modal) modal.style.display = "none";
+  };
+
+  window.renderWeeklyMissionModal = function () {
+    var body = document.getElementById("weekly-mission-body");
+    if (!body) return;
+    var rows = window.computeWeeklyMissionProgress();
+    var achievedCount = rows.filter(function (r) { return r.achieved; }).length;
+
+    body.innerHTML = rows.map(function (r) {
+      var pct = Math.min(100, Math.round((r.count / r.target) * 100));
+      var cls = r.achieved ? "wm-subject-row achieved" : "wm-subject-row";
+      var check = r.achieved ? "✅" : (r.count > 0 ? "🌱" : "⬜");
+      return (
+        '<div class="' + cls + '">' +
+          '<div class="wm-subject-icon">' + r.icon + '</div>' +
+          '<div class="wm-subject-main">' +
+            '<div class="wm-subject-name">' + r.key + '<span class="wm-subject-check">' + check + '</span></div>' +
+            '<div class="wm-subject-bar-track"><div class="wm-subject-bar-fill" style="width:' + pct + '%;"></div></div>' +
+          '</div>' +
+          '<div class="wm-subject-count">' + r.count + '/' + r.target + '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    var footerEl = document.getElementById("weekly-mission-footer");
+    if (footerEl) {
+      footerEl.textContent = achievedCount >= rows.length
+        ? "🎉 ぜんぶの教科にチャレンジできたね！ すごい！"
+        : "むりしなくて大丈夫。ちょっとずつ、さわってみるだけでOKだよ。";
+    }
+  };
+
 })();
