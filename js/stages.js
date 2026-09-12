@@ -622,6 +622,46 @@
       name: "分数のしくみと計算（真・仮・帯分数と同分母の計算）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
       created: "2026-08-11"
+    },
+    // ★2026-09-12追加：4年生2学期ぶんの新規単元4件（英語・社会・理科・漢字）。
+    //   内容はAGENTS.md 3.5チェックリスト（正確性・学習指導要領対応・表現）を適用ずみ。
+    {
+      subject: "理科",
+      category: "水のすがた（4年）",
+      grade: "4年生",
+      id: "理科/水のすがた/sugata01",
+      name: "水のすがたと温度（じょうたいへんか）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-09-12"
+    },
+    {
+      subject: "社会",
+      category: "自然災害からくらしを守る（4年）",
+      grade: "4年生",
+      id: "社会/防災/bousai01",
+      name: "地震・台風にそなえる（ハザードマップと避難）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-09-12"
+    },
+    {
+      subject: "英語",
+      category: "曜日・天気・すきな教科（4年）",
+      grade: "4年生",
+      id: "英語/曜日と天気/english403",
+      name: "曜日と天気、すきな教科の英語",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-09-12"
+    },
+    {
+      // 漢検7級（4年生配当）だい2回。だい1回（争・覚・続・果・飛）に続く5字。
+      // 訓読み・熟語ともに複数辞書で確認ずみ（AGENTS.md 3.5適用）。
+      subject: "国語",
+      category: "漢字を書く（4年）",
+      grade: "4年生",
+      id: "漢検/7級/dai2kai",
+      name: "7級 だい2回：加・積・建・共・節",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-09-12"
     }
   ];
 

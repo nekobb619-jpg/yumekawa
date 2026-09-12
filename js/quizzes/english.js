@@ -674,6 +674,90 @@
       "thinking": true,
       "speech_text": "英語の文の 意味だよ！"
     }
+  ],
+  // ★2026-09-12追加：4年生2学期「曜日・天気・すきな教科」。AGENTS.md 3.5適用ずみ（Let's Try!2相当）。
+  "英語/曜日と天気/english403": [
+    {
+      "q": "「今日は 何曜日？」と 英語で たずねる ときの 言い方は どれかな？",
+      "a": ["What day is it today?", "What time is it?", "What's this?", "How are you?"],
+      "c": 0,
+      "hint": "「day」は「曜日・日」という意味だよ。",
+      "job_title": "曜日の たずね方、はっけん！",
+      "job_desc": "「What day is it today?」で「今日は 何曜日？」と たずねられるよ。"
+    },
+    {
+      "q": "「月曜日」を 表す 英語は どれかな？",
+      "a": ["Monday", "Sunday", "Tuesday", "Friday"],
+      "c": 0,
+      "hint": "「Mon-」で 始まるよ。",
+      "job_title": "Mondayバッチリ！",
+      "job_desc": "「Monday」は「月曜日」だよ。"
+    },
+    {
+      "q": "「土曜日」を 表す 英語は どれかな？",
+      "a": ["Saturday", "Sunday", "Thursday", "Wednesday"],
+      "c": 0,
+      "hint": "「Satur-」で 始まるよ。",
+      "job_title": "Saturdayバッチリ！",
+      "job_desc": "「Saturday」は「土曜日」だよ。"
+    },
+    {
+      "q": "「今日の 天気は どう？」と たずねる ときの 言い方は どれかな？",
+      "a": ["How's the weather today?", "What's your name?", "How old are you?", "What do you like?"],
+      "c": 0,
+      "hint": "「weather」は「天気」という 意味だよ。",
+      "job_title": "天気の たずね方、はっけん！",
+      "job_desc": "「How's the weather today?」で「今日の 天気は？」と たずねられるよ。"
+    },
+    {
+      "q": "「晴れ（はれ）」を 表す 英語は どれかな？",
+      "a": ["sunny", "rainy", "cloudy", "snowy"],
+      "c": 0,
+      "hint": "「sun（太陽）」から できた 言葉だよ。",
+      "job_title": "sunnyバッチリ！",
+      "job_desc": "「sunny」は「晴れ」だよ。太陽（sun）が 出ている イメージだね。"
+    },
+    {
+      "q": "「雨（あめ）」を 表す 英語は どれかな？",
+      "a": ["rainy", "sunny", "windy", "snowy"],
+      "c": 0,
+      "hint": "「rain（雨）」から できた 言葉だよ。",
+      "job_title": "rainyバッチリ！",
+      "job_desc": "「rainy」は「雨」だよ。"
+    },
+    {
+      "q": "「くもり」を 表す 英語は どれかな？",
+      "a": ["cloudy", "sunny", "rainy", "hot"],
+      "c": 0,
+      "hint": "「cloud（くも）」から できた 言葉だよ。",
+      "job_title": "cloudyバッチリ！",
+      "job_desc": "「cloudy」は「くもり」だよ。"
+    },
+    {
+      "q": "「あなたは 何の 教科が すき？」と たずねる ときの 言い方は どれかな？",
+      "a": ["What subject do you like?", "What time is it?", "Where do you live?", "How many?"],
+      "c": 0,
+      "hint": "「subject」は「教科」という 意味だよ。",
+      "job_title": "教科の たずね方、はっけん！",
+      "job_desc": "「What subject do you like?」で「何の 教科が すき？」と たずねられるよ。"
+    },
+    {
+      "q": "「算数」を 表す 英語は どれかな？",
+      "a": ["math", "music", "art", "science"],
+      "c": 0,
+      "hint": "「mathematics」を 短くした 言葉だよ。",
+      "job_title": "mathバッチリ！",
+      "job_desc": "「math」は「算数・数学」だよ。"
+    },
+    {
+      "q": "「体育」を 表す 英語は どれかな？",
+      "a": ["P.E.", "art", "music", "science"],
+      "c": 0,
+      "hint": "「Physical Education」を 短くして「P.E.」と 言うよ。",
+      "thinking": true,
+      "job_title": "P.E.バッチリ！",
+      "job_desc": "「P.E.」は「体育」だよ。「Physical Education」の 略だよ。"
+    }
   ]
 };
 })();

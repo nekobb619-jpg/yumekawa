@@ -1719,6 +1719,171 @@
       "speech_text": "漢字の 読み方を えらぼう！"
     }
   ],
+  // ★2026-09-12追加：漢検7級（4年生配当）だい2回。だい1回（争・覚・続・果・飛）につづく5字。
+  //   訓読み・熟語ともに複数辞書で確認ずみ（AGENTS.md 3.5適用）。
+  "漢検/7級/dai2kai": [
+    {
+      "q": "「加える」を ぜんぶ ひらがなで 書こう。",
+      "type": "text_input",
+      "correct_answers": ["くわえる", "くわえ"],
+      "hint": "何かを 足して 多くする ことだよ。",
+      "rescue_hint": "「くわえる」だよ。",
+      "job_title": "「加」の 訓読みバッチリ！",
+      "job_desc": "「加」は「くわえる」と 読むよ。「参加（さんか）」のように「か」と 読む ときも あるよ。"
+    },
+    {
+      "q": "「積む」を ぜんぶ ひらがなで 書こう。",
+      "type": "text_input",
+      "correct_answers": ["つむ", "つみ"],
+      "hint": "ものを 上に かさねて のせていく ことだよ。",
+      "rescue_hint": "「つむ」だよ。",
+      "job_title": "「積」の 訓読みバッチリ！",
+      "job_desc": "「積」は「つむ」と 読むよ。「面積（めんせき）」のように「せき」と 読む ときも あるよ。"
+    },
+    {
+      "q": "「建てる」を ぜんぶ ひらがなで 書こう。",
+      "type": "text_input",
+      "correct_answers": ["たてる", "たて"],
+      "hint": "家や ビルを 新しく つくる ことだよ。",
+      "rescue_hint": "「たてる」だよ。",
+      "job_title": "「建」の 訓読みバッチリ！",
+      "job_desc": "「建」は「たてる」と 読むよ。「建築（けんちく）」のように「けん」と 読む ときも あるよ。"
+    },
+    {
+      "q": "「友だちと 共に がんばる」の「共に」を ぜんぶ ひらがなで 書こう。",
+      "type": "text_input",
+      "correct_answers": ["ともに", "とも"],
+      "hint": "「いっしょに」という 意味の 言葉だよ。",
+      "rescue_hint": "「ともに」だよ。",
+      "job_title": "「共」の 訓読みバッチリ！",
+      "job_desc": "「共」は「とも」と 読むよ（「共に」で「ともに」）。「共同（きょうどう）」のように「きょう」と 読む ときも あるよ。"
+    },
+    {
+      "q": "「指の 節」の「節」を ひらがなで 書こう。",
+      "type": "text_input",
+      "correct_answers": ["ふし"],
+      "hint": "指を まげる ところや、竹の くぎりの ことだよ。",
+      "rescue_hint": "「ふし」だよ。",
+      "job_title": "「節」の 訓読みバッチリ！",
+      "job_desc": "「節」は「ふし」と 読むよ。「季節（きせつ）」のように「せつ」と 読む ときも あるよ。"
+    },
+    {
+      "q": "「さんか」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+      "type": "kanji_build",
+      "qid": "kanji7_dai2_build_sanka",
+      "kanjiBuild": {
+        "layout": "horizontal",
+        "blanks": [
+          { "id": "first", "promptLabel": "① 1文字目は？", "correctText": "参", "options": ["参", "休", "見"] },
+          { "id": "second", "promptLabel": "② 2文字目は？", "correctText": "加", "options": ["加", "力", "方"] }
+        ]
+      },
+      "hint": "「まじわる」の「参」＋「くわえる」の「加」だよ。",
+      "job_title": "「参加」を くみたてた！",
+      "job_desc": "「参加（さんか）」は「参」＋「加（くわえる）」で できているよ。仲間に 入って、いっしょに 行動する ことを「参加」と いうよ。"
+    },
+    {
+      "q": "「めんせき」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+      "type": "kanji_build",
+      "qid": "kanji7_dai2_build_menseki",
+      "kanjiBuild": {
+        "layout": "horizontal",
+        "blanks": [
+          { "id": "first", "promptLabel": "① 1文字目は？", "correctText": "面", "options": ["面", "雨", "林"] },
+          { "id": "second", "promptLabel": "② 2文字目は？", "correctText": "積", "options": ["積", "火", "休"] }
+        ]
+      },
+      "hint": "「めん」の「面」＋「つむ」の「積」だよ。",
+      "job_title": "「面積」を くみたてた！",
+      "job_desc": "「面積（めんせき）」は「面」＋「積（つむ）」で できているよ。広さの ことを「面積」と いうよ。算数でも 習うね。"
+    },
+    {
+      "q": "「けんちく」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+      "type": "kanji_build",
+      "qid": "kanji7_dai2_build_kenchiku",
+      "kanjiBuild": {
+        "layout": "horizontal",
+        "blanks": [
+          { "id": "first", "promptLabel": "① 1文字目は？", "correctText": "建", "options": ["建", "右", "九"] },
+          { "id": "second", "promptLabel": "② 2文字目は？", "correctText": "築", "options": ["築", "玉", "金"] }
+        ]
+      },
+      "hint": "「たてる」の「建」＋「きずく」の「築」だよ。",
+      "job_title": "「建築」を くみたてた！",
+      "job_desc": "「建築（けんちく）」は「建（たてる）」＋「築（きずく）」で できているよ。建物を たてる ことを「建築」と いうよ。"
+    },
+    {
+      "q": "「きょうどう」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+      "type": "kanji_build",
+      "qid": "kanji7_dai2_build_kyoudou",
+      "kanjiBuild": {
+        "layout": "horizontal",
+        "blanks": [
+          { "id": "first", "promptLabel": "① 1文字目は？", "correctText": "共", "options": ["共", "右", "雨"] },
+          { "id": "second", "promptLabel": "② 2文字目は？", "correctText": "同", "options": ["同", "九", "休"] }
+        ]
+      },
+      "hint": "「とも」の「共」＋「おなじ」の「同」だよ。",
+      "job_title": "「共同」を くみたてた！",
+      "job_desc": "「共同（きょうどう）」は「共（とも）」＋「同（おなじ）」で できているよ。みんなで 力を 合わせる ことを「共同」と いうよ。"
+    },
+    {
+      "q": "「きせつ」を あらわす じゅくごを、パーツを くみたてて つくろう！",
+      "type": "kanji_build",
+      "qid": "kanji7_dai2_build_kisetsu",
+      "kanjiBuild": {
+        "layout": "horizontal",
+        "blanks": [
+          { "id": "first", "promptLabel": "① 1文字目は？", "correctText": "季", "options": ["季", "休", "見"] },
+          { "id": "second", "promptLabel": "② 2文字目は？", "correctText": "節", "options": ["節", "玉", "金"] }
+        ]
+      },
+      "hint": "「き」の「季」＋「ふし」の「節」だよ。",
+      "job_title": "「季節」を くみたてた！",
+      "job_desc": "「季節（きせつ）」は「季」＋「節（ふし）」で できているよ。春・夏・秋・冬の ことを「季節」と いうよ。"
+    },
+    {
+      "q": "「参加」の「加」の ふりがなは？",
+      "type": "choice",
+      "a": ["か", "くわ", "きゅう", "しょ"],
+      "c": 0,
+      "hint": "さんか の「か」だね！",
+      "speech_text": "漢字の 読み方を えらぼう！"
+    },
+    {
+      "q": "「面積」の「積」の ふりがなを ひらがなで 書きましょう。",
+      "type": "text_input",
+      "correct_answers": ["めんせき", "せき"],
+      "hint": "めんせき の「せき」だね！",
+      "rescue_hint": "「せき」と 書いてね！",
+      "speech_text": "ひらがなで 入力してね！"
+    },
+    {
+      "q": "「建築」の「建」の ふりがなは？",
+      "type": "choice",
+      "a": ["けん", "たて", "たつ", "こん"],
+      "c": 0,
+      "hint": "けんちく の「けん」だね！",
+      "speech_text": "漢字の 読み方を えらぼう！"
+    },
+    {
+      "q": "「共同」の「共」の ふりがなを ひらがなで 書きましょう。",
+      "type": "text_input",
+      "correct_answers": ["きょうどう", "きょう"],
+      "hint": "きょうどう の「きょう」だね！",
+      "rescue_hint": "「きょう」と 書いてね！",
+      "speech_text": "ひらがなで 入力してね！"
+    },
+    {
+      "q": "「季節」の「節」の ふりがなは？",
+      "type": "choice",
+      "a": ["せつ", "き", "ふし", "せき"],
+      "c": 0,
+      "hint": "きせつ の「せつ」だね！",
+      "thinking": true,
+      "speech_text": "漢字の 読み方を えらぼう！"
+    }
+  ],
   "漢検/10級/dai5kai": [
     {
       "q": "「五人」の「五」の 読み方は？",
