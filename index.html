@@ -1185,6 +1185,7 @@ window.normalizeSaveData = function(data) {
   normalized.islandStatusDate = normalized.islandStatusDate || "";
   normalized.tornadoResolvedDate = normalized.tornadoResolvedDate || ""; // ★2026-09-13追加：竜巻サバイバルイベントを挑戦済みの日付
   normalized.tornadoLuckBuffUntil = Number(normalized.tornadoLuckBuffUntil || 0); // ★2026-09-13追加：竜巻を全問正解で乗り切った時の幸運バフ有効期限（epoch ms）
+  normalized.seenFastTapNotice = !!normalized.seenFastTapNotice; // ★2026-09-14追加：探偵ラボ/竜巻の「初回正解が一番おトク」注意書きを見せたかどうか（1回だけ表示）
   normalized.loginStampCount = Number(normalized.loginStampCount || 0);
   normalized.lastStampDate = normalized.lastStampDate || "";
   normalized.dailyHakushiCount = Number(normalized.dailyHakushiCount || 0);
@@ -2272,12 +2273,23 @@ window.rollPremiumTreasureInDetectiveLab = function () {
   return { treasure: picked, isDupe: isDupe };
 };
 
+// ★2026-09-14追加：探偵ラボ・竜巻サバイバルどちらか先に触った方で1回だけ表示する注意書き。
+//   「間違えても0にはならないが、初回正解が一番おトク」であることを事前に伝える
+//   （黙って半分に減らすと不信感につながるため、先に説明しておく）。
+window.maybeShowFastTapNotice = function () {
+  if (!window.saveData || window.saveData.seenFastTapNotice) return;
+  window.saveData.seenFastTapNotice = true;
+  if (window.saveGame) window.saveGame();
+  alert("🔍 探偵ラボ＆宝島サバイバルからのお知らせ\n\n1回目のタップでしっかり考えて答えると、もらえるQが一番多くなるよ！\n間違えてから正解しても大丈夫、そのぶんQが少し減るだけだから安心してね。");
+};
+
 window.startDetectiveLab = function(subject) {
   window.ensureDetectiveLabDailyReset();
   if (window.saveData.detectiveLabDailyCount >= window.DETECTIVE_LAB_DAILY_MAX) {
     alert("🔍 今日の探偵ラボはおしまい！また明日来てね！");
     return;
   }
+  window.maybeShowFastTapNotice();
   const genFns = window.DYNAMIC_GENERATORS[subject];
   if (!genFns) return;
 
@@ -2536,6 +2548,7 @@ window.tornadoQuizModeActive = false;
 window.tornadoCorrectCount = 0;
 
 window.launchTornadoChallenge = function () {
+  window.maybeShowFastTapNotice();
   const pool = window.getSurvivalQuestionPool().slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
   window.currentQuestions = pool.map(function (q) { return window._shuffleQuestionChoices(Object.assign({}, q)); });
   window.tornadoQuizModeActive = true;
