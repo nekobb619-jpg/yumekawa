@@ -3090,7 +3090,7 @@ window.useInventoryItem = function(itemKey) {
   if(window.saveData.inventory) { window.saveData.inventory.forEach(i => { if(counts[i] !== undefined) counts[i]++; }); }
   if(counts[itemKey] === 0) { alert("🤖 このアイテムは今持っていないぞ！宝島でクラフトするか、クイズを頑張って拾おう！"); return; }
   let desc = "";
-  if(itemKey==='booster') desc = "🧪【脳内ブースター】\n次のクイズをクリアしたとき、お父さんからもらえるQ報酬が『2倍』になる魔法のドリンク！";
+  if(itemKey==='booster') desc = "🧪【脳内ブースター】\n次のクイズをクリアしたとき、お父さんからもらえるQ報酬が『1.5倍』になる魔法のドリンク！";
   if(itemKey==='analyzer') desc = "🔍【予言のレンズ】\nクイズの途中で使うと、間違っているハズレ選択肢を1つ自動で消し去ってくれるレンズ！";
   if(itemKey==='hourglass') desc = "⏰【時空の砂時計】\n同じステージを連続で遊んだ時の「周回ペナルティ」を1回だけ踏み倒して、初期の満点ptsをもらえる砂時計！";
   alert(`💼 ポケットの中のアイテム（残り ${counts[itemKey]}個）：\n\n${desc}\n\n※このアイテムはクイズに挑戦した後に、画面に出てくる青い「✨アイテム使用」ボタンから発発動できるぞ！`);
@@ -3524,7 +3524,7 @@ window.GACHA_EGG_LIST = [
   { id: 'e14', name: 'たびびとニコ',   icon: '🎒', rarity: 2, type: 'char', desc: '大きなリュックを背負ったニコ。世界中の知識を集める旅の途中らしい。' },
   // ★2 バフアイテム（レア帯）
   { id: 'ei03', name: 'Q結晶×3',       icon: '💎', rarity: 2, type: 'item', desc: 'ガチャから出た大きなQ結晶。すぐに+3Qになる！', itemKey: 'gachaQ3' },
-  { id: 'ei04', name: 'ブースター',     icon: '🧪', rarity: 2, type: 'item', desc: '次のクイズのQ報酬が2倍になる脳内ブースター！', itemKey: 'booster' },
+  { id: 'ei04', name: 'ブースター',     icon: '🧪', rarity: 2, type: 'item', desc: '次のクイズのQ報酬が1.5倍になる脳内ブースター！', itemKey: 'booster' },
   // ★3（超レア）キャラ4種
   { id: 'e15', name: 'たいようニコ',   icon: '☀️', rarity: 3, type: 'char', desc: '太陽のようなエネルギーを持つニコ。周りも明るくなる！' },
   { id: 'e16', name: 'でんせつニコ',   icon: '🏆', rarity: 3, type: 'char', desc: '数々の試練を乗り越えた伝説のニコ。ずっと見守ってくれている。' },
@@ -4843,8 +4843,8 @@ window.ITEM_DEFS = [
     key: 'booster',
     icon: '🧪',
     name: '脳内ブースター',
-    when: '💡 クリア時のQ報酬を2倍にしたいとき',
-    desc: 'このステージをクリアしたときにもらえるQトークンが【2倍】になる魔法のドリンク！クエストを始める前に使おう！'
+    when: '💡 クリア時のQ報酬を1.5倍にしたいとき',
+    desc: 'このステージをクリアしたときにもらえるQトークンが【1.5倍】になる魔法のドリンク！クエストを始める前に使おう！'
   },
   {
     key: 'analyzer',
@@ -4904,8 +4904,8 @@ window.activateItem = function(itemKey) {
   window.closeItemModal();
 
   if(itemKey === 'booster') {
-    window.activeBoostMultiplier = 2.0;
-    alert("🧪 【脳内ブースター発動！】\nこのステージをクリアした時のQ報酬が【2倍】になるぞ！このままクイズを頑張ろう！");
+    window.activeBoostMultiplier = 1.5; // ★2026-09-13調整：2.0→1.5（Q獲得ペースを緩やかにする狙い）
+    alert("🧪 【脳内ブースター発動！】\nこのステージをクリアした時のQ報酬が【1.5倍】になるぞ！このままクイズを頑張ろう！");
   } else if(itemKey === 'analyzer') {
     const current = window.currentQuestions[window.currentQIdx];
     if(current && current.a && current.a.length > 1) {
