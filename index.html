@@ -2286,6 +2286,7 @@ window.startDetectiveLab = function(subject) {
 
   window.dynamicPracticeModeActive = true;
   window.dynamicPracticeCorrectCount = 0;
+  window.dynamicPracticeCreditSum = 0; // ★2026-09-14追加：初回タップ正解=1.0、間違えてから正解=0.5の加重合計（Q計算用）
   window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
   window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
 
@@ -2333,8 +2334,12 @@ window.finishDynamicPractice = function() {
   window.dynamicPracticeModeActive = false;
   const correctCount = window.dynamicPracticeCorrectCount || 0;
   const totalCount = window.currentQuestions.length;
-  // ★脳内ブースター使用時はactiveBoostMultiplier(2.0)がここにも乗算されるようになった
-  const earnedQ = Math.floor(correctCount * 1.5 * window.getStarBuffMultiplier() * window.activeBoostMultiplier);
+  // ★2026-09-14修正：適当タップ対策として、Q計算はcorrectCount（正解数）ではなく
+  //   dynamicPracticeCreditSum（初回正解=1.0／間違えてから正解=0.5の加重合計）を使う。
+  //   表示上の「正解○/○問」はcorrectCountのまま（正解かどうかは変わらないので）。
+  const credit = window.dynamicPracticeCreditSum || 0;
+  // ★脳内ブースター使用時はactiveBoostMultiplier(1.5)がここにも乗算されるようになった
+  const earnedQ = Math.floor(credit * 1.5 * window.getStarBuffMultiplier() * window.activeBoostMultiplier);
   window.saveData.q += earnedQ;
   window.registerStudyStreak();
 
@@ -5597,6 +5602,9 @@ window.triggerCorrectAnswer = function(current) {
     // ★特訓ラボはステージ非依存（window.currentStageがnull）なので、既存のelse節（.id/.isMaster等参照）を
     //   絶対に通してはいけない。正解カウントのみ行い、Q付与はfinishDynamicPractice側でまとめて行う。
     window.dynamicPracticeCorrectCount = (window.dynamicPracticeCorrectCount || 0) + 1;
+    // ★2026-09-14追加：適当タップ対策。間違えてから正解した問題は半分の加重で数える
+    //   （0にはしない＝挑戦した価値はゼロにしない。「初回正解」を大事にする設計に寄せる）。
+    window.dynamicPracticeCreditSum = (window.dynamicPracticeCreditSum || 0) + (window.currentFirstTry ? 1 : 0.5);
     document.getElementById("job-title").textContent = current.job_title || "正解！";
     document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
     const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
@@ -5623,8 +5631,10 @@ window.triggerCorrectAnswer = function(current) {
     return;
   }
   if (window.tornadoQuizModeActive) {
-    // ★竜巻サバイバル挑戦：ステージ非依存。正解数だけ数え、演出のみ行う（結果反映はfinishTornadoChallenge側）
-    window.tornadoCorrectCount = (window.tornadoCorrectCount || 0) + 1;
+    // ★竜巻サバイバル挑戦：ステージ非依存。演出のみ行う（結果反映はfinishTornadoChallenge側）
+    // ★2026-09-14修正：適当タップ対策として、初回タップで正解した問題だけを「守れた」としてカウントする
+    //   （間違えてから正解しても、演出は変えず前向きに表示するが、内部のカウントには入れない）
+    if (window.currentFirstTry) { window.tornadoCorrectCount = (window.tornadoCorrectCount || 0) + 1; }
     document.getElementById("job-title").textContent = current.job_title || "🌪️ 生きのびた！";
     document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
     const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
