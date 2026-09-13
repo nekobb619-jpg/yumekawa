@@ -2198,7 +2198,9 @@ window._buildDetectiveNormalPool = function (subject) {
   const pool = [];
   Object.keys(window.CONTENT.quizzes).forEach(function (stageId) {
     if (stageId.indexOf(prefix + "/") === 0) {
-      window.CONTENT.quizzes[stageId].forEach(function (q) { pool.push(q); });
+      // ★2026-09-13追加：出典stageIdをクローンに残しておく（fastMasteredQidsの除外判定で使う。
+      //   window.CONTENT.quizzes本体は書き換えない）
+      window.CONTENT.quizzes[stageId].forEach(function (q) { pool.push(Object.assign({}, q, { _srcStageId: stageId })); });
     }
   });
   return pool;
@@ -2289,8 +2291,15 @@ window.startDetectiveLab = function(subject) {
 
   // ★CLI生成済みの実問題データ（js/quizzes/*.js＝その教科の全単元）から4問をランダム抽出し、
   //   regen対応問題は数値を再生成、それ以外も含め選択肢の並び順をシャッフルして「通常問題化」する
+  // ★2026-09-13追加：早すぎる正解で「覚えてしまった問題」（fastMasteredQids）は、新鮮な問題が
+  //   足りている間は後回しにする（launchQuestと同じ考え方。探偵ラボは複数ステージ横断のため
+  //   _srcStageIdでキーを組む）。
   const rawPool = window._buildDetectiveNormalPool(subject);
-  const shuffledPool = rawPool.slice().sort(function () { return Math.random() - 0.5; });
+  const masteredKeysDL = new Set(window.saveData.fastMasteredQids || []);
+  const isMasteredDL = function (q) { return q && q.qid && q._srcStageId && masteredKeysDL.has(q._srcStageId + "::" + q.qid); };
+  const freshPoolDL = rawPool.filter(function (q) { return !isMasteredDL(q); });
+  const stalePoolDL = rawPool.filter(isMasteredDL);
+  const shuffledPool = freshPoolDL.sort(function () { return Math.random() - 0.5; }).concat(stalePoolDL.sort(function () { return Math.random() - 0.5; }));
   let normalQs = shuffledPool.slice(0, 4).map(function (q) {
     const regenApplied = q.regen ? window.regenerateQuestion(q) : q;
     return window._shuffleQuestionChoices(regenApplied);
@@ -2383,7 +2392,11 @@ window.refreshIslandStatusUI = function() {
   if (window.saveData.islandStatusDate !== todayStr || !window.saveData.islandStatus) {
     window.saveData.islandStatusDate = todayStr;
     const roll = Math.random();
-    if (roll < window.TORNADO_EVENT_CHANCE) { window.saveData.islandStatus = "tornado"; }
+    if (roll < window.TORNADO_EVENT_CHANCE) {
+      window.saveData.islandStatus = "tornado";
+      // ★竜巻の日はサバイバル問題プールを裏側で補充しておく（通信は非ブロッキング、既にプールが十分あれば何もしない）
+      if (window.maybeGenerateSurvivalQuestions) window.maybeGenerateSurvivalQuestions();
+    }
     else if (roll < window.TORNADO_EVENT_CHANCE + window.TREASURE_ISLAND_SPAWN_CHANCE) { window.saveData.islandStatus = "open"; }
     else { window.saveData.islandStatus = "close"; }
     try { localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); } catch(e){}
@@ -2450,11 +2463,75 @@ window.SURVIVAL_TORNADO_QUESTIONS = [
     job_desc: "ガラスの破片など危ないものが落ちていることがあるので、大人と一緒に確認しながら片付けるのが正解だよ。",
     a: ["壊れたものやガラスの破片に注意して大人と片付ける", "すぐに全部一人で片付ける", "気にせずすぐ外で遊ぶ", "何も確認せずそのままにする"], c: 0 }
 ];
+// ★2026-09-13追加：サバイバル問題の自動生成（既存のGENERATE_QUIZ_QUESTIONS汎用GASアクションを
+//   そのまま再利用。js/adaptive-question-generator.jsのbuildWeakAreaGeminiRequestと同じ仕組みで、
+//   GAS側の追加実装・再デプロイは不要）。手作りの6問はフォールバック兼シード。
+window.SURVIVAL_QUESTIONS_STAGE_KEY = "tornado_survival"; // aiGeneratedQuizzesの保存キー（実ステージではない仮想キー）
+window.SURVIVAL_MIN_POOL_SIZE = 12; // 手作り分＋生成分の合計がこれ未満なら、竜巻の日にバックグラウンドで追加生成する
+
+window.getSurvivalQuestionPool = function () {
+  const generated = (window.CONTENT && window.CONTENT.quizzes && window.CONTENT.quizzes[window.SURVIVAL_QUESTIONS_STAGE_KEY]) || [];
+  return window.SURVIVAL_TORNADO_QUESTIONS.concat(generated);
+};
+
+window.buildSurvivalGeminiRequest = function (opts) {
+  opts = opts || {};
+  const count = opts.count || 4;
+  const grade = opts.grade || "小学4年生";
+  const responseFormatExample = {
+    generated_questions: [{
+      question_id: "gen_001", category: "サバイバル・防災",
+      question_text: "問題文", options: ["選択肢1", "選択肢2", "選択肢3", "選択肢4"],
+      correct_index: 0, explanation: "解説文"
+    }]
+  };
+  const systemPrompt = [
+    "あなたは" + grade + "向け学習アプリ「ゆめかわ★学びアドベンチャー LAB」の問題作成アシスタントです。",
+    "『宝島に竜巻が接近するサバイバルイベント』で出題する、「なぜそうなるのか」を考えさせる",
+    "防災・自然現象テーマの4択クイズを" + count + "問作成してください（category は必ず『サバイバル・防災』にする）。",
+    "",
+    "【厳守事項】",
+    "- 対象は" + grade + "。使う漢字・言葉は" + grade + "が読めるやさしい表現にすること。",
+    "- テーマ例：強い風・台風・地震・火山・雷などの自然現象がなぜ起きるか、どう身を守るか。",
+    "- 4択問題のみ（options は必ず4つ、correct_index は0〜3）。正解は1つだけ。",
+    "- 実際の被害描写・個人の被災体験・暴力的やグロテスクな表現は一切含めない。",
+    "  あくまで科学的な『なぜ』と『どう身を守るか』を楽しく学べる内容にすること。",
+    "- question_text に答えをそのまま書かない・答えが一意に推測できる書き方をしない。",
+    "- explanation は正解の理由を簡潔にやさしく説明すること。",
+    "- 出力は指定のJSON以外の文章（前置き・挨拶・コードブロック記号）を一切含めないこと。",
+    "",
+    "【出力フォーマット（厳守・このJSON以外を出力しない）】",
+    JSON.stringify(responseFormatExample, null, 2)
+  ].join("\n");
+  const userPrompt = "サバイバルイベント向けの新しい防災クイズを" + count + "問作ってください。";
+  return { systemPrompt: systemPrompt, userPrompt: userPrompt };
+};
+
+window.generateSurvivalQuestions = function (opts) {
+  if (typeof window.postToGAS !== "function") return Promise.resolve({ generated_questions: [], error: "no_transport" });
+  const request = window.buildSurvivalGeminiRequest(opts);
+  return window.postToGAS({ action: "GENERATE_QUIZ_QUESTIONS", systemPrompt: request.systemPrompt, userPrompt: request.userPrompt })
+    .then(function (res) { return window.parseGeneratedQuestionsResponse(res); })
+    .catch(function (err) { console.error("[tornado] survival question generation failed", err); return { generated_questions: [], error: "communication_failed" }; });
+};
+
+// 竜巻の日にだけ呼ぶ（refreshIslandStatusUI側）。プールが少なければバックグラウンドで補充する
+// （通信はブロッキングしない。addGeneratedQuestionsToQuizzesは既存のweak-area生成と同じ仕組みを再利用）。
+window.maybeGenerateSurvivalQuestions = function () {
+  if (window.getSurvivalQuestionPool().length >= window.SURVIVAL_MIN_POOL_SIZE) return;
+  if (typeof window.generateSurvivalQuestions !== "function" || typeof window.addGeneratedQuestionsToQuizzes !== "function") return;
+  window.generateSurvivalQuestions({ count: 4 }).then(function (result) {
+    if (result.generated_questions && result.generated_questions.length > 0) {
+      window.addGeneratedQuestionsToQuizzes(result.generated_questions, window.SURVIVAL_QUESTIONS_STAGE_KEY);
+    }
+  });
+};
+
 window.tornadoQuizModeActive = false;
 window.tornadoCorrectCount = 0;
 
 window.launchTornadoChallenge = function () {
-  const pool = window.SURVIVAL_TORNADO_QUESTIONS.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
+  const pool = window.getSurvivalQuestionPool().slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
   window.currentQuestions = pool.map(function (q) { return window._shuffleQuestionChoices(Object.assign({}, q)); });
   window.tornadoQuizModeActive = true;
   window.tornadoCorrectCount = 0;
@@ -5491,14 +5568,20 @@ window.triggerSkipAnswer = function(current) {
 window.FAST_MASTERY_MS = 3000; // これ未満で初回正解・ヒント未使用なら「覚えてしまった問題」判定
 window.MAX_FAST_MASTERED_QIDS = 300; // 際限なく増やさないよう直近N件のみ保持（古いものは自然に押し出される）
 window.trackFastMastery = function(current) {
-  if (!current || !current.qid || !window.currentActiveStageId) return;
-  if (window.weakAttackModeActive || window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive) return;
+  if (!current || !current.qid) return;
+  // ★2026-09-13追加：探偵ラボ（dynamicPracticeModeActive）は本来ステージ非依存で対象外にしていたが、
+  //   実問題データ（_srcStageIdが付いている＝_buildDetectiveNormalPool経由）だけは例外的に対象にする。
+  //   ステージ非依存のテンプレ生成問題（思考力ボス等、_srcStageIdが無い）は引き続き対象外。
+  const stageKey = current._srcStageId || window.currentActiveStageId;
+  if (!stageKey) return;
+  if (window.weakAttackModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive) return;
+  if (window.dynamicPracticeModeActive && !current._srcStageId) return;
   if (!window.currentFirstTry || window.currentQuestionHintUsed) return;
   const startedAt = window.currentQuestionStartedAt;
   const answerTimeMs = (typeof startedAt === "number") ? Date.now() - startedAt : null;
   if (answerTimeMs === null || answerTimeMs >= window.FAST_MASTERY_MS) return;
   if (!Array.isArray(window.saveData.fastMasteredQids)) window.saveData.fastMasteredQids = [];
-  const key = window.currentActiveStageId + "::" + current.qid;
+  const key = stageKey + "::" + current.qid;
   window.saveData.fastMasteredQids = window.saveData.fastMasteredQids.filter(function (k) { return k !== key; });
   window.saveData.fastMasteredQids.push(key);
   if (window.saveData.fastMasteredQids.length > window.MAX_FAST_MASTERED_QIDS) {
