@@ -1173,6 +1173,7 @@ window.normalizeSaveData = function(data) {
   normalized.lastContentRefreshLoopCount = normalized.lastContentRefreshLoopCount || {};
   normalized.weakQuestions = normalized.weakQuestions || [];
   normalized.answerLogs = normalized.answerLogs || []; // ★2026-08-08追加：解答時間・ヒント使用ログ（js/adaptive-question-generator.js）
+  normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
   normalized.totalAnswersCount = normalized.totalAnswersCount || 0; // ★2026-08-08追加：せいちょうきろく用の総チャレンジ数（answerLogsは件数上限があるため別カウンタ）
   normalized.bossQuestCleared = normalized.bossQuestCleared || {}; // ★2026-08-08追加：ボスクエストの非消費型クリアフラグ（js/boss-quest.js）
   // ★2026-08-19廃止：bossQuestUnlockedCount/bossQuestLastUnlockDate（解放数を貯める旧方式）は
@@ -1182,6 +1183,8 @@ window.normalizeSaveData = function(data) {
   normalized.inventory = normalized.inventory || [];
   normalized.islandStatus = normalized.islandStatus || "";
   normalized.islandStatusDate = normalized.islandStatusDate || "";
+  normalized.tornadoResolvedDate = normalized.tornadoResolvedDate || ""; // ★2026-09-13追加：竜巻サバイバルイベントを挑戦済みの日付
+  normalized.tornadoLuckBuffUntil = Number(normalized.tornadoLuckBuffUntil || 0); // ★2026-09-13追加：竜巻を全問正解で乗り切った時の幸運バフ有効期限（epoch ms）
   normalized.loginStampCount = Number(normalized.loginStampCount || 0);
   normalized.lastStampDate = normalized.lastStampDate || "";
   normalized.dailyHakushiCount = Number(normalized.dailyHakushiCount || 0);
@@ -1338,14 +1341,14 @@ window.STAR_Q_BUFF_BY_RARITY = {
   2: { 1: 0, 2: 0,    3: 0.20 },
   3: { 1: 0, 2: 0.10, 3: 0.25 },
   4: { 1: 0, 2: 0.10, 3: 0.35 },
-  5: { 1: 0.35, 2: 0.35, 3: 0.35 } // 実質未使用（もちくんはgetStarBuffMultiplierで無条件+35%固定のため）
+  5: { 1: 0.25, 2: 0.25, 3: 0.25 } // 実質未使用（もちくんはgetStarBuffMultiplierで無条件+25%固定のため。2026-09-13:きょうだい2人とも所持済みで希少性が薄れたため35%→25%に調整）
 };
 
-// ★2026-08-08追加：指定ランクでのQブースト率(%)を返す。もちくんはランクに関係なく常に+35%固定
+// ★2026-08-08追加：指定ランクでのQブースト率(%)を返す。もちくんはランクに関係なく常に+25%固定
 //   （getStarBuffMultiplierと同じ特別扱いをここでも踏襲）。ガチャ図鑑で「強化の利点」を見せるために使う。
 window.getStarBuffPercentForRank = function(eggDef, rank) {
   if (!eggDef) return 0;
-  if (eggDef.id === 'e_ex_mochi') return 35;
+  if (eggDef.id === 'e_ex_mochi') return 25;
   const byRarity = window.STAR_Q_BUFF_BY_RARITY[eggDef.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
   return Math.round((byRarity[rank] || 0) * 100);
 };
@@ -1389,7 +1392,7 @@ window.upgradeEggStar = function(eggId, method) {
 
 // バフ対象は新規フィールドを作らず、既存の選択中アバター(selectedAvatar)のキャラで代用する
 // ★2026-08-03変更：STAR_Q_BUFF(一律表)ではなく、装備中アバターのベースレア別テーブルを参照する
-// ★2026-08-03追加：もちくん(e_ex_mochi)はランクに関係なく常に+35%固定（★5効果）。
+// ★2026-08-03追加：もちくん(e_ex_mochi)はランクに関係なく常に+25%固定（★5効果、2026-09-13に35%から調整）。
 //   メインアバターの快適度が「おでかけ中」の場合はバフを一時停止する。
 window.getStarBuffMultiplier = function() {
   if (window.getMainAvatarIsOut && window.getMainAvatarIsOut()) return 1;
@@ -1397,7 +1400,7 @@ window.getStarBuffMultiplier = function() {
   if (!activeEgg) return 1;
   const owned = window.saveData.gachaEggs[activeEgg.id];
   if (!owned) return 1;
-  if (activeEgg.id === 'e_ex_mochi') return 1.35;
+  if (activeEgg.id === 'e_ex_mochi') return 1.25;
   const byRarity = window.STAR_Q_BUFF_BY_RARITY[activeEgg.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
   return 1 + (byRarity[owned.starRank || 1] || 0);
 };
@@ -2379,7 +2382,10 @@ window.refreshIslandStatusUI = function() {
   const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
   if (window.saveData.islandStatusDate !== todayStr || !window.saveData.islandStatus) {
     window.saveData.islandStatusDate = todayStr;
-    if (Math.random() < window.TREASURE_ISLAND_SPAWN_CHANCE) { window.saveData.islandStatus = "open"; } else { window.saveData.islandStatus = "close"; }
+    const roll = Math.random();
+    if (roll < window.TORNADO_EVENT_CHANCE) { window.saveData.islandStatus = "tornado"; }
+    else if (roll < window.TORNADO_EVENT_CHANCE + window.TREASURE_ISLAND_SPAWN_CHANCE) { window.saveData.islandStatus = "open"; }
+    else { window.saveData.islandStatus = "close"; }
     try { localStorage.setItem("kids_lab_v12_pro_" + window.playerId, JSON.stringify(window.saveData)); } catch(e){}
   }
   const container = document.getElementById("treasure-island-container-el");
@@ -2392,6 +2398,11 @@ window.refreshIslandStatusUI = function() {
     title.textContent = "🏝️ 【幻の宝島が出現中!!】 お助けマジックショップオープン！";
     desc.innerHTML = "クイズで集めた【🧩欠片】とトークンを両替して、強力なアイテムをクラフトしよう！<br>🎒 <b>リュックの容量：全アイテム合計で最大【10個】まで！</b>";
     shelf.style.display = "grid";
+  } else if (window.saveData.islandStatus === "tornado" && window.saveData.tornadoResolvedDate !== window.saveData.islandStatusDate) {
+    container.className = "treasure-banner hidden-island";
+    title.textContent = "🌪️ 【竜巻接近中！】 宝島のアイテムがあぶない！";
+    desc.innerHTML = `サバイバル問題に挑戦して、大事なアイテムを守ろう！（正解が多いほど、アイテムが飛ばされにくくなるよ）<br><button class="btn-sm" style="margin-top:6px; background:#fecaca; color:#7f1d1d; font-weight:900;" onclick="window.launchTornadoChallenge()">⚔️ アイテムを守る挑戦をする</button>`;
+    shelf.style.display = "none";
   } else {
     container.className = "treasure-banner hidden-island";
     title.textContent = "🌫️ 【濃い霧の海】 宝島が見つからない…";
@@ -2399,6 +2410,95 @@ window.refreshIslandStatusUI = function() {
     shelf.style.display = "none";
   }
   window.renderTreasureIsland();
+};
+
+/* ★2026-09-13追加：宝島 竜巻サバイバルイベント -----------------------------
+   islandStatusの3つ目の状態として「tornado」を追加。TORNADO_EVENT_CHANCEの確率で
+   その日の宝島が竜巻接近中になり、causal型のサバイバル問題に挑戦してアイテムを守れる。
+   「1問でも間違えたら全滅」にはせず、正解数に応じて失うアイテム数を減らす部分点方式にする
+   （全問不正解でも最大TORNADO_MAX_ITEM_LOSS個までしか失わない＝安心して挑戦できる設計）。
+   挑戦しなくてもペナルティは発生しない（未挑戦への自動没収はしない、安全側に倒す設計）。 -------- */
+window.TORNADO_EVENT_CHANCE = 0.1;
+window.TORNADO_MAX_ITEM_LOSS = 2;
+// ★2026-09-13追加：竜巻を全問正解で乗り切ると、お礼に「幸運バフ」が一定期間つく（見返りとご褒美のバランス）
+window.TORNADO_LUCK_BUFF_MULTIPLIER = 1.15;
+window.TORNADO_LUCK_BUFF_DURATION_MS = 24 * 60 * 60 * 1000; // 24時間
+window.getLuckyBuffMultiplier = function () {
+  const until = window.saveData && window.saveData.tornadoLuckBuffUntil;
+  if (!until) return 1;
+  const now = window.currentServerTime || Date.now();
+  if (now >= until) return 1;
+  return window.TORNADO_LUCK_BUFF_MULTIPLIER;
+};
+window.SURVIVAL_TORNADO_QUESTIONS = [
+  { q: "つよい風でとばされそうなものを守るには、どうすればいい？", hint: "重心を低く、しっかり固定するのが基本だよ。",
+    job_desc: "重いものの下や頑丈な入れ物にしまって固定するのがコツ！ひもでしばったりすると風に負けなくなるよ。",
+    a: ["重いものの下や頑丈な入れ物にしまって固定する", "軽くて高い場所に飾っておく", "外に出しっぱなしにする", "窓を開けて風を通してあげる"], c: 0 },
+  { q: "たつまき（うずをまくはげしい風）が近づいてきたら、まず何をする？", hint: "窓の近くは危ないよ。",
+    job_desc: "頑丈な建物の中の、窓から離れた部屋にすぐ避難するのが正解！窓の近くはガラスが割れて危ないんだ。",
+    a: ["窓から離れた頑丈な部屋にすぐ避難する", "窓のそばで景色を見る", "傘をさして外で待つ", "高い木の下で雨宿りする"], c: 0 },
+  { q: "なぜたつまきは、ものをまきあげてとばしてしまうの？", hint: "うずをまく風の力を考えてみよう。",
+    job_desc: "うずをまく強い風が、ものを持ち上げる力を生み出すからなんだ。だから軽いものほど簡単に飛ばされてしまうよ。",
+    a: ["うずをまく強い風が、ものを持ち上げる力を生むから", "気温が急に下がるから", "音が大きいから", "雨がたくさん降るから"], c: 0 },
+  { q: "大事なアイテムを風から守るときに、いちばん良い方法は？", hint: "外の高い場所は危険だよ。",
+    job_desc: "頑丈な入れ物にしまって、屋内の低い場所に置くのが一番安全！外や高い場所に出しっぱなしにするのは危ないよ。",
+    a: ["頑丈な入れ物にしまって屋内の低い場所に置く", "屋根の上に置いておく", "外の一番高い場所に飾る", "何もせず様子を見る"], c: 0 },
+  { q: "強い風がふくと、なぜ軽いものから先にとばされてしまうの？", hint: "重さと風の力のバランスを考えよう。",
+    job_desc: "軽いものは、自分の重さに比べて風から受ける力の影響が大きいから、先に飛ばされやすいんだ。重いものほど風に負けにくいよ。",
+    a: ["軽いものは重さに対して風の力の影響を受けやすいから", "軽いものは風が嫌いだから", "重いものだけ特別な力があるから", "たまたま、特に理由はない"], c: 0 },
+  { q: "たつまきが過ぎ去ったあと、気をつけることは？", hint: "割れたものでケガをしないように。",
+    job_desc: "ガラスの破片など危ないものが落ちていることがあるので、大人と一緒に確認しながら片付けるのが正解だよ。",
+    a: ["壊れたものやガラスの破片に注意して大人と片付ける", "すぐに全部一人で片付ける", "気にせずすぐ外で遊ぶ", "何も確認せずそのままにする"], c: 0 }
+];
+window.tornadoQuizModeActive = false;
+window.tornadoCorrectCount = 0;
+
+window.launchTornadoChallenge = function () {
+  const pool = window.SURVIVAL_TORNADO_QUESTIONS.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
+  window.currentQuestions = pool.map(function (q) { return window._shuffleQuestionChoices(Object.assign({}, q)); });
+  window.tornadoQuizModeActive = true;
+  window.tornadoCorrectCount = 0;
+  window.currentQIdx = 0; window.totalMistakes = 0;
+  document.getElementById("game-screen").style.display = "block";
+  const itemBtn = document.getElementById("item-use-in-game-btn");
+  if (itemBtn) itemBtn.style.display = "none"; // ★サバイバル挑戦中はアイテム使用不可（知識だけで守り切るイベントにする）
+  window.showQuestionStep();
+};
+
+window.finishTornadoChallenge = function () {
+  window.tornadoQuizModeActive = false;
+  const total = window.currentQuestions.length;
+  const correct = window.tornadoCorrectCount;
+  const missCount = Math.max(0, total - correct);
+  const lossCount = Math.min(window.TORNADO_MAX_ITEM_LOSS, missCount, (window.saveData.inventory || []).length);
+  const lostNames = [];
+  for (let i = 0; i < lossCount; i++) {
+    const idx = Math.floor(Math.random() * window.saveData.inventory.length);
+    const lostKey = window.saveData.inventory.splice(idx, 1)[0];
+    const def = (window.ITEM_DEFS || []).find(function (it) { return it.key === lostKey; });
+    lostNames.push(def ? def.name : lostKey);
+  }
+  const isPerfect = correct === total;
+  let luckBuffGranted = false;
+  if (isPerfect) {
+    window.saveData.tornadoLuckBuffUntil = (window.currentServerTime || Date.now()) + window.TORNADO_LUCK_BUFF_DURATION_MS;
+    luckBuffGranted = true;
+  }
+  window.saveData.tornadoResolvedDate = window.saveData.islandStatusDate;
+  window.saveGame();
+  window.updateUI(); if (window.updateInventoryUI) window.updateInventoryUI();
+  document.getElementById("game-screen").style.display = "none";
+  window.refreshIslandStatusUI();
+  let msg = `🌪️ サバイバル挑戦結果：${total}問中${correct}問正解！\n\n`;
+  if (lossCount === 0) {
+    msg += "🎉 アイテムを全部しっかり守り切ったよ！さすが！";
+  } else {
+    msg += `😢 風が強くて「${lostNames.join('」「')}」が飛ばされてしまった…\nでも守れたアイテムもあるよ。次はもっと守れるかも！`;
+  }
+  if (luckBuffGranted) {
+    msg += `\n\n🍀 全問正解のごほうびに「幸運バフ」がついたよ！24時間だけ、クイズでもらえるQが+${Math.round((window.TORNADO_LUCK_BUFF_MULTIPLIER - 1) * 100)}%になるよ！`;
+  }
+  alert(msg);
 };
 /* ★宝島の見える化（2026-07-24 追加）：クラフトした「たてもの」が消えずに島にずっと残っていく、
    非消費のビジュアル進捗（inventoryは使うと減る消費アイテムなので、それとは別に「積み上げ」を見せる）。 */
@@ -3515,7 +3615,7 @@ window.renderGachaBook = function() {
     const maxRankBuffPct = window.getStarBuffPercentForRank(egg, 3);
     let buffHtml;
     if (egg.id === 'e_ex_mochi') {
-      buffHtml = `<div class="egg-card-buff">✨ そうび中は常に+35%Q</div>`;
+      buffHtml = `<div class="egg-card-buff">✨ そうび中は常に+25%Q</div>`;
     } else if (currentBuffPct > 0) {
       buffHtml = `<div class="egg-card-buff">✨ そうび中+${currentBuffPct}%Q${(currentBuffPct < maxRankBuffPct) ? `（★3で+${maxRankBuffPct}%）` : ''}</div>`;
     } else if (maxRankBuffPct > 0) {
@@ -4639,7 +4739,15 @@ window.launchQuest = function() {
 
   script.onload = () => {
     if(!window.quizPool || window.quizPool.length === 0) { alert("問題データが空っぽです！"); return; }
-    window.currentQuestions = [...window.quizPool].sort(() => Math.random() - 0.5).slice(0, 10);
+    // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）は、新鮮な問題が足りている間は後回しにする。
+    //   完全に除外はしない（新鮮な問題がそのステージに10問未満しか無い場合は従来通り全問から選ぶ）ので、
+    //   小さいステージで出題数が0になる事故は起きない。
+    const masteredKeys = new Set(window.saveData.fastMasteredQids || []);
+    const isMastered = function (q) { return q && q.qid && masteredKeys.has(window.currentStage.id + "::" + q.qid); };
+    const freshPool = window.quizPool.filter(function (q) { return !isMastered(q); });
+    const stalePool = window.quizPool.filter(isMastered);
+    const orderedPool = freshPool.sort(() => Math.random() - 0.5).concat(stalePool.sort(() => Math.random() - 0.5));
+    window.currentQuestions = orderedPool.slice(0, 10);
     document.getElementById("game-screen").style.display = "block";
     if(window.saveData.inventory && window.saveData.inventory.length >= 1) { document.getElementById("item-use-in-game-btn").style.display = "block"; } else { document.getElementById("item-use-in-game-btn").style.display = "none"; }
     window.showQuestionStep();
@@ -5137,6 +5245,7 @@ window.showQuestionStep = function() {
     if (window.dynamicPracticeModeActive) { window.finishDynamicPractice(); return; }
     if (window.rescueQuizModeActive) { window.finishExpeditionRescue(); return; }
     if (window.expeditionQuizModeActive) { window.finishExpeditionQuiz(); return; }
+    if (window.tornadoQuizModeActive) { window.finishTornadoChallenge(); return; }
     // ★2026-07-20 修正：スコア加算・saveGame・スプレッドシートへのログ送信は、
     //   ふりかえりチャットを最後までクリックしたかどうかに関係なく、問題セットが終わった
     //   瞬間に必ず実行する（以前はチャットを最後まで見ないと保存されず、子どもが
@@ -5157,10 +5266,10 @@ window.showQuestionStep = function() {
   }
   window.currentWeakQuestionObj = current;
   // ★2026-08-03 追加：探偵ラボのボス問題（isDetectiveBoss）中はアイテム使用不可にする
-  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive) {
+  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive) {
     const detectiveItemBtn = document.getElementById("item-use-in-game-btn");
     if (detectiveItemBtn) {
-      const canUseItem = !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
+      const canUseItem = !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !window.tornadoQuizModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
       detectiveItemBtn.style.display = canUseItem ? "block" : "none";
     }
   }
@@ -5313,7 +5422,7 @@ window.triggerWrongAnswer = function(current) {
 
   window.speakText("ざんねん！", "ja-JP");
 
-  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive && !window.expeditionQuizModeActive) {
+  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !window.tornadoQuizModeActive) {
     if (!window.sessionMissedQuestions) window.sessionMissedQuestions = [];
     if (!window.sessionMissedQuestions.some(m => m._qIdx === window.currentQIdx)) {
       window.sessionMissedQuestions.push({
@@ -5329,6 +5438,7 @@ window.triggerWrongAnswer = function(current) {
   }
 
   if (window.dynamicPracticeModeActive) { return; } // ★特訓ラボはステージ非依存のため、weakQuestions等への書き込みは行わない
+  if (window.tornadoQuizModeActive) { return; } // ★竜巻サバイバル挑戦もステージ非依存のため同様
   if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
      // ★qid（並び順が変わってもズレない安定id）があればそちらを使う。無ければ従来のindex形式にフォールバック。
@@ -5375,9 +5485,30 @@ window.triggerSkipAnswer = function(current) {
   }
   window.triggerPassAnswer(current);
 };
+// ★2026-09-13追加：早すぎる正解（＝覚えてしまった/簡単すぎる問題）を記録し、次回の出題プールで
+//   優先的に外して別の問題に入れ替わるようにする（完全に二度と出さないわけではなく、
+//   「新鮮な問題が十分ある間は優先しない」という緩やかな除外）。
+window.FAST_MASTERY_MS = 3000; // これ未満で初回正解・ヒント未使用なら「覚えてしまった問題」判定
+window.MAX_FAST_MASTERED_QIDS = 300; // 際限なく増やさないよう直近N件のみ保持（古いものは自然に押し出される）
+window.trackFastMastery = function(current) {
+  if (!current || !current.qid || !window.currentActiveStageId) return;
+  if (window.weakAttackModeActive || window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive) return;
+  if (!window.currentFirstTry || window.currentQuestionHintUsed) return;
+  const startedAt = window.currentQuestionStartedAt;
+  const answerTimeMs = (typeof startedAt === "number") ? Date.now() - startedAt : null;
+  if (answerTimeMs === null || answerTimeMs >= window.FAST_MASTERY_MS) return;
+  if (!Array.isArray(window.saveData.fastMasteredQids)) window.saveData.fastMasteredQids = [];
+  const key = window.currentActiveStageId + "::" + current.qid;
+  window.saveData.fastMasteredQids = window.saveData.fastMasteredQids.filter(function (k) { return k !== key; });
+  window.saveData.fastMasteredQids.push(key);
+  if (window.saveData.fastMasteredQids.length > window.MAX_FAST_MASTERED_QIDS) {
+    window.saveData.fastMasteredQids = window.saveData.fastMasteredQids.slice(-window.MAX_FAST_MASTERED_QIDS);
+  }
+};
 window.triggerCorrectAnswer = function(current) {
   // ★2026-08-08追加：解答時間・ヒント使用込みのログを記録（js/adaptive-question-generator.js側で分析に使う）
   if (window.recordAnswerLog) window.recordAnswerLog(current, true);
+  window.trackFastMastery(current);
   let finalEarnedQ = 0; let finalEarnedPts = 5;
   if (window.dynamicPracticeModeActive) {
     // ★特訓ラボはステージ非依存（window.currentStageがnull）なので、既存のelse節（.id/.isMaster等参照）を
@@ -5402,6 +5533,16 @@ window.triggerCorrectAnswer = function(current) {
   if (window.expeditionQuizModeActive) {
     // ★探検隊出動前クイズ：ステージ非依存のため、正解演出のみ行う（実際の出動処理はfinishExpeditionQuiz側）
     document.getElementById("job-title").textContent = current.job_title || "正解！";
+    document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
+    const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
+    document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
+    setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
+    return;
+  }
+  if (window.tornadoQuizModeActive) {
+    // ★竜巻サバイバル挑戦：ステージ非依存。正解数だけ数え、演出のみ行う（結果反映はfinishTornadoChallenge側）
+    window.tornadoCorrectCount = (window.tornadoCorrectCount || 0) + 1;
+    document.getElementById("job-title").textContent = current.job_title || "🌪️ 生きのびた！";
     document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
     const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
     document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
@@ -5436,7 +5577,7 @@ window.triggerCorrectAnswer = function(current) {
       finalEarnedQ = isCleared ? 2 : stgReward;
       let isPerfectForDisplay = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
       if (isPerfectForDisplay) { finalEarnedQ += 5; }
-      finalEarnedQ = Math.floor(finalEarnedQ * window.activeBoostMultiplier); finalEarnedPts = basePts; window.saveData.pts += basePts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + basePts;
+      finalEarnedQ = Math.floor(finalEarnedQ * window.activeBoostMultiplier * window.getLuckyBuffMultiplier()); finalEarnedPts = basePts; window.saveData.pts += basePts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + basePts;
     }
     document.getElementById("job-title").textContent = current.job_title || "クリア！";
     // ★2026-08-03 修正：欠片だけはdailyLoopCounts/MASTER日次上限の対象外で、周回で無制限に稼げてしまっていたバグ修正。
@@ -5655,7 +5796,7 @@ window.triggerForcedClear = function() { window.exitToMainMenu(); };
 // ★2026-08-03修正：探偵ラボ/救出クイズ中に「やめる」を押すとモードフラグが残り続けるバグを修正
 //   （dynamicPracticeModeActiveは元々ここでリセットされておらず、新設のrescueQuizModeActiveも
 //   同じ穴になるところだったため、あわせて修正した。expeditionQuizModeActiveも同様に対応）
-window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; window.expeditionQuizModeActive = false; window._pendingExpeditionTeam = null; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
+window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; window.expeditionQuizModeActive = false; window.tornadoQuizModeActive = false; window._pendingExpeditionTeam = null; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
 // ★2026-08-08追加：「🛑やめる」ボタン専用。セコ技（1問だけ正解してptをもらい、
 //   単元を完走せずに離脱するのを繰り返してptを稼ぐ）対策として、このセッション中に
 //   triggerCorrectAnswerで加算されたpts（sessionEarnedPts）をここで没収してからquitQuestへ渡す。
