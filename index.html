@@ -2376,6 +2376,14 @@ window.finishDynamicPractice = function() {
   document.getElementById("game-screen").style.display = "none";
   alert(`🔍 探偵ラボ、おつかれさま！\n正解 ${correctCount}/${totalCount} 問\n【+${earnedQ}Q】獲得！`);
   if (premiumResult) window.showTreasureReveal(premiumResult.treasure, premiumResult.isDupe);
+  // ★2026-09-14追加：探偵ラボのクリアはこれまでlog_dbに何も残らなかったため、
+  //   後から「いつ・何回目・正解○/○・初回正解換算creditが何だったか」を追えるように記録する。
+  if (window.syncWithGoogleSpreadsheet) {
+    window.syncWithGoogleSpreadsheet("LOG", {
+      stage: `探偵ラボ_${window._detectiveLabRunIndexToday || 1}回目`,
+      msg: `探偵ラボ${window.isDetectiveLabStrictRun ? "(厳しめ)" : "(通常)"} 正解${correctCount}/${totalCount} credit${credit} +${earnedQ}Q獲得`
+    });
+  }
 };
 
 window.updateUI = function() {
@@ -5924,7 +5932,15 @@ window.exitToMainMenu = function() {
     msg += `\n合計【 ${earnedQ}Q 】を金庫にチャージしました！${dropMsg}`;
 
     alert(msg);
-    window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: window.currentActiveStageIsMaster ? 'MASTER周回完了' : `クリア! +${earnedQ}Q獲得` });
+    // ★2026-09-14追加：Q数字だけでは後から「パーフェクトだったか」「どのボーナスが乗ったか」が
+    //   log_db側で判別できなかったため、内訳をmsgに明示する（Qトレーサビリティ改善）。
+    const logDetailParts = [];
+    if (pBonus > 0) logDetailParts.push("パーフェクト");
+    if (lBonus > 0) logDetailParts.push("実験ボーナス");
+    if (vBonus > 0) logDetailParts.push("動画ボーナス");
+    if (rewardResult.caseType) logDetailParts.push(rewardResult.caseType === "new_question" ? "新問題クリア" : "再コンプリート");
+    const logDetailStr = logDetailParts.length > 0 ? ` [${logDetailParts.join("・")}]` : "";
+    window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: window.currentActiveStageIsMaster ? 'MASTER周回完了' : `クリア! +${earnedQ}Q獲得${logDetailStr}` });
     window.quitQuest();
     if (window.rollTreasureDrop) {
       const treasureResult = window.rollTreasureDrop();
