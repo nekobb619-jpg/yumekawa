@@ -2690,6 +2690,18 @@ window.refreshWeakBanner = function() {
   }
 };
 window.closeIframeModal = function() {
+  // ★2026-09-14追加：実験ラボを開いてからLAB_MIN_DWELL_MS以上経ってから閉じたときだけ、
+  //   実験ボーナス(bonusLabUsed)の対象にする（開いて即閉じるだけの抜け道を防ぐ）。
+  if (window._labBonusPending) {
+    const elapsed = Date.now() - (window._labOpenedAt || 0);
+    if (elapsed >= window.LAB_MIN_DWELL_MS) {
+      window.bonusLabUsed = true;
+    } else if (!window._labDwellNoticeShown) {
+      window._labDwellNoticeShown = true;
+      alert("🔬 実験ラボは、もう少し中で試してから閉じると「実験ボーナス」の対象になるよ！");
+    }
+    window._labBonusPending = false;
+  }
   document.getElementById("content-iframe").src = ""; document.getElementById("iframe-modal").style.display = "none";
 };
 // ★2026-07-29 追加：GAS通信の共通リトライ＋失敗可視化ヘルパー。
@@ -4487,6 +4499,7 @@ window.adminResetRobux = function() {
 window.adminClearAll = function() { if(confirm("⚠️ クラウドを含む全データを消去して初期化しますか？")) { localStorage.clear(); location.reload(); } };
 window.closeAdmin = function() { document.getElementById("admin-zone").style.display = "none"; };
 window.speakText = function(txt, lang = 'ja-JP') { if (!window.speechSynthesis) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = lang; u.rate = 0.85; window.speechSynthesis.speak(u); };
+window.LAB_MIN_DWELL_MS = 15000; // ★2026-09-14追加：実験ラボは開いてから最低これだけ経ってから閉じないとボーナス対象にしない（開いて即閉じる対策）
 window.openHybridContent = function(url, title, isCleared) {
   if (!url) return; const targetUrl = url.trim();
   // ★2026-08-16修正：以前はvideo_urlが常にYouTube等だったため「httpを含む＝別タブ」で
@@ -4499,7 +4512,10 @@ window.openHybridContent = function(url, title, isCleared) {
     if (!isCleared) { window.bonusVideoUsed = true; }
     alert(`🚀 「${title}」のページを、新しい大きなタブでひらきます！\nしっかりお勉強して戻ってきてね！`); window.open(targetUrl, "_blank");
   } else {
-    if (!isCleared) { window.bonusLabUsed = true; }
+    // ★2026-09-14変更：即座にbonusLabUsedを立てず、実際に閉じるタイミング（closeIframeModal）で
+    //   滞在時間を見て判定するようにした（開いて即閉じるだけでボーナス対象になっていたのを修正）。
+    window._labBonusPending = !isCleared;
+    window._labOpenedAt = Date.now();
     document.getElementById("iframe-title-text").textContent = title; document.getElementById("content-iframe").src = targetUrl; document.getElementById("iframe-modal").style.display = "flex";
   }
 };
