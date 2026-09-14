@@ -2274,13 +2274,14 @@ window.rollPremiumTreasureInDetectiveLab = function () {
 };
 
 // ★2026-09-14追加：探偵ラボ・竜巻サバイバルどちらか先に触った方で1回だけ表示する注意書き。
-//   「間違えても0にはならないが、初回正解が一番おトク」であることを事前に伝える
+//   主眼は「すばやい当てずっぽうタップでは実力が身につかない」という学習面の呼びかけで、
+//   誤答数を見ていること・じっくり読んで答えることを促す。Q減額の話は補足に留める
 //   （黙って半分に減らすと不信感につながるため、先に説明しておく）。
 window.maybeShowFastTapNotice = function () {
   if (!window.saveData || window.saveData.seenFastTapNotice) return;
   window.saveData.seenFastTapNotice = true;
   if (window.saveGame) window.saveGame();
-  alert("🔍 探偵ラボ＆宝島サバイバルからのお知らせ\n\n1回目のタップでしっかり考えて答えると、もらえるQが一番多くなるよ！\n間違えてから正解しても大丈夫、そのぶんQが少し減るだけだから安心してね。");
+  alert("🔍 探偵ラボ＆宝島サバイバルからのお知らせ\n\nすばやくタップして当てずっぽうで答えても、本当の力は身につかないよ。まちがえた数もちゃんと見ているから、あわてずに問題をよく読んで、じっくり考えてから答えてみよう！\n（1回目でしっかり正解できると、もらえるQも一番多くなるよ）");
 };
 
 window.startDetectiveLab = function(subject) {
