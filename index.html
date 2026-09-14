@@ -1342,14 +1342,14 @@ window.STAR_Q_BUFF_BY_RARITY = {
   2: { 1: 0, 2: 0,    3: 0.20 },
   3: { 1: 0, 2: 0.10, 3: 0.25 },
   4: { 1: 0, 2: 0.10, 3: 0.35 },
-  5: { 1: 0.25, 2: 0.25, 3: 0.25 } // 実質未使用（もちくんはgetStarBuffMultiplierで無条件+25%固定のため。2026-09-13:きょうだい2人とも所持済みで希少性が薄れたため35%→25%に調整）
+  5: { 1: 0.35, 2: 0.35, 3: 0.35 } // 実質未使用（もちくんはgetStarBuffMultiplierで無条件+35%固定のため。2026-09-13に25%へ一時調整したが、探偵ラボ/竜巻の適当タップ対策（初回正解のみ加算）を入れたため2026-09-14に35%へ復帰）
 };
 
-// ★2026-08-08追加：指定ランクでのQブースト率(%)を返す。もちくんはランクに関係なく常に+25%固定
+// ★2026-08-08追加：指定ランクでのQブースト率(%)を返す。もちくんはランクに関係なく常に+35%固定
 //   （getStarBuffMultiplierと同じ特別扱いをここでも踏襲）。ガチャ図鑑で「強化の利点」を見せるために使う。
 window.getStarBuffPercentForRank = function(eggDef, rank) {
   if (!eggDef) return 0;
-  if (eggDef.id === 'e_ex_mochi') return 25;
+  if (eggDef.id === 'e_ex_mochi') return 35;
   const byRarity = window.STAR_Q_BUFF_BY_RARITY[eggDef.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
   return Math.round((byRarity[rank] || 0) * 100);
 };
@@ -1393,7 +1393,7 @@ window.upgradeEggStar = function(eggId, method) {
 
 // バフ対象は新規フィールドを作らず、既存の選択中アバター(selectedAvatar)のキャラで代用する
 // ★2026-08-03変更：STAR_Q_BUFF(一律表)ではなく、装備中アバターのベースレア別テーブルを参照する
-// ★2026-08-03追加：もちくん(e_ex_mochi)はランクに関係なく常に+25%固定（★5効果、2026-09-13に35%から調整）。
+// ★2026-08-03追加：もちくん(e_ex_mochi)はランクに関係なく常に+35%固定（★5効果）。
 //   メインアバターの快適度が「おでかけ中」の場合はバフを一時停止する。
 window.getStarBuffMultiplier = function() {
   if (window.getMainAvatarIsOut && window.getMainAvatarIsOut()) return 1;
@@ -1401,7 +1401,7 @@ window.getStarBuffMultiplier = function() {
   if (!activeEgg) return 1;
   const owned = window.saveData.gachaEggs[activeEgg.id];
   if (!owned) return 1;
-  if (activeEgg.id === 'e_ex_mochi') return 1.25;
+  if (activeEgg.id === 'e_ex_mochi') return 1.35;
   const byRarity = window.STAR_Q_BUFF_BY_RARITY[activeEgg.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
   return 1 + (byRarity[owned.starRank || 1] || 0);
 };
@@ -3716,7 +3716,7 @@ window.renderGachaBook = function() {
     const maxRankBuffPct = window.getStarBuffPercentForRank(egg, 3);
     let buffHtml;
     if (egg.id === 'e_ex_mochi') {
-      buffHtml = `<div class="egg-card-buff">✨ そうび中は常に+25%Q</div>`;
+      buffHtml = `<div class="egg-card-buff">✨ そうび中は常に+35%Q</div>`;
     } else if (currentBuffPct > 0) {
       buffHtml = `<div class="egg-card-buff">✨ そうび中+${currentBuffPct}%Q${(currentBuffPct < maxRankBuffPct) ? `（★3で+${maxRankBuffPct}%）` : ''}</div>`;
     } else if (maxRankBuffPct > 0) {
