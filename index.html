@@ -2234,8 +2234,9 @@ window.pickBalancedQuestions = function (bundle, count) {
   return picks.sort(function () { return Math.random() - 0.5; });
 };
 
-window.DETECTIVE_LAB_DAILY_MAX = 5;
-window.PREMIUM_TREASURE_BASE_CHANCE = 0.20;                          // 2〜5回目の基本出現率
+window.DETECTIVE_LAB_DAILY_MAX = 8; // ★2026-09-14変更：5→8。3回目以降は厳しめルール（1問間違えたら即0）が効くので、
+//   回数を増やしても「適当タップでの稼ぎやすさ」は増えない（増えるのは、ちゃんと考えて答える練習量）。
+window.PREMIUM_TREASURE_BASE_CHANCE = 0.20;                          // 2回目以降の基本出現率
 window.PREMIUM_TREASURE_STARRANK_BOOST = { 1: 0, 2: 0.15, 3: 0.30 }; // 選択中アバターの★ランクによる上乗せ
 window.PREMIUM_TREASURE_RARITIES = [3, 4];                            // 「プレミアムお宝」＝TREASURE_LISTの★3(超レア)/★4(伝説)のみ
 
@@ -2295,7 +2296,7 @@ window.startDetectiveLab = function(subject) {
   if (!genFns) return;
 
   window.saveData.detectiveLabDailyCount = (window.saveData.detectiveLabDailyCount || 0) + 1;
-  window._detectiveLabRunIndexToday = window.saveData.detectiveLabDailyCount; // 1〜5回目
+  window._detectiveLabRunIndexToday = window.saveData.detectiveLabDailyCount; // 1〜8回目
   // ★2026-09-14追加：1日の最初の2回だけ「通常ルール」（間違えてもやり直せる、半分の加重で正解扱い）。
   //   3回目以降は「厳しめルール」にし、1問でも間違えたら即座に答えを見せて次へ進む（やり直し不可・
   //   その問題の加算は0）。適当タップで正解を探す戦法が、回数を重ねるほど通用しなくなる設計。
@@ -2361,7 +2362,7 @@ window.finishDynamicPractice = function() {
   window.saveData.q += earnedQ;
   window.registerStudyStreak();
 
-  // ★1回目はプレミアムお宝の抽選対象外。2〜5回目のみ抽選する
+  // ★1回目はプレミアムお宝の抽選対象外。2回目以降のみ抽選する
   let premiumResult = null;
   if ((window._detectiveLabRunIndexToday || 1) >= 2) {
     premiumResult = window.rollPremiumTreasureInDetectiveLab();
