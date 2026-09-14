@@ -228,7 +228,7 @@
   // 特訓ラボ・SOS救出・遠征クイズはステージに紐づかない（＝カテゴリが解決できない）ため対象外。
   window.recordAnswerLog = function (current, correct) {
     if (!window.saveData) return;
-    if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive) return;
+    if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive || window.survivalModeActive) return;
     var category = window.resolveStageCategory(window.currentActiveStageId);
     if (!category) return;
 

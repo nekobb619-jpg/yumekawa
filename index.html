@@ -627,6 +627,10 @@
     <!-- ★2026-09-12追加：こんしゅうのもくひょう（教科ごとに軽く触れる週間ミッション。js/adaptive-question-generator.js） -->
     <button class="btn-sm" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff); color:#6b21a8; font-weight:900;" onclick="window.openWeeklyMissionModal()">📅 こんしゅうのもくひょう</button>
   </div>
+  <div class="flex-row">
+    <!-- ★2026-09-14追加：⚡サバイバルクイズ（1問でも間違えたら即終了。Q/pts無し、スコアのみの腕試しモード） -->
+    <button class="btn-sm" style="background:linear-gradient(135deg,#1e293b,#334155); color:#fbbf24; font-weight:900;" onclick="window.launchSurvivalMode()">⚡ サバイバルクイズ（自己ベスト：<span id="survival-best-inline">0</span>問）</button>
+  </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
     <div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">データ通信中...</div>
@@ -1185,6 +1189,7 @@ window.normalizeSaveData = function(data) {
   normalized.islandStatusDate = normalized.islandStatusDate || "";
   normalized.tornadoResolvedDate = normalized.tornadoResolvedDate || ""; // ★2026-09-13追加：竜巻サバイバルイベントを挑戦済みの日付
   normalized.tornadoLuckBuffUntil = Number(normalized.tornadoLuckBuffUntil || 0); // ★2026-09-13追加：竜巻を全問正解で乗り切った時の幸運バフ有効期限（epoch ms）
+  normalized.survivalBestScore = Number(normalized.survivalBestScore || 0); // ★2026-09-14追加：⚡サバイバルクイズの自己ベストスコア
   normalized.seenFastTapNotice = !!normalized.seenFastTapNotice; // ★2026-09-14追加：探偵ラボ/竜巻の「初回正解が一番おトク」注意書きを見せたかどうか（1回だけ表示）
   normalized.loginStampCount = Number(normalized.loginStampCount || 0);
   normalized.lastStampDate = normalized.lastStampDate || "";
@@ -2392,6 +2397,8 @@ window.updateUI = function() {
   document.getElementById("q-val").innerHTML = `${window.saveData.q || 0}<span>Q</span>`;
   let displayKakera = window.saveData.kakera || 0;
   document.getElementById("kakera-val").innerHTML = `${displayKakera}<span>🧩</span>`;
+  const survivalBestEl = document.getElementById("survival-best-inline");
+  if (survivalBestEl) survivalBestEl.textContent = window.saveData.survivalBestScore || 0;
   // ガチャの欠片カウント更新
   const kEl = document.getElementById('gacha-kakera-count');
   if (kEl) kEl.textContent = displayKakera;
@@ -2610,6 +2617,62 @@ window.finishTornadoChallenge = function () {
   }
   alert(msg);
 };
+
+/* ★2026-09-14追加：⚡サバイバルクイズ（早押しサバイバルバトル） -----------------------------
+   全教科・全ステージ（今表示中の学年でmatchesGradeFilterを通るもの）の4択問題を1問ずつ出題し、
+   1問でも間違えたら即ゲームオーバー。Q・ptsは一切からまず、「どこまで行けたか」というスコア
+   （自己ベスト保存）だけの、純粋な腕試しモード。やり直し・パス・ヒントアイテムは使用不可。 -------- */
+window.survivalModeActive = false;
+window.survivalScore = 0;
+
+window.buildSurvivalQuestionPool = function () {
+  const pool = [];
+  const master = window.globalStageMaster || {};
+  Object.keys(master).forEach(function (sub) {
+    Object.keys(master[sub] || {}).forEach(function (cat) {
+      (master[sub][cat] || []).forEach(function (stg) {
+        if (!stg || !stg.id || !window.matchesGradeFilter(stg)) return;
+        const qs = (window.CONTENT && window.CONTENT.quizzes && window.CONTENT.quizzes[stg.id]) || [];
+        qs.forEach(function (q) {
+          // ★4択のみ対象（text_input/branch_diagram等は「1タップで即判定」というゲーム性に合わないため除外）
+          if (q && Array.isArray(q.a) && q.a.length >= 2 && typeof q.c === "number") pool.push(Object.assign({}, q));
+        });
+      });
+    });
+  });
+  return pool;
+};
+
+window.launchSurvivalMode = function () {
+  const pool = window.buildSurvivalQuestionPool();
+  if (pool.length < 10) { alert("⚡ サバイバルクイズに出せる問題がまだ少ないみたい…また今度チャレンジしてね！"); return; }
+  window.currentQuestions = pool.sort(function () { return Math.random() - 0.5; }).map(function (q) { return window._shuffleQuestionChoices(q); });
+  window.survivalModeActive = true;
+  window.survivalScore = 0;
+  window.currentQIdx = 0; window.totalMistakes = 0;
+  document.getElementById("game-screen").style.display = "block";
+  const itemBtn = document.getElementById("item-use-in-game-btn");
+  if (itemBtn) itemBtn.style.display = "none"; // ★サバイバルクイズはアイテム使用不可（実力だけで勝負）
+  window.showQuestionStep();
+};
+
+window.finishSurvivalMode = function () {
+  window.survivalModeActive = false;
+  const score = window.survivalScore || 0;
+  const prevBest = window.saveData.survivalBestScore || 0;
+  const isNewBest = score > prevBest;
+  if (isNewBest) window.saveData.survivalBestScore = score;
+  window.saveGame();
+  window.updateUI();
+  document.getElementById("game-screen").style.display = "none";
+  let msg = `⚡ サバイバルクイズ終了！\n\n今回のスコア：${score}問\n自己ベスト：${window.saveData.survivalBestScore || 0}問`;
+  if (isNewBest && score > 0) msg += "\n\n🎉 自己ベスト更新！すごい！";
+  alert(msg);
+  if (window.syncWithGoogleSpreadsheet) {
+    window.syncWithGoogleSpreadsheet("LOG", { stage: "サバイバルクイズ", msg: `スコア${score}問（自己ベスト${window.saveData.survivalBestScore || 0}）` });
+  }
+};
+
 /* ★宝島の見える化（2026-07-24 追加）：クラフトした「たてもの」が消えずに島にずっと残っていく、
    非消費のビジュアル進捗（inventoryは使うと減る消費アイテムなので、それとは別に「積み上げ」を見せる）。 */
 window.ISLAND_BUILDING_ICONS = { booster: "🧪", analyzer: "🔍", hourglass: "⏰", treasure_exp: "💎" };
@@ -5379,6 +5442,7 @@ window.showQuestionStep = function() {
     if (window.rescueQuizModeActive) { window.finishExpeditionRescue(); return; }
     if (window.expeditionQuizModeActive) { window.finishExpeditionQuiz(); return; }
     if (window.tornadoQuizModeActive) { window.finishTornadoChallenge(); return; }
+    if (window.survivalModeActive) { window.finishSurvivalMode(); return; } // ★問題プールを1問も落とさず使い切った（レア）
     // ★2026-07-20 修正：スコア加算・saveGame・スプレッドシートへのログ送信は、
     //   ふりかえりチャットを最後までクリックしたかどうかに関係なく、問題セットが終わった
     //   瞬間に必ず実行する（以前はチャットを最後まで見ないと保存されず、子どもが
@@ -5399,10 +5463,10 @@ window.showQuestionStep = function() {
   }
   window.currentWeakQuestionObj = current;
   // ★2026-08-03 追加：探偵ラボのボス問題（isDetectiveBoss）中はアイテム使用不可にする
-  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive) {
+  if (window.dynamicPracticeModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive || window.survivalModeActive) {
     const detectiveItemBtn = document.getElementById("item-use-in-game-btn");
     if (detectiveItemBtn) {
-      const canUseItem = !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !window.tornadoQuizModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
+      const canUseItem = !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !window.tornadoQuizModeActive && !window.survivalModeActive && !current.isDetectiveBoss && window.saveData.inventory && window.saveData.inventory.length >= 1;
       detectiveItemBtn.style.display = canUseItem ? "block" : "none";
     }
   }
@@ -5530,6 +5594,11 @@ window.showQuestionStep = function() {
           choiceBtns.forEach(cb => cb.disabled = true); skipBtn.disabled = true;
           window.triggerPassAnswer(current);
         }
+        // ★2026-09-14追加：⚡サバイバルクイズは1問でも間違えたら即ゲームオーバー（やり直し不可）。
+        if (window.survivalModeActive) {
+          choiceBtns.forEach(cb => cb.disabled = true);
+          window.finishSurvivalMode();
+        }
       } }; zone.appendChild(b); choiceBtns.push(b);
     });
     // ★2026-09-12追加：選択式にもtext_inputと同じ「わからない」パス（ノーペナルティ）を追加。
@@ -5543,7 +5612,9 @@ window.showQuestionStep = function() {
       skipBtn.disabled = true;
       window.triggerSkipAnswer(current);
     };
-    zone.appendChild(skipBtn);
+    // ★2026-09-14追加：⚡サバイバルクイズは「わからない」で逃げられると1問ミス即アウトの
+    //   ルールが機能しなくなるため、このモード中は表示しない。
+    if (!window.survivalModeActive) zone.appendChild(skipBtn);
   } else { const passBtn = document.createElement("button"); passBtn.className = "choice-btn correct"; passBtn.textContent = "✨ 実験に成功したらここを押して次へ！"; passBtn.onclick = () => { window.triggerCorrectAnswer(current); }; zone.appendChild(passBtn); }
 };
 window.triggerWrongAnswer = function(current) {
@@ -5562,7 +5633,7 @@ window.triggerWrongAnswer = function(current) {
 
   window.speakText("ざんねん！", "ja-JP");
 
-  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !window.tornadoQuizModeActive) {
+  if (!window.weakAttackModeActive && !window.dynamicPracticeModeActive && !window.rescueQuizModeActive && !window.expeditionQuizModeActive && !window.tornadoQuizModeActive && !window.survivalModeActive) {
     if (!window.sessionMissedQuestions) window.sessionMissedQuestions = [];
     if (!window.sessionMissedQuestions.some(m => m._qIdx === window.currentQIdx)) {
       window.sessionMissedQuestions.push({
@@ -5579,6 +5650,7 @@ window.triggerWrongAnswer = function(current) {
 
   if (window.dynamicPracticeModeActive) { return; } // ★特訓ラボはステージ非依存のため、weakQuestions等への書き込みは行わない
   if (window.tornadoQuizModeActive) { return; } // ★竜巻サバイバル挑戦もステージ非依存のため同様
+  if (window.survivalModeActive) { return; } // ★サバイバルクイズもステージ非依存のため同様
   if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
      // ★qid（並び順が変わってもズレない安定id）があればそちらを使う。無ければ従来のindex形式にフォールバック。
@@ -5637,7 +5709,7 @@ window.trackFastMastery = function(current) {
   //   ステージ非依存のテンプレ生成問題（思考力ボス等、_srcStageIdが無い）は引き続き対象外。
   const stageKey = current._srcStageId || window.currentActiveStageId;
   if (!stageKey) return;
-  if (window.weakAttackModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive) return;
+  if (window.weakAttackModeActive || window.rescueQuizModeActive || window.expeditionQuizModeActive || window.tornadoQuizModeActive || window.survivalModeActive) return;
   if (window.dynamicPracticeModeActive && !current._srcStageId) return;
   if (!window.currentFirstTry || window.currentQuestionHintUsed) return;
   const startedAt = window.currentQuestionStartedAt;
@@ -5694,6 +5766,17 @@ window.triggerCorrectAnswer = function(current) {
     //   （間違えてから正解しても、演出は変えず前向きに表示するが、内部のカウントには入れない）
     if (window.currentFirstTry) { window.tornadoCorrectCount = (window.tornadoCorrectCount || 0) + 1; }
     document.getElementById("job-title").textContent = current.job_title || "🌪️ 生きのびた！";
+    document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
+    const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
+    document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
+    setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400);
+    return;
+  }
+  if (window.survivalModeActive) {
+    // ★2026-09-14追加：⚡サバイバルクイズ。ステージ非依存、Q・pts無し。スコアを1つ増やして次の問題へ
+    //   （ゲームオーバー判定は選択ボタンの誤タップ時にfinishSurvivalModeを直接呼ぶ側で行う）。
+    window.survivalScore = (window.survivalScore || 0) + 1;
+    document.getElementById("job-title").textContent = current.job_title || `⚡ ${window.survivalScore}問目、せいかい！`;
     document.getElementById("job-desc").innerHTML = (current.job_desc || "").replace(/\n/g, "<br>");
     const nextBtn = document.getElementById("next-btn"); nextBtn.textContent = "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next";
     document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block";
@@ -5955,7 +6038,7 @@ window.triggerForcedClear = function() { window.exitToMainMenu(); };
 // ★2026-08-03修正：探偵ラボ/救出クイズ中に「やめる」を押すとモードフラグが残り続けるバグを修正
 //   （dynamicPracticeModeActiveは元々ここでリセットされておらず、新設のrescueQuizModeActiveも
 //   同じ穴になるところだったため、あわせて修正した。expeditionQuizModeActiveも同様に対応）
-window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; window.expeditionQuizModeActive = false; window.tornadoQuizModeActive = false; window._pendingExpeditionTeam = null; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
+window.quitQuest = function() { window.weakAttackModeActive = false; window.dynamicPracticeModeActive = false; window.rescueQuizModeActive = false; window.expeditionQuizModeActive = false; window.tornadoQuizModeActive = false; window.survivalModeActive = false; window._pendingExpeditionTeam = null; document.getElementById("game-screen").style.display = "none"; window.updateUI(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI(); };
 // ★2026-08-08追加：「🛑やめる」ボタン専用。セコ技（1問だけ正解してptをもらい、
 //   単元を完走せずに離脱するのを繰り返してptを稼ぐ）対策として、このセッション中に
 //   triggerCorrectAnswerで加算されたpts（sessionEarnedPts）をここで没収してからquitQuestへ渡す。
