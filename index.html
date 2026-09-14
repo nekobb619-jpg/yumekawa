@@ -2296,6 +2296,11 @@ window.startDetectiveLab = function(subject) {
 
   window.saveData.detectiveLabDailyCount = (window.saveData.detectiveLabDailyCount || 0) + 1;
   window._detectiveLabRunIndexToday = window.saveData.detectiveLabDailyCount; // 1〜5回目
+  // ★2026-09-14追加：1日の最初の2回だけ「通常ルール」（間違えてもやり直せる、半分の加重で正解扱い）。
+  //   3回目以降は「厳しめルール」にし、1問でも間違えたら即座に答えを見せて次へ進む（やり直し不可・
+  //   その問題の加算は0）。適当タップで正解を探す戦法が、回数を重ねるほど通用しなくなる設計。
+  window.DETECTIVE_LAB_LENIENT_RUNS_PER_DAY = 2;
+  window.isDetectiveLabStrictRun = window._detectiveLabRunIndexToday > window.DETECTIVE_LAB_LENIENT_RUNS_PER_DAY;
 
   window.dynamicPracticeModeActive = true;
   window.dynamicPracticeCorrectCount = 0;
@@ -5486,7 +5491,14 @@ window.showQuestionStep = function() {
     const choiceBtns = [];
     opts.forEach(o => {
       const b = document.createElement("button"); b.className = "choice-btn"; b.textContent = o.txt;
-      b.onclick = () => { if(o.originalIdx === current.c) { b.className = "choice-btn correct"; window.speakText("まる！大正解！", "ja-JP"); window.triggerCorrectAnswer(current); choiceBtns.forEach(cb => cb.disabled = true); skipBtn.disabled = true; } else { b.className = "choice-btn wrong"; window.triggerWrongAnswer(current); b.disabled = true; } }; zone.appendChild(b); choiceBtns.push(b);
+      b.onclick = () => { if(o.originalIdx === current.c) { b.className = "choice-btn correct"; window.speakText("まる！大正解！", "ja-JP"); window.triggerCorrectAnswer(current); choiceBtns.forEach(cb => cb.disabled = true); skipBtn.disabled = true; } else { b.className = "choice-btn wrong"; window.triggerWrongAnswer(current); b.disabled = true;
+        // ★2026-09-14追加：探偵ラボの厳しめラン（1日3回目以降）は、1問でも間違えたら
+        //   やり直しさせずに即座に答えを見せて次へ進む（適当タップ対策の強化）。
+        if (window.dynamicPracticeModeActive && window.isDetectiveLabStrictRun) {
+          choiceBtns.forEach(cb => cb.disabled = true); skipBtn.disabled = true;
+          window.triggerPassAnswer(current);
+        }
+      } }; zone.appendChild(b); choiceBtns.push(b);
     });
     // ★2026-09-12追加：選択式にもtext_inputと同じ「わからない」パス（ノーペナルティ）を追加。
     //   weakQuestionsには記録せず、triggerSkipAnswerで答えだけ見せて次へ進める。
