@@ -1200,6 +1200,8 @@ window.normalizeSaveData = function(data) {
   normalized.tornadoResolvedDate = normalized.tornadoResolvedDate || ""; // ★2026-09-13追加：竜巻サバイバルイベントを挑戦済みの日付
   normalized.tornadoLuckBuffUntil = Number(normalized.tornadoLuckBuffUntil || 0); // ★2026-09-13追加：竜巻を全問正解で乗り切った時の幸運バフ有効期限（epoch ms）
   normalized.survivalBestScore = Number(normalized.survivalBestScore || 0); // ★2026-09-14追加：⚡サバイバルクイズの自己ベストスコア
+  normalized.ptsToQDailyDate = normalized.ptsToQDailyDate || ""; // ★2026-09-18追加：pt→Q両替の1日上限リセット用日付
+  normalized.ptsToQDailyUsed = Number(normalized.ptsToQDailyUsed || 0); // ★2026-09-18追加：本日すでに両替したQ量
   normalized.seenFastTapNotice = !!normalized.seenFastTapNotice; // ★2026-09-14追加：探偵ラボ/竜巻の「初回正解が一番おトク」注意書きを見せたかどうか（1回だけ表示）
   normalized.loginStampCount = Number(normalized.loginStampCount || 0);
   normalized.lastStampDate = normalized.lastStampDate || "";
@@ -4416,15 +4418,41 @@ window.applyAvatar = function() {
   }
 };
 /* ★クロぽんごはん・アバター ここまで ------------------- */
-window.exchangePtsToQ = function() { if(window.saveData.pts < 20) { alert("🪙 20pts必要です。"); return; } window.saveData.pts -= 20; window.saveData.q += 1; window.saveGame(); alert("🪙 両替しました！"); };
+// ★2026-09-18追加：pt→Q両替の1日の上限（Q換算）。クリア済みの簡単なステージを周回するだけで
+//   ptsが無制限に貯まり、それをそのままQへ青天井で両替できてしまっていた抜け道を塞ぐ。
+//   周回（復習）自体は悪いことではないので、周回にペナルティは付けず「両替できる量」だけ絞る。
+window.PTS_TO_Q_DAILY_CAP = 10;
+window.ensurePtsToQDailyReset = function () {
+  const sd = new Date(window.currentServerTime || Date.now());
+  const todayStr = `${sd.getFullYear()}-${sd.getMonth() + 1}-${sd.getDate()}`;
+  if (window.saveData.ptsToQDailyDate !== todayStr) {
+    window.saveData.ptsToQDailyDate = todayStr;
+    window.saveData.ptsToQDailyUsed = 0;
+  }
+};
+window.exchangePtsToQ = function() {
+  window.ensurePtsToQDailyReset();
+  const remaining = window.PTS_TO_Q_DAILY_CAP - (window.saveData.ptsToQDailyUsed || 0);
+  if (remaining <= 0) { alert(`🪙 今日のpt→Q両替は上限（${window.PTS_TO_Q_DAILY_CAP}Q）に達したよ。また明日やってみてね！`); return; }
+  if(window.saveData.pts < 20) { alert("🪙 20pts必要です。"); return; }
+  window.saveData.pts -= 20; window.saveData.q += 1;
+  window.saveData.ptsToQDailyUsed = (window.saveData.ptsToQDailyUsed || 0) + 1;
+  window.saveGame(); alert("🪙 両替しました！");
+};
 // ★2026-08-03 追加：pt→Qの一括交換（Math.floor(pts/20)で最大Q数を算出し、端数ptsは保持する）
 window.exchangePtsToQBulk = function() {
-  const maxQ = Math.floor((window.saveData.pts || 0) / 20);
-  if (maxQ <= 0) { alert("🪙 20pts必要です。"); return; }
+  window.ensurePtsToQDailyReset();
+  const remaining = window.PTS_TO_Q_DAILY_CAP - (window.saveData.ptsToQDailyUsed || 0);
+  if (remaining <= 0) { alert(`🪙 今日のpt→Q両替は上限（${window.PTS_TO_Q_DAILY_CAP}Q）に達したよ。また明日やってみてね！`); return; }
+  const maxQByPts = Math.floor((window.saveData.pts || 0) / 20);
+  if (maxQByPts <= 0) { alert("🪙 20pts必要です。"); return; }
+  const maxQ = Math.min(maxQByPts, remaining);
   const usedPts = maxQ * 20;
-  if (!confirm(`🪙 ${usedPts}ptsを使って ${maxQ}Q に一括交換するよ！\nいいかな？`)) return;
+  const cappedNote = maxQ < maxQByPts ? `\n（今日の上限${window.PTS_TO_Q_DAILY_CAP}Qまでのため一部だけ両替するよ）` : "";
+  if (!confirm(`🪙 ${usedPts}ptsを使って ${maxQ}Q に一括交換するよ！${cappedNote}\nいいかな？`)) return;
   window.saveData.pts -= usedPts;
   window.saveData.q += maxQ;
+  window.saveData.ptsToQDailyUsed = (window.saveData.ptsToQDailyUsed || 0) + maxQ;
   window.saveGame();
   alert(`🪙 ${usedPts}pts → ${maxQ}Q に一括両替したよ！`);
 };
