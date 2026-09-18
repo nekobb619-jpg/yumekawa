@@ -4423,6 +4423,13 @@ window.applyAvatar = function() {
 //   周回（復習）自体は悪いことではないので、周回にペナルティは付けず「両替できる量」だけ絞る。
 window.PTS_TO_Q_DAILY_CAP = 15; // ★2026-09-18調整：10→15。下のpts消費システム（復習中の誤答で減点）と合わせて、貯まりすぎを緩和
 window.REVIEW_WRONG_PTS_PENALTY = 3; // ★2026-09-18追加：復習（周回済みステージ）中に間違えた時のpts減点
+// ★2026-09-18追加：「りさ」は実際には大人（母）のアカウントで、1400Q＝500円というRobux交換とは
+//   別のリアルなお金の約束があり、意図的にQ/ptsを貯めている。子ども向けのファーミング対策
+//   （両替上限・復習誤答減点）は「りお」専用にし、りさは対象外にする。
+window.PTS_ANTI_FARM_EXEMPT_PLAYER_IDS = ["りさ"];
+window.isPtsAntiFarmExempt = function () {
+  return window.PTS_ANTI_FARM_EXEMPT_PLAYER_IDS.indexOf(window.playerId) !== -1;
+};
 window.ensurePtsToQDailyReset = function () {
   const sd = new Date(window.currentServerTime || Date.now());
   const todayStr = `${sd.getFullYear()}-${sd.getMonth() + 1}-${sd.getDate()}`;
@@ -4434,7 +4441,7 @@ window.ensurePtsToQDailyReset = function () {
 window.exchangePtsToQ = function() {
   window.ensurePtsToQDailyReset();
   const remaining = window.PTS_TO_Q_DAILY_CAP - (window.saveData.ptsToQDailyUsed || 0);
-  if (remaining <= 0) { alert(`🪙 今日のpt→Q両替は上限（${window.PTS_TO_Q_DAILY_CAP}Q）に達したよ。また明日やってみてね！`); return; }
+  if (!window.isPtsAntiFarmExempt() && remaining <= 0) { alert(`🪙 今日のpt→Q両替は上限（${window.PTS_TO_Q_DAILY_CAP}Q）に達したよ。また明日やってみてね！`); return; }
   if(window.saveData.pts < 20) { alert("🪙 20pts必要です。"); return; }
   window.saveData.pts -= 20; window.saveData.q += 1;
   window.saveData.ptsToQDailyUsed = (window.saveData.ptsToQDailyUsed || 0) + 1;
@@ -4443,13 +4450,14 @@ window.exchangePtsToQ = function() {
 // ★2026-08-03 追加：pt→Qの一括交換（Math.floor(pts/20)で最大Q数を算出し、端数ptsは保持する）
 window.exchangePtsToQBulk = function() {
   window.ensurePtsToQDailyReset();
+  const exempt = window.isPtsAntiFarmExempt();
   const remaining = window.PTS_TO_Q_DAILY_CAP - (window.saveData.ptsToQDailyUsed || 0);
-  if (remaining <= 0) { alert(`🪙 今日のpt→Q両替は上限（${window.PTS_TO_Q_DAILY_CAP}Q）に達したよ。また明日やってみてね！`); return; }
+  if (!exempt && remaining <= 0) { alert(`🪙 今日のpt→Q両替は上限（${window.PTS_TO_Q_DAILY_CAP}Q）に達したよ。また明日やってみてね！`); return; }
   const maxQByPts = Math.floor((window.saveData.pts || 0) / 20);
   if (maxQByPts <= 0) { alert("🪙 20pts必要です。"); return; }
-  const maxQ = Math.min(maxQByPts, remaining);
+  const maxQ = exempt ? maxQByPts : Math.min(maxQByPts, remaining);
   const usedPts = maxQ * 20;
-  const cappedNote = maxQ < maxQByPts ? `\n（今日の上限${window.PTS_TO_Q_DAILY_CAP}Qまでのため一部だけ両替するよ）` : "";
+  const cappedNote = (!exempt && maxQ < maxQByPts) ? `\n（今日の上限${window.PTS_TO_Q_DAILY_CAP}Qまでのため一部だけ両替するよ）` : "";
   if (!confirm(`🪙 ${usedPts}ptsを使って ${maxQ}Q に一括交換するよ！${cappedNote}\nいいかな？`)) return;
   window.saveData.pts -= usedPts;
   window.saveData.q += maxQ;
@@ -5742,7 +5750,9 @@ window.triggerWrongAnswer = function(current) {
     //   （0未満にはしない）。新規学習中の間違いはここに入らないので対象外＝安心して挑戦できる。
     //   周回でのpts稼ぎを少し抑えつつ、pts→Q両替の上限アップ（10→15）とセットで、
     //   「貯まる一方で使い道が無い」フラストレーションを緩和する狙い。
-    window.saveData.pts = Math.max(0, (window.saveData.pts || 0) - window.REVIEW_WRONG_PTS_PENALTY);
+    if (!window.isPtsAntiFarmExempt()) {
+      window.saveData.pts = Math.max(0, (window.saveData.pts || 0) - window.REVIEW_WRONG_PTS_PENALTY);
+    }
     return;
   }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
