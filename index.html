@@ -4421,7 +4421,8 @@ window.applyAvatar = function() {
 // ★2026-09-18追加：pt→Q両替の1日の上限（Q換算）。クリア済みの簡単なステージを周回するだけで
 //   ptsが無制限に貯まり、それをそのままQへ青天井で両替できてしまっていた抜け道を塞ぐ。
 //   周回（復習）自体は悪いことではないので、周回にペナルティは付けず「両替できる量」だけ絞る。
-window.PTS_TO_Q_DAILY_CAP = 10;
+window.PTS_TO_Q_DAILY_CAP = 15; // ★2026-09-18調整：10→15。下のpts消費システム（復習中の誤答で減点）と合わせて、貯まりすぎを緩和
+window.REVIEW_WRONG_PTS_PENALTY = 3; // ★2026-09-18追加：復習（周回済みステージ）中に間違えた時のpts減点
 window.ensurePtsToQDailyReset = function () {
   const sd = new Date(window.currentServerTime || Date.now());
   const todayStr = `${sd.getFullYear()}-${sd.getMonth() + 1}-${sd.getDate()}`;
@@ -5736,7 +5737,14 @@ window.triggerWrongAnswer = function(current) {
   if (window.dynamicPracticeModeActive) { return; } // ★特訓ラボはステージ非依存のため、weakQuestions等への書き込みは行わない
   if (window.tornadoQuizModeActive) { return; } // ★竜巻サバイバル挑戦もステージ非依存のため同様
   if (window.survivalModeActive) { return; } // ★サバイバルクイズもステージ非依存のため同様
-  if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) { return; }
+  if (window.currentActiveStageId && window.saveData.clearedStages[window.currentActiveStageId]) {
+    // ★2026-09-18追加：pts消費システム。復習（周回済みステージ）中に間違えると少しptsを失う
+    //   （0未満にはしない）。新規学習中の間違いはここに入らないので対象外＝安心して挑戦できる。
+    //   周回でのpts稼ぎを少し抑えつつ、pts→Q両替の上限アップ（10→15）とセットで、
+    //   「貯まる一方で使い道が無い」フラストレーションを緩和する狙い。
+    window.saveData.pts = Math.max(0, (window.saveData.pts || 0) - window.REVIEW_WRONG_PTS_PENALTY);
+    return;
+  }
   if (window.currentActiveStageId && !window.weakAttackModeActive) {
      // ★qid（並び順が変わってもズレない安定id）があればそちらを使う。無ければ従来のindex形式にフォールバック。
      let weakId = current.qid ? `${window.currentActiveStageId}::${current.qid}` : `${window.currentActiveStageId}_q_${window.currentQIdx}`;
