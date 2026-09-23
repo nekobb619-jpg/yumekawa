@@ -1187,6 +1187,15 @@ window.normalizeSaveData = function(data) {
   normalized.lastContentRefreshLoopCount = normalized.lastContentRefreshLoopCount || {};
   normalized.weakQuestions = normalized.weakQuestions || [];
   normalized.answerLogs = normalized.answerLogs || []; // ★2026-08-08追加：解答時間・ヒント使用ログ（js/adaptive-question-generator.js）
+  // ★2026-09-23追加：answerLogsは1件約100〜130文字あり、旧上限500件のままだと単独で
+  //   スプレッドシート1セル50,000文字制限（.knowledge/postmortems.md参照、りさの過去
+  //   インシデントと同型）に到達してしまう。normalizeSaveData（毎回のsaveGame/ログイン時に通る）
+  //   の時点で強制的に上限まで切り詰め、古い上限のまま貯まった既存データも次回読み込み時に
+  //   自動で縮小されるようにする。
+  var _answerLogsCap = window.MAX_ANSWER_LOGS || 150;
+  if (Array.isArray(normalized.answerLogs) && normalized.answerLogs.length > _answerLogsCap) {
+    normalized.answerLogs = normalized.answerLogs.slice(-_answerLogsCap);
+  }
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
   normalized.totalAnswersCount = normalized.totalAnswersCount || 0; // ★2026-08-08追加：せいちょうきろく用の総チャレンジ数（answerLogsは件数上限があるため別カウンタ）
   normalized.bossQuestCleared = normalized.bossQuestCleared || {}; // ★2026-08-08追加：ボスクエストの非消費型クリアフラグ（js/boss-quest.js）
@@ -3041,6 +3050,22 @@ window.saveGame = function() {
   //   reviewDates等の未来タイムスタンプ（端末の時計ずれ等が原因）もここで現在時刻に丸め、
   //   壊れた値のままGASへ送ってしまわないようにする。
   window.saveData = window.normalizeSaveData(window.saveData);
+  // ★2026-09-23追加：answerLogsの上限を下げても、他のフィールド（clearedQuestionQids・
+  //   gachaEggs・treasureBook等、ユニークキーが増え続けるタイプ）が数年単位で育ち続ければ
+  //   いずれまた50,000文字制限に近づく可能性がある。送信直前に実サイズを直接確認し、
+  //   万一近づいていたらanswerLogsをさらに切り詰める最終防衛ラインを入れておく。
+  (function () {
+    var SAFE_LIMIT = 42000; // 50,000文字制限に対して十分な余白を持たせた閾値
+    var guardCount = 0;
+    while (Array.isArray(window.saveData.answerLogs) && window.saveData.answerLogs.length > 0 && guardCount < 20) {
+      var currentLen = JSON.stringify(window.saveData).length;
+      if (currentLen <= SAFE_LIMIT) break;
+      var nextCap = Math.max(0, Math.floor(window.saveData.answerLogs.length * 0.7));
+      if (nextCap >= window.saveData.answerLogs.length) nextCap = window.saveData.answerLogs.length - 20;
+      window.saveData.answerLogs = window.saveData.answerLogs.slice(-Math.max(0, nextCap));
+      guardCount++;
+    }
+  })();
   const snapshot = JSON.stringify(window.saveData);
   localStorage.setItem("kids_lab_v12_pro_" + window.playerId, snapshot);
   if (window.playerId === "りお" || window.playerId === "りさ") {

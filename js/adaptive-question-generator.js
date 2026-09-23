@@ -207,7 +207,11 @@
      saveData.answerLogsへ蓄積する。これでanalyzeWeakAreas(logs)が本来の実データで動くようになった
      （優先度1の暫定実装＝weakQuestionsのカテゴリ別滞留数を数えるだけの代用シグナルは廃止）。
      --------------------------------------------------------------------- */
-  window.MAX_ANSWER_LOGS = 500; // 際限なく増やさないよう直近N件のみ保持
+  // ★2026-09-23修正：500件だと1件あたり約100〜130文字として単独で44,000文字超になり、
+  //   スプレッドシート1セル50,000文字制限（.knowledge/postmortems.md参照）にほぼ到達してしまう
+  //   （実際にりおのデータが49,949文字まで到達しSAVEが継続的に失敗する事象が発生した）。
+  //   150件に縮小し、他のフィールドの今後の増加分の余白を確保する。
+  window.MAX_ANSWER_LOGS = 150; // 際限なく増やさないよう直近N件のみ保持
 
   // stageIdから、weak-area分析のcategoryキーとして使う文字列を解決する（無ければsubject、それも無ければstageId自身）
   window.resolveStageCategory = function (stageId) {
