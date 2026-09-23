@@ -331,6 +331,16 @@
       addedCount += 1;
     });
 
+    // ★2026-09-23追加：aiGeneratedQuizzesはstageIdごとにpushするだけでトリムがなく、
+    //   AI生成のたびに無制限に増え続けてしまう（answerLogsと同じくスプレッドシート
+    //   1セル50,000文字制限に効いてくる。.knowledge/postmortems.md参照）。
+    //   ステージごとに直近MAX_AI_QUIZZES_PER_STAGE件だけ保持する。
+    if (addedCount > 0) {
+      var cap = window.MAX_AI_QUIZZES_PER_STAGE || 20;
+      if (window.saveData.aiGeneratedQuizzes[stageId].length > cap) {
+        window.saveData.aiGeneratedQuizzes[stageId] = window.saveData.aiGeneratedQuizzes[stageId].slice(-cap);
+      }
+    }
     if (addedCount > 0 && typeof window.saveGame === "function") window.saveGame();
     return addedCount;
   };

@@ -1202,6 +1202,17 @@ window.normalizeSaveData = function(data) {
   // ★2026-08-19廃止：bossQuestUnlockedCount/bossQuestLastUnlockDate（解放数を貯める旧方式）は
   //   book.jsと同じ「日付%件数」の巡回方式に置き換えたため、js/boss-quest.jsはもう参照しない。
   normalized.aiGeneratedQuizzes = normalized.aiGeneratedQuizzes || {};
+  // ★2026-09-23追加：answerLogsと同じ理由（50,000文字制限、.knowledge/postmortems.md参照）で、
+  //   古い上限（トリム無し）のまま貯まった既存データもここで縮小する。
+  (function () {
+    var cap = window.MAX_AI_QUIZZES_PER_STAGE || 20;
+    Object.keys(normalized.aiGeneratedQuizzes).forEach(function (stageId) {
+      var arr = normalized.aiGeneratedQuizzes[stageId];
+      if (Array.isArray(arr) && arr.length > cap) {
+        normalized.aiGeneratedQuizzes[stageId] = arr.slice(-cap);
+      }
+    });
+  })();
   normalized.kakera = Number(normalized.kakera || 0);
   normalized.inventory = normalized.inventory || [];
   normalized.islandStatus = normalized.islandStatus || "";
@@ -3057,12 +3068,26 @@ window.saveGame = function() {
   (function () {
     var SAFE_LIMIT = 42000; // 50,000文字制限に対して十分な余白を持たせた閾値
     var guardCount = 0;
+    // ステップ1：answerLogsを段階的に切り詰める
     while (Array.isArray(window.saveData.answerLogs) && window.saveData.answerLogs.length > 0 && guardCount < 20) {
-      var currentLen = JSON.stringify(window.saveData).length;
-      if (currentLen <= SAFE_LIMIT) break;
+      if (JSON.stringify(window.saveData).length <= SAFE_LIMIT) break;
       var nextCap = Math.max(0, Math.floor(window.saveData.answerLogs.length * 0.7));
       if (nextCap >= window.saveData.answerLogs.length) nextCap = window.saveData.answerLogs.length - 20;
       window.saveData.answerLogs = window.saveData.answerLogs.slice(-Math.max(0, nextCap));
+      guardCount++;
+    }
+    // ★2026-09-23追加：それでもまだ大きい場合（aiGeneratedQuizzes等、answerLogs以外の
+    //   フィールドが育っているケース）は、stageIdごとのAI生成問題も古いものから切り詰める
+    //   最終手段。ゲーム進捗（q/pts/clearedStages等）には一切触れない。
+    guardCount = 0;
+    while (JSON.stringify(window.saveData).length > SAFE_LIMIT && guardCount < 40) {
+      var aiq = window.saveData.aiGeneratedQuizzes || {};
+      var targetStageId = null, targetLen = 0;
+      Object.keys(aiq).forEach(function (sid) {
+        if (Array.isArray(aiq[sid]) && aiq[sid].length > targetLen) { targetLen = aiq[sid].length; targetStageId = sid; }
+      });
+      if (!targetStageId || targetLen === 0) break; // これ以上削れるものが無い
+      aiq[targetStageId] = aiq[targetStageId].slice(1); // 一番古い1件を落とす
       guardCount++;
     }
   })();
