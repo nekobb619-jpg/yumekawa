@@ -3164,6 +3164,19 @@ window.initApp = function() {
   }
   window.refreshSummerTimeline(); // 夏休みタイムラインの表示判定
   window.performLogin(window.playerId);
+  // ★2026-09-23追加：ログイン直後の1回だけでなく、アプリを開いている間は数分おきに
+  //   未同期SAVEの再送を試みる。弱い回線（特に上りが弱いモバイル回線等）だと
+  //   ログイン直後のタイミングでは送信が通らず、次にプレイヤーが新しく問題をクリアする
+  //   （＝次のsaveGame()呼び出し）までクラウドに一切反映されない状態が続いてしまう。
+  //   一瞬でも通信が回復した好機を取りこぼさないための保険。
+  window.setInterval(function () {
+    if (!window.playerId || !window.saveDataConfirmedSource) return;
+    try {
+      if (localStorage.getItem("kids_lab_v12_pro_unsynced_" + window.playerId) === "1") {
+        window.saveGame();
+      }
+    } catch (e) {}
+  }, 3 * 60 * 1000);
 };
 window.doLogin = function() {
   const input = document.getElementById("player-id-input").value.trim();
