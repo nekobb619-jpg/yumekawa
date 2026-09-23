@@ -3061,33 +3061,53 @@ window.saveGame = function() {
   //   reviewDates等の未来タイムスタンプ（端末の時計ずれ等が原因）もここで現在時刻に丸め、
   //   壊れた値のままGASへ送ってしまわないようにする。
   window.saveData = window.normalizeSaveData(window.saveData);
-  // ★2026-09-23追加：answerLogsの上限を下げても、他のフィールド（clearedQuestionQids・
-  //   gachaEggs・treasureBook等、ユニークキーが増え続けるタイプ）が数年単位で育ち続ければ
-  //   いずれまた50,000文字制限に近づく可能性がある。送信直前に実サイズを直接確認し、
-  //   万一近づいていたらanswerLogsをさらに切り詰める最終防衛ラインを入れておく。
+  // ★2026-09-23追加（根本対策）：answerLogs/aiGeneratedQuizzesのように「発見するたびに
+  //   個別フィールドを後追いで対策する」やり方だと、次に別のフィールドが育ったときにまた
+  //   同じ事故が起きる。そこで「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」
+  //   だけを優先順位付きでリスト化し、実際のJSON文字列長を見ながら必要な分だけ動的に
+  //   切り詰める汎用ガードにする。pts/q/robux/clearedStages/gachaEggs/treasureBook等の
+  //   本当の進捗・所持品データは、このリストに絶対に含めない＝一切トリム対象にしない。
+  //   新しく似た性質の（履歴・ログ系の）フィールドを追加する場合は、ここにも追加すること。
   (function () {
     var SAFE_LIMIT = 42000; // 50,000文字制限に対して十分な余白を持たせた閾値
+    // 優先度順（先に削られる＝実害が最も小さいもの）。
+    //   flat: 単純配列を古い方から切り詰め。byStage: stageIdごとの配列のうち一番長いものから1件ずつ。
+    var TRIMMABLE_FIELDS = [
+      { key: "answerLogs", type: "flat" }, // 解答時間・ヒント使用の直近ログ（分析用、表示に直接使われない）
+      { key: "aiGeneratedQuizzes", type: "byStage" }, // AI生成問題の保存（次回起動時に再合流するキャッシュ的データ）
+      { key: "fastMasteredQids", type: "flat" }, // 早すぎ正解の記録（出題優先度の調整用ヒント）
+      { key: "clearedQuestionQids", type: "byStage" } // ステージクリア時に再生成される（最終手段）
+    ];
     var guardCount = 0;
-    // ステップ1：answerLogsを段階的に切り詰める
-    while (Array.isArray(window.saveData.answerLogs) && window.saveData.answerLogs.length > 0 && guardCount < 20) {
-      if (JSON.stringify(window.saveData).length <= SAFE_LIMIT) break;
-      var nextCap = Math.max(0, Math.floor(window.saveData.answerLogs.length * 0.7));
-      if (nextCap >= window.saveData.answerLogs.length) nextCap = window.saveData.answerLogs.length - 20;
-      window.saveData.answerLogs = window.saveData.answerLogs.slice(-Math.max(0, nextCap));
-      guardCount++;
-    }
-    // ★2026-09-23追加：それでもまだ大きい場合（aiGeneratedQuizzes等、answerLogs以外の
-    //   フィールドが育っているケース）は、stageIdごとのAI生成問題も古いものから切り詰める
-    //   最終手段。ゲーム進捗（q/pts/clearedStages等）には一切触れない。
-    guardCount = 0;
-    while (JSON.stringify(window.saveData).length > SAFE_LIMIT && guardCount < 40) {
-      var aiq = window.saveData.aiGeneratedQuizzes || {};
-      var targetStageId = null, targetLen = 0;
-      Object.keys(aiq).forEach(function (sid) {
-        if (Array.isArray(aiq[sid]) && aiq[sid].length > targetLen) { targetLen = aiq[sid].length; targetStageId = sid; }
-      });
-      if (!targetStageId || targetLen === 0) break; // これ以上削れるものが無い
-      aiq[targetStageId] = aiq[targetStageId].slice(1); // 一番古い1件を落とす
+    while (JSON.stringify(window.saveData).length > SAFE_LIMIT && guardCount < 300) {
+      var trimmedSomething = false;
+      for (var i = 0; i < TRIMMABLE_FIELDS.length; i++) {
+        var f = TRIMMABLE_FIELDS[i];
+        if (f.type === "flat") {
+          var arr = window.saveData[f.key];
+          if (Array.isArray(arr) && arr.length > 0) {
+            var nextLen = Math.max(0, Math.floor(arr.length * 0.7));
+            if (nextLen >= arr.length) nextLen = arr.length - 1;
+            window.saveData[f.key] = arr.slice(-Math.max(0, nextLen));
+            trimmedSomething = true;
+            break;
+          }
+        } else if (f.type === "byStage") {
+          var obj = window.saveData[f.key];
+          if (obj && typeof obj === "object") {
+            var targetSid = null, targetLen = 0;
+            Object.keys(obj).forEach(function (sid) {
+              if (Array.isArray(obj[sid]) && obj[sid].length > targetLen) { targetLen = obj[sid].length; targetSid = sid; }
+            });
+            if (targetSid && targetLen > 0) {
+              obj[targetSid] = obj[targetSid].slice(1);
+              trimmedSomething = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!trimmedSomething) break; // 安全に削れるものがもう無い（本当の進捗データには手を出さない）
       guardCount++;
     }
   })();
