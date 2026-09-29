@@ -631,6 +631,29 @@
     <!-- ★2026-09-14追加：⚡サバイバルクイズ（1問でも間違えたら即終了。Q/pts無し、スコアのみの腕試しモード） -->
     <button class="btn-sm" style="background:linear-gradient(135deg,#1e293b,#334155); color:#fbbf24; font-weight:900;" onclick="window.launchSurvivalMode()">⚡ サバイバルクイズ（自己ベスト：<span id="survival-best-inline">0</span>問）</button>
   </div>
+  <!-- ★2026-09-30追加：『少女ポリアンナ』の「よかったさがし」の考え方をいつでも見返せる常設ボックス（静的コンテンツ、saveData・通信は使わない） -->
+  <div class="acc-box" style="margin:8px 0 12px;">
+    <div class="acc-head" onclick="window.toggleAcc(this)">🌷 ポリアンナの「よかったさがし」</div>
+    <div class="acc-body" style="font-size:13px; line-height:1.7; color:var(--text-main, #4a4458);">
+      <p style="margin:0 0 8px; font-weight:900;">いやなこと・うまくいかないことがあっても、その中から「よかったこと」をさがす ゲームだよ。</p>
+      <div style="background:#fff7ed; border-radius:12px; padding:8px 10px; margin-bottom:8px;">
+        <div style="font-weight:900; color:#c2410c;">📖 はじまりのおはなし</div>
+        <div>ポリアンナは、プレゼントに人形をたのしみにしていたのに、とどいたのは<b>つえ（松葉づえ）</b>だった。がっかりしていると、お父さんが言ったよ。「つえを使わなくてすむなんて、<b>よかった</b>じゃないか！」――これが「よかったさがし」のはじまり。</div>
+      </div>
+      <div style="background:#f0fdf4; border-radius:12px; padding:8px 10px; margin-bottom:8px;">
+        <div style="font-weight:900; color:#15803d;">✅ やりかた（3ステップ）</div>
+        <div>① いやだな、と思ったことを 正直に見つける<br>
+        ② 「〜だけど、<b>〜はよかった</b>」の形で言ってみる<br>
+        ③ むりに見つからなければ、ちいさなことでOK（「おなかがすいた → ごはんがおいしく食べられる！」）</div>
+      </div>
+      <div style="background:#eff6ff; border-radius:12px; padding:8px 10px; margin-bottom:8px;">
+        <div style="font-weight:900; color:#1d4ed8;">💡 クイズやテストで使ってみよう</div>
+        <div>まちがえた → 「<b>まちがえたけど、いま気づけてよかった</b>。本番でまちがえなくてすむ！」<br>
+        むずかしい → 「<b>むずかしいけど、できたらぜったい強くなれる</b>からよかった！」</div>
+      </div>
+      <div style="font-size:12px; color:var(--text-soft);">※ 「つらいのを がまんしてニコニコする」ことじゃないよ。かなしい気もちはそのままにして、そのうえで「よかったこと」も ひとつ見つけてみよう。</div>
+    </div>
+  </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
     <div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">データ通信中...</div>
