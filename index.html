@@ -2905,7 +2905,8 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
     if (action === "LOAD" && res.status === "SUCCESS") {
       let incomingStages = res.stages || []; window.globalStageMaster = {}; let foundSubjects = new Set();
       const specCont = document.getElementById("special-missions-container"); if(specCont) specCont.innerHTML = "";
-      const activeMissions = (res.missions && res.missions.length > 0) ? res.missions : (res.mission ? [res.mission] : []);
+      // ★2026-09-30変更：完了済み（is_cleared:true）の特別指令は表示しない（シートの行を手動で消さなくてよいように）。
+      const activeMissions = ((res.missions && res.missions.length > 0) ? res.missions : (res.mission ? [res.mission] : [])).filter(m => !(m && m.is_cleared === true));
       if (activeMissions.length > 0) {
          activeMissions.forEach((m, idx) => {
            const mCard = document.createElement("div"); mCard.style = `background: #faf5ff; border-left: 5px solid #d946ef; padding: 10px; border-radius: 8px;${idx > 0 ? " margin-top: 8px;" : ""}`;
