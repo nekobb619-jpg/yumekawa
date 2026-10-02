@@ -658,6 +658,7 @@
         むずかしい → 「<b>むずかしいけど、できたらぜったい強くなれる</b>からよかった！」</div>
       </div>
       <div style="font-size:12px; color:var(--text-soft);">※ 「つらいのを がまんしてニコニコする」ことじゃないよ。かなしい気もちはそのままにして、そのうえで「よかったこと」も ひとつ見つけてみよう。</div>
+      <button class="btn-sm" style="margin-top:8px; width:100%; background:linear-gradient(135deg,#ede9fe,#ddd6fe); color:#5b21b6; font-weight:900;" onclick="window.openReadingNote('少女ポリアンナ')">✏️ 『少女ポリアンナ』の 読書ノートを書く</button>
     </div>
   </div>
   <!-- ★2026-09-30追加：学級通信「作品読解6」の6つの見方の早見表（静的コンテンツ）。練習は 国語/読解/dokkai6_01 -->
@@ -680,6 +681,10 @@
         <div>「かぶが 大きくなる」ことが 言いたいのでは ない。→ <b>みんなで 力を 合わせれば 大きな 力に なる</b></div>
       </div>
       <div style="font-size:12px; color:var(--text-soft);">✅ 書いたら 見直そう：<b>本文に こんきょ</b>は ある？ ／ <b>発見・気づき</b>は ある？ ／ <b>考える 視点</b>は ある？<br>（答えが いくつか あるときは、いちばん 大事な ものに 赤えんぴつで ○！）<br>🎯 れんしゅう：国語 →「作品読解6」ステージ</div>
+      <div class="flex-row" style="margin-top:8px;">
+        <button class="btn-sm" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe); color:#5b21b6; font-weight:900;" onclick="window.openReadingNote()">✏️ 読書ノートを書く</button>
+        <button class="btn-sm" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;" onclick="window.openBookshelf()">📚 わたしの本だな</button>
+      </div>
     </div>
   </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
@@ -1252,6 +1257,8 @@ window.normalizeSaveData = function(data) {
   if (Array.isArray(normalized.answerLogs) && normalized.answerLogs.length > _answerLogsCap) {
     normalized.answerLogs = normalized.answerLogs.slice(-_answerLogsCap);
   }
+  normalized.readingNotes = Array.isArray(normalized.readingNotes) ? normalized.readingNotes : []; // ★2026-10-02追加：読書ノート（js/reading-note.js、新しい順・最大8件）
+  normalized.readingNoteCount = Number(normalized.readingNoteCount || 0);
   normalized.knowledgeCards = normalized.knowledgeCards || {}; // ★2026-10-02追加：ちしきカード { stageId: [段階1〜3, 達成日(日数)] }
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
@@ -6562,5 +6569,6 @@ window.initQAMode();
 <script src="./js/adaptive-question-generator.js"></script>
 <script src="./js/boss-quest.js"></script>
 <script src="./book.js"></script>
+<script src="./js/reading-note.js"></script>
 </body>
 </html>
