@@ -904,6 +904,12 @@
 
   // メインメニューのバナー（book-bannerのすぐ下）を更新する。index.htmlのrefreshBookBanner()と
   // 同じタイミング（ログイン成功後・データ更新後）で呼ばれる想定。
+  // ★2026-10-02追加：きょうのまなびプラン（js/tutor-plan.js）が「今日のなぞとき」の完了を判定するための読み取り専用API
+  window.getTodayMysteryInfo = function () {
+    var today = todaysMission_();
+    return { id: today.id, title: today.title, cleared: isMissionCleared(today.id) };
+  };
+
   window.refreshDailyMissionBanner = function () {
     var banner = document.getElementById("dailymission-banner");
     var sub = document.getElementById("dailymission-banner-sub");

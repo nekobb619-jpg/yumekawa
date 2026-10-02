@@ -43,6 +43,47 @@
   .stat-item { text-align: center; } .stat-label { font-size: 11px; color: var(--text-soft); } .stat-val { font-size: 20px; font-weight: 900; color: var(--text-main); } .stat-val span { font-size: 12px; font-weight: 700; margin-left: 2px; }
   .navi-box { background: linear-gradient(135deg, var(--lavender-light), var(--pastel-pink)); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--card-shadow); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
   .navi-avatar { font-size: 32px; animation: bounce 2s infinite; } .navi-text { font-size: 13px; font-weight: 700; line-height: 1.5; }
+  /* ★2026-10-02追加（ホーム改革）：きょうのまなびプラン（js/tutor-plan.js）＋ホームのセクション見出し・タイル */
+  header.top h1 { font-size: clamp(19px, 6vw, 30px); line-height: 1.25; white-space: nowrap; }
+  .tplan { background: linear-gradient(160deg, #fff 0%, #fdf4ff 55%, #fce7f3 100%); border: 2px solid #e9d5ff; border-radius: 22px; padding: 12px 12px 10px; box-shadow: 0 6px 0 rgba(147, 51, 234, 0.16); margin-bottom: 14px; }
+  .tplan-head { display: flex; justify-content: space-between; align-items: center; margin: 0 2px 8px; }
+  .tplan-title { font-size: 16px; font-weight: 900; color: #6b21a8; }
+  .tplan-dots { display: flex; gap: 5px; } .tplan-dots i { width: 12px; height: 12px; border-radius: 50%; background: #e9d5ff; display: block; } .tplan-dots i.on { background: linear-gradient(135deg, #f472b6, #a855f7); }
+  .tplan-navi { background: transparent; box-shadow: none; padding: 0 2px 8px; margin: 0; align-items: flex-end; }
+  .tplan-navi .navi-text { position: relative; flex: 1; background: #fff; border: 2px solid #f5d0fe; border-radius: 16px; padding: 9px 12px; font-size: 13.5px; color: #4a3b52; }
+  .tplan-navi .navi-text::before { content: ""; position: absolute; left: -9px; bottom: 14px; border: 8px solid transparent; border-right-color: #f5d0fe; border-left: 0; }
+  .tplan-chara { flex: 0 0 auto; width: 92px; display: flex; align-items: flex-end; gap: 0; }
+  .tplan-chara svg { display: block; }
+  .tplan-chara .c-teacher { width: 70px; height: 77px; animation: tplanBob 2.6s ease-in-out infinite; }
+  .tplan-chara .c-buddy { width: 38px; height: 38px; margin-left: -16px; animation: tplanBob 2.6s ease-in-out .5s infinite; }
+  @keyframes tplanBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .tplan-step { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 16px; padding: 9px 10px; margin-bottom: 7px; border: 2px solid #f3e8ff; }
+  .tplan-step .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; background: #f3e8ff; }
+  .tplan-step .body { flex: 1; min-width: 0; }
+  .tplan-step .kind { font-size: 11px; font-weight: 900; color: #9333ea; }
+  .tplan-step .name { font-size: 14px; font-weight: 900; color: #4a3b52; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .tplan-step .why { font-size: 11px; font-weight: 700; color: var(--text-soft); margin-top: 2px; }
+  .tplan-step .go { flex: 0 0 auto; border: none; border-radius: 999px; padding: 8px 12px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 12px; background: #f3e8ff; color: #7e22ce; cursor: pointer; min-height: 36px; }
+  .tplan-step.next { border-color: #f0abfc; box-shadow: 0 4px 0 rgba(217, 70, 239, 0.18); }
+  .tplan-step.next .num { background: linear-gradient(135deg, #f9a8d4, #c084fc); }
+  .tplan-step.next .go { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; padding: 10px 14px; font-size: 13px; box-shadow: 0 3px 0 #86198f; animation: tplanPulse 1.8s ease-in-out infinite; }
+  @keyframes tplanPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .tplan-step.done { background: #f8fafc; border-color: #e2e8f0; }
+  .tplan-step.done .name { color: #94a3b8; text-decoration: line-through; text-decoration-color: #cbd5e1; }
+  .tplan-step.done .num { background: #dcfce7; }
+  .tplan-foot { font-size: 11.5px; font-weight: 800; color: #7e22ce; text-align: center; padding-top: 2px; }
+  .tplan-foot b { color: #db2777; }
+  .tplan.all-done { border-color: #f9a8d4; background: linear-gradient(160deg, #fff7fb, #fdf2f8 50%, #fef9c3); }
+  h2.home-sec { font-size: 16px; font-weight: 900; color: #6b21a8; margin: 22px 4px 10px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+  h2.home-sec small { font-size: 11px; font-weight: 700; color: var(--text-soft); }
+  .tile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  @media (min-width: 560px) { .tile-grid { grid-template-columns: repeat(4, 1fr); } }
+  .tile { background: var(--panel-bg); border: none; border-radius: 18px; padding: 12px 4px 10px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 12px; line-height: 1.3; color: var(--text-main); cursor: pointer; min-height: 84px; text-align: center; }
+  .tile:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(74, 59, 82, 0.1); }
+  .tile .ti { font-size: 28px; line-height: 1.1; margin-bottom: 2px; }
+  .tile small { font-size: 10px; font-weight: 700; color: var(--text-soft); }
+  .tile .ti .c-buddy { width: 34px; height: 34px; display: block; margin: -2px auto 0; }
+  #grade-nav { display: none; } /* ★2026-10-02：学年は4年生のみ（3年生タブは2026-09-14に削除済み）なので、1つしかない学年タブは隠す */
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   .weak-attack-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fee2e2, #fcd34d); border: 2px solid #ef4444; border-radius: var(--radius); box-shadow: 0 5px 0 #b91c1c; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #991b1b; text-align: center; cursor: pointer; margin-bottom: 14px; display: none; transition: all 0.1s; }
   /* ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン）ボタン群 */
@@ -571,8 +612,8 @@
 </div>
 <div class="container">
   <header class="top" onclick="window.checkSecretTap()">
-    <h1>ゆめかわ★学びアドベンチャー LAB Pro</h1>
-    <p>ネット連動 ＆ お仕事シミュレーションプラットフォーム</p>
+    <h1>ゆめかわ★学びアドベンチャー</h1>
+    <p>きみ専用の まなびチューター ✨ LAB Pro</p>
   </header>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding: 0 4px;">
     <div style="font-weight:900; color:#6b21a8; font-size:14px;">👑 <span id="display-player-name">---</span> 社長</div>
@@ -583,10 +624,21 @@
     <div class="stat-item"><div class="stat-label">持ちトークン</div><div class="stat-val" id="q-val">0<span>Q</span></div></div>
     <div class="stat-item"><div class="stat-label">設計図の欠片</div><div class="stat-val" id="kakera-val" style="color:#0284c7;">0<span>🧩</span></div></div>
   </div>
-  <div class="navi-box">
-    <div class="navi-avatar">🤖</div>
-    <div class="navi-text" id="navi-say">ハロー社長！データ通信が終わるまで少し待ってね！</div>
-  </div>
+  <!-- ★2026-10-02追加（ホーム改革）：個別チューターの「きょうのまなびプラン」。
+       ふくしゅう→あたらしく学ぶ→よむ の3ステップを毎日1回だけ組み立てて固定し、次にやる1つを大きく見せる。
+       中身は js/tutor-plan.js が描画する。ナビの吹き出し（#navi-say）はこのカードの中に移した。 -->
+  <section id="tutor-plan-card" class="tplan">
+    <div class="tplan-head">
+      <div class="tplan-title">🎯 きょうの まなびプラン</div>
+      <div class="tplan-dots" id="tplan-dots"></div>
+    </div>
+    <div class="navi-box tplan-navi">
+      <div class="tplan-chara" id="tplan-chara" aria-hidden="true"></div>
+      <div class="navi-text" id="navi-say">クロぽん先生だよ。いま データを よみこんでいるから ちょっと まってね！</div>
+    </div>
+    <div id="tplan-steps"></div>
+    <div class="tplan-foot" id="tplan-foot"></div>
+  </section>
   <div id="book-banner" class="book-banner" onclick="window.openBookModal()">
     <div class="book-banner-icon">📖</div>
     <div class="book-banner-text">
@@ -605,37 +657,41 @@
     </div>
     <div class="dailymission-banner-badge" id="dailymission-banner-badge"></div>
   </div>
-  <div class="flex-row">
-    <button class="btn-sm" onclick="window.openStampModal()">💮 ログインスタンプ</button>
-    <button class="btn-sm" onclick="window.exchangePtsToQ()">🪙 20pts を 1Q に両替</button>
+  <!-- ★2026-10-02変更（ホーム改革）：学ぶ場所を ごほうび・設定より上に置く（以前はページの一番下だった） -->
+  <h2 class="home-sec">📚 教科の ぼうけん <small>やりたい ステージを じぶんで えらべるよ</small></h2>
+  <!-- ★2026-09-14変更：3年生タブを削除。やり尽くした内容として選択できなくする（currentGradeFilterは常に4年生固定になる） -->
+  <nav class="subjects" id="grade-nav" style="margin-bottom:8px;">
+    <button class="tab-btn active" data-grade="4年生" onclick="window.setGradeFilter('4年生')">📗 4年生</button>
+  </nav>
+  <nav class="subjects" id="subjects-nav">
+    <div style="font-size:12px; color:#94a3b8;">教科データを読み込み中...</div>
+  </nav>
+  <div id="stage-maps-container"></div>
+  <h2 class="home-sec">🔁 ふくしゅう・とっくん <small>まちがえた問題は のびるチャンス</small></h2>
+  <div id="weak-attack-btn-banner" class="weak-attack-banner" onclick="window.launchWeakAttackLab()">
+    💔 苦手撃破ラボに挑戦する！ (あと <span id="weak-count-badge">0</span> 問たまってるぞ) ⚡
   </div>
-  <div class="flex-row">
-    <button class="btn-sm" style="background:var(--pastel-pink);" onclick="window.exchangePtsToQBulk()">🪙 まとめて一括交換！</button>
+  <!-- ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン、ステージ非依存） -->
+  <div class="detective-lab-menu">
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('math')">🔍 算数の探偵ラボ</div>
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('kokugo')">🔍 国語の探偵ラボ</div>
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('science')">🔍 理科の探偵ラボ</div>
+    <div class="detective-lab-btn" onclick="window.startDetectiveLab('shakai')">🔍 社会の探偵ラボ</div>
   </div>
-  <div class="flex-row">
-    <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openTreasureBookModal()">🏆 お宝図鑑・🃏カード</button>
-    <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openGachaModal()">🥚 ガチャ</button>
+  <h2 class="home-sec">👑 今月の 特別指令 <small>お父さんから</small></h2>
+  <div id="special-missions-container">
+    <div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">データ通信中...</div>
   </div>
-  <div class="flex-row">
-    <button class="btn-sm" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3); color:#be185d; font-weight:900;" id="kuropon-btn" onclick="window.openKuroPonModal()">🐱 クロぽんのへや</button>
-    <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openTutorScreen()">📖 ゆめかわチューター</button>
-  </div>
-  <div class="flex-row">
-    <button class="btn-sm" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;" onclick="window.openAllowanceScreen()">💰 おこづかい管理</button>
-  </div>
-  <div class="flex-row">
-    <!-- ★2026-08-08追加：せいちょうきろく（総チャレンジ数・解答スピードの推移。js/adaptive-question-generator.js） -->
-    <button class="btn-sm" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5); color:#065f46; font-weight:900;" onclick="window.openGrowthModal()">📈 せいちょうきろく</button>
-    <!-- ★2026-08-08追加：ほごしゃレポート（週間の学習量・得意/苦戦分野。js/adaptive-question-generator.js） -->
-    <button class="btn-sm" style="background:linear-gradient(135deg,#eff6ff,#dbeafe); color:#1e3a8a; font-weight:900;" onclick="window.openParentReportModal()">👨‍👩‍👧 ほごしゃレポート</button>
-  </div>
-  <div class="flex-row">
-    <!-- ★2026-09-12追加：こんしゅうのもくひょう（教科ごとに軽く触れる週間ミッション。js/adaptive-question-generator.js） -->
-    <button class="btn-sm" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff); color:#6b21a8; font-weight:900;" onclick="window.openWeeklyMissionModal()">📅 こんしゅうのもくひょう</button>
-  </div>
-  <div class="flex-row">
-    <!-- ★2026-09-14追加：⚡サバイバルクイズ（1問でも間違えたら即終了。Q/pts無し、スコアのみの腕試しモード） -->
-    <button class="btn-sm" style="background:linear-gradient(135deg,#1e293b,#334155); color:#fbbf24; font-weight:900;" onclick="window.launchSurvivalMode()">⚡ サバイバルクイズ（自己ベスト：<span id="survival-best-inline">0</span>問）</button>
+  <h2 class="home-sec">🧰 まなびの どうぐばこ <small>ふりかえり・ノート・考え方</small></h2>
+  <div class="tile-grid">
+    <button class="tile" onclick="window.openFriendsModal()"><span class="ti" id="friends-tile-art">🐾</span>まなびの なかま<small>プランで ふえる</small></button>
+    <button class="tile" onclick="window.openTutorScreen()"><span class="ti">🧑‍🏫</span>チューター<small>単元のふりかえり</small></button>
+    <button class="tile" onclick="window.openGrowthModal()"><span class="ti">📈</span>せいちょう<small>きろくを見る</small></button>
+    <button class="tile" onclick="window.openWeeklyMissionModal()"><span class="ti">📅</span>今週の もくひょう</button>
+    <button class="tile" onclick="window.openReadingNote()"><span class="ti">✏️</span>読書ノート<small>6つの見方</small></button>
+    <button class="tile" onclick="window.openBookshelf()"><span class="ti">📚</span>わたしの 本だな</button>
+    <button class="tile" onclick="window.openObservationNote()"><span class="ti">🔭</span>かんさつ ノート<small>星・月を記録</small></button>
+    <button class="tile" onclick="window.openObservationList()"><span class="ti">🌌</span>かんさつを 見る</button>
   </div>
   <!-- ★2026-09-30追加：『少女ポリアンナ』の「よかったさがし」の考え方をいつでも見返せる常設ボックス（静的コンテンツ、saveData・通信は使わない） -->
   <div class="acc-box" style="margin:8px 0 12px;">
@@ -687,30 +743,15 @@
       </div>
     </div>
   </div>
-  <!-- ★2026-10-02追加：星と月の かんさつノート（js/observation-note.js）。実際の観察・宿題のレポート・プラネタリウム見学の記録 -->
-  <div class="acc-box" style="margin:0 0 12px;">
-    <div class="acc-head" onclick="window.toggleAcc(this)">🔭 星と月の かんさつノート</div>
-    <div class="acc-body" style="font-size:13px; line-height:1.7; color:var(--text-main, #4a4458);">
-      <div style="margin-bottom:6px;">夜空を 見たら 記録しよう。時刻・方位・高さ（うでを のばした こぶし1こ分＝約10度）を 2回 書くと、空の 図に 動きが 矢印で かけるよ。プラネタリウムで 知ったことも 書けるよ。</div>
-      <div class="flex-row">
-        <button class="btn-sm" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe); color:#1e3a8a; font-weight:900;" onclick="window.openObservationNote()">✏️ 記録する</button>
-        <button class="btn-sm" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe); color:#3730a3; font-weight:900;" onclick="window.openObservationList()">🌌 記録を見る</button>
-      </div>
-    </div>
-  </div>
-  <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
-  <div id="special-missions-container">
-    <div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">データ通信中...</div>
-  </div>
-  <div id="weak-attack-btn-banner" class="weak-attack-banner" onclick="window.launchWeakAttackLab()">
-    💔 苦手撃破ラボに挑戦する！ (あと <span id="weak-count-badge">0</span> 問たまってるぞ) ⚡
-  </div>
-  <!-- ★2026-08-02 追加：ニコの探偵ラボ（動的問題生成エンジン、ステージ非依存） -->
-  <div class="detective-lab-menu">
-    <div class="detective-lab-btn" onclick="window.startDetectiveLab('math')">🔍 算数の探偵ラボ</div>
-    <div class="detective-lab-btn" onclick="window.startDetectiveLab('kokugo')">🔍 国語の探偵ラボ</div>
-    <div class="detective-lab-btn" onclick="window.startDetectiveLab('science')">🔍 理科の探偵ラボ</div>
-    <div class="detective-lab-btn" onclick="window.startDetectiveLab('shakai')">🔍 社会の探偵ラボ</div>
+  <h2 class="home-sec">🎁 ごほうび・あそび <small>がんばった分で 楽しもう</small></h2>
+  <div class="tile-grid">
+    <button class="tile" onclick="window.openStampModal()"><span class="ti">💮</span>ログイン スタンプ</button>
+    <button class="tile" onclick="window.openTreasureBookModal()"><span class="ti">🏆</span>お宝図鑑<small>カードも</small></button>
+    <button class="tile" onclick="window.openGachaModal()"><span class="ti">🥚</span>ガチャ</button>
+    <button class="tile" id="kuropon-btn" onclick="window.openKuroPonModal()"><span class="ti">🐱</span>クロぽん<small id="kuropon-badge">のへや</small></button>
+    <button class="tile" onclick="window.launchSurvivalMode()"><span class="ti">⚡</span>サバイバル<small>ベスト <span id="survival-best-inline">0</span>問</small></button>
+    <button class="tile" onclick="window.exchangePtsToQ()"><span class="ti">🪙</span>ptsを Qに<small>20pts→1Q</small></button>
+    <button class="tile" onclick="window.exchangePtsToQBulk()"><span class="ti">💰</span>まとめて 両替</button>
   </div>
   <div id="treasure-island-container-el" class="treasure-banner">
     <div class="treasure-title" id="treasure-island-title-el">🏝️ 脳科学 ＆ ロジック天秤の「宝島」ショップ</div>
@@ -743,15 +784,7 @@
       </div>
     </div>
   </div>
-  <!-- ★2026-09-14変更：3年生タブを削除。やり尽くした内容として選択できなくする（currentGradeFilterは常に4年生固定になる） -->
-  <nav class="subjects" id="grade-nav" style="margin-bottom:8px;">
-    <button class="tab-btn active" data-grade="4年生" onclick="window.setGradeFilter('4年生')">📗 4年生</button>
-  </nav>
-  <nav class="subjects" id="subjects-nav">
-    <div style="font-size:12px; color:#94a3b8;">教科データを読み込み中...</div>
-  </nav>
-  <div id="stage-maps-container"></div>
-  <div class="acc-box" style="margin-top:12px;">
+  <div class="acc-box">
     <div class="acc-head" onclick="window.toggleAcc(this)">💸 ロバックス交換申請所 (お財布安心設計)</div>
     <div class="acc-body" style="text-align:center;">
       <p style="font-size:11px; margin:0 0 8px; color:var(--text-soft);">Qトークンをロバックス交換券（R$）に変えよう！</p>
@@ -759,7 +792,7 @@
       <button class="btn-sm" style="background:var(--lavender-light);" onclick="window.claimRobux(1400, 400)">👑 1400Q ➔ 400R$ 交換申請</button>
     </div>
   </div>
-  <div class="acc-box" style="margin-top:12px;">
+  <div class="acc-box">
     <div class="acc-head" onclick="window.toggleAcc(this); window.fetchBattleStats();">🥊 きょうだい対抗バトル（今週のがんばり）</div>
     <div class="acc-body" style="text-align:center;">
       <p style="font-size:11px; margin:0 0 10px; color:var(--text-soft);">今週（月曜日〜）にクイズをクリアした数を見せ合いっこ！勝ち負けじゃなくて、おたがいのがんばりを応援しよう。</p>
@@ -771,13 +804,18 @@
   </div>
   <!-- ★2026-09-14追加：⚡サバイバルクイズの自己ベストを papa・りお・りさ の3人で見せ合う（GAS変更不要、
        既存のLOGINアクションで各playerIdのsurvivalBestScoreを読み取り専用で覗くだけ） -->
-  <div class="acc-box" style="margin-top:12px;">
+  <div class="acc-box">
     <div class="acc-head" onclick="window.toggleAcc(this); window.fetchSurvivalLeaderboard();">⚡ サバイバルクイズ ランキング（papa・りお・りさ）</div>
     <div class="acc-body" style="text-align:center;">
       <div id="survival-leaderboard-area">
         <div style="font-size:12px; color:#94a3b8; padding:8px;">タップすると さいしんの記録を読み込むよ…</div>
       </div>
     </div>
+  </div>
+  <h2 class="home-sec">👨‍👩‍👧 おうちの人と <small>いっしょに 見てね</small></h2>
+  <div class="tile-grid">
+    <button class="tile" onclick="window.openParentReportModal()"><span class="ti">👨‍👩‍👧</span>ほごしゃ レポート</button>
+    <button class="tile" onclick="window.openAllowanceScreen()"><span class="ti">👛</span>おこづかい<small>お金・ロバックス</small></button>
   </div>
   <div class="admin-zone" id="admin-zone">
     <h4 style="margin:0 0 8px; color:#b91c1c;">👨 お父さん専用コントロール（機密）</h4>
@@ -1273,6 +1311,12 @@ window.normalizeSaveData = function(data) {
   normalized.observationNotes = Array.isArray(normalized.observationNotes) ? normalized.observationNotes : []; // ★2026-10-02追加：かんさつノート（js/observation-note.js、最大6件）
   normalized.observationNoteCount = Number(normalized.observationNoteCount || 0);
   normalized.knowledgeCards = normalized.knowledgeCards || {}; // ★2026-10-02追加：ちしきカード { stageId: [段階1〜3, 達成日(日数)] }
+  // ★2026-10-02追加：きょうのまなびプラン（js/tutor-plan.js）。tutorPlan は当日のプラン1件だけ（小さいのでcore行に置く）
+  normalized.tutorPlan = (normalized.tutorPlan && typeof normalized.tutorPlan === "object") ? normalized.tutorPlan : null;
+  normalized.tutorPlanStreak = Number(normalized.tutorPlanStreak || 0);
+  normalized.tutorPlanDoneCount = Number(normalized.tutorPlanDoneCount || 0);
+  normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
+  normalized.selectedFriend = normalized.selectedFriend || "mochikko"; // ★2026-10-02追加：まなびのなかま（js/mascots.js）
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
   normalized.totalAnswersCount = normalized.totalAnswersCount || 0; // ★2026-08-08追加：せいちょうきろく用の総チャレンジ数（answerLogsは件数上限があるため別カウンタ）
@@ -2493,6 +2537,7 @@ window.finishDynamicPractice = function() {
   const earnedQ = Math.floor(credit * 1.5 * window.getStarBuffMultiplier() * window.activeBoostMultiplier);
   window.saveData.q += earnedQ;
   window.registerStudyStreak();
+  if (window.tutorPlanMark) window.tutorPlanMark("detective"); // ★2026-10-02追加：きょうのまなびプラン（js/tutor-plan.js）
 
   // ★1回目はプレミアムお宝の抽選対象外。2回目以降のみ抽選する
   let premiumResult = null;
@@ -3042,7 +3087,8 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
         window.globalStageMaster[sub][cat].push(stg); foundSubjects.add(sub);
       });
       window.availableSubjects = Array.from(foundSubjects); window.renderSubjectsNav(); window.renderStageMaps(); window.refreshWeakBanner(); window.refreshIslandStatusUI();
-      const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ 通信成功！スプレッドシートの問題を読み込んだよ！";
+      const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ じゅんび できたよ！";
+      if (window.renderTutorPlan) window.renderTutorPlan({ greet: true }); // ★2026-10-02追加：ステージ一覧がそろってからプランを組み立てる（js/tutor-plan.js）
     }
   }).catch(e => {
     console.error("連動エラー（3回リトライ後もNG）:", action, e);
@@ -4840,7 +4886,10 @@ window.applyAvatar = function() {
     const f = window.saveData.kuroPonFriendship || 0;
     const h = window.saveData.kuroPonHunger || 0;
     const badge = h <= 20 ? '🚨' : f >= 80 ? '💗' : f >= 50 ? '💕' : '';
-    btn.textContent = `🐱 クロぽんのへや ${badge}`;
+    // ★2026-10-02変更：ホーム改革でタイル型ボタンになったため、ボタン全体ではなくバッジ部分だけ書き換える
+    const badgeEl = document.getElementById('kuropon-badge');
+    if (badgeEl) badgeEl.textContent = `のへや ${badge}`;
+    else btn.textContent = `🐱 クロぽんのへや ${badge}`;
   }
 };
 /* ★クロぽんごはん・アバター ここまで ------------------- */
@@ -6507,6 +6556,7 @@ window.nextQuestStep = function() {
 };
 window.exitToMainMenu = function() {
     if (window.weakAttackModeActive) {
+      if (window.tutorPlanMark) window.tutorPlanMark("weak"); // ★2026-10-02追加：きょうのまなびプラン「ふくしゅう」達成（js/tutor-plan.js）。下のsaveGameで一緒に保存される
       window.saveGame();
       alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`);
       window.weakAttackModeActive = false;
@@ -6737,5 +6787,7 @@ window.initQAMode();
 <script src="./book.js"></script>
 <script src="./js/reading-note.js"></script>
 <script src="./js/observation-note.js"></script>
+<script src="./js/mascots.js"></script>
+<script src="./js/tutor-plan.js"></script>
 </body>
 </html>
