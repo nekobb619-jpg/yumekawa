@@ -2907,11 +2907,60 @@ window.closeIframeModal = function() {
 //   「クラウドに保存されたように見えて実は届いていない」→次回起動時に古いサーバーデータで
 //   上書きされ、pt/Q/済/ログインボーナスが巻き戻って見える不具合の主因だった。
 //   通信エラー時に間隔をあけて3回まで自動リトライし、それでも失敗した場合だけ呼び出し側にthrowする。
+// ★2026-10-02追加：GASの応答は約2秒〜十数秒と大きくばらつく（実測：curlで2秒前後・起動直後16秒、
+//   ブラウザから4.5〜11秒以上）。遅くても成功する通信を途中で打ち切ると逆効果なので、上限は
+//   「本当に止まった通信」だけを拾う長さにする。LOGは打ち切ってもサーバー側で書き込みが進み
+//   二重記録になりやすいので上限なし。
+window.GAS_TIMEOUT_MS = { LOGIN: 25000, LOAD: 25000, SAVE: 30000, LOG: 0, _default: 30000 };
+// ★2026-10-02追加：GAS通信の時系列ログ。1回ごとに {t:時刻, a:処理, n:何回目, ms:かかった時間, ok, e:失敗の種類} を
+//   端末（localStorage、直近200件）に残し、アプリを開いたあとにその回のまとめを log_db へ1行送る（gasTimingSummary）。
+//   saveDataには入れない（セーブのサイズを増やさないため）。
+window.GAS_TIMING_KEY = "kids_lab_gas_timing";
+window._gasSessionTimings = [];
+window.recordGasTiming = function (entry) {
+  window._gasSessionTimings.push(entry);
+  try {
+    const arr = JSON.parse(localStorage.getItem(window.GAS_TIMING_KEY) || "[]");
+    arr.push(entry);
+    localStorage.setItem(window.GAS_TIMING_KEY, JSON.stringify(arr.slice(-200)));
+  } catch (e) {}
+};
 window.postToGAS = function(payload, attempt) {
   attempt = attempt || 1;
-  const retryDelays = [1500, 4000, 9000];
-  return fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
-    .then(res => res.json())
+  const retryDelays = [1500, 3000, 6000];
+  const action = payload && payload.action;
+  const limit = Object.prototype.hasOwnProperty.call(window.GAS_TIMEOUT_MS, action) ? window.GAS_TIMEOUT_MS[action] : window.GAS_TIMEOUT_MS._default;
+  const ctrl = (limit > 0 && typeof AbortController !== "undefined") ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, limit) : null;
+  const startedAt = Date.now();
+  const label = action + ((payload && String(payload.playerId || "").slice(-5) === "__ext") ? "(ext)" : "");
+  return fetch(window.GAS_WEBAPP_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload), signal: ctrl ? ctrl.signal : undefined })
+    .then(res => res.text().then(txt => {
+      try { return JSON.parse(txt); }
+      catch (e) {
+        // GASがエラーページ（HTML）を返したときは、その冒頭を記録して原因を追えるようにする
+        const err = new Error("NotJSON");
+        err.name = "NotJSON(" + res.status + ")";
+        err.detail = String(txt).replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+        throw err;
+      }
+    }))
+    .then(data => {
+      // GASの結果受け渡しが間に合わず GET（doGet）に戻された場合、doGetは {status:"RETRY"} を返す
+      //   （GAS側に doGet を追加した場合のみ）。元のPOSTの結果は失われているので、やり直しに回す。
+      if (data && data.status === "RETRY") {
+        if (timer) clearTimeout(timer);
+        window.recordGasTiming({ t: startedAt, a: label, n: attempt, ms: Date.now() - startedAt, ok: false, e: "GAS_RETRY" });
+        const err = new Error("GAS_RETRY"); err.name = "GAS_RETRY"; throw err;
+      }
+      if (timer) clearTimeout(timer);
+      window.recordGasTiming({ t: startedAt, a: label, n: attempt, ms: Date.now() - startedAt, ok: true });
+      return data;
+    }, err => {
+      if (timer) clearTimeout(timer);
+      window.recordGasTiming({ t: startedAt, a: label, n: attempt, ms: Date.now() - startedAt, ok: false, e: ((err && err.name) || "Error") + (err && err.detail ? "「" + err.detail + "」" : "") });
+      throw err;
+    })
     .catch(err => {
       if (attempt <= retryDelays.length) {
         return new Promise(resolve => setTimeout(resolve, retryDelays[attempt - 1]))
@@ -2920,6 +2969,27 @@ window.postToGAS = function(payload, attempt) {
       throw err;
     });
 };
+// ★2026-10-02追加：その回（アプリを開いてから）の通信まとめを log_db に送る。
+//   例：「LOGIN 9.2s✓ / LOGIN(ext) 3.1s✓ / LOAD 2.4s✓ / SAVE 4.0s✓ ｜失敗1: LOGIN#1 TypeError 11.0s ｜回線:4g」
+window._gasTimingSentCount = 0;
+window.sendGasTimingSummary = function () {
+  const all = window._gasSessionTimings || [];
+  const fresh = all.slice(window._gasTimingSentCount).filter(function (x) { return x.a !== "LOG"; });
+  window._gasTimingSentCount = all.length;
+  if (!fresh.length || !window.playerId || typeof window.syncWithGoogleSpreadsheet !== "function") return;
+  const sec = function (ms) { return (ms / 1000).toFixed(1) + "s"; };
+  const oks = fresh.filter(function (x) { return x.ok; }).map(function (x) { return x.a + " " + sec(x.ms) + "✓" + (x.n > 1 ? "(" + x.n + "回目)" : ""); });
+  const fails = fresh.filter(function (x) { return !x.ok; }).map(function (x) { return x.a + "#" + x.n + " " + x.e + " " + sec(x.ms); });
+  const conn = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType : "?";
+  const slowest = fresh.reduce(function (m, x) { return Math.max(m, x.ms); }, 0);
+  window.syncWithGoogleSpreadsheet("LOG", {
+    stage: "⏱通信記録",
+    msg: oks.join(" / ") + (fails.length ? " ｜失敗" + fails.length + ": " + fails.join(", ") : "") + " ｜最長" + sec(slowest) + " ｜回線:" + conn + (navigator.onLine === false ? "(オフライン)" : "")
+  });
+};
+// 開いて45秒後（ログイン・履歴行・ステージ情報の読み込みが終わったころ）に1回、そのあとは15分ごとに新しい分だけ送る
+setTimeout(function () { window.sendGasTimingSummary(); }, 45000);
+setInterval(function () { window.sendGasTimingSummary(); }, 15 * 60 * 1000);
 // 通信失敗の警告は5分に1回までに間引く（成功時にリセットはしないが、次に失敗した時にまた出す）。
 window._gasWarnLastShownAt = 0;
 window.warnGasSyncFailure = function(actionLabel) {
@@ -2982,14 +3052,31 @@ window.syncWithGoogleSpreadsheet = function(action, extraData = {}) {
 };
 // ★2026-08-29追加：#data-loading-overlayの解除。performLoginの結果（成功・明示エラー・
 //   通信失敗フォールバックのいずれか）が確定した後、必ずこれを呼んでからタップ操作を許可する。
+// ★2026-10-02追加：GASがしばらく使われていないと起動に十数秒かかることがあるため、
+//   読み込みが長引いたら「止まっていない」ことが分かる文言に切り替える。
+window.LOADING_TEXT_DEFAULT = "✨ データを よみこみちゅう…";
+window.armLoadingSlowNotice = function () {
+  clearTimeout(window._loadingSlowTimer1); clearTimeout(window._loadingSlowTimer2);
+  const textEl = document.querySelector("#data-loading-overlay .loading-text");
+  if (textEl) textEl.textContent = window.LOADING_TEXT_DEFAULT;
+  window._loadingSlowTimer1 = setTimeout(function () {
+    if (textEl) textEl.textContent = "☁️ サーバーが 目を さますまで 少し まってね…";
+  }, 6000);
+  window._loadingSlowTimer2 = setTimeout(function () {
+    if (textEl) textEl.textContent = "📡 もう少しで つながるよ。アプリを 閉じずに まってね…";
+  }, 15000);
+};
 window.hideLoadingOverlay = function() {
+  clearTimeout(window._loadingSlowTimer1); clearTimeout(window._loadingSlowTimer2);
   const el = document.getElementById("data-loading-overlay");
   if (el) el.style.display = "none";
 };
 window.showLoadingOverlay = function() {
   const el = document.getElementById("data-loading-overlay");
   if (el) el.style.display = "flex";
+  window.armLoadingSlowNotice();
 };
+window.armLoadingSlowNotice(); // ページを開いた直後（初回ログイン）にも効かせる
 window.performLogin = function(id) {
   const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ クラウドからセーブデータをよみこみ中...";
   document.getElementById("display-player-name").textContent = id;
