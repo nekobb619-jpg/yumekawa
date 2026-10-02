@@ -4401,6 +4401,356 @@
           "job_desc": "0.19 ＋ 4.81 ＝ 5.00 ＝ 5 に なれば 正しい。ひき算は、答え ＋ ひく数 ＝ ひかれる数 で たしかめられるよ。",
           "thinking": true
       }
+  ],
+  "算数/角度/kakudo_zu01": [
+      {
+          "q": "青い 数字と 赤い 数字、2つの 目もりが ある 分度器だよ。オレンジの しるしの 角は 何度？（目もりは 10度ずつ）",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';var cx=240,cy=185,R=165;ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R,Math.PI,2*Math.PI);ctx.lineTo(cx-R,cy);ctx.stroke();for(var d=0;d<=180;d+=10){var t=d*Math.PI/180,k=(d%30==0?14:8);ctx.beginPath();ctx.moveTo(cx+Math.cos(t)*R,cy-Math.sin(t)*R);ctx.lineTo(cx+Math.cos(t)*(R-k),cy-Math.sin(t)*(R-k));ctx.stroke();}ctx.font='bold 12px sans-serif';for(var d=0;d<=180;d+=30){var t=d*Math.PI/180,oy=(d%180==0?14:0);ctx.fillStyle='#2563eb';ctx.fillText(String(d),cx+Math.cos(t)*(R-27),cy-Math.sin(t)*(R-27)-oy);ctx.fillStyle='#dc2626';ctx.fillText(String(180-d),cx+Math.cos(t)*(R-50),cy-Math.sin(t)*(R-50)-oy);}ctx.fillStyle='#64748b';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,185);ctx.lineTo(240+Math.cos(0*Math.PI/180)*178,185-Math.sin(0*Math.PI/180)*178);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,185);ctx.lineTo(240+Math.cos(50*Math.PI/180)*178,185-Math.sin(50*Math.PI/180)*178);ctx.stroke();ctx.strokeStyle='#f59e0b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(240,185,62,-50*Math.PI/180,-0*Math.PI/180);ctx.stroke();",
+          "a": [
+              "130度",
+              "50度",
+              "40度",
+              "140度"
+          ],
+          "c": 1,
+          "hint": "線に 重なって いる「0」は、どっちの 色の 目もりかな？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "右の 線に 重なって いる 0 は 青い 目もり。青い 60 の 1目もり 手前で 50度。直角（90度）より 小さい 角なので、130度では ないと たしかめられるよ。",
+          "thinking": true
+      },
+      {
+          "q": "こんどは 左の 線から 開いた 角だよ。オレンジの しるしの 角は 何度？（目もりは 10度ずつ）",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';var cx=240,cy=185,R=165;ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R,Math.PI,2*Math.PI);ctx.lineTo(cx-R,cy);ctx.stroke();for(var d=0;d<=180;d+=10){var t=d*Math.PI/180,k=(d%30==0?14:8);ctx.beginPath();ctx.moveTo(cx+Math.cos(t)*R,cy-Math.sin(t)*R);ctx.lineTo(cx+Math.cos(t)*(R-k),cy-Math.sin(t)*(R-k));ctx.stroke();}ctx.font='bold 12px sans-serif';for(var d=0;d<=180;d+=30){var t=d*Math.PI/180,oy=(d%180==0?14:0);ctx.fillStyle='#2563eb';ctx.fillText(String(d),cx+Math.cos(t)*(R-27),cy-Math.sin(t)*(R-27)-oy);ctx.fillStyle='#dc2626';ctx.fillText(String(180-d),cx+Math.cos(t)*(R-50),cy-Math.sin(t)*(R-50)-oy);}ctx.fillStyle='#64748b';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,185);ctx.lineTo(240+Math.cos(180*Math.PI/180)*178,185-Math.sin(180*Math.PI/180)*178);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,185);ctx.lineTo(240+Math.cos(110*Math.PI/180)*178,185-Math.sin(110*Math.PI/180)*178);ctx.stroke();ctx.strokeStyle='#f59e0b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(240,185,62,-180*Math.PI/180,-110*Math.PI/180);ctx.stroke();",
+          "a": [
+              "110度",
+              "20度",
+              "70度",
+              "160度"
+          ],
+          "c": 2,
+          "hint": "左の 線に 重なって いる「0」の 色を 見よう。",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "左の 線に 0 が 重なって いるのは 赤い 目もり。赤い 60 から 1目もり（10度）すすんで 70度。直角より 小さいので 110度では ないね。",
+          "thinking": true
+      },
+      {
+          "q": "一直線の 上に 線を 1本 引いた。35度の となりの「？」の 角は 何度？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,140);ctx.lineTo(240+Math.cos(0*Math.PI/180)*190,140-Math.sin(0*Math.PI/180)*190);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,140);ctx.lineTo(240+Math.cos(180*Math.PI/180)*190,140-Math.sin(180*Math.PI/180)*190);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,140);ctx.lineTo(240+Math.cos(35*Math.PI/180)*160,140-Math.sin(35*Math.PI/180)*160);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(240,140,42,-35*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#be185d';ctx.font='bold 15px sans-serif';ctx.fillText('35°',240+Math.cos(17*Math.PI/180)*68,140-Math.sin(17*Math.PI/180)*68);ctx.strokeStyle='#0ea5e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(240,140,30,-180*Math.PI/180,-35*Math.PI/180);ctx.stroke();ctx.fillStyle='#0369a1';ctx.font='bold 18px sans-serif';ctx.fillText('？',240+Math.cos(110*Math.PI/180)*56,140-Math.sin(110*Math.PI/180)*56);ctx.fillStyle='#7c3aed';ctx.beginPath();ctx.arc(240,140,5,0,Math.PI*2);ctx.fill();",
+          "a": [
+              "145度",
+              "55度",
+              "35度",
+              "325度"
+          ],
+          "c": 0,
+          "hint": "一直線の 角は 何度だったかな？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "一直線（半回転）は 180度。180−35＝145度。90度から ひいて 55度に しないよう 注意！",
+          "thinking": true
+      },
+      {
+          "q": "上の 角を はかると 150度 だった。下がわの「？」の 角は 何度？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,90);ctx.lineTo(240+Math.cos(0*Math.PI/180)*150,90-Math.sin(0*Math.PI/180)*150);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,90);ctx.lineTo(240+Math.cos(150*Math.PI/180)*150,90-Math.sin(150*Math.PI/180)*150);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(240,90,30,-150*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#be185d';ctx.font='bold 15px sans-serif';ctx.fillText('150°',240+Math.cos(75*Math.PI/180)*52,90-Math.sin(75*Math.PI/180)*52);ctx.strokeStyle='#0ea5e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(240,90,42,-360*Math.PI/180,-150*Math.PI/180);ctx.stroke();ctx.fillStyle='#0369a1';ctx.font='bold 18px sans-serif';ctx.fillText('？',240+Math.cos(270*Math.PI/180)*66,90-Math.sin(270*Math.PI/180)*66);ctx.fillStyle='#7c3aed';ctx.beginPath();ctx.arc(240,90,5,0,Math.PI*2);ctx.fill();",
+          "a": [
+              "150度",
+              "30度",
+              "330度",
+              "210度"
+          ],
+          "c": 3,
+          "hint": "上と 下の 角を 合わせると、ぐるっと 1回転だよ。",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "1回転は 360度。360−150＝210度。180度より 大きい 角は「360度から ひく」か「180度と あと何度」で 求められるよ。",
+          "thinking": true
+      },
+      {
+          "q": "三角じょうぎの 45度と 30度の 角を 合わせた。「？」の 角は 何度？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(130,180);ctx.lineTo(130+Math.cos(0*Math.PI/180)*165,180-Math.sin(0*Math.PI/180)*165);ctx.stroke();ctx.strokeStyle='#a78bfa';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(130,180);ctx.lineTo(130+Math.cos(45*Math.PI/180)*165,180-Math.sin(45*Math.PI/180)*165);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(130,180);ctx.lineTo(130+Math.cos(75*Math.PI/180)*165,180-Math.sin(75*Math.PI/180)*165);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,180,50,-45*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#be185d';ctx.font='bold 15px sans-serif';ctx.fillText('45°',130+Math.cos(22*Math.PI/180)*72,180-Math.sin(22*Math.PI/180)*72);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,180,50,-75*Math.PI/180,-45*Math.PI/180);ctx.stroke();ctx.fillStyle='#b45309';ctx.font='bold 15px sans-serif';ctx.fillText('30°',130+Math.cos(61*Math.PI/180)*72,180-Math.sin(61*Math.PI/180)*72);ctx.strokeStyle='#0ea5e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,180,108,-75*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#0369a1';ctx.font='bold 18px sans-serif';ctx.fillText('？',130+Math.cos(38*Math.PI/180)*128,180-Math.sin(38*Math.PI/180)*128);ctx.fillStyle='#7c3aed';ctx.beginPath();ctx.arc(130,180,5,0,Math.PI*2);ctx.fill();",
+          "a": [
+              "15度",
+              "75度",
+              "105度",
+              "135度"
+          ],
+          "c": 1,
+          "hint": "2つの 角を 合わせると、たし算？ ひき算？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "45＋30＝75度。三角じょうぎの 角（30度・45度・60度・90度）を 合わせると、いろいろな 角が 作れるよ。"
+      },
+      {
+          "q": "三角じょうぎの 60度の 角に、45度の 角を 重ねた。はみ出した「？」の 角は 何度？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(130,180);ctx.lineTo(130+Math.cos(0*Math.PI/180)*165,180-Math.sin(0*Math.PI/180)*165);ctx.stroke();ctx.strokeStyle='#a78bfa';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(130,180);ctx.lineTo(130+Math.cos(45*Math.PI/180)*165,180-Math.sin(45*Math.PI/180)*165);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(130,180);ctx.lineTo(130+Math.cos(60*Math.PI/180)*165,180-Math.sin(60*Math.PI/180)*165);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,180,55,-45*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#be185d';ctx.font='bold 15px sans-serif';ctx.fillText('45°',130+Math.cos(22*Math.PI/180)*78,180-Math.sin(22*Math.PI/180)*78);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,180,118,-60*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#b45309';ctx.font='bold 15px sans-serif';ctx.fillText('60°',130+Math.cos(28*Math.PI/180)*140,180-Math.sin(28*Math.PI/180)*140);ctx.strokeStyle='#0ea5e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,180,85,-60*Math.PI/180,-45*Math.PI/180);ctx.stroke();ctx.fillStyle='#0369a1';ctx.font='bold 18px sans-serif';ctx.fillText('？',130+Math.cos(53*Math.PI/180)*104,180-Math.sin(53*Math.PI/180)*104);ctx.fillStyle='#7c3aed';ctx.beginPath();ctx.arc(130,180,5,0,Math.PI*2);ctx.fill();",
+          "a": [
+              "105度",
+              "45度",
+              "15度",
+              "30度"
+          ],
+          "c": 2,
+          "hint": "大きい 角から、重なった 分を どうする？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "60−45＝15度。重ねて できる 角は ひき算で 求めるよ。",
+          "thinking": true
+      },
+      {
+          "q": "1組の 三角じょうぎ（30度・45度・60度・90度）の 角を 合わせたり 重ねたり しても、作れない 角は どれ？",
+          "a": [
+              "100度",
+              "105度",
+              "135度",
+              "75度"
+          ],
+          "c": 0,
+          "hint": "たし算・ひき算で 作れるか、1つずつ ためそう。",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "105＝60＋45、135＝90＋45、75＝45＋30 は 作れる。100度は どう 組み合わせても 作れないよ。",
+          "thinking": true
+      },
+      {
+          "q": "あ と い、大きい 角は どっち？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(70,170);ctx.lineTo(70+Math.cos(0*Math.PI/180)*170,170-Math.sin(0*Math.PI/180)*170);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(70,170);ctx.lineTo(70+Math.cos(40*Math.PI/180)*170,170-Math.sin(40*Math.PI/180)*170);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(70,170,30,-40*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#7c3aed';ctx.font='bold 18px sans-serif';ctx.fillText('あ',55,185);ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(340,170);ctx.lineTo(340+Math.cos(0*Math.PI/180)*55,170-Math.sin(0*Math.PI/180)*55);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(340,170);ctx.lineTo(340+Math.cos(60*Math.PI/180)*55,170-Math.sin(60*Math.PI/180)*55);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(340,170,22,-60*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#7c3aed';ctx.font='bold 18px sans-serif';ctx.fillText('い',325,185);",
+          "a": [
+              "あ",
+              "同じ 大きさ",
+              "くらべられない",
+              "い"
+          ],
+          "c": 3,
+          "hint": "角の 大きさは、辺の 長さで きまるのかな？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "あ は 40度くらい、い は 60度くらい。辺（線）が 長くても 角は 大きく ならない。角の 大きさは「開きぐあい」で くらべるよ。",
+          "thinking": true
+      },
+      {
+          "q": "250度の 角を かく。まず 180度（一直線）を かいた あと、さらに 何度 はかれば よい？",
+          "a": [
+              "250度",
+              "120度",
+              "70度",
+              "80度"
+          ],
+          "c": 2,
+          "hint": "250 は、180 と あと いくつ？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "250−180＝70度。180度より 大きい 角は「180度と あと何度」に 分けて かけるよ。"
+      },
+      {
+          "q": "分度器で 角を はかる ときの やり方と して 正しいのは？",
+          "a": [
+              "0の 線を 辺に 合わせ、中心は 合わせないまま、もう1つの 辺の 目もりを 読む",
+              "中心を 頂点に 合わせ、0の 線を 辺に 合わせて、もう1つの 辺の 目もりを 読む",
+              "中心を 頂点に 合わせたら、2つ ある 数字の うち 大きい ほうを 読む",
+              "辺の 長さを ものさしで はかってから、その 長さと 同じ 目もりを 読む"
+          ],
+          "c": 1,
+          "hint": "大事な 合わせ方は 2つ あるよ。",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "①中心を 頂点に、②0の 線を 1つの 辺に 合わせる。そして 0 から 数えて もう1つの 辺の 目もりを 読む。"
+      },
+      {
+          "q": "1つの 辺が 5cmで、その 両はしの 角が どちらも 60度の 三角形を かいた。どんな 三角形に なる？",
+          "a": [
+              "直角三角形",
+              "辺の 長さが ばらばらの 三角形",
+              "正三角形では ない 二等辺三角形",
+              "正三角形"
+          ],
+          "c": 3,
+          "hint": "実際に かいたら、のこりの 2つの 辺の 長さは どうなるかな？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "かいてみると、3つの 辺が どれも 5cm、3つの 角も どれも 60度の 正三角形に なるよ。",
+          "thinking": true
+      },
+      {
+          "q": "同じ しるしの ついた 2つの 辺は 長さが 同じ。左下の 角が 55度の とき、右下の「？」の 角は 何度？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,37);ctx.lineTo(140,180);ctx.lineTo(340,180);ctx.closePath();ctx.stroke();ctx.strokeStyle='#ef4444';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(183.4,103.9);ctx.lineTo(196.6,113.1);ctx.moveTo(283.4,113.1);ctx.lineTo(296.6,103.9);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(140,180,30,-55*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#be185d';ctx.font='bold 15px sans-serif';ctx.fillText('55°',188,166);ctx.strokeStyle='#0ea5e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(340,180,30,-180*Math.PI/180,-125*Math.PI/180);ctx.stroke();ctx.fillStyle='#0369a1';ctx.font='bold 18px sans-serif';ctx.fillText('？',292,166);",
+          "a": [
+              "55度",
+              "70度",
+              "125度",
+              "35度"
+          ],
+          "c": 0,
+          "hint": "長さの 同じ 2つの 辺が ある 三角形の 角には、ひみつが あったよ。",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "二等辺三角形では、同じ 長さの 2つの 辺の 下に ある 2つの 角が 同じ 大きさ。紙に うつして 半分に 折ると ぴったり 重なるよ。"
+      },
+      {
+          "q": "辺の 長さが 図の ような 三角形の 名前は？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(150,165);ctx.lineTo(330,165);ctx.lineTo(240,86);ctx.closePath();ctx.stroke();ctx.fillStyle='#334155';ctx.font='bold 15px sans-serif';ctx.fillText('6cm',240,185);ctx.fillStyle='#334155';ctx.font='bold 15px sans-serif';ctx.fillText('4cm',178,118);ctx.fillStyle='#334155';ctx.font='bold 15px sans-serif';ctx.fillText('4cm',302,118);",
+          "a": [
+              "正三角形",
+              "二等辺三角形",
+              "直角三角形",
+              "名前の ない 三角形"
+          ],
+          "c": 1,
+          "hint": "同じ 長さの 辺は いくつ ある？",
+          "job_title": "図を読む 角度ハンター",
+          "job_desc": "4cm の 辺が 2本 あるので 二等辺三角形。3本とも 同じなら 正三角形 だよ。"
+      }
+  ],
+  "算数/角度/setsumei01": [
+      {
+          "q": "【まず 口で 言ってから 選ぼう】 三角形が「二等辺三角形」だと 言える 理由として、いちばん よい 説明は？",
+          "a": [
+              "2つの 辺の 長さが 等しいから",
+              "とがった 形を しているから",
+              "見た感じで そう 思ったから",
+              "角が 3つ あって、辺も 3本 あるから"
+          ],
+          "c": 0,
+          "hint": "二等辺三角形の「決まり」を 思い出そう。",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "理由には「決まり（定義）」を 使うと 伝わる。二等辺三角形は「2つの 辺の 長さが 等しい 三角形」だね。"
+      },
+      {
+          "q": "ニコの 説明に 足りない ものは どれ？",
+          "scenario": [
+              {
+                  "name": "ニコ",
+                  "icon": "🦄",
+                  "msg": "ぼくの 説明、聞いてね。『この 角は 鈍角です。』……あれ、先生に「どうして？」って 聞かれちゃった。何が 足りないのかな？"
+              }
+          ],
+          "a": [
+              "角の 色",
+              "「この 角は 鈍角です」と いう 答えを、もう1回 大きな 声で くり返す こと",
+              "鈍角だと 言える 理由（90度より 大きく、180度より 小さい）",
+              "「たぶん」「なんとなく」と いう 言葉を つけ足す こと"
+          ],
+          "c": 2,
+          "hint": "先生に「どうして？」と 聞かれたら、何を 答える？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "答えだけでなく「なぜなら〜だから」の 理由を つけると、説明に なるよ。",
+          "thinking": true
+      },
+      {
+          "q": "【まず 口で 言ってから 選ぼう】 この 角を 50度と 読んだ 理由を 友だちに 説明する。いちばん 伝わる 説明は？",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';var cx=240,cy=185,R=165;ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R,Math.PI,2*Math.PI);ctx.lineTo(cx-R,cy);ctx.stroke();for(var d=0;d<=180;d+=10){var t=d*Math.PI/180,k=(d%30==0?14:8);ctx.beginPath();ctx.moveTo(cx+Math.cos(t)*R,cy-Math.sin(t)*R);ctx.lineTo(cx+Math.cos(t)*(R-k),cy-Math.sin(t)*(R-k));ctx.stroke();}ctx.font='bold 12px sans-serif';for(var d=0;d<=180;d+=30){var t=d*Math.PI/180,oy=(d%180==0?14:0);ctx.fillStyle='#2563eb';ctx.fillText(String(d),cx+Math.cos(t)*(R-27),cy-Math.sin(t)*(R-27)-oy);ctx.fillStyle='#dc2626';ctx.fillText(String(180-d),cx+Math.cos(t)*(R-50),cy-Math.sin(t)*(R-50)-oy);}ctx.fillStyle='#64748b';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,185);ctx.lineTo(240+Math.cos(0*Math.PI/180)*178,185-Math.sin(0*Math.PI/180)*178);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,185);ctx.lineTo(240+Math.cos(50*Math.PI/180)*178,185-Math.sin(50*Math.PI/180)*178);ctx.stroke();ctx.strokeStyle='#f59e0b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(240,185,62,-50*Math.PI/180,-0*Math.PI/180);ctx.stroke();",
+          "a": [
+              "数字が 2つ あったので 小さい ほうを 読んだ。どちらの 数字を 読んでも 同じだと 思う",
+              "130度は 大きすぎる 気が したので、なんとなく 50度に した。直角とは くらべて いないけど たぶん 合っている",
+              "分度器の まん中に いちばん 近い 数字を 読んだ。それが 50 だったので 50度に した",
+              "右の 線に 重なる 0 が 青い 目もりなので 青い 数字を 読んだ。直角より 小さいので 50度で 合っている"
+          ],
+          "c": 3,
+          "hint": "「どの 目もりを 読んだか」と「たしかめ方」が 入って いる 説明は？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "よい 説明には ①何を 見て きめたか（0の 位置）と ②たしかめ（直角より 小さい）が 入って いる。",
+          "thinking": true
+      },
+      {
+          "q": "75度の 角を 三角じょうぎで 作った 方法の 説明として、正しいのは？",
+          "a": [
+              "45度の 角に 30度の 角を 重ねたので、45−30＝75度",
+              "45度と 30度の 角を 合わせたので、45＋30＝75度",
+              "60度の 角と 15度の 角を 合わせたので 75度",
+              "90度の 角から 30度を ひいたので、90−30＝75度"
+          ],
+          "c": 1,
+          "hint": "式と 答えが 合って いるか、計算して たしかめよう。",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "説明の 式は、計算して 合って いるか たしかめよう。45＋30＝75 は 正しい。90−30 は 60、45−30 は 15 だよ。",
+          "thinking": true
+      },
+      {
+          "q": "ニコに 教える 説明として 正しい ものは？",
+          "scenario": [
+              {
+                  "name": "ニコ",
+                  "icon": "🦄",
+                  "msg": "210度の 角って、分度器（180度まで）で どうやって はかるの？ ぼくに 教えて！"
+              }
+          ],
+          "a": [
+              "反対がわの 150度を はかって、一直線の 180度に たす（180＋150＝330）",
+              "分度器の いちばん 大きい 目もり 180度を そのまま 読む",
+              "反対がわの 150度を はかり、1回転の 360度から ひく（360−150＝210）",
+              "210度は 分度器に 目もりが ないので はかれない"
+          ],
+          "c": 2,
+          "hint": "上と 下の 角を 合わせると 何度？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "180度より 大きい 角は、反対がわを はかって 360度から ひけば 求められる。",
+          "thinking": true
+      },
+      {
+          "q": "正三角形は 二等辺三角形の なかまと 言える。その 理由の 説明で 正しいのは？",
+          "a": [
+              "どちらも 角が 3つ あって、ぱっと 見た 形が よく にて いるから",
+              "大きさが だいたい 同じくらいだから",
+              "正三角形と 二等辺三角形は 名前が にているから",
+              "3つの 辺が 等しいので、「2つの 辺が 等しい」にも 当てはまるから"
+          ],
+          "c": 3,
+          "hint": "二等辺三角形の 決まりに、正三角形は 当てはまる？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "決まり（2つの 辺が 等しい）に 当てはまるかどうかで 考えると、理由が はっきり するよ。",
+          "thinking": true
+      },
+      {
+          "q": "説明の「型」として、いちばん 伝わりやすい ものは？",
+          "a": [
+              "〇〇です。なぜなら、△△だからです。",
+              "〇〇です。",
+              "たぶん 〇〇だと 思う。",
+              "〇〇です。見れば すぐに 分かるでしょ、たぶん。"
+          ],
+          "c": 0,
+          "hint": "答えに「理由」が ついて いる 型は？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "「答え ＋ なぜなら ＋ 理由」の 型で 話すと、聞く 人に 伝わる。まず 口で この 型を 使って みよう。"
+      },
+      {
+          "q": "つぎの 説明の うち、伝わり にくい ものは どれ？",
+          "a": [
+              "90度より 大きいので、鈍角です",
+              "分度器で はかったら 120度だったので、鈍角です",
+              "なんとなく 大きく 見えるから、鈍角だと 思う",
+              "直角の 三角じょうぎを 当てたら 角が はみ出したので、鈍角です"
+          ],
+          "c": 2,
+          "hint": "「伝わり にくい」ものを 選ぶよ。理由が はっきり しないのは？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "「なんとなく」「見た感じ」では 理由に ならない。数字や 決まりを 使うと 伝わるよ。",
+          "thinking": true
+      },
+      {
+          "q": "ニコに 教える 説明で、いちばん よいのは？",
+          "scenario": [
+              {
+                  "name": "ニコ",
+                  "icon": "🦄",
+                  "msg": "二等辺三角形の 下の 2つの 角が 同じ 大きさって、どうして 分かるの？"
+              }
+          ],
+          "a": [
+              "二等辺三角形は、いつも 同じ 形を しているから",
+              "紙に うつして 半分に 折ると、2つの 角が ぴったり 重なるから",
+              "三角形の 下の ほうに ある 2つの 角は、どんな ときも 同じ 大きさだから",
+              "2つの 角は、どちらも とがって いるから"
+          ],
+          "c": 1,
+          "hint": "じっさいに 「たしかめる」 方法が 入って いる 説明は？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "折って 重なる、と いう たしかめ方を 言うと、聞いた 人も なっとく できる。「どれも 同じ」は まちがい（ふつうの 三角形では ちがう）だよ。",
+          "thinking": true
+      },
+      {
+          "q": "『一直線の 上の 35度の となりの 角は 145度』を 説明する 文。（　）に 入る 言葉は？ 『一直線の 角は（　）なので、180−35＝145度です。』",
+          "canvas_code": "canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,480,200);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,140);ctx.lineTo(240+Math.cos(0*Math.PI/180)*190,140-Math.sin(0*Math.PI/180)*190);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,140);ctx.lineTo(240+Math.cos(180*Math.PI/180)*190,140-Math.sin(180*Math.PI/180)*190);ctx.stroke();ctx.strokeStyle='#7c3aed';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(240,140);ctx.lineTo(240+Math.cos(35*Math.PI/180)*160,140-Math.sin(35*Math.PI/180)*160);ctx.stroke();ctx.strokeStyle='#ec4899';ctx.lineWidth=2;ctx.beginPath();ctx.arc(240,140,42,-35*Math.PI/180,-0*Math.PI/180);ctx.stroke();ctx.fillStyle='#be185d';ctx.font='bold 15px sans-serif';ctx.fillText('35°',240+Math.cos(17*Math.PI/180)*68,140-Math.sin(17*Math.PI/180)*68);ctx.strokeStyle='#0ea5e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(240,140,30,-180*Math.PI/180,-35*Math.PI/180);ctx.stroke();ctx.fillStyle='#0369a1';ctx.font='bold 18px sans-serif';ctx.fillText('？',240+Math.cos(110*Math.PI/180)*56,140-Math.sin(110*Math.PI/180)*56);ctx.fillStyle='#7c3aed';ctx.beginPath();ctx.arc(240,140,5,0,Math.PI*2);ctx.fill();",
+          "a": [
+              "90度",
+              "360度",
+              "35度",
+              "180度"
+          ],
+          "c": 3,
+          "hint": "一直線は、何回転分かな？",
+          "job_title": "ことばで 伝える 図形はかせ",
+          "job_desc": "一直線は 半回転で 180度。「〜なので」の 前に 理由を 入れると、説明に なるよ。"
+      }
   ]
 };
 })();
