@@ -687,6 +687,17 @@
       </div>
     </div>
   </div>
+  <!-- ★2026-10-02追加：星と月の かんさつノート（js/observation-note.js）。実際の観察・宿題のレポート・プラネタリウム見学の記録 -->
+  <div class="acc-box" style="margin:0 0 12px;">
+    <div class="acc-head" onclick="window.toggleAcc(this)">🔭 星と月の かんさつノート</div>
+    <div class="acc-body" style="font-size:13px; line-height:1.7; color:var(--text-main, #4a4458);">
+      <div style="margin-bottom:6px;">夜空を 見たら 記録しよう。時刻・方位・高さ（うでを のばした こぶし1こ分＝約10度）を 2回 書くと、空の 図に 動きが 矢印で かけるよ。プラネタリウムで 知ったことも 書けるよ。</div>
+      <div class="flex-row">
+        <button class="btn-sm" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe); color:#1e3a8a; font-weight:900;" onclick="window.openObservationNote()">✏️ 記録する</button>
+        <button class="btn-sm" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe); color:#3730a3; font-weight:900;" onclick="window.openObservationList()">🌌 記録を見る</button>
+      </div>
+    </div>
+  </div>
   <div style="font-size: 14px; font-weight: 900; color: #d946ef; margin-bottom: 8px; padding-left: 4px;">👑 今月の特別指令（お父さん配信）</div>
   <div id="special-missions-container">
     <div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">データ通信中...</div>
@@ -1259,6 +1270,8 @@ window.normalizeSaveData = function(data) {
   }
   normalized.readingNotes = Array.isArray(normalized.readingNotes) ? normalized.readingNotes : []; // ★2026-10-02追加：読書ノート（js/reading-note.js、新しい順・最大8件）
   normalized.readingNoteCount = Number(normalized.readingNoteCount || 0);
+  normalized.observationNotes = Array.isArray(normalized.observationNotes) ? normalized.observationNotes : []; // ★2026-10-02追加：かんさつノート（js/observation-note.js、最大6件）
+  normalized.observationNoteCount = Number(normalized.observationNoteCount || 0);
   normalized.knowledgeCards = normalized.knowledgeCards || {}; // ★2026-10-02追加：ちしきカード { stageId: [段階1〜3, 達成日(日数)] }
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
@@ -6570,5 +6583,6 @@ window.initQAMode();
 <script src="./js/boss-quest.js"></script>
 <script src="./book.js"></script>
 <script src="./js/reading-note.js"></script>
+<script src="./js/observation-note.js"></script>
 </body>
 </html>
