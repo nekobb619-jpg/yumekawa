@@ -101,6 +101,13 @@
   .expedition-member-icon .c-buddy { width: 40px; height: 40px; display: block; margin: 0 auto; }
   #star-up-icon .c-buddy { width: 96px; height: 96px; display: block; margin: 0 auto; }
   .premium-gacha-avatar-icon .c-buddy { width: 120px; height: 120px; display: block; margin: 0 auto; }
+  /* ★2026-10-02追加：学習用イラスト（js/figures.js） */
+  .fig-box { background: #fff; border: 2px solid #e9d5ff; border-radius: 14px; padding: 8px; margin: 4px 0 8px; }
+  .fig-box .fig-svg { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto; }
+  .fig-explain { margin-top: 12px; background: #fdfaff; }
+  .fig-tag { font-size: 12px; font-weight: 900; color: #9333ea; margin: 0 0 4px 2px; }
+  .fig-row { display: flex; gap: 6px; justify-content: center; } .fig-cell { flex: 1; min-width: 0; text-align: center; }
+  .fig-cap { font-size: 12px; font-weight: 900; color: #6b21a8; text-align: center; line-height: 1.4; } .fig-cap-main { margin-top: 6px; font-size: 13px; }
   #grade-nav { display: none; } /* ★2026-10-02：学年は4年生のみ（3年生タブは2026-09-14に削除済み）なので、1つしかない学年タブは隠す */
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   .weak-attack-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fee2e2, #fcd34d); border: 2px solid #ef4444; border-radius: var(--radius); box-shadow: 0 5px 0 #b91c1c; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #991b1b; text-align: center; cursor: pointer; margin-bottom: 14px; display: none; transition: all 0.1s; }
@@ -6103,6 +6110,7 @@ window.showQuestionStep = function() {
   }
   const mediaZone = document.getElementById("q-media-zone");
   mediaZone.innerHTML = "";
+  const _figs = window.figuresFor ? window.figuresFor(current) : null; // ★2026-10-02追加：学習用イラスト（js/figures.js・js/figure-map.js）
   if (current.image_url) {
     let img = document.createElement("img"); img.src = current.image_url; img.className = "q-image"; mediaZone.appendChild(img);
   } else if (current._regenDrawFn) {
@@ -6117,6 +6125,8 @@ window.showQuestionStep = function() {
     let ctx = canvas.getContext("2d");
     try { let drawFunc = new Function('ctx', 'canvas', current.canvas_code); drawFunc(ctx, canvas); } catch(e) { console.error("Canvas描画エラー", e); }
     mediaZone.appendChild(canvas);
+  } else if (_figs && _figs.fig && window.appendFigure) {
+    window.appendFigure(mediaZone, _figs.fig, "question");
   }
 
   const zone = document.getElementById("quiz-options-zone"); zone.innerHTML = "";
@@ -6280,7 +6290,7 @@ window.triggerPassAnswer = function(current) {
     let eCtx = eCan.getContext("2d");
     try { let drawFunc = new Function('ctx', 'canvas', current.explain_canvas_code); drawFunc(eCtx, eCan); } catch(e) { console.error("解説Canvasエラー", e); }
     jobDescEl.appendChild(eCan);
-  }
+  } else if (window.figuresFor && window.appendFigure) { const _ef = window.figuresFor(current); if (_ef && _ef.explain_fig) window.appendFigure(jobDescEl, _ef.explain_fig, "explain"); } // ★2026-10-02：解説の図
   const nextBtn = document.getElementById("next-btn");
   nextBtn.innerHTML = window.weakAttackModeActive && window.currentQIdx >= window.currentQuestions.length - 1 ? "🏠 メニューにもどる" : "つぎへ進む 🎀";
   nextBtn.className = "action-btn nav-next";
@@ -6466,7 +6476,7 @@ window.triggerCorrectAnswer = function(current) {
       let eCtx = eCan.getContext("2d");
       try { let drawFunc = new Function('ctx', 'canvas', current.explain_canvas_code); drawFunc(eCtx, eCan); } catch(e) { console.error("解説Canvasエラー", e); }
       jobDescEl.appendChild(eCan);
-    }
+    } else if (window.figuresFor && window.appendFigure) { const _ef = window.figuresFor(current); if (_ef && _ef.explain_fig) window.appendFigure(jobDescEl, _ef.explain_fig, "explain"); } // ★2026-10-02：解説の図
   }
   const nextBtn = document.getElementById("next-btn"); nextBtn.innerHTML = window.weakAttackModeActive && window.currentQIdx >= window.currentQuestions.length - 1 ? "🏠 メニューにもどる" : "つぎへ進む 🎀"; nextBtn.className = "action-btn nav-next"; document.getElementById("feedback-box").style.display = "block"; nextBtn.style.display = "block"; setTimeout(() => { const card = document.getElementById("scroll-target-card"); card.scrollTo({ top: card.scrollHeight, behavior: 'smooth' }); }, 400); window.saveGame();
 };
@@ -6816,6 +6826,8 @@ window.initQAMode();
 <script src="./book.js"></script>
 <script src="./js/reading-note.js"></script>
 <script src="./js/observation-note.js"></script>
+<script src="./js/figures.js"></script>
+<script src="./js/figure-map.js"></script>
 <script src="./js/avatar-art.js"></script>
 <script src="./js/mascots.js"></script>
 <script src="./js/tutor-plan.js"></script>
