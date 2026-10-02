@@ -34,6 +34,19 @@ const TEMP = { xs: ["9", "10", "11", "12", "13", "14", "15"], ys: [16, 18, 21, 2
 const G = (extra, cap) => Object.assign({ t: "graph", cap }, TEMP, extra || {});
 const fr = (d, n, cap, extra) => Object.assign({ t: "frac", d, n, cap }, extra || {});
 
+const cir = (o, cap) => Object.assign({ t: "circuit", cap }, o);
+const MOTOR_DIR = { t: "row", cap: "電池の 向きを 逆に → モーターも 逆に 回る", items: [cir({ load: "motor", dir: "cw", cap: "もとの 向き" }), cir({ load: "motor", dir: "ccw", flip: true, cap: "電池を 逆に" })] };
+const PAR_SAME = { t: "row", cap: "並列つなぎ：明るさは 1この ときと 同じ", items: [cir({ cap: "電池 1こ" }), cir({ bat: "parallel", cap: "並列つなぎ" })] };
+const SER_MOTOR = { t: "row", items: [cir({ bat: "series", load: "motor", dir: "cw", speed: "速い！", cap: "直列：速く 回る" }), cir({ bat: "parallel", load: "motor", dir: "cw", cap: "並列：1こと 同じ" })] };
+const sky = (o, cap) => Object.assign({ t: "skypath", cap }, o);
+const MOON_PATH = sky({ night: true, marks: [{ u: 0.1 }, { u: 0.5 }, { u: 0.9 }] }, "東から のぼり、南を 通って、西へ しずむ");
+const SUMMER = { t: "stars", k: "summer", cap: "夏の大三角：デネブ・ベガ・アルタイル" };
+const REFLECT = { t: "sunmoon", mode: "reflect", cap: "月は 太陽の 光を はね返して 光る" };
+const STATES = { t: "states", cap: "水は 温度で すがたが 変わる" };
+const BOIL = { t: "boil", cap: "あわは 水じょう気、湯気は 水のつぶ" };
+const EVAP = { t: "evap", cap: "水は 水じょう気に なって 空気中へ 出ていく" };
+const CUP = { t: "cup", cap: "空気中の 水じょう気が 冷やされて 水てきに" };
+
 module.exports = {
   "算数/図形/suichoku_heikou01": {
     0: E(PERP), 2: E(PARA), 4: E(PERP), 5: E(RECT_SIDE), 6: E(PERP2), 7: E(PARA),
@@ -128,5 +141,41 @@ module.exports = {
     5: E(fr(7, 5, "2/7 ＋ 3/7 ＝ 5/7（分母は そのまま）", { parts: [2, 3] })),
     6: E(fr(9, 6, "6/9 − 2/9 ＝ 4/9", { minus: 2 })),
     7: E(fr(8, 8, "1 ＝ 8/8 → 8/8 − 3/8 ＝ 5/8", { minus: 3 }))
+  },
+  "理科/電気/denki01": {
+    0: E(cir({}, "わのように 1つの 道で つながると あかりが つく")),
+    1: E({ t: "row", cap: "直列つなぎ：1この ときより 明るい", items: [cir({ cap: "電池 1こ" }), cir({ bat: "series", cap: "直列つなぎ" })] }),
+    2: E(MOTOR_DIR), 4: E(cir({}, "回路：電気の 通り道（わの 形）")), 5: E(PAR_SAME), 6: E(SER_MOTOR),
+    9: E(cir({ bat: "parallel" }, "並列つなぎ：電池が ならんで 道が 枝わかれ")),
+    10: E(MOTOR_DIR),
+    11: E(cir({ bulbs: { n: 3, mode: "parallel", broken: 1 } }, "並列：1こ 切れても のこりは つく")),
+    12: E(SER_MOTOR), 13: E(MOTOR_DIR), 14: E(PAR_SAME),
+    15: E({ t: "row", cap: "スイッチで 電流を つないだり 切ったり", items: [cir({ sw: "on", cap: "ON：つく" }), cir({ sw: "off", cap: "OFF：消える" })] }),
+    17: E({ t: "row", cap: "直列は 道が 1本 → 1こ 切れると ぜんぶ 消える", items: [cir({ bulbs: { n: 2, mode: "series" }, cap: "直列" }), cir({ bulbs: { n: 2, mode: "series", broken: 1 }, cap: "1こ はずすと…" })] })
+  },
+  "理科/星/hoshi01": {
+    0: E(MOON_PATH), 1: E(Object.assign({}, SUMMER, { cap: "夏の大三角（オリオン座は 冬の 星座）" })), 4: E(REFLECT),
+    5: E({ t: "stars", k: "orion", cap: "オリオン座（冬）" }), 6: E({ t: "stars", k: "cassiopeia", cap: "カシオペヤ座（北の 空）" }),
+    9: E(sky({ night: true, icon: "star", marks: [{ u: 0.15 }, { u: 0.5 }, { u: 0.85 }] }, "星も 東から 西へ 動いて 見える")),
+    10: E(SUMMER), 12: E({ t: "sunmoon", mode: "line", cap: "太陽ー地球ー月 が 一直線 → 満月" }), 13: E(SUMMER),
+    14: E(Object.assign({}, SUMMER, { hl: "vega", cap: "ベガ（こと座）＝ おりひめ星" })), 15: E(MOON_PATH), 16: E(REFLECT),
+    17: E({ t: "moonshapes", cap: "半月（上弦）から 約1週間で 満月", items: [{ p: "first", label: "半月（上弦）" }, { p: "full", label: "満月", sub: "約1週間後" }] })
+  },
+  "理科/星/kansatsu01": {
+    0: E({ t: "fist" }), 2: E({ t: "compass" }),
+    3: E(sky({ icon: "first", marks: [{ u: 0.3, label: "3時" }, { u: 0.45, label: "5時" }] }, "南の ほうへ 動いて、高く なる")),
+    4: E(sky({ arrow: false, marks: [{ u: 0.04, icon: "full", label: "満月" }, { u: 0.96, icon: "sun", label: "夕日" }] }, "日の入りの ころ、東から 満月が のぼる")),
+    5: E(sky({ night: true, arrow: false, marks: [{ u: 0.5, label: "真夜中" }] }, "真夜中：南の 空高くに 満月")),
+    8: E({ t: "stars", k: "polaris" }),
+    10: E(sky({ night: true, marks: [{ u: 0.12, label: "7時 こぶし2こ" }, { u: 0.3, label: "9時 こぶし4こ" }] }, "時刻・方位・高さ を そろえて 書く"))
+  },
+  "理科/水のすがた/sugata01": {
+    0: E(BOIL), 1: E(BOIL), 2: E(BOIL), 3: E(EVAP), 4: E(STATES), 5: E(STATES), 6: E(Object.assign({}, STATES, { cap: "温度で すがたが 変わる ＝ 状態変化" })),
+    7: E({ t: "freeze", cap: "こおると 体積（かさ）が 少し ふえる" }), 8: E(CUP)
+  },
+  "理科/水のすがた/sugata02": {
+    0: E(EVAP), 2: E(Object.assign({}, EVAP, { cap: "水じょう気は 目に 見えない" })), 3: E(EVAP), 4: E(STATES), 5: E(CUP),
+    6: E({ t: "cup", compare: true, cap: "冷えて いる ことが かんけい している" }), 7: E(CUP), 8: E(CUP), 9: E(STATES),
+    11: E({ t: "cover", cap: "おおいの 内がわに 水てき → 水は 空気中へ 出ていく" })
   }
 };
