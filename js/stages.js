@@ -743,6 +743,136 @@
       name: "7級 だい2回：加・積・建・共・節",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
       created: "2026-09-12"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "社会",
+      category: "きょう土の伝統と先人（4年）",
+      grade: "4年生",
+      id: "社会/先人/senjin01",
+      name: "きょう土の 伝統・文化と 先人たち",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "社会",
+      category: "地震・台風にそなえる（4年）",
+      grade: "4年生",
+      id: "社会/防災/saigai02",
+      name: "風水害から 身を 守る（どう 行動する？）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "社会",
+      category: "都道府県（4年）",
+      grade: "4年生",
+      id: "社会/都道府県/kenchou01",
+      name: "県名と 県庁所在地（名前が ちがう 県）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "社会",
+      category: "地図・内陸県（4年）",
+      grade: "4年生",
+      id: "社会/地図/chizuyomi01",
+      name: "地図の 読み方（土地の 高さ・方位・きょり）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "英語",
+      category: "時刻・持ち物・場所・一日（4年）",
+      grade: "4年生",
+      id: "英語/時刻/english404",
+      name: "What time is it?（時刻の 英語）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "英語",
+      category: "時刻・持ち物・場所・一日（4年）",
+      grade: "4年生",
+      id: "英語/文房具/english405",
+      name: "Do you have a pen?（文ぼう具の 英語）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "英語",
+      category: "時刻・持ち物・場所・一日（4年）",
+      grade: "4年生",
+      id: "英語/学校の場所/english406",
+      name: "学校の 場所と 道案内の 英語",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "英語",
+      category: "時刻・持ち物・場所・一日（4年）",
+      grade: "4年生",
+      id: "英語/一日の生活/english407",
+      name: "This is my day.（一日の 生活の 英語）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "探究",
+      category: "情報モラル（4年）",
+      grade: "4年生",
+      id: "探究/情報/net_ethics02",
+      name: "ネットの ルール2（個人情報・写真・ことば）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "探究",
+      category: "プログラミング（4年）",
+      grade: "4年生",
+      id: "探究/プログラミング/prog02",
+      name: "プログラミング2（順番・くりかえし・条件分岐）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "探究",
+      category: "調べ方・まとめ方（4年）",
+      grade: "4年生",
+      id: "探究/調べ方/shirabe01",
+      name: "調べ学習の しかた（問い → 調べる → まとめる）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "探究",
+      category: "データの活用（4年）",
+      grade: "4年生",
+      id: "探究/データ/data01",
+      name: "データを 読みとって 考えよう（表・グラフ・アンケート）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
+    },
+    {
+      // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
+      subject: "国語",
+      category: "漢字を書く（4年）",
+      grade: "4年生",
+      id: "国語/漢字/tsukaiwake01",
+      name: "同じ 読み・にた 形の 漢字の 使い分け",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      created: "2026-10-03"
     }
   ];
 
