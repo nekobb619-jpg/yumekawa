@@ -2961,6 +2961,7 @@ window.showLoadingOverlay = function() {
 window.performLogin = function(id) {
   const navi = document.getElementById("navi-say"); if(navi) navi.textContent = "✨ クラウドからセーブデータをよみこみ中...";
   document.getElementById("display-player-name").textContent = id;
+  window.saveExtLoadedFor = null; // ★アカウント切替時も、新しいIDのext行を読み込むまでは1行保存に戻す
   // ★2026-07-29修正：以前はここで window.applyRestoredPlayerSaveData(id) を最優先チェックし、
   //   真本来のログインを試す前に window.RESTORED_SAVE_PAYLOADS の固定スナップショット
   //   （2026-07-20の空上書き事故からの復旧用に埋め込んだ、その時点限りのバックアップJSON）で
@@ -3003,6 +3004,9 @@ window.performLogin = function(id) {
          }
        }
        if (!usedLocalOverride) {
+         // ★2026-10-02追加：履歴系フィールドは本体行に無い（ext行に移った）ことがあるので、
+         //   直前の別アカウントの履歴がメモリに残ったまま混ざらないよう、本体行に無いものは一度消す。
+         window.SAVE_EXT_FIELDS.forEach(function (k) { if (!res.playerData || res.playerData[k] === undefined) delete window.saveData[k]; });
          // ★同上の理由でnormalizeSaveDataを通す（サーバー応答由来のpts/q/robux型ゆれ対策）
          window.saveData = window.normalizeSaveData(Object.assign(window.saveData, res.playerData));
          window.saveDataConfirmedSource = "server"; // ★クラウドから正式に読み込めたことを確認
@@ -3043,7 +3047,9 @@ window.performLogin = function(id) {
        //   ボタン（openStampModal→executeStamp）から、子ども自身が手動で受け取る方式に統一する。
        // ★端末側の記録を正として使った場合は、あらためてクラウドへの再送を試みる
        //   （成功すれば "unsynced" フラグは saveGame() 内で自動的に解除される）。
-       if (usedLocalOverride) { window.saveGame(); }
+       // ★2026-10-02追加：履歴系のext行を読み込んでから（成功すれば分割保存が有効になる）、
+       //   端末側を優先した場合のクラウド再送を行う。
+       window.loadExtSaveData(id, usedLocalOverride).then(function () { if (usedLocalOverride) window.saveGame(); });
        window.hideLoadingOverlay();
     } else { alert("読み込みエラー: " + res.message); window.hideLoadingOverlay(); }
   })
@@ -3120,63 +3126,102 @@ window.loadGameLocal = function() {
   //   player_dbを上書きする恐れがある。ログインスタンプの付与は、本当にサーバーと
   //   同期できた状態（performLoginの通常成功時）でのみ行うようにする。
 };
+// ★2026-10-02追加（player_dbの1セル50,000文字制限の根本対策）：セーブデータを player_db の2行に分けて保存する。
+//   「プレイヤーID」行＝進捗・所持品など大事なデータ（保護者が手で直すQ/ptsもここ）。
+//   「プレイヤーID__ext」行＝解答ログ・AI生成問題・出題履歴などの履歴系データ。
+//   GASは知らないIDのLOGIN/SAVEで行を自動追加する作りなので、GAS側の変更・再デプロイは不要。
+//   ext行を読み込めたことを確認できた（saveExtLoadedFor===playerId）ときだけ分割保存し、
+//   それまでは従来どおり1行にまとめて保存する（＝空/古いext行で履歴を上書きしない安全側）。
+window.SAVE_EXT_SUFFIX = "__ext";
+window.SAVE_EXT_FIELDS = ["answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids"];
+window.SAVE_SAFE_LIMIT = 42000; // 1セル50,000文字制限に対して余白を持たせた、1行あたりの上限
+window.saveExtLoadedFor = null;
+// ★2026-09-23追加：「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」だけを優先度順に、
+//   実際のJSON文字列長を見ながら必要な分だけ切り詰める。pts/q/robux/clearedStages/gachaEggs/
+//   treasureBook等の本当の進捗・所持品データは絶対に対象にしない。履歴系のフィールドを新しく
+//   追加する場合は、こことSAVE_EXT_FIELDSの両方に追加すること。
+window.trimSaveObjectToLimit = function (target, limit) {
+  // flat: 単純配列を古い方から切り詰め。byStage: stageIdごとの配列のうち一番長いものから1件ずつ。
+  const TRIMMABLE_FIELDS = [
+    { key: "answerLogs", type: "flat" },
+    { key: "aiGeneratedQuizzes", type: "byStage" },
+    { key: "fastMasteredQids", type: "flat" },
+    { key: "detectiveSeenIds", type: "flat" },
+    { key: "clearedQuestionQids", type: "byStage" }
+  ];
+  let guardCount = 0;
+  while (JSON.stringify(target).length > limit && guardCount < 300) {
+    let trimmedSomething = false;
+    for (let i = 0; i < TRIMMABLE_FIELDS.length; i++) {
+      const f = TRIMMABLE_FIELDS[i];
+      if (f.type === "flat") {
+        const arr = target[f.key];
+        if (Array.isArray(arr) && arr.length > 0) {
+          let nextLen = Math.max(0, Math.floor(arr.length * 0.7));
+          if (nextLen >= arr.length) nextLen = arr.length - 1;
+          // slice(-0)は配列全体を返してしまう（＝1件も減らないまま空回りする）ため、先頭からの位置で切る
+          target[f.key] = nextLen > 0 ? arr.slice(arr.length - nextLen) : [];
+          trimmedSomething = true;
+          break;
+        }
+      } else if (f.type === "byStage") {
+        const obj = target[f.key];
+        if (obj && typeof obj === "object") {
+          let targetSid = null, targetLen = 0;
+          Object.keys(obj).forEach(function (sid) {
+            if (Array.isArray(obj[sid]) && obj[sid].length > targetLen) { targetLen = obj[sid].length; targetSid = sid; }
+          });
+          if (targetSid && targetLen > 0) {
+            obj[targetSid] = obj[targetSid].slice(1);
+            trimmedSomething = true;
+            break;
+          }
+        }
+      }
+    }
+    if (!trimmedSomething) break; // 安全に削れるものがもう無い（本当の進捗データには手を出さない）
+    guardCount++;
+  }
+  return target;
+};
+window.buildSplitSavePayloads = function (data) {
+  const core = JSON.parse(JSON.stringify(data));
+  const ext = {};
+  window.SAVE_EXT_FIELDS.forEach(function (k) {
+    if (core[k] !== undefined) ext[k] = core[k];
+    delete core[k];
+  });
+  window.trimSaveObjectToLimit(ext, window.SAVE_SAFE_LIMIT);
+  return { core: core, ext: ext };
+};
+// ext行を読み込み、本体に合流させる。ext行にまだ履歴が無い（作られたばかりの行）場合は、本体行の履歴をそのまま使う。
+//   skipMerge：端末の未同期データを優先した場合（端末側に全データがそろっている）は合流させない。
+window.loadExtSaveData = function (id, skipMerge) {
+  return window.postToGAS({ action: "LOGIN", playerId: id + window.SAVE_EXT_SUFFIX }).then(function (res) {
+    if (!res || res.status !== "SUCCESS" || window.playerId !== id) return;
+    const ext = res.playerData || {};
+    if (!skipMerge) {
+      let merged = false;
+      window.SAVE_EXT_FIELDS.forEach(function (k) {
+        if (ext[k] !== undefined) { window.saveData[k] = ext[k]; merged = true; }
+      });
+      if (merged) {
+        window.saveData = window.normalizeSaveData(window.saveData);
+        try { localStorage.setItem("kids_lab_v12_pro_" + id, JSON.stringify(window.saveData)); } catch (e) {}
+        if (window.reinjectSavedAiQuestions) window.reinjectSavedAiQuestions();
+      }
+    }
+    window.saveExtLoadedFor = id;
+  }).catch(function (e) { console.warn("⚠️ ext行の読み込みに失敗（従来の1行保存のまま続行）:", e); });
+};
 window.saveGame = function() {
   // ★保存・送信の直前に必ずnormalizeSaveDataを通す：pts/q/robuxの型ゆれに加えて、
   //   reviewDates等の未来タイムスタンプ（端末の時計ずれ等が原因）もここで現在時刻に丸め、
   //   壊れた値のままGASへ送ってしまわないようにする。
   window.saveData = window.normalizeSaveData(window.saveData);
-  // ★2026-09-23追加（根本対策）：answerLogs/aiGeneratedQuizzesのように「発見するたびに
-  //   個別フィールドを後追いで対策する」やり方だと、次に別のフィールドが育ったときにまた
-  //   同じ事故が起きる。そこで「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」
-  //   だけを優先順位付きでリスト化し、実際のJSON文字列長を見ながら必要な分だけ動的に
-  //   切り詰める汎用ガードにする。pts/q/robux/clearedStages/gachaEggs/treasureBook等の
-  //   本当の進捗・所持品データは、このリストに絶対に含めない＝一切トリム対象にしない。
-  //   新しく似た性質の（履歴・ログ系の）フィールドを追加する場合は、ここにも追加すること。
-  (function () {
-    var SAFE_LIMIT = 42000; // 50,000文字制限に対して十分な余白を持たせた閾値
-    // 優先度順（先に削られる＝実害が最も小さいもの）。
-    //   flat: 単純配列を古い方から切り詰め。byStage: stageIdごとの配列のうち一番長いものから1件ずつ。
-    var TRIMMABLE_FIELDS = [
-      { key: "answerLogs", type: "flat" }, // 解答時間・ヒント使用の直近ログ（分析用、表示に直接使われない）
-      { key: "aiGeneratedQuizzes", type: "byStage" }, // AI生成問題の保存（次回起動時に再合流するキャッシュ的データ）
-      { key: "fastMasteredQids", type: "flat" }, // 早すぎ正解の記録（出題優先度の調整用ヒント）
-      { key: "detectiveSeenIds", type: "flat" }, // 探偵ラボ専用バンクの出題済みid（消えても「未出題」に戻るだけ）
-      { key: "clearedQuestionQids", type: "byStage" } // ステージクリア時に再生成される（最終手段）
-    ];
-    var guardCount = 0;
-    while (JSON.stringify(window.saveData).length > SAFE_LIMIT && guardCount < 300) {
-      var trimmedSomething = false;
-      for (var i = 0; i < TRIMMABLE_FIELDS.length; i++) {
-        var f = TRIMMABLE_FIELDS[i];
-        if (f.type === "flat") {
-          var arr = window.saveData[f.key];
-          if (Array.isArray(arr) && arr.length > 0) {
-            var nextLen = Math.max(0, Math.floor(arr.length * 0.7));
-            if (nextLen >= arr.length) nextLen = arr.length - 1;
-            // slice(-0)は配列全体を返してしまう（＝1件も減らないまま無限に空回りする）ため、先頭からの位置で切る
-            window.saveData[f.key] = nextLen > 0 ? arr.slice(arr.length - nextLen) : [];
-            trimmedSomething = true;
-            break;
-          }
-        } else if (f.type === "byStage") {
-          var obj = window.saveData[f.key];
-          if (obj && typeof obj === "object") {
-            var targetSid = null, targetLen = 0;
-            Object.keys(obj).forEach(function (sid) {
-              if (Array.isArray(obj[sid]) && obj[sid].length > targetLen) { targetLen = obj[sid].length; targetSid = sid; }
-            });
-            if (targetSid && targetLen > 0) {
-              obj[targetSid] = obj[targetSid].slice(1);
-              trimmedSomething = true;
-              break;
-            }
-          }
-        }
-      }
-      if (!trimmedSomething) break; // 安全に削れるものがもう無い（本当の進捗データには手を出さない）
-      guardCount++;
-    }
-  })();
+  // ★1行にまとめて保存する（ext行が未確認の）間だけ、本体を50,000文字制限に収まるよう切り詰める。
+  //   2行に分けて保存できる状態なら、本体には触れず、送信時に作るext行のコピーだけを切り詰める。
+  if (window.saveExtLoadedFor !== window.playerId) window.trimSaveObjectToLimit(window.saveData, window.SAVE_SAFE_LIMIT);
   const snapshot = JSON.stringify(window.saveData);
   localStorage.setItem("kids_lab_v12_pro_" + window.playerId, snapshot);
   if (window.playerId === "りお" || window.playerId === "りさ") {
@@ -3209,19 +3254,35 @@ window.saveGame = function() {
     //   実際に送信する中身はキューに積んだ時点ではなく「送信する瞬間」の最新window.saveDataなので、
     //   待たされている間に増えた分もちゃんと含まれる。
     window._saveGameQueue = (window._saveGameQueue || Promise.resolve()).then(() => {
-      return window.postToGAS({ action: "SAVE", playerId: playerIdAtQueue, saveData: window.saveData })
-        .then((res) => {
-          // ★通信自体は成功しても、GASが明示的にエラーを返した場合（res.statusが"SUCCESS"以外）は
-          //   「未同期」フラグを消さない＝次回ログイン時にサーバーの古いデータで上書きさせない。
-          //   res.statusが無い応答形式の場合は従来通り成功扱い（未知の応答形式で誤って
-          //   毎回失敗警告を出し続けることを避けるための保守的な判定）。
-          if (res && typeof res.status === "string" && res.status !== "SUCCESS") {
-            console.warn("⚠️ SAVE失敗（サーバーがエラーを返しました）:", res);
-            window.warnGasSyncFailure("SAVE");
-            return;
-          }
-          try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + playerIdAtQueue); } catch (e) {}
-        })
+      // ★2026-10-02追加：ext行を読み込めていれば「本体行＋ext行」の2回に分けて送る（送信する瞬間に判定）。
+      let payloads;
+      if (window.saveExtLoadedFor === playerIdAtQueue && window.playerId === playerIdAtQueue) {
+        const split = window.buildSplitSavePayloads(window.saveData);
+        payloads = [{ id: playerIdAtQueue, data: split.core }, { id: playerIdAtQueue + window.SAVE_EXT_SUFFIX, data: split.ext }];
+      } else {
+        window.trimSaveObjectToLimit(window.saveData, window.SAVE_SAFE_LIMIT);
+        payloads = [{ id: playerIdAtQueue, data: window.saveData }];
+      }
+      let chain = Promise.resolve(true);
+      payloads.forEach(p => {
+        chain = chain.then(ok => {
+          if (!ok) return false;
+          return window.postToGAS({ action: "SAVE", playerId: p.id, saveData: p.data }).then((res) => {
+            // ★通信自体は成功しても、GASが明示的にエラーを返した場合（res.statusが"SUCCESS"以外）は
+            //   「未同期」フラグを消さない＝次回ログイン時にサーバーの古いデータで上書きさせない。
+            //   res.statusが無い応答形式の場合は従来通り成功扱い（未知の応答形式で誤って
+            //   毎回失敗警告を出し続けることを避けるための保守的な判定）。
+            if (res && typeof res.status === "string" && res.status !== "SUCCESS") {
+              console.warn("⚠️ SAVE失敗（サーバーがエラーを返しました）:", p.id, res);
+              window.warnGasSyncFailure("SAVE");
+              return false;
+            }
+            return true;
+          });
+        });
+      });
+      return chain
+        .then(ok => { if (ok) { try { localStorage.removeItem("kids_lab_v12_pro_unsynced_" + playerIdAtQueue); } catch (e) {} } })
         .catch(e => { console.warn("⚠️ SAVE失敗（3回リトライ後もNG）:", e); window.warnGasSyncFailure("SAVE"); });
     });
   }

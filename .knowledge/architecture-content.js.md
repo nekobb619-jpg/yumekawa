@@ -471,3 +471,16 @@ showCount`のときだけランダム抽選になる。つまり「周回して�
 ```
 ※ サーバー（GAS = Google Apps Script）は別管理。`コード.gs` はこのリポジトリには含まれない場合がある。
 　GAS側の仕様を変更する提案・実装は、必ずユーザーに確認してから行うこと（現状はGASを一切さわらない方針）。
+
+## セーブデータの2行分割保存（2026-10-02〜）
+- `player_db` は1セル50,000文字制限があるため、セーブデータを2行に分けて保存する（GAS側の変更なし。
+  GASは知らないIDのLOGIN/SAVEで行を自動追加する作りを利用）。
+  - `プレイヤーID` 行：進捗・所持品など大事なデータ（保護者がQ/ptsを手で直すのはこの行）。
+  - `プレイヤーID__ext` 行：`window.SAVE_EXT_FIELDS`（answerLogs / aiGeneratedQuizzes / fastMasteredQids /
+    detectiveSeenIds / clearedQuestionQids）の履歴系データ。
+- `performLogin` が本体行を読んだあと `loadExtSaveData` でext行を読み、ext行に値があるフィールドだけ本体に合流させる。
+  ext行の読み込みを確認できた（`saveExtLoadedFor === playerId`）ときだけ `saveGame` が2行に分けて送る。
+  それまでは従来どおり1行で送り、`trimSaveObjectToLimit` で42,000文字以内に切り詰める。
+- 未同期フラグは2行とも保存成功したときだけ消す。`__ext` 行は削除・手編集しないこと。
+- 履歴系フィールドを新しく追加するときは `SAVE_EXT_FIELDS` と `trimSaveObjectToLimit` の両方に足す。
+
