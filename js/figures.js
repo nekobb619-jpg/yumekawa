@@ -173,7 +173,120 @@
     return '<div class="fig-row">' + cells + '</div>' + (spec.cap ? '<div class="fig-cap fig-cap-main">' + esc(spec.cap) + '</div>' : '');
   }
 
-  var TYPES = { shape: shape, lines: lines, angle: angle };
+  /* ---------------- 角度（追加）：1回転・2つに分けた角 ---------------- */
+  function angle2(spec) {
+    var V = P(160, 118), deg = spec.deg;
+    if (deg === 360) {
+      V = P(160, 78);
+      var out = line(V, P(285, 78)) + '<circle cx="160" cy="78" r="3.5" fill="' + INK + '"/>';
+      out += '<path d="M190 78 A30 30 0 1 0 189.5 82" fill="none" stroke="' + MARK + '" stroke-width="2.4"/><path d="M183 86 L190 80 L193 89" fill="none" stroke="' + MARK + '" stroke-width="2.4" stroke-linejoin="round"/>';
+      return out + text(160, 136, spec.label || "360°", 16, MARK);
+    }
+    var R = 125, out2 = "";
+    function ray(d) { var r = -d * Math.PI / 180; var e = add(V, P(Math.cos(r) * R, Math.sin(r) * R)); if (e.y < 8) e = add(V, mul(sub(e, V), (V.y - 8) / (V.y - e.y))); return e; }
+    function arcBetween(d1, d2, rr, lab) {
+      var r1 = -d1 * Math.PI / 180, r2 = -d2 * Math.PI / 180;
+      var s = add(V, P(Math.cos(r1) * rr, Math.sin(r1) * rr)), e = add(V, P(Math.cos(r2) * rr, Math.sin(r2) * rr));
+      var o = '<path d="M' + pt(s) + ' A' + rr + ' ' + rr + ' 0 0 0 ' + pt(e) + '" fill="none" stroke="' + MARK + '" stroke-width="2.4"/>';
+      if (d2 - d1 === 90) o = rightAngle(V, ray(d1), ray(d2), 14);
+      var m = -(d1 + d2) / 2 * Math.PI / 180, lp = add(V, P(Math.cos(m) * (rr + 20), Math.sin(m) * (rr + 20)));
+      return o + (lab ? text(lp.x, lp.y + 5, lab, 14, MARK) : "");
+    }
+    out2 += line(V, ray(0)) + line(V, ray(deg));
+    if (spec.split) {
+      out2 += line(V, ray(spec.split), { color: "#a78bfa" });
+      out2 += arcBetween(0, spec.split, 28, spec.split + "°") + arcBetween(spec.split, deg, 36, (deg - spec.split) + "°");
+    } else out2 += arcBetween(0, deg, 30, spec.label === false ? "" : (spec.label || deg + "°"));
+    return out2 + '<circle cx="' + V.x + '" cy="' + V.y + '" r="3.5" fill="' + INK + '"/>';
+  }
+
+  /* ---------------- 角度どおりの三角形（角A・角B を指定。Cは のこり） ---------------- */
+  function tri(spec) {
+    var a = spec.a * Math.PI / 180, b = spec.b * Math.PI / 180;
+    var A0 = P(0, 0), B0 = P(1, 0);
+    var C0 = intersect(A0, P(Math.cos(a), -Math.sin(a)), B0, P(1 - Math.cos(b), -Math.sin(b)));
+    var pts = [A0, B0, C0], minx = Math.min(A0.x, C0.x), maxx = Math.max(B0.x, C0.x), miny = C0.y, maxy = 0;
+    var sc = Math.min(250 / (maxx - minx), 105 / (maxy - miny));
+    var ox = 160 - (minx + maxx) / 2 * sc, oy = 128;
+    var p = pts.map(function (q) { return P(ox + q.x * sc, oy + q.y * sc); });
+    var out = poly(p);
+    var labs = spec.labels || {}, names = ["A", "B", "C"], cen = mul(add(add(p[0], p[1]), p[2]), 1 / 3);
+    for (var i = 0; i < 3; i++) {
+      var o = p[(i + 1) % 3], q = p[(i + 2) % 3];
+      out += arc(p[i], o, q, 16, 1);
+      var inside = add(p[i], mul(norm(sub(cen, p[i])), 34));
+      if (labs[names[i]]) out += text(inside.x, inside.y + 5, labs[names[i]], 13, labs[names[i]] === "?" ? "#2563eb" : MARK);
+      if (spec.names !== false) { var outside = add(p[i], mul(norm(sub(p[i], cen)), 12)); out += text(outside.x, outside.y + 5, names[i], 12, SUB); }
+    }
+    return out;
+  }
+
+  /* ---------------- 多角形を 三角形に 分ける ---------------- */
+  function polysplit(spec) {
+    var n = spec.n, c = P(160, 76), r = 66, p = [], out = "", cols = ["#fce7f3", "#e0f2fe", "#fef9c3", "#dcfce7", "#ede9fe"];
+    for (var i = 0; i < n; i++) { var ang = -Math.PI / 2 + Math.PI / n + i * 2 * Math.PI / n; p.push(add(c, P(Math.cos(ang) * r, Math.sin(ang) * r))); }
+    for (var k = 1; k < n - 1; k++) {
+      out += poly([p[0], p[k], p[k + 1]], { fill: cols[(k - 1) % cols.length], stroke: "#c4b5fd" });
+      var tc = mul(add(add(p[0], p[k]), p[k + 1]), 1 / 3);
+      if (spec.labels !== false) out += text(tc.x, tc.y + 4, "180°", 11, MARK);
+    }
+    return out + poly(p, { fill: "none" });
+  }
+
+  /* ---------------- 時計 ---------------- */
+  function clock(spec) {
+    var c = P(160, 74), r = 62, out = '<circle cx="160" cy="74" r="62" fill="#fff" stroke="' + INK + '" stroke-width="3"/>';
+    for (var i = 0; i < 12; i++) { var a = i * Math.PI / 6 - Math.PI / 2; out += line(add(c, P(Math.cos(a) * 54, Math.sin(a) * 54)), add(c, P(Math.cos(a) * 60, Math.sin(a) * 60)), { w: i % 3 === 0 ? 3 : 1.5, color: SUB }); }
+    var ha = (spec.h % 12) * Math.PI / 6 - Math.PI / 2, ma = -Math.PI / 2;
+    var H = add(c, P(Math.cos(ha) * 36, Math.sin(ha) * 36)), M = add(c, P(Math.cos(ma) * 52, Math.sin(ma) * 52));
+    var deg = ((spec.h % 12) * 30) % 360;
+    if (deg === 90) out += rightAngle(c, M, H, 14);
+    else out += '<path d="M' + pt(add(c, P(0, -24))) + ' A24 24 0 ' + (deg > 180 ? 1 : 0) + ' 1 ' + pt(add(c, P(Math.cos(ha) * 24, Math.sin(ha) * 24))) + '" fill="none" stroke="' + MARK + '" stroke-width="2.4"/>';
+    out += line(c, M, { w: 3, color: "#334155" }) + line(c, H, { w: 5, color: "#334155" }) + '<circle cx="160" cy="74" r="4" fill="#334155"/>';
+    if (spec.label) out += text(240, 80, spec.label, 16, MARK, "start");
+    return out;
+  }
+
+  /* ---------------- 分数のテープ図 ---------------- */
+  // d：分母、n：色をぬる数（dをこえたら2本目・3本目のテープ）、parts：[2,3] のように色分け、minus：うしろから×をつける数
+  function frac(spec) {
+    var d = spec.d, n = spec.n, bars = Math.max(1, Math.ceil(n / d)), out = "", W = 250, H = Math.min(30, 120 / bars - 8);
+    var colors = ["#f9a8d4", "#93c5fd", "#fde047"], parts = spec.parts || [n], idx = 0, partOf = [];
+    parts.forEach(function (cnt, pi) { for (var t = 0; t < cnt; t++) partOf.push(pi); });
+    var y0 = 75 - (bars * (H + 8) - 8) / 2;
+    for (var b = 0; b < bars; b++) {
+      var y = y0 + b * (H + 8);
+      for (var i = 0; i < d; i++) {
+        var x = 30 + i * W / d, on = idx < n;
+        out += '<rect x="' + f(x) + '" y="' + f(y) + '" width="' + f(W / d) + '" height="' + f(H) + '" fill="' + (on ? colors[partOf[idx] || 0] : "#fff") + '" stroke="' + INK + '" stroke-width="2"/>';
+        if (spec.minus && on && idx >= n - spec.minus) out += '<path d="M' + f(x + 4) + ' ' + f(y + 4) + ' L' + f(x + W / d - 4) + ' ' + f(y + H - 4) + ' M' + f(x + W / d - 4) + ' ' + f(y + 4) + ' L' + f(x + 4) + ' ' + f(y + H - 4) + '" stroke="#2563eb" stroke-width="2.4"/>';
+        idx++;
+      }
+      out += text(292, y + H / 2 + 5, "1", 13, SUB);
+    }
+    return out;
+  }
+
+  /* ---------------- 折れ線グラフ ---------------- */
+  function graph(spec) {
+    var xs = spec.xs, ys = spec.ys, lo = spec.ymin, hi = spec.ymax, X0 = 52, X1 = 300, Y0 = 128, Y1 = 14, out = "";
+    var px = function (i) { return X0 + 10 + i * (X1 - X0 - 20) / (xs.length - 1); };
+    var py = function (v) { return Y0 - (v - lo) / (hi - lo) * (Y0 - Y1); };
+    for (var g = lo; g <= hi; g += (spec.step || 5)) { out += line(P(X0, py(g)), P(X1, py(g)), { w: 1, color: "#e9d5ff" }) + text(X0 - 6, py(g) + 4, g, 10, SUB, "end"); }
+    out += line(P(X0, Y0), P(X1, Y0), { w: 2, color: SUB }) + line(P(X0, Y0 + 14), P(X0, Y1), { w: 2, color: SUB });
+    if (spec.wave) out += '<path d="M' + (X0 - 7) + ' ' + (Y0 + 6) + ' q3.5 -4 7 0 t7 0" fill="none" stroke="' + MARK + '" stroke-width="2.4"/><path d="M' + (X0 - 7) + ' ' + (Y0 + 10) + ' q3.5 -4 7 0 t7 0" fill="none" stroke="' + MARK + '" stroke-width="2.4"/>';
+    xs.forEach(function (x, i) { out += text(px(i), Y0 + 15, x, 10, SUB); });
+    if (spec.xl) out += text(X1, Y0 + 15, spec.xl, 10, SUB, "end");
+    if (spec.yl) out += text(X0 - 6, Y1 - 4, spec.yl, 10, SUB, "end");
+    for (var i = 0; i < ys.length - 1; i++) {
+      var hl = spec.hi && i >= spec.hi[0] && i < spec.hi[1];
+      out += line(P(px(i), py(ys[i])), P(px(i + 1), py(ys[i + 1])), { w: hl ? 5 : 3, color: hl ? MARK : INK });
+    }
+    ys.forEach(function (v, i) { out += '<circle cx="' + f(px(i)) + '" cy="' + f(py(v)) + '" r="3.6" fill="#fff" stroke="' + INK + '" stroke-width="2"/>'; if (spec.vals && spec.vals.indexOf(i) !== -1) out += text(px(i), py(v) - 9, v + (spec.unit || ""), 11, MARK); });
+    return out;
+  }
+
+  var TYPES = { shape: shape, lines: lines, angle: angle, angle2: angle2, tri: tri, polysplit: polysplit, clock: clock, frac: frac, graph: graph };
   function draw(spec) { var fn = TYPES[spec && spec.t]; return fn ? fn(spec) : ""; }
 
   window.FIGURE_TYPES = TYPES;
