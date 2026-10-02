@@ -103,3 +103,6 @@ t25〜t26（2026-07-24追加：賢者の羅針石／女神のリボン）
   `showQuestionStep`/`triggerCorrectAnswer`/`triggerWrongAnswer`/`triggerSkipAnswer` を後ろから包む。進行は止めない）。
   読む時間ロック（READ_LOCK）は2026-10-02に0へ（次の問題への移り変わりのもたつきはUX的に良くない、というユーザー判断）。
   代わりに、40文字以上の問題を2.5秒未満で正解すると「はやい！問題も読めたかな？」と声をかける。
+- ガチャのアバター（ニコ19種＋はじめてのニコ）は `js/avatar-art.js` のオリジナルSVG（ひよこの体は共通、帽子・持ち物・表情・色で描き分け）。
+  `window.avatarSvg(idまたは絵文字, mood)` / `window.avatarHtml(...)`。ナビ・アバター一覧・ガチャ結果・ガチャ図鑑・★強化・探検隊編成で使う。
+  新しいアバターを GACHA_EGG_LIST に足したら、avatar-art.js の DEFS にも1体ぶん足す（無ければ絵文字のまま表示される）。

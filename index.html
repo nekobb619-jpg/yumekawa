@@ -95,7 +95,11 @@
   .gb-say.show { opacity: 1; transform: translateY(0) scale(1); }
   .gb-say.gb-wrong { border-color: #93c5fd; color: #1d4ed8; } .gb-say.gb-wrong::before { border-bottom-color: #93c5fd; }
   .navi-avatar .c-buddy { width: 44px; height: 44px; display: block; }
-  .avatar-icon .c-buddy { width: 30px; height: 30px; display: block; margin: 0 auto; }
+  .avatar-icon .c-buddy { width: 34px; height: 34px; display: block; margin: 0 auto; }
+  .gacha-result-icon .c-buddy { width: 104px; height: 104px; display: block; margin: 0 auto; }
+  .gacha-book-icon .c-buddy { width: 34px; height: 34px; display: block; margin: 0 auto; }
+  .expedition-member-icon .c-buddy { width: 40px; height: 40px; display: block; margin: 0 auto; }
+  #star-up-icon .c-buddy { width: 96px; height: 96px; display: block; margin: 0 auto; }
   .premium-gacha-avatar-icon .c-buddy { width: 120px; height: 120px; display: block; margin: 0 auto; }
   #grade-nav { display: none; } /* ★2026-10-02：学年は4年生のみ（3年生タブは2026-09-14に削除済み）なので、1つしかない学年タブは隠す */
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -1583,7 +1587,7 @@ window.showStarUpgradeCelebration = function(eggId, newRank) {
   const egg = window.GACHA_EGG_LIST.find(e => e.id === eggId);
   const modal = document.getElementById("star-upgrade-modal");
   if (!modal || !egg) return;
-  document.getElementById("star-up-icon").textContent = egg.icon;
+  document.getElementById("star-up-icon").innerHTML = window.avatarHtml ? window.avatarHtml(egg.id, egg.icon, 'cheer') : egg.icon; // ★2026-10-02：イラスト
   document.getElementById("star-up-name").textContent = `${egg.name}が ${"★".repeat(newRank)}${"☆".repeat(3 - newRank)} に強化された！`;
   const byRarity = window.STAR_Q_BUFF_BY_RARITY[egg.rarity] || window.STAR_Q_BUFF_BY_RARITY[1];
   const buffPct = Math.round((byRarity[newRank] || 0) * 100);
@@ -2013,7 +2017,7 @@ window.renderExpeditionTeamModal = function () {
       const selected = window.expeditionManualSelection.indexOf(e.id) !== -1;
       const card = document.createElement('div');
       card.className = 'expedition-member-card' + (selected ? ' selected' : '');
-      card.innerHTML = `<div class="expedition-member-icon">${e.icon}</div><div class="expedition-member-name">${e.name}</div><div class="expedition-member-star">${'★'.repeat(e.rarity)}</div><div class="expedition-member-count">×${e.count}</div>`;
+      card.innerHTML = `<div class="expedition-member-icon">${window.avatarHtml ? window.avatarHtml(e.id, e.icon) : e.icon}</div><div class="expedition-member-name">${e.name}</div><div class="expedition-member-star">${'★'.repeat(e.rarity)}</div><div class="expedition-member-count">×${e.count}</div>`;
       card.onclick = () => window.toggleExpeditionMemberSelection(e.id);
       grid.appendChild(card);
     });
@@ -4319,7 +4323,7 @@ window.renderGachaBook = function() {
     slot.innerHTML = `
       <div class="egg-card-count-badge" title="今の所持数（★強化・探検隊に送ると減るよ）">×${owned.count}</div>
       <div class="egg-card-total-badge" title="これまでに このキャラを ゲットした回数（減らないよ）">累計${owned.totalObtained || owned.count}</div>${buffHtml}
-      <div class="gacha-book-icon">${egg.icon}</div>
+      <div class="gacha-book-icon">${(egg.type === 'char' && window.avatarHtml) ? window.avatarHtml(egg.id, egg.icon) : egg.icon}</div>
       <div class="gacha-book-name">${egg.name}</div>
       <div class="egg-card-star-badge">${starHtml}</div>
       ${upgradeHtml}
@@ -4412,7 +4416,7 @@ window.showGachaResult = function(result) {
     dupeHtml = `<div class="gacha-result-dupe" style="display:block; background:#dcfce7; color:#15803d;">🪙 即時Q付与済み！</div>`;
   }
   zone.innerHTML = `
-    <div class="gacha-result-icon">${egg.icon}</div>
+    <div class="gacha-result-icon">${(egg.type === 'char' && window.avatarHtml) ? window.avatarHtml(egg.id, egg.icon, 'cheer') : egg.icon}</div>
     <div class="gacha-result-rarity" style="color:${rarityColor};">${rarityLabel}</div>
     <div class="gacha-result-name">${egg.name}</div>
     <div class="gacha-result-desc">${egg.desc}</div>
@@ -4880,7 +4884,7 @@ window.renderAvatarGrid = function() {
     const selected = window.saveData.selectedAvatar === egg.icon;
     const slot = document.createElement('div');
     slot.className = 'avatar-slot' + (owned ? ' owned' : ' locked') + (selected ? ' selected' : '');
-    const iconHtml = (owned && egg.id === 'e_ex_mochi' && window.MASCOTS && window.MASCOTS.mochikunSvg) ? window.MASCOTS.mochikunSvg(selected ? 'happy' : 'normal') : (owned ? egg.icon : '❓'); // ★2026-10-02：もちくんはイラスト
+    const iconHtml = owned ? (window.avatarHtml ? window.avatarHtml(egg.id, egg.icon, selected ? 'happy' : 'normal') : egg.icon) : '❓'; // ★2026-10-02：ガチャのアバターはイラスト（js/avatar-art.js）
     slot.innerHTML = `<div class="avatar-icon">${iconHtml}</div><div class="avatar-name">${owned ? egg.name : '？？？'}</div>`;
     if (owned) {
       slot.onclick = () => {
@@ -4898,9 +4902,9 @@ window.applyAvatar = function() {
   const avatar = window.saveData.selectedAvatar || '🐣';
   // メインメニューのナビアバターとゲーム画面アバターを更新
   const naviAvatars = document.querySelectorAll('.navi-avatar');
-  // ★2026-10-02変更：もちくん（🦭）だけは絵文字ではなくイラスト（js/mascots.js）で出す
-  const mochiSvg = (avatar === '🦭' && window.MASCOTS && window.MASCOTS.mochikunSvg) ? window.MASCOTS.mochikunSvg('normal') : '';
-  naviAvatars.forEach(el => { if (mochiSvg) el.innerHTML = mochiSvg; else el.textContent = avatar; });
+  // ★2026-10-02変更：ガチャのアバター（ニコ・もちくん）は絵文字ではなくイラスト（js/avatar-art.js）で出す
+  const avatarArt = window.avatarSvg ? window.avatarSvg(avatar, 'normal') : null;
+  naviAvatars.forEach(el => { if (avatarArt) el.innerHTML = avatarArt; else el.textContent = avatar; });
   // クロぽんボタンにもなかよし度に応じたバッジを付与
   const btn = document.getElementById('kuropon-btn');
   if (btn) {
@@ -6812,6 +6816,7 @@ window.initQAMode();
 <script src="./book.js"></script>
 <script src="./js/reading-note.js"></script>
 <script src="./js/observation-note.js"></script>
+<script src="./js/avatar-art.js"></script>
 <script src="./js/mascots.js"></script>
 <script src="./js/tutor-plan.js"></script>
 </body>
