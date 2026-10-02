@@ -235,6 +235,12 @@
   .treasure-slot-icon { font-size: 28px; line-height: 1.2; }
   .treasure-slot.locked .treasure-slot-icon { opacity: 0.35; }
   .treasure-slot-name { font-size: 10px; font-weight: 900; color: #475569; margin-top: 2px; }
+  /* ★2026-10-02追加：ちしきカード（単元ごとのカード。🥉→🥈→🥇と育つ） */
+  .treasure-slot.kcard { cursor: pointer; }
+  .treasure-slot.kcard.lv1 { border-style: solid; background: #fff7ed; border-color: #d97706; }
+  .treasure-slot.kcard.lv2 { border-style: solid; background: #f1f5f9; border-color: #94a3b8; box-shadow: 0 0 6px rgba(148, 163, 184, 0.6); }
+  .treasure-slot.kcard.lv3 { border-style: solid; background: #fefce8; border-color: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.6); }
+  .kcard-subject { font-size: 13px; font-weight: 900; color: #6d28d9; margin: 10px 0 6px; }
   #game-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; }
   /* ★ゆめかわチューター（振り返り・予習）2026-07-26 追加 */
   #tutor-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: none; padding: 10px; height: 100vh; height: 100dvh; overflow-y: auto; }
@@ -607,7 +613,7 @@
     <button class="btn-sm" style="background:var(--pastel-pink);" onclick="window.exchangePtsToQBulk()">🪙 まとめて一括交換！</button>
   </div>
   <div class="flex-row">
-    <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openTreasureBookModal()">🏆 お宝図鑑</button>
+    <button class="btn-sm" style="background:#e0f2fe;" onclick="window.openTreasureBookModal()">🏆 お宝図鑑・🃏カード</button>
     <button class="btn-sm" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#7c3aed; font-weight:900;" onclick="window.openGachaModal()">🥚 ガチャ</button>
   </div>
   <div class="flex-row">
@@ -865,6 +871,11 @@
     <h3 style="margin:14px 0 4px; color:#be185d; font-size:14px; font-weight:900;">🐾 クロぽんのひみつのすがた</h3>
     <div class="treasure-book-progress" id="treasure-book-kuropon-progress" style="color:#be185d;">0 / 0 集めた！</div>
     <div class="treasure-grid" id="treasure-book-kuropon-grid"></div>
+    <!-- ★2026-10-02追加：ちしきカード（単元ごと。間をあけてもう一度できると育つ＝分散学習） -->
+    <h3 style="margin:14px 0 4px; color:#6d28d9; font-size:14px; font-weight:900;">🃏 ちしきカード</h3>
+    <div class="treasure-book-progress" id="kcard-progress" style="color:#6d28d9;">0 / 0</div>
+    <div style="font-size:11px; color:#64748b; line-height:1.6; margin-bottom:6px;">🥉 その単元を クリア → 🥈 3日 あけて ミス2つ以下で クリア → 🥇 さらに 7日 あけて ノーミスで クリア。<br>時間を あけて もう一度 できると、ほんとうの 力に なるよ。カードを タップすると その単元の ポイントが 見られるよ。</div>
+    <div id="kcard-area"></div>
     <button class="br-btn close" style="margin-top:0;" onclick="window.closeTreasureBookModal()">とじる</button>
   </div>
 </div>
@@ -1241,6 +1252,7 @@ window.normalizeSaveData = function(data) {
   if (Array.isArray(normalized.answerLogs) && normalized.answerLogs.length > _answerLogsCap) {
     normalized.answerLogs = normalized.answerLogs.slice(-_answerLogsCap);
   }
+  normalized.knowledgeCards = normalized.knowledgeCards || {}; // ★2026-10-02追加：ちしきカード { stageId: [段階1〜3, 達成日(日数)] }
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
   normalized.totalAnswersCount = normalized.totalAnswersCount || 0; // ★2026-08-08追加：せいちょうきろく用の総チャレンジ数（answerLogsは件数上限があるため別カウンタ）
@@ -3633,9 +3645,106 @@ window.openTreasureBookModal = function() {
       kGrid.appendChild(slot);
     });
   }
+  if (window.renderKnowledgeCards) window.renderKnowledgeCards();
   const modal = document.getElementById("treasure-book-modal"); if (modal) modal.style.display = "flex";
 };
 window.closeTreasureBookModal = function() { const modal = document.getElementById("treasure-book-modal"); if (modal) modal.style.display = "none"; };
+/* ★2026-10-02追加：ちしきカード ------------------------------------------------
+   単元（ステージ）ごとに1枚。🥉クリア → 🥈3日以上あけてミス2つ以下 → 🥇さらに7日以上あけてノーミス。
+   「時間をあけて思い出せるか」（分散学習・検索練習）をそのまま集める要素にしたもの。Qは付与しない
+   （ポイント稼ぎの抜け道にしないため）。保存は saveData.knowledgeCards[stageId] = [段階, 達成日(日数)]
+   で本体行に入れる（進捗データ扱い。SAVE_EXT_FIELDS/切り詰め対象には入れない）。 */
+window.KCARD_SUBJECT_ICON = { "算数": "📐", "国語": "📖", "理科": "🔬", "社会": "🗾", "探究": "🧭", "英語": "🔤", "漢検": "🈴" };
+window.KCARD_LEVEL_NAME = { 1: "🥉ブロンズ", 2: "🥈シルバー", 3: "🥇ゴールド" };
+window.KCARD_RULES = { 2: { gapDays: 3, maxMistakes: 2 }, 3: { gapDays: 7, maxMistakes: 0 } };
+window.kcardToday = function () {
+  const ms = window.currentServerTime || Date.now();
+  return Math.floor((ms + 9 * 3600000) / 86400000); // 日本時間の日付（日数）
+};
+// ステージクリア時に呼ぶ。段階が上がったら {level, up:true}、日数待ちなら {level, waitDays}、それ以外は null。
+window.awardKnowledgeCard = function (stageId, mistakes) {
+  if (!stageId || !window.saveData) return null;
+  if (!window.saveData.knowledgeCards) window.saveData.knowledgeCards = {};
+  const today = window.kcardToday();
+  const cur = window.saveData.knowledgeCards[stageId];
+  const lv = cur ? Number(cur[0]) || 0 : 0;
+  const day = cur ? Number(cur[1]) || 0 : 0;
+  if (lv >= 3) return null;
+  if (lv === 0) { window.saveData.knowledgeCards[stageId] = [1, today]; return { level: 1, up: true }; }
+  const rule = window.KCARD_RULES[lv + 1];
+  const waited = today - day;
+  if (waited < rule.gapDays) return { level: lv, waitDays: rule.gapDays - waited };
+  if (Number(mistakes || 0) > rule.maxMistakes) return { level: lv, needFewerMistakes: rule.maxMistakes };
+  window.saveData.knowledgeCards[stageId] = [lv + 1, today];
+  return { level: lv + 1, up: true };
+};
+window.kcardMessage = function (result, stageName) {
+  if (!result) return "";
+  const name = stageName ? `『${stageName}』` : "";
+  if (result.up) {
+    const next = result.level === 1 ? "（3日 あけて もう一度 クリアすると 🥈に なるよ）" : (result.level === 2 ? "（さらに 7日 あけて ノーミスなら 🥇！）" : "（コンプリート！）");
+    return `\n\n🃏 ちしきカード${name}が ${window.KCARD_LEVEL_NAME[result.level]} に なった！${next}`;
+  }
+  if (result.waitDays) return `\n\n🃏 ちしきカード${name}は、あと ${result.waitDays}日 あけて クリアすると 次の 段階に なるよ。`;
+  if (result.needFewerMistakes !== undefined) return `\n\n🃏 ちしきカード${name}：次は ミス${result.needFewerMistakes === 0 ? "なし" : result.needFewerMistakes + "つ以下"}で クリアすると 段階が 上がるよ。あわてず いこう！`;
+  return "";
+};
+window.renderKnowledgeCards = function () {
+  const area = document.getElementById("kcard-area"); if (!area) return;
+  const cards = (window.saveData && window.saveData.knowledgeCards) || {};
+  const stages = ((window.CONTENT && window.CONTENT.stages) || []).filter(function (s) {
+    return s && s.id && window.CONTENT.quizzes && Array.isArray(window.CONTENT.quizzes[s.id]) && window.CONTENT.quizzes[s.id].length > 0
+      && (!window.matchesGradeFilter || window.matchesGradeFilter(s));
+  });
+  const counts = { 1: 0, 2: 0, 3: 0 };
+  const bySubject = {};
+  stages.forEach(function (s) {
+    const lv = cards[s.id] ? Number(cards[s.id][0]) || 0 : 0;
+    if (lv > 0) counts[lv]++;
+    (bySubject[s.subject] = bySubject[s.subject] || []).push({ s: s, lv: lv });
+  });
+  const owned = counts[1] + counts[2] + counts[3];
+  const prog = document.getElementById("kcard-progress");
+  if (prog) prog.textContent = `🃏 ${owned} / ${stages.length} 枚（🥇${counts[3]} 🥈${counts[2]} 🥉${counts[1]}）`;
+  area.innerHTML = "";
+  Object.keys(bySubject).forEach(function (subj) {
+    const list = bySubject[subj];
+    const gold = list.filter(function (x) { return x.lv === 3; }).length;
+    const head = document.createElement("div");
+    head.className = "kcard-subject";
+    head.textContent = `${window.KCARD_SUBJECT_ICON[subj] || "📘"} ${subj}（${list.filter(function (x) { return x.lv > 0; }).length}/${list.length}${gold === list.length ? "・🥇ぜんぶゴールド！" : ""}）`;
+    area.appendChild(head);
+    const grid = document.createElement("div");
+    grid.className = "treasure-grid";
+    list.forEach(function (x) {
+      const slot = document.createElement("div");
+      slot.className = "treasure-slot kcard " + (x.lv > 0 ? "owned lv" + x.lv : "locked");
+      const icon = x.lv === 3 ? "🥇" : (x.lv === 2 ? "🥈" : (x.lv === 1 ? "🥉" : (window.KCARD_SUBJECT_ICON[subj] || "📘")));
+      slot.innerHTML = `<div class="treasure-slot-icon">${icon}</div><div class="treasure-slot-name">${x.s.name}</div>`;
+      slot.onclick = function () { window.showKnowledgeCardPoint(x.s.id); };
+      grid.appendChild(slot);
+    });
+    area.appendChild(grid);
+  });
+};
+window.showKnowledgeCardPoint = function (stageId) {
+  const stage = ((window.CONTENT && window.CONTENT.stages) || []).find(function (s) { return s.id === stageId; });
+  const cards = (window.saveData && window.saveData.knowledgeCards) || {};
+  const cur = cards[stageId];
+  const lv = cur ? Number(cur[0]) || 0 : 0;
+  const name = stage ? stage.name : stageId;
+  if (lv === 0) { alert(`🃏 ${name}\n\nまだ カードを もって いないよ。この 単元を クリアすると 🥉ブロンズが もらえるよ！`); return; }
+  const pool = ((window.CONTENT.quizzes && window.CONTENT.quizzes[stageId]) || []).filter(function (q) { return q && q.job_desc; });
+  const point = pool.length ? pool[Math.floor(Math.random() * pool.length)].job_desc : "";
+  let next = "";
+  if (lv < 3) {
+    const rule = window.KCARD_RULES[lv + 1];
+    const left = rule.gapDays - (window.kcardToday() - (Number(cur[1]) || 0));
+    next = left > 0 ? `\n\n⏳ あと ${left}日で、次の 段階に チャレンジ できるよ。` : `\n\n✨ 今日 ${rule.maxMistakes === 0 ? "ノーミス" : "ミス" + rule.maxMistakes + "つ以下"}で クリアすると ${window.KCARD_LEVEL_NAME[lv + 1]} に なるよ！`;
+  }
+  alert(`🃏 ${window.KCARD_LEVEL_NAME[lv]}：${name}\n\n💡 この単元の ポイント\n${point}${next}`);
+};
+/* ちしきカード ここまで ------------------------------------------------ */
 /* ★お宝図鑑（コレクション）システム ここまで ------------------- */
 
 /* ★ゆめかわチューター（単元ごとの振り返り・予習サポート）2026-07-26 追加 ここから -------------------
@@ -6309,6 +6418,8 @@ window.exitToMainMenu = function() {
     }
     window.activeItemBuff = null;
     window.registerStudyStreak(); // ★1日1クエストクリアで連続学習ストリークを登録（同日2回目以降は内部でスキップ）
+    // ★2026-10-02追加：ちしきカード（単元ごと。間をあけてもう一度できると育つ）
+    const kcardResult = window.awardKnowledgeCard ? window.awardKnowledgeCard(targetStageId, window.totalMistakes) : null;
     window.saveGame();
     if (justTurnedMaster) {
       const celebStageName = (window.currentStage && window.currentStage.name) ? window.currentStage.name : targetStageId;
@@ -6326,6 +6437,7 @@ window.exitToMainMenu = function() {
     if(isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster && baseReward === 0) msg += `⚠️ (本日の2Qボーナスは上限に達しました)\n`;
     if(masterCapHit) msg += `⚠️ (本日のマスター周回ボーナス上限 ${window.MASTER_DAILY_Q_CAP}Q に到達しました)\n`;
     msg += `\n合計【 ${earnedQ}Q 】を金庫にチャージしました！${dropMsg}`;
+    if (window.kcardMessage) msg += window.kcardMessage(kcardResult, (window.currentStage && window.currentStage.name) || "");
 
     alert(msg);
     // ★2026-09-14追加：Q数字だけでは後から「パーフェクトだったか」「どのボーナスが乗ったか」が
