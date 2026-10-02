@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>わり算の筆算シート</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-03追加：3けた÷2けたの 筆算シート（印刷用）。?no=1234 で 8問、?mode=memo で おぼえがきメモ、&answers=1 で 答えも 表示。
+     問題は js/hissan-sheet.js の HISSAN.make(no) で 作るので、アプリの 答え合わせと 同じ 問題に なる。 -->
+<style>
+  :root { --ink: #4a3b52; --line: #c4b5fd; --soft: #7a6985; --accent: #db2777; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f3ebf7; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); }
+  .bar { position: sticky; top: 0; display: flex; gap: 8px; justify-content: center; padding: 10px; background: #fff; border-bottom: 2px solid #e9d5ff; flex-wrap: wrap; }
+  .bar button { border: none; border-radius: 12px; padding: 10px 16px; font-family: inherit; font-weight: 900; font-size: 14px; cursor: pointer; background: #f3e8ff; color: #7e22ce; }
+  .bar button.main { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; }
+  .page { width: 210mm; min-height: 297mm; margin: 12px auto; padding: 10mm 11mm; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--ink); padding-bottom: 2mm; }
+  .head h1 { font-size: 19pt; margin: 0; }
+  .head .meta { font-size: 10.5pt; font-weight: 700; text-align: right; line-height: 1.7; }
+  .memo { display: flex; flex-wrap: wrap; gap: 1.5mm 4mm; font-size: 9.5pt; font-weight: 700; background: #faf5ff; border-radius: 3mm; padding: 2mm 3mm; margin: 3mm 0; }
+  .memo b { color: #7e22ce; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .prob { border: 1.5px solid #d8b4fe; border-radius: 3mm; padding: 2mm 3mm 2mm; break-inside: avoid; }
+  .prob .t { font-size: 13pt; font-weight: 900; }
+  .prob .t span { font-size: 9pt; color: var(--soft); font-weight: 700; margin-left: 2mm; }
+  .prob svg { display: block; width: 100%; height: auto; }
+  .prob .chk { font-size: 9pt; color: var(--soft); font-weight: 700; margin-top: 1mm; }
+  .ans { color: var(--accent); font-weight: 900; font-size: 10.5pt; }
+  .pb { height: 0; }
+  .head2 { font-size: 11pt; font-weight: 900; text-align: right; margin: 8mm 0 3mm; border-bottom: 1.5px solid var(--ink); padding-bottom: 1mm; }
+  @media print { .pb { break-before: page; page-break-before: always; } .head2 { margin-top: 0; } }
+  .memo-page h1 { font-size: 24pt; text-align: center; margin: 2mm 0 6mm; }
+  .memo-row { display: flex; gap: 5mm; align-items: flex-start; border-bottom: 1.5px dashed #e9d5ff; padding: 4mm 0; font-size: 15pt; font-weight: 700; line-height: 1.6; }
+  .memo-row b { flex: 0 0 38mm; font-size: 17pt; color: #7e22ce; }
+  .ex { margin-top: 6mm; display: flex; gap: 8mm; align-items: center; justify-content: center; }
+  @media print {
+    body { background: #fff; }
+    .bar { display: none; }
+    .page { margin: 0; box-shadow: none; width: auto; min-height: auto; padding: 0; }
+    @page { size: A4; margin: 10mm; }
+  }
+  @media screen and (max-width: 820px) { .page { width: auto; margin: 8px; padding: 12px; min-height: 0; } .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button class="main" onclick="window.print()">🖨️ 印刷する</button>
+  <button onclick="location.href='?no=' + (1000 + Math.floor(Math.random() * 9000))">🔄 べつの シート</button>
+  <button onclick="location.href='?mode=memo'">📝 おぼえがきメモ</button>
+  <button id="ansbtn">👀 答え（おうちの人用）</button>
+</div>
+<div id="root"></div>
+<script>window.HISSAN_PRINT_PAGE = true;</script>
+<script src="./js/hissan-sheet.js"></script>
+<script>
+(function () {
+  var qs = new URLSearchParams(location.search);
+  var mode = qs.get("mode"), no = Number(qs.get("no")) || (1000 + Math.floor(Math.random() * 9000)), showAns = qs.get("answers") === "1";
+  var root = document.getElementById("root"), H = window.HISSAN;
+  document.getElementById("ansbtn").onclick = function () { location.href = "?no=" + no + (showAns ? "" : "&answers=1"); };
+  if (mode === "memo") { document.getElementById("ansbtn").style.display = "none"; }
+
+  // 方眼の 筆算わく（8列×7行）。わる数は 0〜1列、わられる数は 3〜5列。商は 1行目
+  function frame(p, ans) {
+    var C = 10, cols = 8, rows = 7, W = cols * C, Hh = rows * C, s = '<svg viewBox="-1 -1 ' + (W + 2) + ' ' + (Hh + 2) + '" xmlns="http://www.w3.org/2000/svg">';
+    for (var i = 0; i <= cols; i++) s += '<line x1="' + i * C + '" y1="0" x2="' + i * C + '" y2="' + Hh + '" stroke="#e9d5ff" stroke-width=".4"/>';
+    for (var j = 0; j <= rows; j++) s += '<line x1="0" y1="' + j * C + '" x2="' + W + '" y2="' + j * C + '" stroke="#e9d5ff" stroke-width=".4"/>';
+    var d = String(p.divisor), n = String(p.dividend);
+    s += '<path d="M' + (3 * C - 1.5) + ' ' + (2 * C) + ' Q' + (3 * C + 1.5) + ' ' + (1.5 * C) + ' ' + (3 * C - 1.5) + ' ' + C + ' L' + (6 * C + 3) + ' ' + C + '" fill="none" stroke="#4a3b52" stroke-width=".9"/>';
+    for (var a = 0; a < d.length; a++) s += '<text x="' + ((1 + a - (d.length - 2)) * C - C / 2 + C) + '" y="' + (1.75 * C) + '" font-size="7.5" font-weight="700" text-anchor="middle" fill="#4a3b52">' + d[a] + '</text>';
+    for (var b = 0; b < n.length; b++) s += '<text x="' + ((3 + b) * C + C / 2) + '" y="' + (1.75 * C) + '" font-size="7.5" font-weight="700" text-anchor="middle" fill="#4a3b52">' + n[b] + '</text>';
+    if (ans) {
+      var q = String(p.q);
+      for (var c = 0; c < q.length; c++) s += '<text x="' + ((6 - q.length + c) * C + C / 2) + '" y="' + (0.75 * C) + '" font-size="7.5" font-weight="700" text-anchor="middle" fill="#db2777">' + q[c] + '</text>';
+    }
+    // 見本だけ：途中の式（[行, 列, 数字]）と ひき算の 線（[行, 列から, 列まで]）
+    (p.work || []).forEach(function (w) { s += '<text x="' + (w[1] * C + C / 2) + '" y="' + ((w[0] + 0.75) * C) + '" font-size="7.5" font-weight="700" text-anchor="middle" fill="' + (w[3] || "#2563eb") + '">' + w[2] + '</text>'; });
+    (p.lines || []).forEach(function (l) { s += '<line x1="' + (l[1] * C) + '" y1="' + ((l[0] + 1) * C) + '" x2="' + ((l[2] + 1) * C) + '" y2="' + ((l[0] + 1) * C) + '" stroke="#4a3b52" stroke-width=".7"/>'; });
+    return s + '</svg>';
+  }
+
+  if (mode === "memo") {
+    var ex = { dividend: 823, divisor: 34 };
+    root.innerHTML = '<div class="page memo-page"><h1>📝 わり算の 筆算 おぼえがきメモ</h1>' +
+      H.MEMO.map(function (m) { return '<div class="memo-row"><b>' + m[0] + '</b><div>' + m[1] + '</div></div>'; }).join("") +
+      '<div class="ex"><div style="width:70mm;">' + frame({ divisor: 34, dividend: 823, q: 24, work: [[2, 3, 6], [2, 4, 8], [3, 3, 1], [3, 4, 4], [3, 5, 3, "#db2777"], [4, 3, 1], [4, 4, 3], [4, 5, 6], [5, 5, 7, "#db2777"]], lines: [[2, 3, 4], [4, 3, 5]] }, true) + '</div>' +
+      '<div style="font-size:13pt;font-weight:700;line-height:1.8;">れい：823 ÷ 34<br>34 を 30 と みて、82 ÷ 30 → <b style="color:#db2777">2</b><br>143 ÷ 34 → 140 ÷ 30 で <b style="color:#db2777">4</b><br>＝ 24 あまり 7<br>たしかめ：34×24＋7＝823 ✅</div></div></div>';
+    return;
+  }
+
+  var probs = H.make(no);
+  var d = new Date();
+  root.innerHTML = '<div class="page">' +
+    '<div class="head"><h1>✏️ わり算の 筆算シート（3けた ÷ 2けた）</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／8</div></div>' +
+    '<div class="memo">' + H.MEMO.map(function (m) { return '<span><b>' + m[0] + '</b> ' + m[1] + '</span>'; }).join("") + '</div>' +
+    '<div class="grid">' + probs.map(function (p, i) {
+      var brk = i === 4 ? '</div><div class="pb"></div><div class="head2">シート No.<b>' + no + '</b> の つづき（5〜8）</div><div class="grid">' : '';
+      return brk + '<div class="prob"><div class="t">(' + (i + 1) + ') ' + p.dividend + ' ÷ ' + p.divisor + '<span>' + p.kind + '</span></div>' + frame(p, showAns) +
+        '<div class="chk">答え：＿＿＿ あまり ＿＿＿　／　たしかめ：' + p.divisor + ' × ＿＿ ＋ ＿＿ ＝ ' + p.dividend + '</div>' +
+        (showAns ? '<div class="ans">答え ' + p.q + (p.r ? ' あまり ' + p.r : '（わりきれる）') + '　たしかめ ' + p.divisor + '×' + p.q + '＋' + p.r + '＝' + p.dividend + '</div>' : '') + '</div>';
+    }).join("") + '</div>' +
+    '<div style="font-size:9.5pt;color:#7a6985;font-weight:700;margin-top:3mm;">とけたら アプリの「✏️ 筆算シート」→「答え合わせ」で シート No. を 入れて まるつけ しよう。</div></div>';
+})();
+</script>
+</body>
+</html>
