@@ -275,6 +275,154 @@
     return c(90, false, "水") + arrow(140, 80, 180, 80, BLUE) + t(160, 70, "冷やす", 11, BLUE) + c(230, true, "氷：かさが ふえる") + L(56, 70, 264, 70, MARK, 1.4, "4 4");
   }
 
+  /* ---------------- 空気と水（注射器・空気でっぽう） ---------------- */
+  function syringe(s) {
+    function one(y, fill, pressed, cap) {
+      var x0 = 40, x1 = 230, push = pressed ? (fill === "water" ? 0 : (fill === "mix" ? 40 : 70)) : 0, out = "";
+      out += '<rect x="' + x0 + '" y="' + (y - 16) + '" width="' + (x1 - x0) + '" height="32" rx="6" fill="#fff" stroke="' + WIRE + '" stroke-width="2.4"/>';
+      out += '<path d="M' + (x0 - 18) + ' ' + y + ' H' + x0 + '" stroke="' + WIRE + '" stroke-width="5"/>';
+      var px = x1 - 8 - push, inner = px - x0 - 4;
+      if (fill === "water") out += '<rect x="' + (x0 + 2) + '" y="' + (y - 14) + '" width="' + inner + '" height="28" fill="#93c5fd"/>';
+      else if (fill === "mix") out += '<rect x="' + (x0 + 2) + '" y="' + (y - 14) + '" width="70" height="28" fill="#93c5fd"/>' + dots(x0 + 76, px - 4, y);
+      else out += dots(x0 + 6, px - 4, y);
+      out += '<rect x="' + px + '" y="' + (y - 14) + '" width="8" height="28" fill="#a78bfa"/><path d="M' + (px + 8) + ' ' + y + ' H' + (px + 70) + '" stroke="#a78bfa" stroke-width="6"/><rect x="' + (px + 66) + '" y="' + (y - 16) + '" width="8" height="32" rx="3" fill="#a78bfa"/>';
+      if (pressed) out += arrow(px + 110, y, px + 82, y, MARK);
+      return out + t(x0, y + 30, cap, 11, pressed ? MARK : SUB, "start");
+    }
+    function dots(a, b, y) { var o = "", n = Math.max(3, Math.round((b - a) / 14)); for (var i = 0; i < n; i++) o += '<circle cx="' + (a + (b - a) * (i + 0.5) / n) + '" cy="' + (y + (i % 2 ? 6 : -6)) + '" r="2.4" fill="#94a3b8"/>'; return o; }
+    var f = s.fill || "air";
+    if (f === "compare") return one(36, "air", true, "空気：おすと ちぢむ") + one(104, "water", true, "水：おしても ちぢまない");
+    return one(36, f, false, f === "water" ? "水を とじこめる" : f === "mix" ? "水と 空気" : "空気を とじこめる") +
+           one(104, f, true, f === "water" ? "おしても ちぢまない" : f === "mix" ? "ちぢむのは 空気だけ" : "おすと ちぢむ（手ごたえ）");
+  }
+  function airgun() {
+    var out = '<rect x="40" y="58" width="200" height="34" rx="8" fill="#fff" stroke="' + WIRE + '" stroke-width="2.4"/>';
+    out += '<circle cx="232" cy="75" r="15" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>' + '<circle cx="128" cy="75" r="15" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>';
+    for (var i = 0; i < 9; i++) out += '<circle cx="' + (150 + i * 8) + '" cy="' + (68 + (i % 2) * 14) + '" r="2.2" fill="#94a3b8"/>';
+    out += '<path d="M20 75 H110" stroke="#a78bfa" stroke-width="7"/>' + arrow(18, 104, 90, 104, MARK) + t(54, 124, "おす", 12, MARK);
+    out += arrow(250, 75, 300, 66, "#f59e0b", 3) + t(282, 52, "ポン！", 13, "#f59e0b");
+    out += t(186, 40, "ちぢめられた 空気が", 11, MARK) + t(186, 140, "もとに もどろうとして 玉を おす", 11, MARK);
+    return out;
+  }
+
+  /* ---------------- あたたまり方 ---------------- */
+  var HOT = ["#ef4444", "#f97316", "#fb923c", "#fdba74", "#fed7aa", "#fff7ed"];
+  function rod(s) {
+    var out = "", n = 12, center = s.at === "center";
+    for (var i = 0; i < n; i++) {
+      var d = center ? Math.abs(i - (n - 1) / 2) / ((n - 1) / 2) : i / (n - 1);
+      out += '<rect x="' + (30 + i * 22) + '" y="56" width="22" height="22" fill="' + HOT[Math.min(5, Math.floor(d * 6))] + '"/>';
+    }
+    out += '<rect x="30" y="56" width="264" height="22" fill="none" stroke="' + WIRE + '" stroke-width="2"/>';
+    var fx = center ? 162 : 41;
+    out += '<path d="M' + (fx - 8) + ' 112 q-4 -10 4 -18 q2 9 6 4 q4 -10 0 -16 q12 10 6 30z" fill="#f97316"/>';
+    if (center) out += arrow(140, 46, 60, 46) + arrow(184, 46, 264, 46); else out += arrow(60, 46, 270, 46);
+    return out + t(160, 136, center ? "熱した ところから 両はしへ 順々に" : "熱した はしから 順々に 伝わる", 12, INK);
+  }
+  function plate(s) {
+    var out = '<rect x="90" y="10" width="140" height="120" fill="#fff7ed" stroke="' + WIRE + '" stroke-width="2"/>', cx = s.at === "center" ? 160 : 90, cy = s.at === "center" ? 70 : 130;
+    out += '<clipPath id="plclip"><rect x="90" y="10" width="140" height="120"/></clipPath><g clip-path="url(#plclip)">';
+    for (var i = 5; i >= 0; i--) out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (18 + i * 26) + '" fill="' + HOT[i] + '"/>';
+    out += '</g><rect x="90" y="10" width="140" height="120" fill="none" stroke="' + WIRE + '" stroke-width="2"/>';
+    return out + t(160, 146, s.at === "center" ? "中央から 円のように 広がる" : "熱した かどから 順々に 広がる", 12, INK);
+  }
+  function convection(s) {
+    var out = "";
+    if (s.room) {
+      out += '<rect x="30" y="10" width="260" height="122" fill="#fff" stroke="' + WIRE + '" stroke-width="2.4"/>';
+      if (s.ac) {
+        out += '<rect x="44" y="16" width="56" height="16" rx="4" fill="#e2e8f0" stroke="' + WIRE + '" stroke-width="1.6"/>' + arrow(72, 34, 72, 104, "#ef4444", 3) + arrow(86, 34, 120, 100, "#ef4444", 3);
+        out += '<path d="M120 112 H250 Q270 112 270 92 V40 Q270 22 250 22 H120" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="5 4"/>' + t(196, 58, "下に ふくと", 11, MARK) + t(196, 74, "上へ のぼって", 11, MARK) + t(196, 90, "全体が ぐるぐる", 11, MARK);
+      } else {
+        out += '<rect x="48" y="104" width="34" height="26" rx="4" fill="#fb923c"/>' + t(65, 146, "ストーブ", 10, SUB);
+        out += arrow(65, 100, 65, 30, "#ef4444", 3) + arrow(70, 22, 250, 22, "#ef4444", 3) + arrow(270, 28, 270, 110, BLUE, 3) + arrow(250, 120, 100, 120, BLUE, 3);
+        out += '<rect x="34" y="14" width="252" height="26" fill="#fecaca" opacity=".35"/>' + t(170, 54, "あたたかい 空気は 上へ", 12, "#dc2626") + t(180, 108, "つめたい 空気は 下へ", 12, BLUE);
+      }
+      return out;
+    }
+    out += '<path d="M50 20 L50 118 Q50 128 60 128 L140 128 Q150 128 150 118 L150 20" fill="#e0f2fe" stroke="' + WIRE + '" stroke-width="2.6"/>';
+    out += '<path d="M100 116 V44 Q100 34 112 34 H126 Q136 34 136 46 V108 Q136 118 126 118 H112" fill="none" stroke="#ef4444" stroke-width="3"/>' + arrowHead(100, 44, -Math.PI / 2, "#ef4444") + arrowHead(136, 104, Math.PI / 2, BLUE);
+    out += '<path d="M100 116 V44 Q100 34 88 34 H74 Q64 34 64 46 V108 Q64 118 74 118 H88" fill="none" stroke="#ef4444" stroke-width="3" opacity=".55"/>' + arrowHead(64, 104, Math.PI / 2, BLUE);
+    out += '<path d="M92 148 q-4 -8 4 -14 q2 8 6 4 q4 -8 0 -14 q10 8 6 24z" fill="#f97316"/>';
+    out += t(238, 40, "あたたまった 水は", 11, "#dc2626") + t(238, 56, "上へ のぼる", 12, "#dc2626") + t(238, 88, "つめたい 水は", 11, BLUE) + t(238, 104, "下へ", 12, BLUE) + t(238, 128, "全体が ぐるぐる（対流）", 10, INK);
+    return out;
+  }
+
+  /* ---------------- 雨水 ---------------- */
+  function slope(s) {
+    var out = '<path d="M0 30 Q120 40 200 100 Q240 126 320 126 V150 H0z" fill="#d6b37a"/>';
+    out += '<path d="M200 114 Q250 132 300 126 Q262 118 228 112z" fill="#60a5fa"/>' + t(262, 146, "水たまり（低い ところ）", 11, BLUE);
+    out += arrow(40, 26, 100, 40, BLUE) + arrow(110, 46, 170, 82, BLUE) + arrow(176, 90, 214, 110, BLUE);
+    out += t(60, 16, "高い", 12, INK) + t(300, 112, "低い", 12, INK);
+    if (s.steep) out += t(222, 34, "かたむきが 急 → 流れが 速い", 12, MARK);
+    return out;
+  }
+  function soil() {
+    function cup(x, r, gap, name, drops, cap) {
+      var o = '<path d="M' + (x - 34) + ' 20 L' + (x - 26) + ' 96 L' + (x + 26) + ' 96 L' + (x + 34) + ' 20" fill="#fff" stroke="' + WIRE + '" stroke-width="2"/>';
+      for (var row = 0; row < 4; row++) for (var c = -2; c <= 2; c++) { var cx = x + c * (r * 2 + gap) + (row % 2 ? r : 0), cy = 88 - row * (r * 2 + gap - 2); if (Math.abs(cx - x) < 26) o += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#d6b37a" stroke="#a16207" stroke-width=".8"/>'; }
+      for (var d = 0; d < drops; d++) o += '<path d="M' + (x - 8 + d * 8) + ' 104 q3 5 0 7 q-3 -2 0 -7z" fill="#3b82f6"/>';
+      return o + t(x, 128, name, 12, INK) + t(x, 144, cap, 10, drops >= 3 ? BLUE : SUB);
+    }
+    return cup(60, 9, 3, "ジャリ", 3, "すぐ しみこむ") + cup(160, 5, 2, "すな", 2, "しみこむ") + cup(260, 2.4, .6, "土", 1, "しみこみにくい");
+  }
+  function puddles() {
+    var out = '<rect x="0" y="0" width="160" height="150" fill="#fef9c3"/><rect x="160" y="0" width="160" height="150" fill="#e2e8f0"/>';
+    out += '<circle cx="40" cy="30" r="14" fill="#fb923c"/>' + '<ellipse cx="80" cy="112" rx="40" ry="10" fill="#60a5fa"/>' + arrow(70, 98, 70, 66, MARK) + arrow(92, 98, 92, 60, MARK) + t(80, 140, "日なた：早く かわく", 11, "#b45309");
+    out += '<ellipse cx="240" cy="110" rx="56" ry="14" fill="#60a5fa"/>' + arrow(240, 94, 240, 76, MARK) + t(240, 140, "日かげ：おそい", 11, SUB);
+    return out;
+  }
+
+  /* ---------------- 磁石 ---------------- */
+  function bar(x, y, left, w) {
+    w = w || 100; var right = left === "N" ? "S" : "N";
+    var col = function (p) { return p === "N" ? "#ef4444" : "#3b82f6"; };
+    return '<rect x="' + x + '" y="' + (y - 14) + '" width="' + (w / 2) + '" height="28" fill="' + col(left) + '"/><rect x="' + (x + w / 2) + '" y="' + (y - 14) + '" width="' + (w / 2) + '" height="28" fill="' + col(right) + '"/>' +
+      t(x + w / 4, y + 5, left, 14, "#fff") + t(x + w * 3 / 4, y + 5, right, 14, "#fff");
+  }
+  function magnets(s) {
+    if (s.k === "split") {
+      return bar(60, 40, "N", 200) + L(160, 20, 160, 60, "#334155", 2, "4 3") + arrow(160, 66, 160, 84, MARK) +
+        bar(40, 112, "N", 100) + bar(180, 112, "N", 100) + t(160, 144, "われた ところに 新しい N極と S極", 12, MARK);
+    }
+    // attract：左の磁石の 右はし S ／ 右の磁石の 左はし N（ちがう極）。repel：どちらも N（同じ極）
+    function pair(y, attract) {
+      var o = bar(20, y, attract ? "N" : "S") + bar(attract ? 138 : 196, y, "N");
+      if (attract) o += arrow(250, y, 246, y, MARK) + t(285, y + 5, "ひきあう", 12, MARK);
+      else o += arrow(150, y, 128, y, BLUE) + arrow(172, y, 194, y, BLUE) + t(160, y - 20, "しりぞけあう", 12, BLUE);
+      return o;
+    }
+    var out = "";
+    if (s.k !== "repel") out += pair(s.k === "attract" ? 75 : 40, true);
+    if (s.k !== "attract") out += pair(s.k === "repel" ? 75 : 112, false);
+    return out;
+  }
+
+  /* ---------------- うでの 骨と 筋肉 ---------------- */
+  function arm(s) {
+    var bent = s.bent, out = "";
+    var sh = P2(44, 82), el = P2(168, 92), hand = bent ? P2(214, 20) : P2(288, 100);
+    // うでの 形（はだ）
+    out += '<path d="M' + sh.x + ' ' + sh.y + ' L' + el.x + ' ' + el.y + ' L' + hand.x + ' ' + hand.y + '" fill="none" stroke="#fde7d7" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>';
+    out += '<circle cx="' + hand.x + '" cy="' + hand.y + '" r="17" fill="#fde7d7"/>';
+    // 骨
+    out += '<path d="M' + (sh.x + 4) + ' ' + sh.y + ' L' + (el.x - 6) + ' ' + (el.y - 1) + ' M' + (el.x + 4) + ' ' + (el.y - 2) + ' L' + (hand.x - (bent ? 6 : 14)) + ' ' + (hand.y + (bent ? 12 : 0)) + '" stroke="#94a3b8" stroke-width="11" stroke-linecap="round"/>';
+    out += '<path d="M' + (sh.x + 4) + ' ' + sh.y + ' L' + (el.x - 6) + ' ' + (el.y - 1) + ' M' + (el.x + 4) + ' ' + (el.y - 2) + ' L' + (hand.x - (bent ? 6 : 14)) + ' ' + (hand.y + (bent ? 12 : 0)) + '" stroke="#fff" stroke-width="7" stroke-linecap="round"/>';
+    // 内側の 筋肉（上）：骨から 関節を またいで 下の骨へ
+    var bEnd = bent ? P2(186, 64) : P2(196, 86), bBulge = bent ? 44 : 12, bMid = P2((58 + bEnd.x) / 2, (70 + bEnd.y) / 2);
+    out += '<path d="M58 72 Q' + bMid.x + ' ' + (bMid.y - bBulge) + ' ' + bEnd.x + ' ' + bEnd.y + ' Q' + bMid.x + ' ' + (bMid.y - bBulge * 0.25) + ' 58 76 Z" fill="#f87171" stroke="#b91c1c" stroke-width="1.6"/>';
+    // 外側の 筋肉（下）：ひじの うしろへ
+    var tBulge = bent ? 8 : 26;
+    out += '<path d="M58 92 Q112 ' + (100 + tBulge) + ' 172 104 Q112 ' + (100 + tBulge * 0.3) + ' 58 96 Z" fill="#fca5a5" stroke="#b91c1c" stroke-width="1.6"/>';
+    out += '<circle cx="' + el.x + '" cy="' + el.y + '" r="8" fill="#fde047" stroke="#ca8a04" stroke-width="2"/>' + t(el.x + (bent ? 30 : 0), el.y + (bent ? 26 : 36), "関節", 12, "#ca8a04");
+    out += t(100, bent ? 24 : 52, bent ? "内側：ちぢむ（力こぶ）" : "内側：のびる", 12, "#b91c1c");
+    out += t(100, bent ? 128 : 140, bent ? "外側：のびる" : "外側：ちぢむ", 12, "#b91c1c");
+    return out;
+  }
+  function P2(x, y) { return { x: x, y: y }; }
+
+  T.syringe = syringe; T.airgun = airgun; T.rod = rod; T.plate = plate; T.convection = convection;
+  T.slope = slope; T.soil = soil; T.puddles = puddles; T.magnets = magnets; T.arm = arm;
   T.circuit = circuit; T.skypath = skypath; T.sunmoon = sunmoon; T.moonshapes = moonshapes; T.stars = stars;
   T.fist = fist; T.compass = compass; T.states = states; T.boil = boil; T.cup = cup; T.evap = evap; T.cover = cover; T.freeze = freeze;
 })();

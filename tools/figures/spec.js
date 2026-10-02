@@ -47,6 +47,20 @@ const BOIL = { t: "boil", cap: "あわは 水じょう気、湯気は 水のつ�
 const EVAP = { t: "evap", cap: "水は 水じょう気に なって 空気中へ 出ていく" };
 const CUP = { t: "cup", cap: "空気中の 水じょう気が 冷やされて 水てきに" };
 
+const SYR = (fill, cap) => ({ t: "syringe", fill, cap });
+const AIRGUN = { t: "airgun", cap: "空気でっぽう" };
+const CONV = { t: "convection", cap: "対流：あたたまった 水が 上へ、つめたい 水が 下へ" };
+const ROOM = { t: "convection", room: true, cap: "あたたかい 空気は 部屋の 上の ほうに 集まる" };
+const ROD = { t: "rod", cap: "金属：熱した ところから 順々に 伝わる" };
+const MET_VS = { t: "row", cap: "金属は 熱が 順々に、水は 動いて 全体が あたたまる", items: [{ t: "rod", cap: "金属" }, { t: "convection", cap: "水" }] };
+const SOIL = { t: "soil", cap: "つぶが 大きいほど 水が しみこみやすい" };
+const PUD = { t: "puddles", cap: "水は じょう発して 空気中へ" };
+const SLOPE = { t: "slope", cap: "雨水は 高い ところから 低い ところへ" };
+const MAG = (k, cap) => ({ t: "magnets", k, cap });
+const ARM_B = { t: "arm", bent: true, cap: "うでを 曲げる：内側が ちぢむ" };
+const ARM_S = { t: "arm", bent: false, cap: "うでを のばす：外側が ちぢむ" };
+const ARMS = { t: "row", cap: "筋肉は ちぢんで 骨を 引っぱる", items: [{ t: "arm", bent: true, cap: "曲げる" }, { t: "arm", bent: false, cap: "のばす" }] };
+
 module.exports = {
   "算数/図形/suichoku_heikou01": {
     0: E(PERP), 2: E(PARA), 4: E(PERP), 5: E(RECT_SIDE), 6: E(PERP2), 7: E(PARA),
@@ -177,5 +191,37 @@ module.exports = {
     0: E(EVAP), 2: E(Object.assign({}, EVAP, { cap: "水じょう気は 目に 見えない" })), 3: E(EVAP), 4: E(STATES), 5: E(CUP),
     6: E({ t: "cup", compare: true, cap: "冷えて いる ことが かんけい している" }), 7: E(CUP), 8: E(CUP), 9: E(STATES),
     11: E({ t: "cover", cap: "おおいの 内がわに 水てき → 水は 空気中へ 出ていく" })
+  },
+  "理科/空気と水/kuki_mizu01": {
+    0: E(SYR("air", "空気は おすと ちぢむ")), 1: E(SYR("air", "強く おすほど 手ごたえが 強く なる")), 3: E(AIRGUN), 4: E(AIRGUN),
+    5: E(SYR("mix", "ちぢむのは 空気の 部分だけ")), 8: E(SYR("air", "もとに もどろうとする 力＝手ごたえ")),
+    10: E(SYR("compare", "空気は ちぢむ、水は ちぢまない")), 11: E(SYR("air", "強く おすほど 手ごたえが 強い")), 12: E(AIRGUN),
+    13: E(SYR("air", "空気の 体積は 小さく なる")), 14: E(SYR("water", "水の 体積は 変わらない")), 15: E(AIRGUN),
+    16: E(SYR("air", "強く おすほど 手ごたえが 強い")), 17: E(SYR("compare", "空気は ちぢむ、水は ちぢまない"))
+  },
+  "理科/あたたまり方/atatamari01": {
+    0: E({ t: "plate", at: "corner", cap: "金属の 板：熱した かどから 順々に" }), 1: E({ t: "rod", at: "center", cap: "まん中から 両はしへ 順々に" }),
+    3: E(CONV), 4: E(ROOM), 5: E(MET_VS), 6: E(Object.assign({}, CONV, { cap: "あたたまった お湯は 上に 集まる" })),
+    8: E(CONV), 9: E(ROD), 10: E(CONV), 11: E(ROOM), 12: E(MET_VS), 13: E(ROD),
+    14: E({ t: "plate", at: "center", cap: "中央から 円のように 広がる" }), 15: E(CONV),
+    16: E({ t: "convection", room: true, ac: true, cap: "温風は 下向き → 上に のぼって 部屋全体が あたたまる" }),
+    17: E({ t: "row", cap: "水と 空気は 対流で あたたまる", items: [{ t: "convection", cap: "水" }, { t: "convection", room: true, cap: "空気" }] })
+  },
+  "理科/雨水/amamizu01": {
+    0: E(SLOPE), 2: E(SOIL), 3: E(SOIL), 4: E(PUD), 7: E({ t: "puddles", cap: "日なたの ほうが 早く じょう発する" }), 9: E(PUD),
+    10: E({ t: "puddles", cap: "日なた ＋ つぶの 大きい ジャリ → 早く 消える" }), 11: E(SLOPE),
+    12: E({ t: "soil", cap: "つぶが 大きい すなの ほうが 土より しみこみやすい" }), 13: E(SOIL),
+    14: E({ t: "slope", steep: true, cap: "かたむきが 急 → 流れが 速い" })
+  },
+  "理科/磁石/jishaku301": {
+    1: E(MAG("repel", "同じ 極どうし → しりぞけあう")), 2: E(MAG("attract", "ちがう 極どうし → ひきあう")),
+    9: E({ t: "compass", cap: "N極（色の ついた 先）は 北を さす" }), 11: E(MAG("split", "割っても 2本の 磁石に なる")),
+    12: E(MAG("both", "ちがう極は ひきあい、同じ極は しりぞけあう")), 13: E(MAG("repel", "同じ 極どうし → しりぞけあう")),
+    14: E(MAG("attract", "ちがう 極どうし → ひきあう")), 16: E({ t: "compass", cap: "N極（赤い 針）は 北を さす" })
+  },
+  "理科/体/karada01": {
+    0: E(Object.assign({}, ARM_B, { cap: "関節：骨と 骨の つなぎ目で 曲げのばし できる" })), 1: E(ARMS), 3: E(ARM_S),
+    6: E(Object.assign({}, ARM_B, { cap: "筋肉は 関節を またいで となりの 骨に つく" })), 9: E(ARM_B), 10: E(ARMS),
+    12: E(ARM_B), 13: E(ARM_B), 14: E(ARM_S), 15: E(ARMS)
   }
 };
