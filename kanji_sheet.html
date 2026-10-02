@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>漢字の書き取りシート</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Klee+One:wght@600&display=swap" rel="stylesheet">
+<!-- ★2026-10-03追加：漢字の 書き取りシート（印刷用）。?no=1234 で 10問、&p=3.17 で 前に まちがえた 言葉を 先に、&answers=1 で 答え。
+     問題は js/kanji-sheet.js の KANJI_SHEET.make(no, prio) で 作るので、アプリの 丸つけと 同じ 問題に なる。 -->
+<style>
+  :root { --ink: #4a3b52; --soft: #7a6985; --accent: #db2777; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f3ebf7; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); }
+  .bar { position: sticky; top: 0; display: flex; gap: 8px; justify-content: center; padding: 10px; background: #fff; border-bottom: 2px solid #e9d5ff; flex-wrap: wrap; }
+  .bar button { border: none; border-radius: 12px; padding: 10px 16px; font-family: inherit; font-weight: 900; font-size: 14px; cursor: pointer; background: #f3e8ff; color: #7e22ce; }
+  .bar button.main { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; }
+  .page { width: 210mm; min-height: 297mm; margin: 12px auto; padding: 10mm 12mm; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--ink); padding-bottom: 2mm; margin-bottom: 4mm; }
+  .head h1 { font-size: 18pt; margin: 0; }
+  .head .meta { font-size: 10.5pt; font-weight: 700; text-align: right; line-height: 1.7; }
+  .tip { font-size: 9.5pt; font-weight: 700; background: #faf5ff; border-radius: 3mm; padding: 2mm 3mm; margin-bottom: 4mm; color: #6b21a8; }
+  .row { display: flex; align-items: flex-end; gap: 2mm; padding: 2.4mm 0; border-bottom: 1px dashed #e9d5ff; font-size: 14pt; font-weight: 700; flex-wrap: wrap; min-height: 22mm; }
+  .no { width: 9mm; color: var(--soft); font-size: 11pt; align-self: center; }
+  .boxes { display: inline-flex; flex-direction: column; align-items: center; }
+  .yomi { font-size: 9pt; color: var(--accent); letter-spacing: .1em; margin-bottom: .6mm; }
+  .cells { display: inline-flex; }
+  .cell { width: 15mm; height: 15mm; border: 1.6px solid var(--ink); margin-left: -1.6px; position: relative; display: flex; align-items: center; justify-content: center; font-family: 'Klee One', serif; font-size: 30pt; color: var(--accent); }
+  .cell:first-child { margin-left: 0; }
+  .cell::before, .cell::after { content: ""; position: absolute; border-color: #e9d5ff; border-style: dashed; border-width: 0; }
+  .cell::before { left: 50%; top: 0; bottom: 0; border-left-width: 1px; }
+  .cell::after { top: 50%; left: 0; right: 0; border-top-width: 1px; }
+  @media print { body { background: #fff; } .bar { display: none; } .page { margin: 0; box-shadow: none; width: auto; min-height: auto; padding: 0; } @page { size: A4; margin: 10mm; } }
+  @media screen and (max-width: 820px) { .page { width: auto; margin: 8px; padding: 12px; min-height: 0; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button class="main" onclick="window.print()">🖨️ 印刷する</button>
+  <button id="ansbtn">👀 答え（丸つけ用）</button>
+</div>
+<div id="root"></div>
+<script>window.KANJI_PRINT_PAGE = true;</script>
+<script src="./js/kanji-sheet.js"></script>
+<script>
+(function () {
+  var qs = new URLSearchParams(location.search);
+  var no = Number(qs.get("no")) || (1000 + Math.floor(Math.random() * 9000));
+  var prio = (qs.get("p") || "").split(".").filter(Boolean);
+  var showAns = qs.get("answers") === "1";
+  document.getElementById("ansbtn").onclick = function () { var u = new URL(location.href); if (showAns) u.searchParams.delete("answers"); else u.searchParams.set("answers", "1"); location.href = u.toString(); };
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+  var words = window.KANJI_SHEET.make(no, prio), d = new Date();
+  var rows = words.map(function (w, i) {
+    var m = w.s.match(/^(.*)【(.*)】(.*)$/);
+    var cells = w.a.split("").map(function (ch) { return '<span class="cell">' + (showAns ? esc(ch) : "") + '</span>'; }).join("");
+    return '<div class="row"><span class="no">(' + (i + 1) + ')</span>' + esc(m[1]) +
+      '<span class="boxes"><span class="yomi">' + esc(m[2]) + '</span><span class="cells">' + cells + '</span></span>' + esc(m[3]) + '</div>';
+  }).join("");
+  document.getElementById("root").innerHTML = '<div class="page">' +
+    '<div class="head"><h1>✍️ 漢字の 書き取りシート（4年）</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／10</div></div>' +
+    '<div class="tip">読みがなの 漢字を マスに 書こう。とめ・はね・はらいに 気を つけて、ていねいに。書けたら アプリの「✍️ 漢字シート」→「丸つけ」で 自分で 丸つけ しよう。' + (prio.length ? '（🔁 マークの 言葉は 前に まちがえた 言葉だよ）' : '') + '</div>' +
+    rows.replace(/<span class="no">\((\d+)\)<\/span>/g, function (all, n) { return Number(n) <= prio.length ? '<span class="no">🔁' + n + '</span>' : all; }) +
+    '</div>';
+})();
+</script>
+</body>
+</html>
