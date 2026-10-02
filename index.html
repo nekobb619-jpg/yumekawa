@@ -6048,6 +6048,7 @@ window.showQuestionStep = function() {
     // ★2026-09-14追加：⚡サバイバルクイズは「わからない」で逃げられると1問ミス即アウトの
     //   ルールが機能しなくなるため、このモード中は表示しない。
     if (!window.survivalModeActive) zone.appendChild(skipBtn);
+    if (window.applyChoiceReadLock) window.applyChoiceReadLock(choiceBtns, zone, current);
   } else { const passBtn = document.createElement("button"); passBtn.className = "choice-btn correct"; passBtn.textContent = "✨ 実験に成功したらここを押して次へ！"; passBtn.onclick = () => { window.triggerCorrectAnswer(current); }; zone.appendChild(passBtn); }
 };
 window.triggerWrongAnswer = function(current) {
@@ -6351,7 +6352,72 @@ window.reviewChatNext = function() {
   }
   window.renderReviewChatStep();
 };
-window.nextQuestStep = function() { window.currentQIdx++; window.showQuestionStep(); };
+// ★2026-10-02追加：「時短できない」しくみ。Qの量は変えず、1問あたりの最短時間だけを確保する。
+//   ① 選択肢は、問題文の長さに応じた「読む時間」が過ぎるまで押せない（当てずっぽうの即タップ防止）。
+//   ② 解説（feedback-box）が出たら、解説の長さに応じた時間が過ぎるまで「つぎへ進む」を押せない（解説を読む時間）。
+window.READ_LOCK = { choiceBaseMs: 1000, choicePerCharMs: 25, choiceMaxMs: 4000, explainBaseMs: 1500, explainPerCharMs: 12, explainMaxMs: 5000 };
+window.computeChoiceLockMs = function (current) {
+  const R = window.READ_LOCK;
+  const len = String((current && current.q) || "").replace(/\s/g, "").length;
+  return Math.min(R.choiceMaxMs, R.choiceBaseMs + len * R.choicePerCharMs);
+};
+window.applyChoiceReadLock = function (choiceBtns, zone, current) {
+  const ms = window.computeChoiceLockMs(current);
+  if (!ms || !choiceBtns.length) return;
+  choiceBtns.forEach(function (b) { b.disabled = true; b.style.opacity = "0.55"; });
+  const note = document.createElement("div");
+  note.style.cssText = "font-size:12px; font-weight:900; color:#7c3aed; text-align:center; margin:4px 0 6px;";
+  note.textContent = "📖 問題を よく 読んでね…";
+  zone.insertBefore(note, choiceBtns[0]);
+  setTimeout(function () {
+    note.remove();
+    // 読む時間のあいだに「わからない」で答えを見た／別の問題に進んだ場合は、選択肢を戻さない（答えを見てからの正解を防ぐ）
+    const fb = document.getElementById("feedback-box");
+    const answered = (fb && fb.style.display !== "none") || choiceBtns.some(function (b) { return b.className !== "choice-btn"; });
+    const sameQuestion = window.currentQuestions && window.currentQuestions[window.currentQIdx] === current;
+    choiceBtns.forEach(function (b) {
+      b.style.opacity = "";
+      if (!answered && sameQuestion && b.className === "choice-btn") b.disabled = false;
+    });
+  }, ms);
+};
+window._nextLockUntil = 0;
+window.armExplanationReadLock = function () {
+  const R = window.READ_LOCK;
+  const descEl = document.getElementById("job-desc");
+  const len = descEl ? String(descEl.textContent || "").replace(/\s/g, "").length : 0;
+  const ms = Math.min(R.explainMaxMs, R.explainBaseMs + len * R.explainPerCharMs);
+  window._nextLockUntil = Date.now() + ms;
+  const nextBtn = document.getElementById("next-btn");
+  if (!nextBtn) return;
+  const token = window._nextLockUntil;
+  setTimeout(function () {
+    const label = nextBtn.innerHTML;
+    if (window._nextLockUntil !== token) return;
+    nextBtn.dataset.readyLabel = label;
+    nextBtn.innerHTML = "📖 解説を よく 読もう…";
+    nextBtn.style.opacity = "0.6";
+    setTimeout(function () {
+      if (window._nextLockUntil !== token) return;
+      nextBtn.innerHTML = nextBtn.dataset.readyLabel || label;
+      nextBtn.style.opacity = "";
+    }, Math.max(0, token - Date.now()));
+  }, 0);
+};
+(function () {
+  const fb = document.getElementById("feedback-box");
+  if (!fb || typeof MutationObserver === "undefined") return;
+  let wasShown = fb.style.display !== "none";
+  new MutationObserver(function () {
+    const shown = fb.style.display !== "none";
+    if (shown && !wasShown) window.armExplanationReadLock();
+    wasShown = shown;
+  }).observe(fb, { attributes: true, attributeFilter: ["style"] });
+})();
+window.nextQuestStep = function() {
+  if (Date.now() < window._nextLockUntil) return; // 解説を読む時間がまだ残っている
+  window.currentQIdx++; window.showQuestionStep();
+};
 window.exitToMainMenu = function() {
     if (window.weakAttackModeActive) {
       window.saveGame();
