@@ -286,7 +286,81 @@
     return out;
   }
 
-  var TYPES = { shape: shape, lines: lines, angle: angle, angle2: angle2, tri: tri, polysplit: polysplit, clock: clock, frac: frac, graph: graph };
+  /* ---------------- 面積：タイル ---------------- */
+  function tiles(spec) {
+    var w = spec.w, h = spec.h, cell = Math.min(24, 250 / w, 112 / h), x0 = 160 - w * cell / 2 + 10, y0 = 10, out = "";
+    for (var r = 0; r < h; r++) for (var c = 0; c < w; c++)
+      out += '<rect x="' + f(x0 + c * cell) + '" y="' + f(y0 + r * cell) + '" width="' + f(cell) + '" height="' + f(cell) + '" fill="' + ((r + c) % 2 ? "#fbcfe8" : "#fce7f3") + '" stroke="#f472b6" stroke-width="1"/>';
+    out += '<rect x="' + f(x0) + '" y="' + y0 + '" width="' + f(w * cell) + '" height="' + f(h * cell) + '" fill="none" stroke="' + INK + '" stroke-width="2.4"/>';
+    out += text(x0 + w * cell / 2, y0 + h * cell + 16, "よこ " + w + (spec.unit || ""), 12, INK) + text(x0 - 8, y0 + h * cell / 2 + 4, "たて " + h + (spec.unit || ""), 12, INK, "end");
+    return out;
+  }
+
+  /* ---------------- 数直線 ---------------- */
+  function dec(v, step) { var d = String(step).indexOf(".") >= 0 ? String(step).split(".")[1].length : 0; return Number(v.toFixed(d)); }
+  function numline(spec) {
+    var a = spec.from, b = spec.to, st = spec.step, X0 = 26, X1 = 294, Y = 86, out = "";
+    var px = function (v) { return X0 + (v - a) / (b - a) * (X1 - X0); };
+    if (spec.range) out += '<rect x="' + f(px(spec.range[0])) + '" y="' + (Y - 10) + '" width="' + f(px(spec.range[1]) - px(spec.range[0])) + '" height="20" fill="#fde68a" opacity=".8"/>';
+    out += line(P(X0 - 8, Y), P(X1 + 8, Y), { w: 2.4, color: INK });
+    var n = Math.round((b - a) / st);
+    for (var i = 0; i <= n; i++) {
+      var v = dec(a + i * st, st), major = spec.major ? Math.abs((v - a) / spec.major - Math.round((v - a) / spec.major)) < 1e-9 : (i === 0 || i === n);
+      out += line(P(px(v), Y - (major ? 10 : 6)), P(px(v), Y + (major ? 10 : 6)), { w: major ? 2.4 : 1.4, color: INK });
+      if (major) out += text(px(v), Y + 26, spec.fmt ? spec.fmt(v) : String(v), 11, SUB);
+    }
+    if (spec.mid !== undefined) out += line(P(px(spec.mid), Y - 14), P(px(spec.mid), Y + 32), { w: 1.6, color: "#2563eb", dash: "4 3" }) + text(px(spec.mid), Y + 46, "まん中 " + spec.mid, 11, "#2563eb");
+    (spec.marks || []).forEach(function (m, k) {
+      var x = px(m.v), up = 40 + (k % 2) * 16;
+      out += '<path d="M' + f(x) + ' ' + (Y - 12) + ' L' + f(x - 5) + ' ' + (Y - 20) + ' L' + f(x + 5) + ' ' + (Y - 20) + 'z" fill="' + MARK + '"/>';
+      out += text(x, Y - up + 12, m.label || String(m.v), 13, MARK);
+    });
+    return out;
+  }
+
+  /* ---------------- 位（くらい）の表 ---------------- */
+  var BIG = ["千億", "百億", "十億", "一億", "千万", "百万", "十万", "一万", "千", "百", "十", "一"];
+  function placevalue(spec) {
+    var s = String(spec.n), out = "", labels, digits;
+    if (s.indexOf(".") >= 0) {
+      var parts = s.split("."); labels = ["一の位", "小数第一位", "小数第二位", "小数第三位"].slice(0, 1 + parts[1].length);
+      if (parts[0].length > 1) labels = ["十の位"].concat(labels);
+      digits = (parts[0] + parts[1]).split("");
+    } else { digits = s.split(""); labels = BIG.slice(BIG.length - digits.length); }
+    var n = digits.length, cw = Math.min(58, 300 / n), x0 = 160 - n * cw / 2, pointAfter = s.indexOf(".") >= 0 ? s.split(".")[0].length : -1;
+    digits.forEach(function (d, i) {
+      var x = x0 + i * cw, on = spec.hl === labels[i];
+      out += '<rect x="' + f(x) + '" y="30" width="' + f(cw) + '" height="34" fill="' + (on ? "#fbcfe8" : (labels[i].indexOf("億") >= 0 ? "#ede9fe" : labels[i].indexOf("万") >= 0 ? "#e0f2fe" : "#fff")) + '" stroke="' + INK + '" stroke-width="1.6"/>';
+      out += text(x + cw / 2, 23, labels[i].replace("の位", "").replace("小数第", "第"), n > 8 ? 9 : 10, on ? MARK : SUB);
+      out += text(x + cw / 2, 56, d, 20, on ? MARK : INK);
+      if (i + 1 === pointAfter) out += '<circle cx="' + f(x + cw) + '" cy="60" r="3.6" fill="' + MARK + '"/>';
+    });
+    if (spec.note) out += text(160, 96, spec.note, 13, MARK);
+    if (spec.note2) out += text(160, 116, spec.note2, 12, SUB);
+    return out;
+  }
+
+  /* ---------------- 小数の 筆算（小数点を そろえる） ---------------- */
+  function colcalc(spec) {
+    var a = String(spec.a), b = String(spec.b), ans = String(spec.ans);
+    var dl = Math.max((a.split(".")[1] || "").length, (b.split(".")[1] || "").length, (ans.split(".")[1] || "").length);
+    var il = Math.max(a.split(".")[0].length, b.split(".")[0].length, ans.split(".")[0].length);
+    var cw = 26, xPoint = 170, out = "";
+    function row(str, y, color, pad) {
+      var ip = str.split(".")[0], dp = str.split(".")[1] || "", o = "";
+      for (var i = 0; i < ip.length; i++) o += text(xPoint - (ip.length - i) * cw + cw / 2, y, ip[i], 22, color);
+      if (str.indexOf(".") >= 0 || pad) o += text(xPoint, y, ".", 22, MARK);
+      for (var j = 0; j < dl; j++) { var ch = dp[j]; if (ch === undefined) { if (!pad) continue; o += text(xPoint + j * cw + cw / 2 + 6, y, "0", 22, "#cbd5e1"); continue; } o += text(xPoint + j * cw + cw / 2 + 6, y, ch, 22, color); }
+      return o;
+    }
+    out += row(a, 36, INK, true) + text(xPoint - il * cw - 14, 70, spec.op, 22, INK) + row(b, 70, INK, true); // 足りない けたは うすい 0 で 見せる（3 → 3.0、0.5 → 0.500）
+    out += line(P(xPoint - il * cw - 24, 80), P(xPoint + dl * cw + 18, 80), { w: 2.4 }) + row(ans, 112, MARK);
+    out += line(P(xPoint + 3, 14), P(xPoint + 3, 120), { w: 1.4, color: MARK, dash: "3 3" });
+    out += text(258, 60, "小数点を", 11, MARK, "start") + text(258, 76, "たてに そろえる", 11, MARK, "start");
+    return out;
+  }
+
+  var TYPES = { tiles: tiles, numline: numline, placevalue: placevalue, colcalc: colcalc, shape: shape, lines: lines, angle: angle, angle2: angle2, tri: tri, polysplit: polysplit, clock: clock, frac: frac, graph: graph };
   function draw(spec) { var fn = TYPES[spec && spec.t]; return fn ? fn(spec) : ""; }
 
   window.FIGURE_TYPES = TYPES;
