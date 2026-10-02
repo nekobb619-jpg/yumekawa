@@ -149,6 +149,88 @@
     window.openFriendsModal();
   };
 
+  /* ---------------- 問題を解く画面での リアクション ★2026-10-02追加 ----------------
+     えらんだ なかまが、正解・まちがい・「わからない」に その場で こたえる。
+     画面の 進み方（つぎへ進む・選択肢）は いっさい 止めない（見た目だけ）。 */
+  var FAST_MS = 2500;      // これより速い 正解は「はやい！読めた？」と 声かけ（止めはしない）
+  var LONG_Q_CHARS = 40;   // 声かけするのは、ある程度 長い 問題だけ
+  var LINES = {
+    correct: ["やったね！", "せいかい！ すごい！", "ちゃんと 考えたね！", "いいね、そのちょうし！", "かんぺき〜！"],
+    retry: ["まちがえたあと とけたね！ それが 力に なるよ", "あきらめなかったね！", "考えなおせたの、えらい！"],
+    wrong: ["だいじょうぶ！ もういちど 考えよう", "まちがえたけど、いま 気づけて よかった！", "おしい！ ヒントを 見てみよう", "ここが のびる ところだよ"],
+    skip: ["「わからない」って 言えるの えらい！", "解説を いっしょに 読もう", "つぎに 会ったら とけるよ"],
+    fast: ["はやい！ 問題も しっかり 読めたかな？👀"]
+  };
+  var gb = { streak: 0, timer: null };
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function ensureGameBuddy() {
+    var box = document.querySelector("#game-screen .navi-box");
+    if (!box) return null;
+    var el = document.getElementById("game-buddy");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "game-buddy";
+      el.className = "game-buddy";
+      el.innerHTML = '<div class="gb-art"></div><div class="gb-say" id="game-buddy-say"></div>';
+      box.appendChild(el);
+    }
+    return el;
+  }
+  function react(kind, text) {
+    var el = ensureGameBuddy(); if (!el) return;
+    var mood = (kind === "correct" || kind === "retry" || kind === "streak") ? "cheer" : "normal";
+    el.querySelector(".gb-art").innerHTML = current().svg(mood);
+    el.classList.remove("gb-jump", "gb-shake");
+    void el.offsetWidth; // アニメーションを毎回 さいしょから
+    if (mood === "cheer") el.classList.add("gb-jump");
+    else if (kind === "wrong") el.classList.add("gb-shake");
+    var say = el.querySelector(".gb-say");
+    if (text) {
+      say.textContent = text;
+      say.className = "gb-say show" + (kind === "wrong" ? " gb-wrong" : "");
+      clearTimeout(gb.timer);
+      gb.timer = setTimeout(function () { say.className = "gb-say"; }, 2600);
+    }
+  }
+  function wrapAfter(name, fn, before) {
+    var orig = window[name];
+    if (typeof orig !== "function" || orig._gbWrapped) return;
+    var w = function () {
+      var pre = null;
+      try { if (before) pre = before.apply(this, arguments); } catch (e) {}
+      var r = orig.apply(this, arguments);
+      try { fn.call(this, arguments, pre); } catch (e) { console.error("game-buddy", e); }
+      return r;
+    };
+    w._gbWrapped = true;
+    window[name] = w;
+  }
+  function installGameReactions() {
+    wrapAfter("showQuestionStep", function () {
+      if (window.currentQIdx === 0) gb.streak = 0;
+      var el = ensureGameBuddy(); if (!el) return;
+      el.querySelector(".gb-art").innerHTML = current().svg("normal");
+      var say = el.querySelector(".gb-say"); if (say) say.className = "gb-say";
+    });
+    wrapAfter("triggerCorrectAnswer", function (args, pre) {
+      var q = args[0] || {};
+      if (pre.firstTry) gb.streak++; else gb.streak = 0;
+      var qLen = String(q.q || "").replace(/\s/g, "").length;
+      var text;
+      if (pre.firstTry && pre.elapsed !== null && pre.elapsed < FAST_MS && qLen >= LONG_Q_CHARS) text = pick(LINES.fast);
+      else if (!pre.firstTry) text = pick(LINES.retry);
+      else if (gb.streak >= 3 && gb.streak % 3 === 0) text = gb.streak + "もん れんぞく せいかい！🔥";
+      else text = pick(LINES.correct);
+      react(gb.streak >= 3 ? "streak" : (pre.firstTry ? "correct" : "retry"), text);
+    }, function () {
+      var st = window.currentQuestionStartedAt;
+      return { firstTry: !!window.currentFirstTry, elapsed: (typeof st === "number") ? Date.now() - st : null };
+    });
+    wrapAfter("triggerWrongAnswer", function () { gb.streak = 0; react("wrong", pick(LINES.wrong)); });
+    wrapAfter("triggerSkipAnswer", function () { gb.streak = 0; react("skip", pick(LINES.skip)); });
+  }
+  installGameReactions();
+
   window.closeFriendsModal = function () { var m = document.getElementById("friends-modal"); if (m) m.remove(); };
 
   window.openFriendsModal = function () {

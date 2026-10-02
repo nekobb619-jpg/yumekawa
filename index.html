@@ -83,6 +83,17 @@
   .tile .ti { font-size: 28px; line-height: 1.1; margin-bottom: 2px; }
   .tile small { font-size: 10px; font-weight: 700; color: var(--text-soft); }
   .tile .ti .c-buddy { width: 34px; height: 34px; display: block; margin: -2px auto 0; }
+  /* ★2026-10-02追加：問題を解く画面の なかま リアクション（js/mascots.js） */
+  .game-buddy { position: relative; flex: 0 0 auto; width: 52px; height: 52px; margin-left: auto; }
+  .game-buddy .gb-art .c-buddy { width: 52px; height: 52px; display: block; }
+  .game-buddy.gb-jump .gb-art { animation: gbJump .7s ease-out; }
+  .game-buddy.gb-shake .gb-art { animation: gbShake .5s ease-in-out; }
+  @keyframes gbJump { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-14px) scale(1.08); } 55% { transform: translateY(0) scale(.96, 1.04); } 75% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+  @keyframes gbShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-4px) rotate(-6deg); } 40% { transform: translateX(4px) rotate(6deg); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+  .gb-say { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; width: max-content; max-width: 210px; background: #fff; border: 2px solid #f0abfc; border-radius: 14px; padding: 6px 10px; font-size: 12.5px; font-weight: 900; color: #a21caf; line-height: 1.45; box-shadow: 0 4px 0 rgba(217, 70, 239, .18); pointer-events: none; opacity: 0; transform: translateY(-4px) scale(.9); transition: opacity .18s, transform .18s; }
+  .gb-say::before { content: ""; position: absolute; right: 18px; top: -8px; border: 7px solid transparent; border-bottom-color: #f0abfc; border-top: 0; }
+  .gb-say.show { opacity: 1; transform: translateY(0) scale(1); }
+  .gb-say.gb-wrong { border-color: #93c5fd; color: #1d4ed8; } .gb-say.gb-wrong::before { border-bottom-color: #93c5fd; }
   #grade-nav { display: none; } /* ★2026-10-02：学年は4年生のみ（3年生タブは2026-09-14に削除済み）なので、1つしかない学年タブは隠す */
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   .weak-attack-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fee2e2, #fcd34d); border: 2px solid #ef4444; border-radius: var(--radius); box-shadow: 0 5px 0 #b91c1c; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #991b1b; text-align: center; cursor: pointer; margin-bottom: 14px; display: none; transition: all 0.1s; }
@@ -6491,7 +6502,10 @@ window.reviewChatNext = function() {
 // ★2026-10-02追加：「時短できない」しくみ。Qの量は変えず、1問あたりの最短時間だけを確保する。
 //   ① 選択肢は、問題文の長さに応じた「読む時間」が過ぎるまで押せない（当てずっぽうの即タップ防止）。
 //   ② 解説（feedback-box）が出たら、解説の長さに応じた時間が過ぎるまで「つぎへ進む」を押せない（解説を読む時間）。
-window.READ_LOCK = { choiceBaseMs: 1000, choicePerCharMs: 25, choiceMaxMs: 4000, explainBaseMs: 1500, explainPerCharMs: 12, explainMaxMs: 5000 };
+// ★2026-10-02変更：「次の問題への移り変わりが もたつくのはUX的によくない」（ユーザー判断）により、どちらのロックも0にして止めた。
+//   かわりに、長い問題を2.5秒未満で正解したときは なかま が「はやい！問題も読めたかな？」と声をかける（js/mascots.js、止めはしない）。
+//   もとに戻すときの値：choiceBaseMs 1000 / choicePerCharMs 25 / choiceMaxMs 4000 / explainBaseMs 1500 / explainPerCharMs 12 / explainMaxMs 5000
+window.READ_LOCK = { choiceBaseMs: 0, choicePerCharMs: 0, choiceMaxMs: 0, explainBaseMs: 0, explainPerCharMs: 0, explainMaxMs: 0 };
 window.computeChoiceLockMs = function (current) {
   const R = window.READ_LOCK;
   const len = String((current && current.q) || "").replace(/\s/g, "").length;
@@ -6523,6 +6537,7 @@ window.armExplanationReadLock = function () {
   const descEl = document.getElementById("job-desc");
   const len = descEl ? String(descEl.textContent || "").replace(/\s/g, "").length : 0;
   const ms = Math.min(R.explainMaxMs, R.explainBaseMs + len * R.explainPerCharMs);
+  if (!(ms > 0)) { window._nextLockUntil = 0; return; } // ロック0のときは「解説を読もう」表示も出さない
   window._nextLockUntil = Date.now() + ms;
   const nextBtn = document.getElementById("next-btn");
   if (!nextBtn) return;
