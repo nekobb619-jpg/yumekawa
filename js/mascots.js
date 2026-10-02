@@ -49,9 +49,9 @@
       sparkle(mood, 54, 14) + '</svg>';
   }
 
-  // ゴマフアザラシの赤ちゃん「ぽてまる」：ふわふわの 白い うぶ毛、まっくろ おめめ
-  function potemaru(mood) {
-    return open("pm", "ぽてまる") +
+  // ゴマフアザラシの赤ちゃん「もちくん」（ガチャの 超EXレア★5 と 同じ子）：ふわふわの 白い うぶ毛、まっくろ おめめ
+  function mochikun(mood) {
+    return open("pm", "もちくん") +
       '<defs><radialGradient id="pmB" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".85" stop-color="#f3f1f5"/><stop offset="1" stop-color="#dcd7e2"/></radialGradient></defs>' +
       '<ellipse cx="32" cy="61" rx="24" ry="2.6" fill="#a855f7" opacity=".12"/>' +
       '<path d="M50 50 Q62 46 61 56 Q56 58 48 56z" fill="#ebe7ef" stroke="#d6cfdd" stroke-width="1.4"/>' +
@@ -113,22 +113,28 @@
   var FRIENDS = [
     { id: "mochikko", name: "もちっこ", need: 0, svg: function (m) { return window.TUTOR_CHARA ? window.TUTOR_CHARA.buddySvg(m) : ""; },
       kind: "おもちの ようせい", secret: "こまった ときは いっしょに 考えて くれる、さいしょの なかま。" },
+    // ★もちくんは プラン回数ではなく、ガチャ（または探検隊）で 出会えたら なかまに なる（gachaEggs.e_ex_mochi）
+    { id: "mochikun", name: "もちくん", gacha: "e_ex_mochi", svg: mochikun,
+      kind: "ゴマフアザラシの 赤ちゃん（超EXレア★5）", secret: "白い うぶ毛で 生まれ、数週間で 大人と 同じ ゴマもようの 毛に 生えかわる。" },
     { id: "yukinko", name: "ゆきんこ", need: 1, svg: yukinko,
       kind: "シマエナガ", secret: "北海道に すむ 小鳥。体重は 約8g で、1円玉（1まい 1g）8まいぶんくらいの かるさ。" },
-    { id: "potemaru", name: "ぽてまる", need: 3, svg: potemaru,
-      kind: "ゴマフアザラシの 赤ちゃん", secret: "白い うぶ毛で 生まれ、数週間で 大人と 同じ ゴマもようの 毛に 生えかわる。" },
-    { id: "kuroshio", name: "くろしお", need: 6, svg: kuroshio,
+    { id: "kuroshio", name: "くろしお", need: 4, svg: kuroshio,
       kind: "シャチ", secret: "魚では なく クジラの なかま（ほにゅう類）。肺で 息を するので、海面に 出て 息つぎを する。" },
-    { id: "yumerin", name: "ゆめりん", need: 10, svg: yumerin,
+    { id: "yumerin", name: "ゆめりん", need: 8, svg: yumerin,
       kind: "ユニコーン（想像の 生き物）", secret: "「ユニ」は「1つ」という 意味。1本の つの を もつ 馬、という 名前なんだ。" }
   ];
 
   function doneCount() { return (window.saveData && window.saveData.tutorPlanDoneCount) || 0; }
-  function isUnlocked(f) { return doneCount() >= f.need; }
+  function ownsGacha(eggId) { return !!(window.saveData && window.saveData.gachaEggs && window.saveData.gachaEggs[eggId]); }
+  function isUnlocked(f) { return f.gacha ? ownsGacha(f.gacha) : doneCount() >= f.need; }
+  function byId(id) { return FRIENDS.filter(function (x) { return x.id === id; })[0]; }
   function current() {
     var sel = window.saveData && window.saveData.selectedFriend;
-    var f = FRIENDS.filter(function (x) { return x.id === sel && isUnlocked(x); })[0];
-    return f || FRIENDS[0];
+    var f = byId(sel);
+    if (f && isUnlocked(f)) return f;
+    // まだ自分で えらんでいない ときは、アバターが もちくん（🦭）なら もちくんが いっしょに いる
+    if (!sel && window.saveData && window.saveData.selectedAvatar === "🦭" && isUnlocked(byId("mochikun"))) return byId("mochikun");
+    return FRIENDS[0];
   }
 
   window.MASCOTS = {
@@ -136,7 +142,9 @@
     currentSvg: function (mood) { return current().svg(mood || "normal"); },
     currentName: function () { return current().name; },
     // 回数が ふえた ときに 新しく なかまに なった子（なければ null）
-    newlyUnlockedAt: function (count) { return FRIENDS.filter(function (f) { return f.need === count && f.need > 0; })[0] || null; }
+    newlyUnlockedAt: function (count) { return FRIENDS.filter(function (f) { return !f.gacha && f.need === count && f.need > 0; })[0] || null; },
+    // ガチャのアバター表示（ほかの画面）でも もちくんを イラストで 出すため
+    mochikunSvg: function (mood) { return mochikun(mood || "normal"); }
   };
 
   window.selectFriend = function (id) {
@@ -245,7 +253,7 @@
         ';border-radius:18px;padding:10px 8px;text-align:center;' + (un ? "cursor:pointer;" : "") + '" ' + (un ? 'onclick="window.selectFriend(\'' + f.id + '\')"' : "") + '>' +
         '<div class="fr-art" style="display:flex;justify-content:center;">' + art + '</div>' +
         '<div style="font-size:14px;font-weight:900;color:#4a3b52;margin-top:2px;">' + (un ? f.name : "？？？") + '</div>' +
-        '<div style="font-size:10.5px;font-weight:800;color:#9333ea;">' + (un ? f.kind : "あと " + (f.need - n) + "回で なかまに") + '</div>' +
+        '<div style="font-size:10.5px;font-weight:800;color:#9333ea;">' + (un ? f.kind : (f.gacha ? "ガチャで 出会えたら なかまに" : "あと " + (f.need - n) + "回で なかまに")) + '</div>' +
         (un ? '<div style="font-size:11px;font-weight:700;color:var(--text-soft);line-height:1.5;margin-top:4px;text-align:left;">🔎 ひみつ：' + f.secret + '</div>' : "") +
         (f.id === cur ? '<div style="font-size:11px;font-weight:900;color:#db2777;margin-top:4px;">いっしょに いるよ</div>' : (un ? '<div style="font-size:11px;font-weight:900;color:#7e22ce;margin-top:4px;">タップで いっしょに</div>' : "")) +
         '</div>';

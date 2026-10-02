@@ -324,7 +324,7 @@
     if (!card || !stepsEl) return;
     var p = ensurePlan();
     if (!p) {
-      if (chara && !chara.innerHTML) chara.innerHTML = teacherSvg("normal") + friendSvg("normal");
+      if (chara && chara.getAttribute("data-mood") !== "normal") { chara.innerHTML = teacherSvg("normal") + friendSvg("normal"); chara.setAttribute("data-mood", "normal"); }
       stepsEl.innerHTML = '<div class="tplan-step"><div class="body"><div class="why">プランを じゅんびちゅう…</div></div></div>';
       return;
     }

@@ -94,6 +94,9 @@
   .gb-say::before { content: ""; position: absolute; right: 18px; top: -8px; border: 7px solid transparent; border-bottom-color: #f0abfc; border-top: 0; }
   .gb-say.show { opacity: 1; transform: translateY(0) scale(1); }
   .gb-say.gb-wrong { border-color: #93c5fd; color: #1d4ed8; } .gb-say.gb-wrong::before { border-bottom-color: #93c5fd; }
+  .navi-avatar .c-buddy { width: 44px; height: 44px; display: block; }
+  .avatar-icon .c-buddy { width: 30px; height: 30px; display: block; margin: 0 auto; }
+  .premium-gacha-avatar-icon .c-buddy { width: 120px; height: 120px; display: block; margin: 0 auto; }
   #grade-nav { display: none; } /* ★2026-10-02：学年は4年生のみ（3年生タブは2026-09-14に削除済み）なので、1つしかない学年タブは隠す */
   @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   .weak-attack-banner { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #fee2e2, #fcd34d); border: 2px solid #ef4444; border-radius: var(--radius); box-shadow: 0 5px 0 #b91c1c; font-family: 'Zen Maru Gothic'; font-weight: 900; font-size: 14.5px; color: #991b1b; text-align: center; cursor: pointer; margin-bottom: 14px; display: none; transition: all 0.1s; }
@@ -1327,7 +1330,7 @@ window.normalizeSaveData = function(data) {
   normalized.tutorPlanStreak = Number(normalized.tutorPlanStreak || 0);
   normalized.tutorPlanDoneCount = Number(normalized.tutorPlanDoneCount || 0);
   normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
-  normalized.selectedFriend = normalized.selectedFriend || "mochikko"; // ★2026-10-02追加：まなびのなかま（js/mascots.js）
+  normalized.selectedFriend = normalized.selectedFriend || ""; // ★2026-10-02追加：まなびのなかま（js/mascots.js）。空＝まだ選んでいない（アバターが🦭ならもちくん、それ以外はもちっこ）
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
   normalized.totalAnswersCount = normalized.totalAnswersCount || 0; // ★2026-08-08追加：せいちょうきろく用の総チャレンジ数（answerLogsは件数上限があるため別カウンタ）
@@ -4423,7 +4426,11 @@ window.showMochikunCutIn = function(egg) {
   const iconEl = document.getElementById('mochikun-cutin-icon');
   const nameEl = document.getElementById('mochikun-cutin-name');
   const descEl = document.getElementById('mochikun-cutin-desc');
-  if (iconEl) iconEl.textContent = (egg && egg.icon) || '🦭';
+  if (iconEl) {
+    // ★2026-10-02変更：カットインのもちくんをイラスト（js/mascots.js）に
+    if (window.MASCOTS && window.MASCOTS.mochikunSvg) iconEl.innerHTML = window.MASCOTS.mochikunSvg('cheer');
+    else iconEl.textContent = (egg && egg.icon) || '🦭';
+  }
   if (nameEl) nameEl.textContent = (egg && egg.name) || 'もちくん';
   if (descEl) descEl.textContent = (egg && egg.desc) || '';
   if (window.speakText) window.speakText('超EXレア、もちくんが出た！', 'ja-JP');
@@ -4873,7 +4880,8 @@ window.renderAvatarGrid = function() {
     const selected = window.saveData.selectedAvatar === egg.icon;
     const slot = document.createElement('div');
     slot.className = 'avatar-slot' + (owned ? ' owned' : ' locked') + (selected ? ' selected' : '');
-    slot.innerHTML = `<div class="avatar-icon">${owned ? egg.icon : '❓'}</div><div class="avatar-name">${owned ? egg.name : '？？？'}</div>`;
+    const iconHtml = (owned && egg.id === 'e_ex_mochi' && window.MASCOTS && window.MASCOTS.mochikunSvg) ? window.MASCOTS.mochikunSvg(selected ? 'happy' : 'normal') : (owned ? egg.icon : '❓'); // ★2026-10-02：もちくんはイラスト
+    slot.innerHTML = `<div class="avatar-icon">${iconHtml}</div><div class="avatar-name">${owned ? egg.name : '？？？'}</div>`;
     if (owned) {
       slot.onclick = () => {
         window.saveData.selectedAvatar = egg.icon;
@@ -4890,7 +4898,9 @@ window.applyAvatar = function() {
   const avatar = window.saveData.selectedAvatar || '🐣';
   // メインメニューのナビアバターとゲーム画面アバターを更新
   const naviAvatars = document.querySelectorAll('.navi-avatar');
-  naviAvatars.forEach(el => { el.textContent = avatar; });
+  // ★2026-10-02変更：もちくん（🦭）だけは絵文字ではなくイラスト（js/mascots.js）で出す
+  const mochiSvg = (avatar === '🦭' && window.MASCOTS && window.MASCOTS.mochikunSvg) ? window.MASCOTS.mochikunSvg('normal') : '';
+  naviAvatars.forEach(el => { if (mochiSvg) el.innerHTML = mochiSvg; else el.textContent = avatar; });
   // クロぽんボタンにもなかよし度に応じたバッジを付与
   const btn = document.getElementById('kuropon-btn');
   if (btn) {
