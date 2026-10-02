@@ -709,7 +709,7 @@
   </div>
   <h2 class="home-sec">🧰 まなびの どうぐばこ <small>ふりかえり・ノート・考え方</small></h2>
   <div class="tile-grid">
-    <button class="tile" onclick="window.openFriendsModal()"><span class="ti" id="friends-tile-art">🐾</span>まなびの なかま<small>プランで ふえる</small></button>
+    <button class="tile" onclick="window.openFriendsModal()"><span class="ti" id="friends-tile-art">🐾</span>まなびの なかま<small>🥚 たまごガチャ</small></button>
     <button class="tile" onclick="window.openTutorScreen()"><span class="ti">🧑‍🏫</span>チューター<small>単元のふりかえり</small></button>
     <button class="tile" onclick="window.openGrowthModal()"><span class="ti">📈</span>せいちょう<small>きろくを見る</small></button>
     <button class="tile" onclick="window.openWeeklyMissionModal()"><span class="ti">📅</span>今週の もくひょう</button>
@@ -1341,6 +1341,9 @@ window.normalizeSaveData = function(data) {
   normalized.tutorPlanStreak = Number(normalized.tutorPlanStreak || 0);
   normalized.tutorPlanDoneCount = Number(normalized.tutorPlanDoneCount || 0);
   normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
+  normalized.friendEggs = (normalized.friendEggs && typeof normalized.friendEggs === "object") ? normalized.friendEggs : {}; // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）
+  normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
+  normalized.nakamaEggWelcome = !!normalized.nakamaEggWelcome;
   normalized.selectedFriend = normalized.selectedFriend || ""; // ★2026-10-02追加：まなびのなかま（js/mascots.js）。空＝まだ選んでいない（アバターが🦭ならもちくん、それ以外はもちっこ）
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
   normalized.fastMasteredQids = normalized.fastMasteredQids || []; // ★2026-09-13追加：早すぎる正解（覚えてしまった問題）のqid記録。次回出題プールで優先的に外す
@@ -6831,6 +6834,7 @@ window.initQAMode();
 <script src="./js/figures-social.js"></script>
 <script src="./js/figure-map.js"></script>
 <script src="./js/avatar-art.js"></script>
+<script src="./js/nakama-egg.js"></script>
 <script src="./js/mascots.js"></script>
 <script src="./js/tutor-plan.js"></script>
 </body>

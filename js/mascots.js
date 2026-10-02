@@ -123,10 +123,15 @@
     { id: "yumerin", name: "ゆめりん", need: 8, svg: yumerin,
       kind: "ユニコーン（想像の 生き物）", secret: "「ユニ」は「1つ」という 意味。1本の つの を もつ 馬、という 名前なんだ。" }
   ];
+  // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）で 出会う なかまを 合流させる
+  if (Array.isArray(window.EGG_FRIENDS)) window.EGG_FRIENDS.forEach(function (f) { FRIENDS.push(f); });
 
   function doneCount() { return (window.saveData && window.saveData.tutorPlanDoneCount) || 0; }
   function ownsGacha(eggId) { return !!(window.saveData && window.saveData.gachaEggs && window.saveData.gachaEggs[eggId]); }
-  function isUnlocked(f) { return f.gacha ? ownsGacha(f.gacha) : doneCount() >= f.need; }
+  function isUnlocked(f) {
+    if (f.egg) return window.eggFriendLevel ? window.eggFriendLevel(f.id) > 0 : false;
+    return f.gacha ? ownsGacha(f.gacha) : doneCount() >= f.need;
+  }
   function byId(id) { return FRIENDS.filter(function (x) { return x.id === id; })[0]; }
   function current() {
     var sel = window.saveData && window.saveData.selectedFriend;
@@ -142,7 +147,7 @@
     currentSvg: function (mood) { return current().svg(mood || "normal"); },
     currentName: function () { return current().name; },
     // 回数が ふえた ときに 新しく なかまに なった子（なければ null）
-    newlyUnlockedAt: function (count) { return FRIENDS.filter(function (f) { return !f.gacha && f.need === count && f.need > 0; })[0] || null; },
+    newlyUnlockedAt: function (count) { return FRIENDS.filter(function (f) { return !f.gacha && !f.egg && f.need === count && f.need > 0; })[0] || null; },
     // ガチャのアバター表示（ほかの画面）でも もちくんを イラストで 出すため
     mochikunSvg: function (mood) { return mochikun(mood || "normal"); }
   };
@@ -243,21 +248,40 @@
 
   window.openFriendsModal = function () {
     window.closeFriendsModal();
+    if (window.ensureNakamaWelcomeEgg) window.ensureNakamaWelcomeEgg();
     var cur = current().id;
     var n = doneCount();
-    var cards = FRIENDS.map(function (f) {
-      var un = isUnlocked(f);
+    var BTN = "border:none;border-radius:999px;font-family:'Zen Maru Gothic';font-weight:900;cursor:pointer;";
+    function card(f) {
+      var un = isUnlocked(f), lv = f.egg && window.eggFriendLevel ? window.eggFriendLevel(f.id) : 0;
       var art = un ? f.svg(f.id === cur ? "happy" : "normal")
                    : '<div style="filter:brightness(0) opacity(.18);">' + f.svg("normal") + '</div>';
+      var lockText = f.egg ? "たまごから 出てくるかも" : (f.gacha ? "ガチャで 出会えたら なかまに" : "あと " + (f.need - n) + "回で なかまに");
+      var secretHtml = "";
+      if (un && f.egg) {
+        secretHtml = '<div style="font-size:11px;font-weight:900;color:#f59e0b;margin-top:2px;">' + "★★★★".slice(0, f.rarity) + '　なかよし ' + "♥♥♥".slice(0, lv) + "♡♡♡".slice(0, 3 - lv) + '</div>';
+        for (var i = 0; i < 3; i++) secretHtml += '<div style="font-size:11px;font-weight:700;color:' + (i < lv ? "var(--text-soft)" : "#cbd5e1") + ';line-height:1.5;margin-top:3px;text-align:left;">🔎 ' + (i < lv ? f.secrets[i] : "？？？（もう一度 出会うと 開くよ）") + '</div>';
+      } else if (un) secretHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-soft);line-height:1.5;margin-top:4px;text-align:left;">🔎 ひみつ：' + f.secret + '</div>';
       return '<div style="background:' + (f.id === cur ? "linear-gradient(160deg,#fff,#fce7f3)" : "#fff") + ';border:2px solid ' + (f.id === cur ? "#f0abfc" : "#f3e8ff") +
-        ';border-radius:18px;padding:10px 8px;text-align:center;' + (un ? "cursor:pointer;" : "") + '" ' + (un ? 'onclick="window.selectFriend(\'' + f.id + '\')"' : "") + '>' +
+        ';border-radius:18px;padding:10px 8px;text-align:center;' + (un ? "cursor:pointer;" : "") + '" ' + (un ? 'onclick="window.selectFriend(&quot;' + f.id + '&quot;)"' : "") + '>' +
         '<div class="fr-art" style="display:flex;justify-content:center;">' + art + '</div>' +
         '<div style="font-size:14px;font-weight:900;color:#4a3b52;margin-top:2px;">' + (un ? f.name : "？？？") + '</div>' +
-        '<div style="font-size:10.5px;font-weight:800;color:#9333ea;">' + (un ? f.kind : (f.gacha ? "ガチャで 出会えたら なかまに" : "あと " + (f.need - n) + "回で なかまに")) + '</div>' +
-        (un ? '<div style="font-size:11px;font-weight:700;color:var(--text-soft);line-height:1.5;margin-top:4px;text-align:left;">🔎 ひみつ：' + f.secret + '</div>' : "") +
+        '<div style="font-size:10.5px;font-weight:800;color:#9333ea;">' + (un ? f.kind : lockText) + '</div>' + secretHtml +
         (f.id === cur ? '<div style="font-size:11px;font-weight:900;color:#db2777;margin-top:4px;">いっしょに いるよ</div>' : (un ? '<div style="font-size:11px;font-weight:900;color:#7e22ce;margin-top:4px;">タップで いっしょに</div>' : "")) +
         '</div>';
-    }).join("");
+    }
+    var base = FRIENDS.filter(function (f) { return !f.egg; }), eggs = FRIENDS.filter(function (f) { return f.egg; });
+    var eggN = window.nakamaEggCount ? window.nakamaEggCount() : 0, kakera = (window.saveData && window.saveData.kakera) || 0;
+    var gotEgg = eggs.filter(isUnlocked).length;
+    var eggBox =
+      '<div style="background:linear-gradient(135deg,#fff7ed,#fdf2f8);border:2px solid #fbcfe8;border-radius:18px;padding:12px;margin:0 0 12px;text-align:center;">' +
+        '<div style="font-size:15px;font-weight:900;color:#be185d;">🥚 なかまのたまご：' + eggN + 'こ</div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-soft);margin:4px 0 8px;line-height:1.6;">きょうの プランを ぜんぶ できると 1こ（3日れんぞくで もう1こ）。<br>同じ子に また 会うと「ひみつ」が 開くよ。</div>' +
+        '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+          '<button style="' + BTN + 'padding:10px 18px;font-size:14px;color:#fff;background:' + (eggN > 0 ? "linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 4px 0 #86198f" : "#cbd5e1") + ';" onclick="window.openNakamaEgg()">🥚 たまごを わる</button>' +
+          '<button style="' + BTN + 'padding:10px 14px;font-size:12px;color:#0369a1;background:#e0f2fe;" onclick="window.exchangeKakeraForEgg()">🧩6枚 → たまご（いま ' + kakera + '枚）</button>' +
+        '</div>' +
+      '</div>';
     var wrap = document.createElement("div");
     wrap.id = "friends-modal";
     wrap.style.cssText = "position:fixed;inset:0;z-index:9998;background:rgba(74,59,82,.45);display:flex;align-items:center;justify-content:center;padding:16px;";
@@ -265,10 +289,13 @@
     wrap.innerHTML =
       '<style>#friends-modal .fr-art .c-buddy{width:72px;height:72px;margin:0}</style>' +
       '<div style="background:linear-gradient(160deg,#fff,#fdf4ff);border-radius:24px;padding:16px 14px;max-width:400px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 10px 0 rgba(147,51,234,.22);">' +
-        '<div style="font-size:18px;font-weight:900;color:#6b21a8;text-align:center;">🐾 まなびの なかま</div>' +
-        '<div style="font-size:12px;font-weight:700;color:var(--text-soft);text-align:center;margin:4px 0 12px;line-height:1.6;">「きょうの まなびプラン」を ぜんぶ できると なかまが ふえるよ。<br>いままで ' + n + '回 たっせい！</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' + cards + '</div>' +
-        '<button style="display:block;margin:14px auto 0;border:none;border-radius:999px;padding:10px 26px;font-family:\'Zen Maru Gothic\';font-weight:900;font-size:14px;background:#f3e8ff;color:#7e22ce;cursor:pointer;" onclick="window.closeFriendsModal()">とじる</button>' +
+        '<div style="font-size:18px;font-weight:900;color:#6b21a8;text-align:center;margin-bottom:10px;">🐾 まなびの なかま</div>' + eggBox +
+        '<div style="font-size:14px;font-weight:900;color:#be185d;margin:4px 2px 8px;">🥚 たまごの なかま（' + gotEgg + '／' + eggs.length + '）</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' + eggs.map(card).join("") + '</div>' +
+        '<div style="font-size:14px;font-weight:900;color:#6b21a8;margin:14px 2px 4px;">🌟 プランの なかま</div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-soft);margin:0 2px 8px;">「きょうの まなびプラン」を ぜんぶ できた 回数で ふえるよ（いままで ' + n + '回）。</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">' + base.map(card).join("") + '</div>' +
+        '<button style="' + BTN + 'display:block;margin:14px auto 0;padding:10px 26px;font-size:14px;background:#f3e8ff;color:#7e22ce;" onclick="window.closeFriendsModal()">とじる</button>' +
       '</div>';
     document.body.appendChild(wrap);
   };

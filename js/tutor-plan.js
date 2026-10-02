@@ -351,7 +351,7 @@
     if (footEl) {
       footEl.innerHTML = allDone
         ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく"
-        : "3つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
+        : "3つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
     }
     card.classList.toggle("all-done", allDone);
     if (chara) {
@@ -379,6 +379,9 @@
     data.tutorPlanLastDoneDate = todayKey();
     data.tutorPlanDoneCount = (data.tutorPlanDoneCount || 0) + 1;
     data.q = (data.q || 0) + PLAN_REWARD_Q;
+    // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）を 1こ、3日れんぞくごとに もう1こ
+    var eggGift = (data.tutorPlanStreak % 3 === 0) ? 2 : 1;
+    if (window.grantNakamaEgg) window.grantNakamaEgg(eggGift, "まなびプラン達成" + (eggGift === 2 ? "＋3日れんぞく" : ""));
     if (window.saveGame) window.saveGame();
     if (window.syncWithGoogleSpreadsheet) {
       window.syncWithGoogleSpreadsheet("LOG", {
@@ -411,7 +414,7 @@
         '<div style="display:flex;justify-content:center;align-items:flex-end;">' + teacherSvg("cheer") + (newFriend ? newFriend.svg("cheer") : friendSvg("cheer")) + '</div>' +
         '<div style="font-size:20px;font-weight:900;color:#be185d;margin-top:6px;">きょうの プラン たっせい！</div>' +
         '<div style="font-size:13px;font-weight:800;color:#6b21a8;margin:8px 0 4px;line-height:1.7;">ふくしゅう・あたらしい 学び・ちょうせん、<br>ぜんぶ やりきったね。えらい！</div>' +
-        '<div style="font-size:15px;font-weight:900;color:#4a3b52;margin:6px 0 12px;">🎁 +' + PLAN_REWARD_Q + 'Q　🔥 ' + streak + '日 れんぞく</div>' +
+        '<div style="font-size:15px;font-weight:900;color:#4a3b52;margin:6px 0 12px;">🎁 +' + PLAN_REWARD_Q + 'Q　🥚 たまご +' + (streak % 3 === 0 ? 2 : 1) + '　🔥 ' + streak + '日 れんぞく</div>' +
         (newFriend ? '<div style="font-size:13px;font-weight:900;color:#db2777;background:#fff;border-radius:14px;padding:8px;margin:-4px 0 12px;">🐾 ' + newFriend.kind + 'の「' + newFriend.name + '」が なかまに なったよ！<br><span style="font-size:11px;color:#7e22ce;">どうぐばこの「なかま」で いっしょに いられるよ</span></div>' : '') +
         '<button style="border:none;border-radius:999px;padding:12px 26px;font-family:\'Zen Maru Gothic\';font-weight:900;font-size:15px;color:#fff;background:linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 4px 0 #86198f;cursor:pointer;" onclick="document.getElementById(\'tplan-celebrate\').remove()">やったー！</button>' +
       '</div>';
