@@ -61,6 +61,15 @@ const ARM_B = { t: "arm", bent: true, cap: "うでを 曲げる：内側が ち�
 const ARM_S = { t: "arm", bent: false, cap: "うでを のばす：外側が ちぢむ" };
 const ARMS = { t: "row", cap: "筋肉は ちぢんで 骨を 引っぱる", items: [{ t: "arm", bent: true, cap: "曲げる" }, { t: "arm", bent: false, cap: "のばす" }] };
 
+const SYMS = (items, cap, extra) => Object.assign({ t: "mapsym", items, cap }, extra || {});
+const DIR = (hl, cap) => ({ t: "mapdir", hl, cap });
+const WATER_NODES = [{ label: "川・ダム" }, { label: "浄水場", sub: "きれいにする" }, { label: "配水池", sub: "ためて 送る" }, { label: "下水処理場", sub: "よごれを とる" }, { label: "家・学校", sub: "使う" }, { label: "川・海", sub: "もどす" }];
+// 折り返しの 2行目は 右→左に ならぶので、表示が「家・学校 → 下水処理場 → 川・海」の 順に なるように 並べる
+const WATER = (hlLabel, cap) => { const order = [0, 1, 2, 4, 3, 5]; const nodes = order.map((i) => WATER_NODES[i]); return { t: "flow", nodes, hl: nodes.findIndex((n) => n.label === hlLabel), cap }; };
+const JOSUI = (hlLabel, cap) => { const nodes = [{ label: "川の 水" }, { label: "沈殿池", sub: "どろを しずめる" }, { label: "ろ過池", sub: "すなで こす" }, { label: "塩素で 消毒", sub: "ばい菌を へらす" }, { label: "配水池" }, { label: "じゃ口へ", sub: "配水管で" }]; return { t: "flow", nodes, hl: nodes.findIndex((n) => n.label === hlLabel), cap }; };
+const GOMI = (hlLabel, cap) => { const nodes = [{ label: "家庭", sub: "分別して 出す" }, { label: "収集車" }, { label: "清掃工場", sub: "熱で 発電" }, { label: "うめ立て地", sub: "灰を うめる" }]; return { t: "flow", nodes, hl: nodes.findIndex((n) => n.label === hlLabel), cap }; };
+const R3 = (hl, cap) => ({ t: "threeR", hl, cap });
+
 module.exports = {
   "算数/図形/suichoku_heikou01": {
     0: E(PERP), 2: E(PARA), 4: E(PERP), 5: E(RECT_SIDE), 6: E(PERP2), 7: E(PARA),
@@ -223,5 +232,39 @@ module.exports = {
     0: E(Object.assign({}, ARM_B, { cap: "関節：骨と 骨の つなぎ目で 曲げのばし できる" })), 1: E(ARMS), 3: E(ARM_S),
     6: E(Object.assign({}, ARM_B, { cap: "筋肉は 関節を またいで となりの 骨に つく" })), 9: E(ARM_B), 10: E(ARMS),
     12: E(ARM_B), 13: E(ARM_B), 14: E(ARM_S), 15: E(ARMS)
+  },
+  "社会/まち探検/machi301": {
+    0: E(DIR("北", "地図は ふつう 上が 北")), 1: E(SYMS(["school"], "「文」＝ 学校", { hl: "school" })),
+    2: E(SYMS(["koban", "police"], "❌だけ ＝ 交番、⭕の中に❌ ＝ 警察署", { hl: "police" })),
+    3: E(SYMS(["post"], "⭕の中に〒 ＝ 郵便局", { hl: "post" })), 6: E(DIR("東", "太陽は 東から のぼる")),
+    7: E(SYMS(["fire"], "むかしの 消防の 道具（さすまた）の 形", { hl: "fire" })), 9: E(DIR("東", "上が 北 → 右が 東")),
+    10: E(SYMS(["rice"], "稲を かり取った あとの 切り株の 形", { hl: "rice" })), 12: E(DIR("東", "上が北・下が南・右が東・左が西")),
+    13: E(DIR("西", "上が 北 → 左が 西")), 14: E(SYMS(["school"], "「文」＝ 学校", { hl: "school" })),
+    15: E(SYMS(["cityhall"], "◎ ＝ 市役所", { hl: "cityhall" })), 16: E(SYMS(["koban", "police"], "❌だけ ＝ 交番、⭕の中に❌ ＝ 警察署", { hl: "koban" })),
+    17: E(DIR("北", "地図は ふつう 上が 北")), 18: E(DIR("北東", "北と 東の 間 ＝ 北東"))
+  },
+  "社会/水道/josuijo01": {
+    0: E(WATER("浄水場", "じゃ口の 水は 浄水場から")), 1: E(WATER("浄水場", "浄水場で 飲める 水に")),
+    2: E(JOSUI("沈殿池", "浄水場の しくみ")), 3: E(WATER("配水池", "配水池に ためて まちへ 送る")),
+    4: E(WATER("下水処理場", "使った 水は 下水処理場で きれいに")), 9: E(WATER("浄水場", "浄水場（じょうすいじょう）")),
+    10: E(WATER("川・ダム", "ダムに 水を ためて おく")), 11: E(JOSUI("塩素で 消毒", "塩素で 消毒して 安全な 水に")),
+    12: E(WATER("下水処理場", "下水処理場が ないと よごれた 水が 川・海へ")), 13: E(WATER("浄水場", "浄水場で 水道水を つくる")),
+    14: E(JOSUI("沈殿池", "沈殿池で どろや ごみを しずめる")), 15: E(JOSUI("塩素で 消毒", "塩素で ばい菌を 消毒")),
+    16: E(JOSUI("じゃ口へ", "配水管で 家の じゃ口まで")), 17: E(WATER("下水処理場", "使った 水は 下水処理場へ"))
+  },
+  "社会/ごみ/gomi01": {
+    1: E(R3("recycle", "リサイクル：作りかえて また 使う")), 5: E(R3(null, "3R ＝ リデュース・リユース・リサイクル")),
+    8: E(GOMI("うめ立て地", "うめ立て地には かぎりが ある")), 9: E(R3(null, "3R ＝ へらす・くり返し使う・作りかえる")),
+    10: E(R3("recycle", "牛乳パック → 古紙として リサイクル")), 11: E(R3(null, "3R ＝ リデュース・リユース・リサイクル")),
+    12: E(R3("recycle", "原料に もどして 新しい 製品に ＝ リサイクル")), 13: E(GOMI("清掃工場", "燃やした 熱で 発電・温水プール")),
+    14: E(GOMI("うめ立て地", "燃やした あとの 灰は うめ立て地へ")), 15: E(R3("reduce", "マイバッグ ＝ ごみを へらす（リデュース）"))
+  },
+  "社会/地図/nairiku01": {
+    0: E({ t: "inland", cap: "内陸県：海に 面して いない 県" }), 4: E({ t: "inland", cap: "内陸県：海に 面して いない 県" }),
+    10: E({ t: "inland", cap: "内陸県の まわりは となりの 県（陸）" })
+  },
+  "社会/防災/bousai01": {
+    0: E({ t: "phones", cap: "119番：火事・急病 ／ 110番：事件・事故" }), 1: E({ t: "phones", cap: "119番：火事・急病 ／ 110番：事件・事故" }),
+    7: E({ t: "jijo", hl: "共助", cap: "近所どうしで 助け合う ＝ 共助" })
   }
 };
