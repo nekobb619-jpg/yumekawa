@@ -3153,7 +3153,8 @@ window.saveGame = function() {
           if (Array.isArray(arr) && arr.length > 0) {
             var nextLen = Math.max(0, Math.floor(arr.length * 0.7));
             if (nextLen >= arr.length) nextLen = arr.length - 1;
-            window.saveData[f.key] = arr.slice(-Math.max(0, nextLen));
+            // slice(-0)は配列全体を返してしまう（＝1件も減らないまま無限に空回りする）ため、先頭からの位置で切る
+            window.saveData[f.key] = nextLen > 0 ? arr.slice(arr.length - nextLen) : [];
             trimmedSomething = true;
             break;
           }
