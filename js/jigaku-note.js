@@ -7,10 +7,11 @@
    - ノートと 同じ たて書き 20字×15行の マス目で「そのまま 写せる 完成形」を 見せる
    - 文は ぜんぶ この アプリ用に 書いた もの（本の 文を 写したり 短く したり した ものでは ない）。
      サバイバルの 本と 同じ ぎもんを あつかう カードは「本も 読んで くらべよう」と すすめる
-   - 書けたら ✅：その日 はじめての 1つは +3Q、saveData.jigakuDone に のこして 次から 後ろに 回す。log_db「📓自学ノート」
+   - 書けたら ✅：その日 はじめての 1つは +25pt（保護者：Qは チートしやすいので pt に）。saveData.jigakuDone に のこして 次から 後ろに 回す。log_db「📓自学ノート」
    ===================================================================== */
 (function () {
   "use strict";
+  var JIGAKU_PTS = 25; // ★2026-10-03：ネタ帳の ごほうび（1日1回）
   var KIND = { yokatta: "🌼 よかったさがし", quiz: "🧠 クイズを 作る", exp: "🔬 実験レポート", cmp: "⚖️ くらべる・しらべる", a: "💭 Aメニュー", app: "📱 アプリの まちがい" };
 
   // クイズ（自分で 出題する 形。先生に ほめられた「クイズ」の 書き方と 同じ 型）
@@ -248,52 +249,127 @@
     var sd = window.saveData; if (!sd) return;
     var c = findCard(id) || {}, t = today();
     sd.jigakuDone = done().filter(function (x) { return x !== id; }).concat([id]).slice(-60);
-    var reward = sd.jigakuLastDate === t ? 0 : 3;
-    sd.jigakuLastDate = t; sd.q = (sd.q || 0) + reward;
+    var reward = sd.jigakuLastDate === t ? 0 : JIGAKU_PTS;
+    sd.jigakuLastDate = t; sd.pts = (Number(sd.pts) || 0) + reward;
     if (window.saveGame) window.saveGame(); if (window.updateUI) window.updateUI();
-    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "📓自学ノート", msg: (c.title || id) + "（" + (KIND[c.kind] || "") + "）" + (reward ? " +" + reward + "Q" : "") });
+    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "📓自学ノート", msg: (c.title || id) + "（" + (KIND[c.kind] || "") + "）" + (reward ? " +" + reward + "pt" : "") });
     var r = document.getElementById("jigaku-result");
-    if (r) r.innerHTML = '<div style="background:#ecfdf5;border-radius:14px;padding:10px;text-align:center;font-weight:900;color:#065f46;">📓 よく がんばったね！' + (reward ? '　🎁 +' + reward + 'Q' : '') + '<div style="font-size:12px;margin-top:4px;">先生に 見せて、コメントを もらおう。</div></div>';
+    if (r) r.innerHTML = '<div style="background:#ecfdf5;border-radius:14px;padding:10px;text-align:center;font-weight:900;color:#065f46;">📓 よく がんばったね！' + (reward ? '　🎁 +' + reward + 'pt' : '') + '<div style="font-size:12px;margin-top:4px;">先生に 見せて、コメントを もらおう。</div></div>';
   };
 
   /* ---------------- 🌼 よかった帳（ポリアンナの よかったさがし。書いた ものを ためる） ----------------
-     saveData.yokattaLog = [{ d: "2026-10-3", t: "…" }]（新しい 120こ まで。ext行に 保存・自動の 切りつめ対象に しない）
-     書くたびに log_db「🌼よかった帳」にも 送るので、全部の 記録は スプレッドシートに のこる */
+     saveData.yokattaLog = [{ d: "2026-10-3", t: "…", at: 時刻, st: "wait"|"ok"|"ng", c: "ひとこと", rq: 1（Qを わたした） }]
+     （新しい 120こ まで。ext行に 保存・自動の 切りつめ対象に しない。書くたびに log_db「🌼よかった帳」へ 全文）
+     ★2026-10-03変更（保護者）：書いた その場では Q を わたさない。1時間 いじょう たってから アプリを 開いた ときに、
+       GAS の 汎用 Gemini アクション GENERATE_QUIZ_QUESTIONS で 見直し、「意味の 通る 文で よかった ことを 書いて いる」
+       ものだけ 1こ 1Q（1日 YK_DAY_MAX まで）。前に 書いた 文と ほぼ 同じ 文は ng（使い回し 対策）。
+       GAS は generated_questions しか 返さないので、判定は その 形（category="ok"/"ng"、question_text＝ひとこと）で 受け取る。 */
+  var YK_DAY_MAX = 2, YK_WAIT_MS = 60 * 60 * 1000;
   function ylog() { var sd = window.saveData || {}; return Array.isArray(sd.yokattaLog) ? sd.yokattaLog : []; }
+  function ykMark(e) {
+    if (e.st === "ok") return '<span style="color:#059669;">⭕</span>';
+    if (e.st === "ng") return '<span style="color:#b45309;">🔁</span>';
+    if (e.st === "wait") return '<span title="あとで ニコ先生が 読むよ">⏳</span>';
+    return "🌼"; // 見直しを 入れる 前に 書いた もの
+  }
   window.openYokatta = function () {
     var list = ylog(), t = today(), todays = list.filter(function (e) { return e.d === t; });
     var byDay = {}, order = [];
-    list.slice().reverse().forEach(function (e) { if (!byDay[e.d]) { byDay[e.d] = []; order.push(e.d); } byDay[e.d].push(e.t); });
+    list.slice().reverse().forEach(function (e) { if (!byDay[e.d]) { byDay[e.d] = []; order.push(e.d); } byDay[e.d].push(e); });
     var past = order.slice(0, 30).map(function (d) {
       var p = d.split("-");
       return '<div style="border-bottom:1px dashed #fde68a;padding:6px 2px;"><div style="font-size:11px;font-weight:900;color:#b45309;">' + p[1] + '月' + p[2] + '日</div>' +
-        byDay[d].map(function (x) { return '<div style="font-size:13px;font-weight:700;color:#4a3b52;">🌼 ' + esc(x) + '</div>'; }).join("") + '</div>';
+        byDay[d].map(function (e) {
+          return '<div style="font-size:13px;font-weight:700;color:#4a3b52;">' + ykMark(e) + ' ' + esc(e.t) + (e.c ? '<div style="font-size:11px;color:' + (e.st === "ok" ? "#059669" : "#b45309") + ';margin-left:20px;">ニコ先生：' + esc(e.c) + '</div>' : '') + '</div>';
+        }).join("") + '</div>';
     }).join("");
     var inputs = [0, 1, 2].map(function (i) { return '<input id="yk-in' + i + '" maxlength="60" placeholder="よかった ' + "①②③".charAt(i) + '" style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border:2px solid #fde68a;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;">'; }).join("");
     shell('<div style="font-size:18px;font-weight:900;color:#b45309;text-align:center;">🌼 今日の よかった さがし</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 6px;line-height:1.6;">ポリアンナの「よかったさがし」。<br>小さな ことで いいよ。「給食が おいしかった」「〇〇が できた」</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 6px;line-height:1.6;">ポリアンナの「よかったさがし」。<br>小さな ことで いいよ。「給食の カレーが おいしかった」のように、文で 書こう。<br>あとで ニコ先生が 読んで、ちゃんと 文に なって いたら 1こ 1Q（1日 ' + YK_DAY_MAX + 'Qまで）。</div>' +
       (todays.length ? '<div style="background:#fefce8;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;color:#854d0e;">今日は もう ' + todays.length + 'こ 見つけたね！ まだ あれば 書こう</div>' : '') +
       inputs +
       '<button style="' + BTN + 'width:100%;margin-top:10px;padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#f59e0b,#ec4899);" onclick="window.yokattaSave()">🌼 よかった帳に のこす</button>' +
       '<div id="yk-result"></div>' +
       '<div style="margin-top:12px;font-size:14px;font-weight:900;color:#b45309;">📒 これまでの よかった（' + list.length + 'こ）</div>' +
+      '<div style="font-size:11px;font-weight:700;color:#7a6985;">⏳ ニコ先生が まだ 読んで いない　⭕ よく 書けた　🔁 文に して みよう</div>' +
       (past || '<div style="font-size:12px;color:#7a6985;font-weight:700;padding:6px 0;">まだ ないよ。今日が 1こ目！</div>') +
       '<div style="display:grid;gap:8px;margin-top:12px;"><button style="' + BTN + 'padding:10px;font-size:13px;color:#0f766e;background:#ccfbf1;" onclick="window.showJigakuCard(&quot;a_yokatta&quot;)">📓 ノートにも 書く（1ページの 形）</button>' +
       '<button style="' + BTN + 'padding:10px;font-size:13px;color:#7e22ce;background:#f3e8ff;" onclick="window.openJigakuNote()">◀ 自学ネタに もどる</button></div>');
   };
   window.yokattaSave = function () {
     var sd = window.saveData; if (!sd) return;
+    if (!extReady()) { alert("いま データを 読みこみ中だよ。少し まってから もう一度 おしてね"); return; }
     var items = [0, 1, 2].map(function (i) { var el = document.getElementById("yk-in" + i); return el ? el.value.replace(/\s+/g, " ").trim().slice(0, 60) : ""; }).filter(Boolean);
     if (!items.length) { alert("よかった ことを 1つ いじょう 書いてね"); return; }
-    var t = today(), first = !ylog().some(function (e) { return e.d === t; });
-    sd.yokattaLog = ylog().concat(items.map(function (x) { return { d: t, t: x }; })).slice(-120);
-    var reward = first ? 2 : 0; sd.q = (sd.q || 0) + reward;
-    if (window.saveGame) window.saveGame(); if (window.updateUI) window.updateUI();
-    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🌼よかった帳", msg: items.join(" ／ ") + (reward ? " +" + reward + "Q" : "") });
+    var t = today(), now = Date.now();
+    sd.yokattaLog = ylog().concat(items.map(function (x) { return { d: t, t: x, at: now, st: "wait" }; })).slice(-120);
+    if (window.saveGame) window.saveGame();
+    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🌼よかった帳", msg: items.join(" ／ ") });
     window.openYokatta();
     var r = document.getElementById("yk-result");
-    if (r) r.innerHTML = '<div style="background:#fef3c7;border-radius:14px;padding:10px;margin-top:8px;text-align:center;font-weight:900;color:#92400e;">🌼 ' + items.length + 'こ のこしたよ！' + (reward ? '　🎁 +' + reward + 'Q' : '') + '<div style="font-size:12px;margin-top:4px;">よかったを さがす 名人に なって きたね。</div></div>';
+    if (r) r.innerHTML = '<div style="background:#fef3c7;border-radius:14px;padding:10px;margin-top:8px;text-align:center;font-weight:900;color:#92400e;">🌼 ' + items.length + 'こ のこしたよ！<div style="font-size:12px;margin-top:4px;">あとで ニコ先生が 読むよ。ちゃんと 文に なって いたら Q が とどくよ。</div></div>';
   };
+
+  // よかった帳は ext行に あるので、ext行を 読みこめてから 書く・見直す（読みこみ前に 書くと 上書きで 消える）
+  function extReady() { return !window.playerId || window.saveExtLoadedFor === window.playerId; }
+  // あとで 見直す（アプリを 開いた ときに 1回、裏で）
+  function ykToast(html) {
+    var el = document.createElement("div");
+    el.style.cssText = "position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:9999;background:#fff7ed;border:2px solid #fdba74;border-radius:16px;padding:10px 14px;font-family:'Zen Maru Gothic';font-weight:900;font-size:13px;color:#9a3412;box-shadow:0 6px 16px rgba(0,0,0,.15);max-width:90%;text-align:center;";
+    el.innerHTML = html; document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 7000);
+  }
+  window.reviewYokatta = function () {
+    var sd = window.saveData, now = Date.now();
+    if (!sd || !window.playerId || !extReady() || window._ykReviewing || typeof window.postToGAS !== "function") return Promise.resolve(null);
+    var all = ylog(), pend = all.filter(function (e) { return e.st === "wait" && (!e.at || now - e.at >= YK_WAIT_MS); }).slice(0, 15);
+    if (!pend.length) return Promise.resolve(null);
+    window._ykReviewing = true;
+    var ref = all.filter(function (e) { return e.st === "ok"; }).slice(-10).map(function (e) { return e.t; });
+    var systemPrompt = [
+      "あなたは小学4年生の「よかった日記」を読む先生です。番号つきの各文が「その日のよかったことを、意味の通る文で書いているか」を判定します。",
+      "ng にするもの：意味のない文字の並び、同じ文字のくり返し、1〜3文字だけ、よかったことと関係ない言葉、【前に書いた文】や同じ日のほかの文とほとんど同じ文（使い回し）。",
+      "短くても意味が通れば ok。漢字やひらがなのまちがいは気にしない。",
+      "出力は次のJSONだけ（前置き・コードブロック記号なし）。文1つにつき generated_questions の要素を1つ、入力と同じ順番で：",
+      '{"generated_questions":[{"question_id":"r0","category":"ok または ng","question_text":"子どもへのやさしい一言（25字以内。ngなら、どう書けばよいかのヒント）","options":["-","-","-","-"],"correct_index":0,"explanation":"判定のりゆう（短く）"}]}'
+    ].join("\n");
+    var userPrompt = (ref.length ? "【前に書いた文】\n" + ref.join("\n") + "\n\n" : "") + "【判定する文】\n" + pend.map(function (e, i) { return i + ": " + e.t; }).join("\n");
+    return window.postToGAS({ action: "GENERATE_QUIZ_QUESTIONS", systemPrompt: systemPrompt, userPrompt: userPrompt }).then(function (res) {
+      var gq = res && Array.isArray(res.generated_questions) ? res.generated_questions : [];
+      if (gq.length !== pend.length) return null; // 数が 合わない・エラー（503など）→ ⏳ の まま、次に 開いた ときに もう一度
+      sd = window.saveData; if (!sd) return null;
+      var cur = ylog(), keyOf = function (e) { return e.d + "|" + (e.at || "") + "|" + e.t; }, idx = {};
+      cur.forEach(function (e) { idx[keyOf(e)] = e; });
+      var okN = 0, ngN = 0, give = 0, perDay = {};
+      cur.forEach(function (e) { if (e.rq) perDay[e.d] = (perDay[e.d] || 0) + 1; });
+      pend = pend.map(function (e) { return idx[keyOf(e)]; });
+      if (pend.some(function (e) { return !e; })) return null; // 見つからない（ほかの 端末で 変わった など）→ 次回
+      pend.forEach(function (e, i) {
+        var g = gq[i] || {}, ok = String(g.category || "").trim().toLowerCase() === "ok";
+        e.st = ok ? "ok" : "ng"; e.c = String(g.question_text || "").slice(0, 40);
+        if (ok) { okN++; if ((perDay[e.d] || 0) < YK_DAY_MAX) { e.rq = 1; perDay[e.d] = (perDay[e.d] || 0) + 1; give++; } } else ngN++;
+      });
+      sd.q = (sd.q || 0) + give;
+      if (window.saveGame) window.saveGame(); if (window.updateUI) window.updateUI();
+      if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🌼よかった帳（見直し）", msg: "⭕" + okN + " 🔁" + ngN + (give ? " +" + give + "Q" : "") + " ／ " + pend.map(function (e) { return (e.st === "ok" ? "⭕" : "🔁") + e.t; }).join(" ") });
+      ykToast("🌼 ニコ先生が よかった帳を 読んだよ！　⭕" + okN + "こ" + (ngN ? "　🔁" + ngN + "こ" : "") + (give ? "　🎁 +" + give + "Q" : "") + '<div style="font-size:11px;margin-top:2px;">どうぐばこ →「📓 自学ノート」→「🌼 よかった帳」で 見られるよ</div>');
+      return { ok: okN, ng: ngN, give: give };
+    }).catch(function (e) { console.error("[yokatta] review failed", e); return null; }).then(function (r) { window._ykReviewing = false; return r; });
+  };
+  // ホームが 表示されたら、少し あとに 1回だけ 見直す（ログイン・読みこみが 終わってから）
+  var uiJ = window.updateUI;
+  if (typeof uiJ === "function") {
+    window.updateUI = function () {
+      var r = uiJ.apply(this, arguments);
+      try {
+        if (!window._ykReviewTried && window.playerId && window.saveData && window.globalStageMaster && extReady()) {
+          window._ykReviewTried = true;
+          setTimeout(function () { window.reviewYokatta(); }, 5000);
+        }
+      } catch (e) {}
+      return r;
+    };
+  }
   // 作品読解6（ポリアンナが 出る 単元）の 説明画面に ボタン
   var obJ = window.openBriefing;
   if (typeof obJ === "function") {
