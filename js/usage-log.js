@@ -13,7 +13,7 @@
     launchWeakAttackLab: "苦手撃破ラボ", startDetectiveLab: "探偵ラボ", openBriefing: "ステージを開く",
     openFriendsModal: "なかま", openNakamaEgg: "たまごを割る", openTutorScreen: "チューター", openGrowthModal: "せいちょう",
     openWeeklyMissionModal: "今週のもくひょう", openReadingNote: "読書ノート", openBookshelf: "本だな",
-    openObservationNote: "かんさつ記録", openObservationList: "かんさつを見る", openHissanSheet: "筆算シート", openKanjiSheet: "漢字シート",
+    openObservationNote: "かんさつ記録", openObservationList: "かんさつを見る", openHissanSheet: "筆算シート", openKanjiSheet: "漢字シート", openJigakuNote: "自学ノート", openYokatta: "よかった帳",
     openStampModal: "ログインスタンプ", openTreasureBookModal: "お宝図鑑", openGachaModal: "ガチャ", openKuroPonModal: "クロぽん",
     launchSurvivalMode: "サバイバル", exchangePtsToQ: "pts両替", exchangePtsToQBulk: "まとめて両替",
     openParentReportModal: "ほごしゃレポート", openAllowanceScreen: "おこづかい", fetchBattleStats: "きょうだいバトル",
@@ -31,7 +31,17 @@
       }
       u = sd.uiUse = { d: today(), c: {} };
     }
+    if (!u.c[name]) bonus(sd, name);
     u.c[name] = (u.c[name] || 0) + 1;
+  }
+  // ★2026-10-03追加（保護者案）：メインの ボタンを その日 はじめて 開いたら 0.1pt を 裏で ためる（10こ たまると 1pt）。
+  //   ボタンが 28こ あっても 1日 最大 2.8pt（20pt＝1Q なので 約0.14Q）。問題 1問の 正解（5pt 前後）より 小さく、バランスは くずれない。
+  //   お金・アイテムの 操作と、勉強そのもの（ステージを 開く）は 入れない。折りたたみ（開:〜）も 入れない。
+  var NO_BONUS = ["pts両替", "まとめて両替", "宝島ショップ", "アイテム使用", "たまごを割る", "ステージを開く", "きょうだいバトル", "サバイバルランキング", "かんさつを見る"];
+  function bonus(sd, name) {
+    if (name.indexOf("開:") === 0 || NO_BONUS.indexOf(name) >= 0) return;
+    sd.uiBonusTenths = (Number(sd.uiBonusTenths) || 0) + 1;
+    if (sd.uiBonusTenths >= 10) { sd.uiBonusTenths -= 10; sd.pts = (Number(sd.pts) || 0) + 1; }
   }
   Object.keys(FEATURES).forEach(function (fn) {
     var orig = window[fn];

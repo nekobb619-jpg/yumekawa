@@ -308,6 +308,11 @@
       if (b - a >= 5) return "さいきん 正かい率が " + a + "% → " + b + "% に アップ！ 練習した 分だけ のびてるよ ✨";
     }
     var next = p.steps.filter(function (s) { return !stepDone(s, p); })[0];
+    // ★2026-10-03追加（保護者より）：りおは パソコンで 音声つき 英単語タイピングも がんばって いる（アプリの 外）。1日1回 相棒が ほめる
+    if (/りお/.test(name) && data.typingCheerDate !== tk) {
+      data.typingCheerDate = tk;
+      return name + "英語の タイピングも がんばってるね！ 耳で 聞いて 指で 打つと 単語が 体に 入るよ ⌨️ " + (next ? "きょうも プランから いこう！" : "");
+    }
     var nextLabel = next ? (next.kind === "stage" ? "「" + next.name + "」" : next.kind === "weak" ? "にがて問題" : next.kind === "book" ? "おはなし" : next.kind === "mystery" ? "なぞとき" : "探偵ラボ") : "";
     if (todayN > 0) return "きょうは もう " + todayN + "問 チャレンジしたね！ つぎは " + nextLabel + " だよ";
     if (yN > 0) return name + "きのうは " + yN + "問 がんばったね。きょうは " + nextLabel + " から いこう！";

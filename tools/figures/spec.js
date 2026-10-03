@@ -90,6 +90,8 @@ const CJ = (hl, cap) => ({ t: "conj", hl, cap });
 const KK = (words, cap, extra) => Object.assign({ t: "kakari", words, cap }, extra || {});
 const INU = [{ w: "大きな", r: "m", to: 1 }, { w: "犬が", r: "s" }, { w: "元気に", r: "m", to: 3 }, { w: "走る", r: "p" }];
 
+const AI = (o, cap) => Object.assign({ t: "aichi", cap }, o);
+
 module.exports = {
   "算数/図形/suichoku_heikou01": {
     0: E(PERP), 2: E(PARA), 4: E(PERP), 5: E(RECT_SIDE), 6: E(PERP2), 7: E(PARA),
@@ -494,5 +496,33 @@ module.exports = {
     13: E(KK([{ w: "白い", r: "m", to: 1 }, { w: "犬が", r: "s" }, { w: "元気に", r: "m", to: 3 }, { w: "走る", r: "p" }], "元気に → 走る（どのように 走るか）", { hl: 2, why: "どのように？" })),
     14: E(KK(INU, "修飾語 ＝ ほかの 言葉を くわしく する")),
     15: E(KK([{ w: "風が", r: "s" }, { w: "つよく", r: "m", to: 2 }, { w: "ふく", r: "p" }], "主語：風が ／ 述語：ふく"))
+  },
+  /* ---------------- 愛知県（小牧市 在住） ---------------- */
+  "社会/愛知/aichi01": {
+    0: E(AI({ hl: ["nagoya"], box: ["県庁所在地", "名古屋市"] }, "名古屋市は 県の 西がわ")),
+    1: E(AI({}, "北 岐阜・北東 長野・東 静岡・西 三重")),
+    2: E(AI({ show: ["plains", "rivers"] }, "濃尾平野：木曽川などが つくった 平野")),
+    3: E(AI({ show: ["peninsula"] }, "知多半島と 渥美半島の 間が 三河湾")),
+    4: E(AI({ area: "both", cities: ["okazaki", "toyohashi"] }, "西が 尾張、東が 三河")),
+    5: E(AI({ show: ["mountain", "plains"] }, "北東は 三河山地、西と 南は 平野")),
+    6: E(AI({ show: ["plains", "rivers"], cities: ["okazaki", "anjo"] }, "矢作川の まわりに 岡崎平野")),
+    8: E(AI({ show: ["peninsula"], cities: ["centrair"], hl: ["centrair"], box: ["セントレア", "常滑市の 沖"] }, "知多半島の 常滑市の 沖の 空港")),
+    10: E(AI({ show: ["plains", "mountain"], highway: true }, "西は 平野が 広く、道路も 集まる")),
+    11: E(AI({ highway: true, box: ["小牧インター", "東名と 名神が つながる"] }, "小牧から 東京へも 大阪へも")),
+    12: E(AI({ box: ["小牧山", "1563年 信長の 城"] }, "小牧山は 小牧市の まん中")),
+    13: { fig: AI({ cities: ["toyohashi"] }), explain_fig: AI({ cities: ["toyohashi"], hl: ["toyohashi"], box: ["名古屋 → 豊橋", "南東の 方角"] }, "地図は 上が 北。右下 ＝ 南東") }
+  },
+  "社会/愛知/aichi02": {
+    1: E(AI({ cities: ["toyota"], hl: ["toyota"], box: ["豊田市", "自動車工業"] }, "豊田市は 自動車工業の まち")),
+    2: E(AI({ cities: ["toyota"], hl: ["toyota"], highway: true, box: ["部品工場が 近い", "港・高速道路"] }, "部品を 集めやすく、運びやすい")),
+    3: E(AI({ hl: ["nagoya"], box: ["名古屋港", "貨物の 量 日本一"] }, "自動車も 船で 外国へ")),
+    4: E(AI({ show: ["peninsula"], cities: ["tahara"], hl: ["tahara"], box: ["田原市（渥美半島）", "電照菊"] }, "渥美半島は 花づくりが さかん")),
+    5: E(AI({ show: ["peninsula"], cities: ["tahara"], hl: ["tahara"], box: ["田原市（渥美半島）", "花の 産出額 1位"] }, "愛知県の 花の 産出額は 全国1位")),
+    6: E(AI({ cities: ["toyohashi"], hl: ["toyohashi"], box: ["豊橋市", "うずらの たまご"] }, "うずらの たまごは 愛知が 全国一")),
+    7: E(AI({ cities: ["seto"], hl: ["seto"], box: ["瀬戸市", "瀬戸焼 → せともの"] }, "瀬戸焼から「せともの」")),
+    8: E(AI({ cities: ["arimatsu"], hl: ["arimatsu"], box: ["有松・鳴海", "しぼり染め"] }, "名古屋市 緑区の 伝統工芸")),
+    9: E(AI({ cities: ["takahama"], hl: ["takahama"], box: ["高浜市・碧南市", "三州瓦"] }, "三河の ねんどで 作る 瓦")),
+    10: E(AI({ water: "meiji", show: ["rivers"], cities: ["anjo"], box: ["明治用水", "1880年 完成"] }, "矢作川から 安城の 台地へ")),
+    11: E(AI({ water: "aichi", show: ["peninsula", "rivers"], box: ["愛知用水", "1961年 通水"] }, "木曽川から 知多半島の 先まで"))
   }
 };

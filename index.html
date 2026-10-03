@@ -710,6 +710,7 @@
   <h2 class="home-sec">🧰 まなびの どうぐばこ <small>ふりかえり・ノート・考え方</small></h2>
   <div class="tile-grid">
     <button class="tile" onclick="window.openFriendsModal()"><span class="ti" id="friends-tile-art">🐾</span>まなびの なかま<small>🥚 たまごガチャ</small></button>
+    <button class="tile" onclick="window.openJigakuNote()"><span class="ti">📓</span>自学ノート<small>今日の ネタ・1ページ</small></button>
     <button class="tile" onclick="window.openKanjiSheet()"><span class="ti">✍️</span>漢字シート<small>書き取り・印刷</small></button>
     <button class="tile" onclick="window.openHissanSheet()"><span class="ti">✏️</span>筆算シート<small>わり算・印刷</small></button>
     <button class="tile" onclick="window.openTutorScreen()"><span class="ti">🧑‍🏫</span>チューター<small>単元のふりかえり</small></button>
@@ -1343,6 +1344,10 @@ window.normalizeSaveData = function(data) {
   normalized.tutorPlanStreak = Number(normalized.tutorPlanStreak || 0);
   normalized.tutorPlanDoneCount = Number(normalized.tutorPlanDoneCount || 0);
   normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
+  normalized.jigakuDone = Array.isArray(normalized.jigakuDone) ? normalized.jigakuDone : []; // ★2026-10-03：自学ノートで 書いた ネタ（js/jigaku-note.js）
+  normalized.jigakuLastDate = normalized.jigakuLastDate || "";
+  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; // ★2026-10-03：🌼よかった帳
+  normalized.uiBonusTenths = Number(normalized.uiBonusTenths || 0); // ★2026-10-03：メインの ボタンを 1日1回 開くと 0.1pt（js/usage-log.js）
   normalized.friendEggs = (normalized.friendEggs && typeof normalized.friendEggs === "object") ? normalized.friendEggs : {}; // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）
   normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
   normalized.nakamaEggWelcome = !!normalized.nakamaEggWelcome;
@@ -3328,7 +3333,7 @@ window.loadGameLocal = function() {
 //   ext行を読み込めたことを確認できた（saveExtLoadedFor===playerId）ときだけ分割保存し、
 //   それまでは従来どおり1行にまとめて保存する（＝空/古いext行で履歴を上書きしない安全側）。
 window.SAVE_EXT_SUFFIX = "__ext";
-window.SAVE_EXT_FIELDS = ["answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids"];
+window.SAVE_EXT_FIELDS = ["answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
 window.SAVE_SAFE_LIMIT = 42000; // 1セル50,000文字制限に対して余白を持たせた、1行あたりの上限
 window.saveExtLoadedFor = null;
 // ★2026-09-23追加：「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」だけを優先度順に、
@@ -6844,6 +6849,7 @@ window.initQAMode();
 <script src="./js/tutor-plan.js"></script>
 <script src="./js/hissan-sheet.js"></script>
 <script src="./js/kanji-sheet.js"></script>
+<script src="./js/jigaku-note.js"></script>
 <script src="./js/usage-log.js"></script>
 </body>
 </html>

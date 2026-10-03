@@ -172,6 +172,83 @@
     return out;
   }
 
-  T.japan = japan; T.terrain = terrain; T.scale = scale; T.compass8 = compass8;
+  /* ---------------- 愛知県の 地図（★2026-10-03追加：小牧市 在住。形は おおまか） ---------------- */
+  // 経度・緯度 → 図の 座標（愛知県 だけを 大きく）
+  function AX(lon) { return 10 + (lon - 136.62) * 176; }
+  function AY(lat) { return 8 + (35.43 - lat) * 215; }
+  function apath(pts, close) { return "M" + pts.map(function (p) { return AX(p[0]).toFixed(1) + " " + AY(p[1]).toFixed(1); }).join(" L") + (close ? "z" : ""); }
+  var AICHI = [[136.80, 35.37], [136.94, 35.40], [137.05, 35.33], [137.20, 35.36], [137.35, 35.33], [137.50, 35.30], [137.65, 35.26], [137.74, 35.20], [137.80, 35.12],
+    [137.70, 35.02], [137.62, 34.93], [137.55, 34.80], [137.48, 34.67], [137.30, 34.62], [137.15, 34.60], [137.02, 34.58], [137.06, 34.62], [137.20, 34.645], [137.30, 34.685],
+    [137.36, 34.73], [137.28, 34.78], [137.22, 34.81], [137.10, 34.80], [137.02, 34.82], [136.98, 34.88], [136.96, 34.92], [136.94, 34.84], [136.97, 34.76], [136.98, 34.69],
+    [136.90, 34.71], [136.85, 34.78], [136.83, 34.87], [136.85, 34.97], [136.87, 35.05], [136.83, 35.06], [136.75, 35.04], [136.71, 35.06], [136.68, 35.15], [136.71, 35.25], [136.76, 35.33]];
+  var OWARI_LINE = [[137.12, 35.33], [137.08, 35.15], [137.00, 35.03], [136.96, 34.93]];
+  var RIVERS = { "木曽川": [[136.97, 35.40], [136.88, 35.37], [136.80, 35.35], [136.74, 35.27], [136.70, 35.15], [136.72, 35.05]], "庄内川": [[137.08, 35.30], [137.00, 35.24], [136.93, 35.20], [136.86, 35.10], [136.85, 35.05]],
+    "矢作川": [[137.42, 35.28], [137.25, 35.15], [137.16, 35.06], [137.10, 34.95], [137.05, 34.84]], "豊川": [[137.62, 35.02], [137.50, 34.90], [137.38, 34.78], [137.32, 34.74]] };
+  var WATER = { meiji: ["明治用水", [[137.17, 35.06], [137.08, 34.98], [137.02, 34.92]]], aichi: ["愛知用水", [[136.97, 35.39], [137.03, 35.25], [137.00, 35.10], [136.96, 34.98], [136.92, 34.85], [136.95, 34.72]]],
+    toyokawa: ["豊川用水", [[137.60, 35.00], [137.45, 34.82], [137.30, 34.68], [137.10, 34.62]]] };
+  var CITY = { nagoya: ["名古屋市", 136.906, 35.181], komaki: ["小牧市", 136.912, 35.291], toyota: ["豊田市", 137.156, 35.083], okazaki: ["岡崎市", 137.174, 34.955], toyohashi: ["豊橋市", 137.392, 34.769],
+    ichinomiya: ["一宮市", 136.803, 35.303], seto: ["瀬戸市", 137.085, 35.224], tokoname: ["常滑市", 136.835, 34.887], anjo: ["安城市", 137.08, 34.959], takahama: ["高浜市", 136.988, 34.928],
+    tahara: ["田原市", 137.265, 34.668], arimatsu: ["有松（緑区）", 136.97, 35.07], centrair: ["セントレア", 136.805, 34.858] };
+  function aichi(s) {
+    var out = '<rect x="0" y="0" width="320" height="' + aichi.H + '" rx="10" fill="#dbeafe"/>';
+    out += t(110, 14, "岐阜県", 10, SUB) + t(206, 30, "長野県", 10, SUB) + t(236, 92, "静岡県", 10, SUB) + t(16, 112, "三重県", 10, SUB, "start");
+    out += '<path d="' + apath(AICHI, true) + '" fill="#fefce8" stroke="#a8a29e" stroke-width="1.6" stroke-linejoin="round"/>';
+    if (s.area) {
+      // 尾張（境川より 西）・三河（東）を 色で
+      var owari = [[136.80, 35.37], [136.94, 35.40], [137.05, 35.33], [137.12, 35.33], [137.08, 35.15], [137.00, 35.03], [136.96, 34.93], [136.98, 34.88], [136.96, 34.92], [136.94, 34.84], [136.97, 34.76], [136.98, 34.69],
+        [136.90, 34.71], [136.85, 34.78], [136.83, 34.87], [136.85, 34.97], [136.87, 35.05], [136.83, 35.06], [136.75, 35.04], [136.71, 35.06], [136.68, 35.15], [136.71, 35.25], [136.76, 35.33]];
+      out += '<path d="' + apath(owari, true) + '" fill="' + (s.area === "owari" || s.area === "both" ? "#fbcfe8" : "#fefce8") + '"/>';
+      if (s.area === "mikawa" || s.area === "both") out += '<path d="' + apath(AICHI, true) + '" fill="#bfdbfe" opacity=".55"/><path d="' + apath(owari, true) + '" fill="' + (s.area === "both" ? "#fbcfe8" : "#fefce8") + '"/>';
+      out += t(AX(136.86), AY(35.12), "尾張", 14, s.area !== "mikawa" ? MARK : SUB, "middle", true) + t(AX(137.38), AY(35.02), "三河", 14, s.area !== "owari" ? "#1d4ed8" : SUB, "middle", true);
+    }
+    var show = s.show || [];
+    if (has(show, "mountain")) out += '<path d="' + apath([[137.20, 35.36], [137.35, 35.33], [137.50, 35.30], [137.65, 35.26], [137.74, 35.20], [137.80, 35.12], [137.70, 35.02], [137.55, 35.00], [137.35, 35.12], [137.22, 35.22]], true) + '" fill="#d6a86b" opacity=".55"/>' + t(AX(137.50), AY(35.16), "三河山地", 11, "#7c2d12", "middle", true);
+    if (has(show, "plains")) {
+      out += '<path d="' + apath([[136.72, 35.33], [136.95, 35.36], [137.02, 35.22], [136.92, 35.08], [136.74, 35.06], [136.70, 35.20]], true) + '" fill="#86efac" opacity=".55"/>';
+      out += '<path d="' + apath([[137.02, 35.02], [137.20, 35.02], [137.22, 34.88], [137.06, 34.84], [136.99, 34.92]], true) + '" fill="#86efac" opacity=".55"/>';
+      out += '<path d="' + apath([[137.30, 34.86], [137.48, 34.86], [137.50, 34.72], [137.34, 34.73]], true) + '" fill="#86efac" opacity=".55"/>';
+      out += t(AX(136.83), AY(35.22), "濃尾平野", 11, "#166534", "middle", true) + t(AX(137.11), AY(34.93), "岡崎平野", 10, "#166534", "middle", true) + t(AX(137.42), AY(34.80), "豊橋平野", 10, "#166534", "middle", true);
+    }
+    out += '<path d="' + apath(OWARI_LINE) + '" stroke="#a8a29e" stroke-width="1.2" stroke-dasharray="3 3" fill="none"/>';
+    Object.keys(RIVERS).forEach(function (k) {
+      var on = has(show, "rivers");
+      out += '<path d="' + apath(RIVERS[k]) + '" stroke="#3b82f6" stroke-width="' + (on ? 2.4 : 1.4) + '" fill="none" opacity="' + (on ? 1 : 0.6) + '" stroke-linecap="round"/>';
+      if (on) { var p = RIVERS[k][1]; out += t(AX(p[0]) + 4, AY(p[1]) - 3, k, 9.5, "#1d4ed8", "start", true); }
+    });
+    (s.water ? [].concat(s.water) : []).forEach(function (w) {
+      var W = WATER[w]; if (!W) return;
+      out += '<path d="' + apath(W[1]) + '" stroke="#0891b2" stroke-width="3" stroke-dasharray="6 3" fill="none" stroke-linecap="round"/>';
+      var e = W[1][Math.floor(W[1].length / 2)]; out += t(AX(e[0]) + 6, AY(e[1]), W[0], 11, "#0e7490", "start", true);
+    });
+    if (s.highway) {
+      var tomei = [[137.60, 34.80], [137.40, 34.84], [137.20, 34.95], [137.12, 35.08], [137.03, 35.18], [136.92, 35.29]], meishin = [[136.92, 35.29], [136.80, 35.31], [136.66, 35.35]];
+      out += '<path d="' + apath(tomei) + '" stroke="#f97316" stroke-width="3" fill="none"/><path d="' + apath(meishin) + '" stroke="#ea580c" stroke-width="3" fill="none"/>';
+      out += t(AX(137.30), AY(34.93) - 4, "東名高速（東京へ）", 9.5, "#c2410c", "start", true) + t(AX(136.70), AY(35.37) - 4, "名神高速（大阪へ）", 9.5, "#c2410c", "start", true);
+    }
+    out += t(AX(136.74), AY(34.86), "伊勢湾", 11, "#1d4ed8") + t(AX(137.13), AY(34.74), "三河湾", 11, "#1d4ed8") + t(AX(137.58), AY(34.60), "太平洋", 11, "#1d4ed8");
+    if (has(show, "peninsula")) out += t(AX(136.90), AY(34.79), "知多半島", 10, INK, "end", true) + t(AX(137.12), AY(34.64) - 6, "渥美半島", 10, INK, "middle", true);
+    // 町（いつも 名古屋と 小牧）
+    var cities = ["nagoya", "komaki"].concat((s.cities || []).filter(function (c) { return c !== "nagoya" && c !== "komaki"; })), hl = s.hl || [];
+    cities.forEach(function (k) {
+      var c = CITY[k]; if (!c) return;
+      var x = AX(c[1]), y = AY(c[2]), on = has(hl, k);
+      if (k === "komaki") out += t(x, y + 5, "★", 15, MARK) + t(x + 9, y - 5, "小牧市（わたしたちの 町）", 9.5, MARK, "start", true);
+      else out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (on ? 5 : 3.4) + '" fill="' + (on ? MARK : DARK) + '" stroke="#fff" stroke-width="1.2"/>' + t(x + (k === "nagoya" ? -7 : 7), y + 4, c[0], on ? 11 : 9.5, on ? MARK : DARK, k === "nagoya" ? "end" : "start", true);
+    });
+    // 方位と 説明わく（右上）
+    out += '<path d="M302 12 L308 28 L302 24 L296 28z" fill="#dc2626"/>' + t(302, 40, "北", 10, "#dc2626");
+    var lines = s.box || [];
+    if (lines.length) {
+      var w = 0; lines.forEach(function (l) { w = Math.max(w, l.length); });
+      var bw = Math.min(128, w * 11 + 16), bx = 314 - bw;
+      out += '<rect x="' + bx + '" y="122" width="' + bw + '" height="' + (10 + lines.length * 16) + '" rx="8" fill="#fff" stroke="' + MARK + '" stroke-width="1.6"/>';
+      lines.forEach(function (l, i) { out += t(bx + 8, 138 + i * 16, l, i ? 10 : 11.5, i ? INK : MARK, "start"); });
+    }
+    out += t(314, aichi.H - 6, "形は おおまか", 7.5, "#94a3b8", "end");
+    return out;
+  }
+  aichi.H = 206;
+
+  T.japan = japan; T.aichi = aichi; T.terrain = terrain; T.scale = scale; T.compass8 = compass8;
   window.JAPAN_PREFS = PREF.map(function (p) { return p[0]; });
 })();
