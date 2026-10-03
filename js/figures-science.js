@@ -474,6 +474,103 @@
   }
   skydome.H = 196;
 
+  /* ---------------- 季節と 生き物（★2026-10-03追加）：春・夏・秋・冬を 横に ならべて くらべる ----------------
+     s.rows：["tree"（サクラ）, "bird"（ツバメ）, "plant"（ヘチマ）] の どれを 出すか。s.hl：強調する 季節（spring/summer/autumn/winter） */
+  var SEASONS = [
+    { k: "spring", n: "春", sub: "あたたかい", c: "#db2777", bg: "#fdf2f8" },
+    { k: "summer", n: "夏", sub: "暑い", c: "#ea580c", bg: "#fff7ed" },
+    { k: "autumn", n: "秋", sub: "すずしい", c: "#b45309", bg: "#fefce8" },
+    { k: "winter", n: "冬", sub: "寒い", c: "#2563eb", bg: "#eff6ff" }
+  ];
+  var ROWNAME = { tree: "サクラ", bird: "ツバメ", plant: "ヘチマ" };
+  function swallow(x, y, sc, flip) {
+    var k = sc || 1, d = flip ? -1 : 1;
+    function X(v) { return (x + v * k * d).toFixed(1); } function Y(v) { return (y + v * k).toFixed(1); }
+    return '<path d="M' + X(-12) + ' ' + Y(0) + ' Q' + X(-2) + ' ' + Y(-5) + ' ' + X(10) + ' ' + Y(-2) + ' L' + X(13) + ' ' + Y(0) + ' L' + X(10) + ' ' + Y(2) + ' Q' + X(-2) + ' ' + Y(4) + ' ' + X(-12) + ' ' + Y(0) + ' L' + X(-20) + ' ' + Y(-5) + ' L' + X(-14) + ' ' + Y(0) + ' L' + X(-20) + ' ' + Y(5) + ' Z" fill="#1e293b"/>' +
+      '<path d="M' + X(-2) + ' ' + Y(-2) + ' L' + X(-10) + ' ' + Y(-12) + ' L' + X(4) + ' ' + Y(-3) + ' Z" fill="#334155"/>' +
+      '<circle cx="' + X(9) + '" cy="' + Y(0.5) + '" r="' + (1.6 * k) + '" fill="#ef4444"/>';
+  }
+  function seasonCell(row, k, cx, cy) {
+    var out = "";
+    if (row === "tree") {
+      out += '<rect x="' + (cx - 3) + '" y="' + (cy + 2) + '" width="6" height="18" fill="#92400e"/>';
+      if (k === "winter") return out + L(cx, cy + 4, cx - 14, cy - 12, "#92400e", 3) + L(cx, cy + 4, cx + 14, cy - 12, "#92400e", 3) + L(cx, cy + 2, cx, cy - 18, "#92400e", 3) + L(cx - 8, cy - 4, cx - 18, cy - 6, "#92400e", 2) + L(cx + 8, cy - 4, cx + 18, cy - 6, "#92400e", 2);
+      var fill = k === "spring" ? "#fbcfe8" : k === "summer" ? "#4ade80" : "#fb923c";
+      out += '<ellipse cx="' + cx + '" cy="' + (cy - 6) + '" rx="21" ry="15" fill="' + fill + '"/>';
+      if (k === "spring") [[-10, -10], [6, -14], [12, -2], [-4, -2], [-14, 0], [2, -8]].forEach(function (d) { out += '<circle cx="' + (cx + d[0]) + '" cy="' + (cy + d[1]) + '" r="3" fill="#ec4899"/>'; });
+      if (k === "autumn") [[16, 14], [22, 6], [-18, 16]].forEach(function (d) { out += '<ellipse cx="' + (cx + d[0]) + '" cy="' + (cy + d[1]) + '" rx="3" ry="2" fill="#dc2626"/>'; });
+      return out;
+    }
+    if (row === "bird") {
+      if (k === "spring") return '<path d="M' + (cx - 26) + ' ' + (cy - 14) + ' H' + (cx + 26) + '" stroke="#a16207" stroke-width="3"/>' + '<path d="M' + (cx - 2) + ' ' + (cy - 12) + ' q10 16 20 0 z" fill="#d6a76c" stroke="#92400e" stroke-width="1.4"/>' + swallow(cx - 12, cy + 6, 0.8);
+      if (k === "summer") {
+        out += '<path d="M' + (cx - 26) + ' ' + (cy - 14) + ' H' + (cx + 26) + '" stroke="#a16207" stroke-width="3"/>' + '<path d="M' + (cx - 16) + ' ' + (cy - 12) + ' q16 24 32 0 z" fill="#d6a76c" stroke="#92400e" stroke-width="1.4"/>';
+        [-9, 0, 9].forEach(function (d) { out += '<circle cx="' + (cx + d) + '" cy="' + (cy - 12) + '" r="4.5" fill="#475569"/><path d="M' + (cx + d - 3) + ' ' + (cy - 16) + ' l3 -5 l3 5 z" fill="#facc15"/>'; });
+        return out;
+      }
+      if (k === "autumn") return swallow(cx + 4, cy - 2, 0.9) + arrow(cx - 4, cy + 12, cx - 24, cy + 12, MARK, 2);
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="13" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="3 3"/>' + t(cx, cy + 4, "いない", 9, SUB);
+    }
+    if (row === "plant") {
+      out += L(cx - 24, cy + 16, cx + 24, cy + 16, "#a16207", 2);
+      if (k === "spring") return out + L(cx, cy + 16, cx, cy + 4, "#16a34a", 2.4) + '<ellipse cx="' + (cx - 6) + '" cy="' + (cy + 3) + '" rx="6" ry="3" fill="#4ade80"/><ellipse cx="' + (cx + 6) + '" cy="' + (cy + 3) + '" rx="6" ry="3" fill="#4ade80"/>';
+      if (k === "winter") return out + [[-8, 12], [2, 13], [10, 11]].map(function (d) { return '<ellipse cx="' + (cx + d[0]) + '" cy="' + (cy + d[1]) + '" rx="3" ry="2" fill="#1e293b"/>'; }).join("");
+      var vine = k === "summer" ? "#16a34a" : "#a16207", leaf = k === "summer" ? "#4ade80" : "#d6a76c";
+      out += '<path d="M' + cx + ' ' + (cy + 16) + ' C' + (cx - 10) + ' ' + (cy + 4) + ' ' + (cx + 10) + ' ' + (cy - 6) + ' ' + cx + ' ' + (cy - 18) + '" stroke="' + vine + '" stroke-width="2.4" fill="none"/>';
+      out += '<path d="M' + (cx - 1) + ' ' + (cy + 2) + ' l-14 -4 l4 10 z" fill="' + leaf + '"/><path d="M' + (cx + 2) + ' ' + (cy - 8) + ' l14 -4 l-4 10 z" fill="' + leaf + '"/>';
+      if (k === "summer") out += '<circle cx="' + (cx + 12) + '" cy="' + (cy - 16) + '" r="5" fill="#facc15"/><circle cx="' + (cx - 12) + '" cy="' + (cy - 12) + '" r="4" fill="#facc15"/>';
+      else out += '<ellipse cx="' + (cx + 12) + '" cy="' + (cy + 2) + '" rx="4" ry="11" fill="#84cc16" stroke="#65a30d" stroke-width="1"/>';
+      return out;
+    }
+    return out;
+  }
+  var SEASON_NOTE = {
+    tree: { spring: "花が さく", summer: "葉が しげる", autumn: "葉が 色づく", winter: "葉が おちる" },
+    bird: { spring: "やってくる", summer: "子育て", autumn: "南の 国へ", winter: "南で すごす" },
+    plant: { spring: "芽が 出る", summer: "のびて 花", autumn: "実→ かれる", winter: "たねで こす" }
+  };
+  function seasons(s) {
+    var rows = s.rows || ["tree", "bird", "plant"], X0 = 44, W = 68, out = "";
+    SEASONS.forEach(function (se, i) {
+      var x = X0 + i * W, on = s.hl === se.k, h = 30 + rows.length * 58;
+      out += '<rect x="' + (x + 1) + '" y="2" width="' + (W - 2) + '" height="' + (h - 2) + '" rx="10" fill="' + se.bg + '" stroke="' + (on ? MARK : "#e9d5ff") + '" stroke-width="' + (on ? 3 : 1.5) + '"/>';
+      out += t(x + W / 2, 19, se.n, 15, se.c) + t(x + W / 2, 30, se.sub, 8, SUB);
+      rows.forEach(function (r, j) {
+        var cy = 30 + j * 58 + 26;
+        out += seasonCell(r, se.k, x + W / 2, cy) + t(x + W / 2, cy + 30, SEASON_NOTE[r][se.k], 9, on ? MARK : INK);
+      });
+    });
+    rows.forEach(function (r, j) { out += t(22, 30 + j * 58 + 30, ROWNAME[r], 10, INK); });
+    return out;
+  }
+  /* ---------------- 冬の こし方（★2026-10-03追加）：こん虫・カエルの 冬ごしの すがたを くらべる ---------------- */
+  var WINTER = {
+    butterfly: { n: "チョウ", f: "さなぎ", w: "えだ・かべで" },
+    mantis: { n: "カマキリ", f: "たまご", w: "あわの かたまり" },
+    ladybug: { n: "テントウムシ", f: "成虫", w: "葉の 下に あつまる" },
+    frog: { n: "カエル", f: "冬眠", w: "土の 中で ねむる" }
+  };
+  function winterPic(k, cx, cy) {
+    if (k === "butterfly") return L(cx - 6, cy - 34, cx - 6, cy + 30, "#92400e", 4) + '<path d="M' + (cx - 3) + ' ' + (cy - 14) + ' q14 4 12 18 q-2 12 -12 18 q4 -18 0 -36 z" fill="#a3c45a" stroke="#4d7c0f" stroke-width="1.4"/>' + L(cx - 6, cy - 4, cx + 8, cy - 10, "#cbd5e1", 1);
+    if (k === "mantis") return L(cx - 26, cy - 10, cx + 26, cy - 10, "#92400e", 4) + '<ellipse cx="' + cx + '" cy="' + (cy + 2) + '" rx="16" ry="11" fill="#e7d3a8" stroke="#a16207" stroke-width="1.6"/>' + [-8, -2, 4, 10].map(function (d) { return L(cx + d, cy - 7, cx + d - 2, cy + 11, "#c4a46b", 1.2); }).join("");
+    if (k === "ladybug") {
+      var o = '<path d="M' + (cx - 28) + ' ' + (cy - 6) + ' q28 -26 56 0 z" fill="#86efac" stroke="#16a34a" stroke-width="1.4"/>';
+      [[-12, 6], [2, 8], [14, 4], [-4, 18], [10, 18]].forEach(function (d) { var x = cx + d[0], y = cy + d[1]; o += '<circle cx="' + x + '" cy="' + y + '" r="6" fill="#ef4444" stroke="#7f1d1d" stroke-width="1"/>' + L(x, y - 6, x, y + 6, "#7f1d1d", 1) + '<circle cx="' + (x - 2.5) + '" cy="' + (y + 1) + '" r="1.3" fill="#1e293b"/><circle cx="' + (x + 2.5) + '" cy="' + (y + 1) + '" r="1.3" fill="#1e293b"/>'; });
+      return o;
+    }
+    return '<rect x="' + (cx - 32) + '" y="' + (cy - 16) + '" width="64" height="50" fill="#d6a76c" opacity=".55"/>' + L(cx - 32, cy - 16, cx + 32, cy - 16, "#92400e", 2) + '<ellipse cx="' + cx + '" cy="' + (cy + 10) + '" rx="14" ry="9" fill="#65a30d"/><circle cx="' + (cx - 6) + '" cy="' + (cy + 3) + '" r="3" fill="#65a30d"/><circle cx="' + (cx + 6) + '" cy="' + (cy + 3) + '" r="3" fill="#65a30d"/>' + L(cx - 8, cy + 3, cx - 4, cy + 3, "#1e293b", 1.4) + L(cx + 4, cy + 3, cx + 8, cy + 3, "#1e293b", 1.4) + t(cx + 22, cy - 2, "z z", 10, BLUE);
+  }
+  function overwinter(s) {
+    var items = s.items || ["butterfly", "mantis", "ladybug", "frog"], n = items.length, W = 312 / n, out = "";
+    items.forEach(function (k, i) {
+      var it = WINTER[k], x = 4 + i * W, cx = x + W / 2, on = s.hl === k;
+      out += '<rect x="' + (x + 2) + '" y="4" width="' + (W - 4) + '" height="140" rx="12" fill="' + (on ? "#fdf2f8" : "#f8fafc") + '" stroke="' + (on ? MARK : "#cbd5e1") + '" stroke-width="' + (on ? 3 : 1.5) + '"/>';
+      out += t(cx, 22, it.n, it.n.length > 4 ? 10 : 12, INK) + winterPic(k, cx, 64) + t(cx, 120, it.f, 14, on ? MARK : BLUE) + t(cx, 136, it.w, 8, SUB);
+    });
+    return out;
+  }
+
+  T.seasons = seasons; T.overwinter = overwinter;
   T.starmove = starmove; T.starcolor = starcolor; T.skydome = skydome;
   T.syringe = syringe; T.airgun = airgun; T.rod = rod; T.plate = plate; T.convection = convection;
   T.slope = slope; T.soil = soil; T.puddles = puddles; T.magnets = magnets; T.arm = arm;

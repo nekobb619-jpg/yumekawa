@@ -124,5 +124,66 @@
     return out;
   }
 
+
+  /* ---------------- 昔と 今・前と あと（★2026-10-03追加、先人の 単元）：2つの 絵を ならべて くらべる ----------------
+     s.k：dig（昔は 人の 手で ほる／今は 機械）・ta（用水路が できる 前／できた あと）・slope（用水路の かたむき）・bridge（通潤橋） */
+  var WATER = "#38bdf8", SOILC = "#d6a76c", GREEN = "#4ade80";
+  function panel(x, title, sub, on) {
+    return '<rect x="' + x + '" y="4" width="148" height="142" rx="12" fill="' + (on ? "#fdf2f8" : "#f8fafc") + '" stroke="' + (on ? MARK : "#c4b5fd") + '" stroke-width="' + (on ? 3 : 2) + '"/>' +
+      t(x + 74, 22, title, 13, on ? MARK : INK) + (sub ? t(x + 74, 138, sub, 10, SUB) : "");
+  }
+  function person(x, y) {
+    return '<circle cx="' + x + '" cy="' + (y - 30) + '" r="7" fill="#fde7d7" stroke="' + DARK + '" stroke-width="1.6"/>' + '<path d="M' + (x - 10) + ' ' + (y - 36) + ' h20" stroke="#a16207" stroke-width="3"/>' +
+      L(x, y - 23, x, y - 6, DARK, 3) + L(x, y - 6, x - 7, y + 8, DARK, 3) + L(x, y - 6, x + 7, y + 8, DARK, 3) + L(x, y - 18, x + 12, y - 12, DARK, 3);
+  }
+  function fields(x, y, n, wet) {
+    var o = "";
+    for (var i = 0; i < n; i++) {
+      var fx = x + (i % 3) * 42, fy = y + Math.floor(i / 3) * 24;
+      o += '<rect x="' + fx + '" y="' + fy + '" width="38" height="20" rx="3" fill="' + (wet ? "#bbf7d0" : "#fde68a") + '" stroke="' + (wet ? "#16a34a" : "#a16207") + '" stroke-width="1.4"/>';
+      if (wet) for (var k = 0; k < 4; k++) o += L(fx + 6 + k * 9, fy + 16, fx + 6 + k * 9, fy + 6, "#16a34a", 1.6);
+    }
+    return o;
+  }
+  function mukashi(s) {
+    var out = "";
+    if (s.k === "dig") {
+      out += panel(6, "むかし", "人の 手で ほって 運ぶ", s.hl === "old") + panel(166, "今", "機械で ほる", s.hl === "now");
+      out += '<path d="M14 110 H146 V128 H14 Z" fill="' + SOILC + '"/><path d="M60 110 q20 18 40 0" fill="#a16207"/>';
+      out += person(52, 104) + L(64, 92, 78, 116, "#92400e", 3) + '<path d="M74 114 l10 4 l-6 4 z" fill="#64748b"/>';
+      out += person(118, 104) + L(104, 70, 132, 70, "#92400e", 3) + '<path d="M106 70 v14 h8 v-14 M124 70 v14 h8 v-14" fill="none" stroke="#a16207" stroke-width="2"/><ellipse cx="110" cy="86" rx="7" ry="4" fill="' + SOILC + '"/><ellipse cx="128" cy="86" rx="7" ry="4" fill="' + SOILC + '"/>';
+      out += '<path d="M174 110 H306 V128 H174 Z" fill="' + SOILC + '"/><path d="M262 110 q14 16 30 0" fill="#a16207"/>';
+      out += '<rect x="184" y="84" width="54" height="22" rx="4" fill="#facc15" stroke="#a16207" stroke-width="1.6"/><rect x="214" y="64" width="24" height="22" rx="3" fill="#fde68a" stroke="#a16207" stroke-width="1.6"/><rect x="180" y="104" width="62" height="8" rx="4" fill="#475569"/>';
+      out += '<path d="M236 74 L268 50 L290 92" fill="none" stroke="#eab308" stroke-width="6" stroke-linejoin="round"/><path d="M282 90 l16 4 l-4 14 l-16 -4 z" fill="#64748b"/>';
+      return out;
+    }
+    if (s.k === "ta") {
+      out += panel(6, "用水路が できる 前", "水が たりず、田が 少ない", s.hl === "before") + panel(166, "できた あと", "水が とどき、田が ふえた", s.hl === "after");
+      out += '<circle cx="128" cy="44" r="12" fill="#fde047"/>' + fields(18, 56, 2, false) + '<path d="M18 100 H146 V126 H18 Z" fill="#fde68a"/>' + L(40, 106, 52, 118, "#a16207", 1.6) + L(52, 118, 46, 124, "#a16207", 1.6) + L(98, 104, 110, 114, "#a16207", 1.6) + L(110, 114, 124, 112, "#a16207", 1.6);
+      out += '<path d="M174 36 C220 40 240 62 300 62" stroke="' + WATER + '" stroke-width="8" fill="none"/>' + t(194, 54, "用水路", 9, "#0369a1") + fields(178, 72, 6, true);
+      out += '<path d="M178 60 V70 M222 66 V70 M262 62 V70" stroke="' + WATER + '" stroke-width="3"/>';
+      out += arrow(150, 76, 162, 76, MARK);
+      return out;
+    }
+    if (s.k === "slope") {
+      out += '<path d="M10 40 H60 V130 H10 Z" fill="#a7f3d0"/>' + t(35, 30, "川", 12, "#0369a1") + '<path d="M18 60 Q35 52 52 60 V130 H18 Z" fill="' + WATER + '" opacity=".7"/>';
+      out += '<path d="M60 64 L290 104" stroke="' + SOILC + '" stroke-width="14"/><path d="M60 60 L290 100" stroke="' + WATER + '" stroke-width="6"/>';
+      [100, 160, 220].forEach(function (x) { var y = 60 + (x - 60) * 40 / 230; out += arrow(x - 16, y - 12, x + 4, y - 9, MARK); });
+      out += L(60, 60, 290, 60, "#94a3b8", 1.4).replace('fill="none"', 'fill="none" stroke-dasharray="5 4"') + t(276, 54, "同じ 高さ", 9, SUB);
+      out += '<path d="M282 60 V100" stroke="' + MARK + '" stroke-width="2"/>' + arrowHead(282, 100, Math.PI / 2) + t(130, 104, "少しずつ 低く", 11, MARK);
+      out += fields(206, 112, 2, true);
+      return out;
+    }
+    if (s.k === "bridge") {
+      out += '<path d="M8 40 L70 40 L104 140 L216 140 L250 40 L312 40" fill="none" stroke="#a16207" stroke-width="3"/><path d="M8 40 L70 40 L104 140 L216 140 L250 40 L312 40 V146 H8 Z" fill="#fef3c7"/>';
+      out += '<path d="M70 40 H250 V62 H70 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><path d="M96 62 V140 H224 V62 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><path d="M110 140 V104 A50 44 0 0 1 210 104 V140 Z" fill="#fef3c7" stroke="#64748b" stroke-width="2"/>';
+      out += '<path d="M8 50 H312" stroke="' + WATER + '" stroke-width="5" stroke-dasharray="10 0"/>' + t(160, 56, "← 石の 管（水の 通り道）→", 9, "#0369a1");
+      out += '<path d="M160 64 Q150 84 136 100 M160 64 Q170 84 184 100" stroke="' + WATER + '" stroke-width="3" fill="none"/>' + t(160, 122, "放水（水を 出す）", 9, "#0369a1");
+      out += t(36, 34, "台地", 10, DARK) + t(284, 34, "台地（田）", 10, DARK);
+      return out;
+    }
+    return out;
+  }
+  T.mukashi = mukashi;
   T.mapsym = mapsym; T.mapdir = mapdir; T.flow = flow; T.threeR = threeR; T.inland = inland; T.phones = phones; T.jijo = jijo;
 })();

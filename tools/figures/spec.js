@@ -92,6 +92,13 @@ const INU = [{ w: "大きな", r: "m", to: 1 }, { w: "犬が", r: "s" }, { w: "�
 
 const AI = (o, cap) => Object.assign({ t: "aichi", cap }, o);
 
+
+// ★2026-10-03追加：比べて わかる 図（季節と 生き物・昔と 今）
+const SEA = (rows, hl, cap) => ({ t: "seasons", rows, hl, cap, H: 32 + rows.length * 58 });
+const OW = (hl, cap, items) => ({ t: "overwinter", hl, cap, items });
+const MK = (k, hl, cap) => ({ t: "mukashi", k, hl, cap, H: 150 });
+const TAMAGAWA = { t: "flow", nodes: [{ label: "多摩川（羽村）", sub: "水を 取り入れる" }, { label: "玉川上水", sub: "約43kmの 水路" }, { label: "江戸の まち", sub: "飲み水に" }], hl: 2, H: 64, cap: "多摩川の 水を 江戸の まちへ" };
+const UKETSUGI = { t: "flow", nodes: [{ label: "先人が はじめる" }, { label: "保存会で", sub: "教え合う" }, { label: "記録・映像に", sub: "のこす" }, { label: "子どもも 練習", sub: "次の 人へ" }], H: 124, cap: "地域の 人が 受けつぐから 今も 続く" };
 module.exports = {
   "算数/図形/suichoku_heikou01": {
     0: E(PERP), 2: E(PARA), 4: E(PERP), 5: E(RECT_SIDE), 6: E(PERP2), 7: E(PARA),
@@ -524,5 +531,35 @@ module.exports = {
     9: E(AI({ cities: ["takahama"], hl: ["takahama"], box: ["高浜市・碧南市", "三州瓦"] }, "三河の ねんどで 作る 瓦")),
     10: E(AI({ water: "meiji", show: ["rivers"], cities: ["anjo"], box: ["明治用水", "1880年 完成"] }, "矢作川から 安城の 台地へ")),
     11: E(AI({ water: "aichi", show: ["peninsula", "rivers"], box: ["愛知用水", "1961年 通水"] }, "木曽川から 知多半島の 先まで"))
+  },
+  "理科/季節と生き物/kisetsu01": {
+    0: E(SEA(["tree", "bird"], "spring", "春：サクラが さき、ツバメが やってくる")),
+    1: E(SEA(["plant", "tree"], "summer", "夏：よく のびて、葉が しげる")),
+    2: E(SEA(["bird"], "autumn", "秋：南の あたたかい 国へ わたる")),
+    3: E(OW(null, "いろいろな すがたで 冬を こす")),
+    4: E(OW("butterfly", "チョウは さなぎで 冬を こす", ["butterfly", "mantis", "ladybug"])),
+    5: E(OW("mantis", "カマキリは たまご（あわの かたまり）で", ["butterfly", "mantis", "ladybug"])),
+    6: E(OW("ladybug", "テントウムシは 成虫の まま あつまって", ["butterfly", "mantis", "ladybug"])),
+    7: E(SEA(["bird"], "autumn", "秋に 南へ、春に 日本へ")),
+    8: E(SEA(["tree", "bird", "plant"], null, "気温が かわると、生き物の ようすも かわる")),
+    9: E(OW("ladybug", "テントウムシは 成虫の すがたで 冬ごし", ["butterfly", "mantis", "ladybug"])),
+    10: E(OW("butterfly", "モンシロチョウ・アゲハは さなぎ", ["butterfly", "mantis", "ladybug"])),
+    11: E(OW("butterfly", "えだに ついて いるのは チョウの さなぎ", ["butterfly", "mantis", "ladybug"])),
+    12: E(SEA(["bird"], null, "季節で すむ 場所を かえる＝渡り鳥")),
+    13: E(SEA(["plant"], "autumn", "秋に たねを のこして かれる")),
+    14: E(OW("frog", "カエルは 土の 中で 冬眠")),
+    15: E(SEA(["tree"], "summer", "サクラ：花 → 葉 → 色づく → おちる")),
+    16: E(OW("mantis", "カマキリや バッタは たまごで 冬を こす", ["butterfly", "mantis", "ladybug"]))
+  },
+  "社会/先人/senjin01": {
+    1: E(MK("ta", "after", "用水路：田や 畑へ 水を 引く 通り道")),
+    2: E(TAMAGAWA),
+    3: E(MK("bridge", null, "通潤橋：橋の 中の 石の 管を 水が 通る")),
+    4: E(MK("dig", "old", "機械の ない ころは 人の 手で ほった")),
+    5: E(MK("slope", null, "少しずつ 低く すると、水が 遠くまで 流れる")),
+    6: E(MK("ta", "after", "水が 行きわたり、田が ふえた")),
+    8: E(UKETSUGI),
+    9: E(UKETSUGI),
+    11: E(MK("ta", "before", "水不足で こまる 人を 助けたかった"))
   }
 };
