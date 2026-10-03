@@ -459,11 +459,13 @@
     out += t(cx, cy - R + 14, "北", 12, "#e2e8f0") + t(cx, cy + R - 5, "南", 12, "#e2e8f0") + t(cx - R + 12, cy + 4, "東", 12, "#e2e8f0") + t(cx + R - 12, cy + 4, "西", 12, "#e2e8f0");
     out += '<path d="M' + cx + ' ' + (cy - 4) + ' V' + (cy + 4) + ' M' + (cx - 4) + ' ' + cy + ' H' + (cx + 4) + '" stroke="#64748b" stroke-width="1.4"/>';
     var keys = ["vega", "deneb", "altair"], prev = null;
-    hours.forEach(function (h, i) {
-      var last = i === hours.length - 1, pts = keys.map(function (k) { return SK.domeXY(SK.altaz(SK.STARS[k], d[0], d[1], d[2], h), cx, cy, R); });
+    // dates が あれば「同じ 時刻で 日にちを くらべる」、なければ「同じ 日で 時刻を くらべる」
+    var list = s.dates ? s.dates.map(function (dd) { return { d: dd, h: hours[0], label: dd[1] + "/" + dd[2] }; }) : hours.map(function (h) { return { d: d, h: h, label: "午後" + (h > 12 ? h - 12 : h) + "時" }; });
+    list.forEach(function (it, i) {
+      var h = it.h, last = i === list.length - 1, pts = keys.map(function (k) { return SK.domeXY(SK.altaz(SK.STARS[k], it.d[0], it.d[1], it.d[2], h), cx, cy, R); });
       out += '<path d="M' + pts.map(function (p) { return p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(" L") + 'z" fill="' + (last ? "rgba(253,230,138,.12)" : "none") + '" stroke="' + (last ? "#fde68a" : "#a5b4fc") + '" stroke-width="' + (last ? 2 : 1.4) + '"' + (last ? "" : ' stroke-dasharray="4 3"') + '/>';
       pts.forEach(function (p) { out += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3.4" fill="' + (last ? "#fff" : "#a5b4fc") + '"/>'; });
-      out += t(pts[2].x + (last ? 10 : -10), pts[2].y + 14, "午後" + (h > 12 ? h - 12 : h) + "時", 11, last ? "#fde68a" : "#a5b4fc", last ? "start" : "end");
+      out += t(pts[2].x + (last ? 10 : -10), pts[2].y + 14, it.label, 11, last ? "#fde68a" : "#a5b4fc", last ? "start" : "end");
       if (prev) out += '<path d="M' + prev.x.toFixed(1) + ' ' + prev.y.toFixed(1) + ' L' + pts[2].x.toFixed(1) + ' ' + pts[2].y.toFixed(1) + '" stroke="' + MARK + '" stroke-width="2.2"/>' + arrowHead(pts[2].x, pts[2].y, Math.atan2(pts[2].y - prev.y, pts[2].x - prev.x), MARK);
       prev = pts[2];
     });

@@ -41,10 +41,18 @@
 <div class="wrap">
   <h1>🌌 星の動きラボ</h1>
   <div class="place">📍 愛知県（名古屋）の 空 ／ 本当の 星の 位置を 計算して いるよ</div>
-  <div class="row">
+  <div class="row" id="modes">
+    <button class="chip on" data-m="time">🕐 時刻で くらべる（1日の 動き）</button>
+    <button class="chip" data-m="date">📅 日にちで くらべる（季節）</button>
+  </div>
+  <div class="row" id="timeCtrl">
     <input type="date" id="date" value="2026-10-01">
     <button class="chip on" id="thu">📅 木曜日（10/1）の 観察</button>
     <button class="chip" id="tonight">🌙 今夜</button>
+  </div>
+  <div class="row" id="dateCtrl" style="display:none">
+    <span style="font-size:12px;font-weight:900;color:#7a6985">毎日 同じ 時刻に 見る：</span>
+    <button class="chip" data-h="19">午後7時</button><button class="chip on" data-h="20">午後8時</button><button class="chip" data-h="21">午後9時</button>
   </div>
   <div class="tabs" id="tabs">
     <button data-v="dome" class="on">⬆️ 見上げる（空ぜんぶ）</button>
@@ -52,7 +60,7 @@
   </div>
   <svg id="sky" viewBox="0 0 360 360" role="img" aria-label="星の 位置"></svg>
   <div class="time"><button id="play" aria-label="時間を すすめる">▶</button><input type="range" id="t" min="1080" max="1560" step="5" value="1140"><span id="tlabel"></span></div>
-  <label class="check"><input type="checkbox" id="trail" checked> 🕐 1時間ごとの 位置を のこして くらべる</label>
+  <label class="check"><input type="checkbox" id="trail" checked> <span id="trailLabel">🕐 1時間ごとの 位置を のこして くらべる</span></label>
 
   <div class="card" id="say"></div>
 
@@ -62,6 +70,16 @@
       <li>まわりに <b>目印が ない</b> ので、どれだけ 動いたか くらべにくい。</li>
       <li>真上を 見ると、体の 向きで 東と 西が 分からなく なりやすい。<b>南を 向いて 見上げると、左が 東・右が 西</b>。</li>
       <li>頭の 上を 通る 星は、<b>西へ 動きながら 三角の 向きが かたむいて</b> 見える（形＝ならび方は 同じ）。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>📅 7月には 東の 空に あったのに、どうして 今は 頭の 上？</h2>
+    <ul>
+      <li>星は <b>毎日 約4分ずつ 早く</b> 同じ 場所に 来る。<b>1か月で 約2時間</b> 早く なる。</li>
+      <li>アルタイルが 東から のぼる 時刻（名古屋）：<b>7月20日 午後5時26分</b> → <b>10月1日 午後0時39分</b>（昼の 明るい うちに のぼって いる）。</li>
+      <li>だから <b>同じ 午後8時</b>に 見ると、7月は まだ 東の 空、10月は もう 頭の 上を こえて 西へ。上の「📅 日にちで くらべる」で たしかめよう。</li>
+      <li style="color:#7a6985">なぜ 毎日 4分 早いのかは、中学校で 学ぶ「地球が 太陽の まわりを 回る こと」と 関係が あるよ。</li>
     </ul>
   </div>
 
@@ -77,7 +95,7 @@
   </div>
 
   <div class="card">
-    <h2>✏️ やってみよう（木曜日の 空で）</h2>
+    <h2>✏️ やってみよう</h2>
     <div id="quiz"></div>
   </div>
 </div>
@@ -85,11 +103,14 @@
 <script>
 (function () {
   var S = window.SKY, P = S.PLACES.nagoya, svg = document.getElementById("sky");
-  var view = "dome", dateEl = document.getElementById("date"), tEl = document.getElementById("t"), trailEl = document.getElementById("trail");
+  var view = "dome", mode = "time", dHour = 20, dateEl = document.getElementById("date"), tEl = document.getElementById("t"), trailEl = document.getElementById("trail");
   var LAND = [{ az: 180, k: "house", name: "家の 屋根" }, { az: 222, k: "pole", name: "電柱" }, { az: 262, k: "tree", name: "木" }, { az: 128, k: "tree", name: "木" }, { az: 330, k: "bldg", name: "マンション" }, { az: 45, k: "pole", name: "電柱" }, { az: 80, k: "bldg", name: "マンション" }];
   function ymd() { var v = (dateEl.value || "2026-10-01").split("-").map(Number); return v; }
   function hm(min) { var h = Math.floor(min / 60), m = min % 60, hh = h % 24; return (hh < 12 ? (h >= 24 ? "夜中" : "午前") : "午後") + (hh % 12 === 0 && hh >= 12 ? 12 : hh % 12) + "時" + (m ? m + "分" : ""); }
-  function pos(key, hour) { var v = ymd(), d = new Date(Date.UTC(v[0], v[1] - 1, v[2] + Math.floor(hour / 24))); return S.altaz(S.STARS[key], d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), hour % 24, P); }
+  // 日にちで くらべる ときの スライダー：6月1日 ＝ 0
+  function dayToDate(n) { var d = new Date(Date.UTC(2026, 5, 1 + n)); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()]; }
+  function dateToDay(m, d) { return Math.round((Date.UTC(2026, m - 1, d) - Date.UTC(2026, 5, 1)) / 86400000); }
+  function pos(key, hour, dt) { var v = dt || ymd(), d = new Date(Date.UTC(v[0], v[1] - 1, v[2] + Math.floor(hour / 24))); return S.altaz(S.STARS[key], d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), hour % 24, P); }
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   function tx(x, y, s, size, col, anchor, extra) { return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="' + size + '" font-weight="900" fill="' + col + '" text-anchor="' + (anchor || "middle") + '" font-family="\'Zen Maru Gothic\',sans-serif"' + (extra || "") + '>' + esc(s) + '</text>'; }
 
@@ -102,24 +123,24 @@
   }
   function starR(k) { var m = S.STARS[k].mag; return Math.max(1.6, 4.6 - m * 1.1); }
 
-  function drawSet(hour, faint, label) {
+  function drawSet(hour, faint, label, dt) {
     var o = "", op = faint ? 0.38 : 1;
     Object.keys(S.FIGS).forEach(function (f) {
       var F = S.FIGS[f];
       F.lines.forEach(function (ln) {
-        var a = proj(pos(ln[0], hour)), b = proj(pos(ln[1], hour));
+        var a = proj(pos(ln[0], hour, dt)), b = proj(pos(ln[1], hour, dt));
         if (a && b) o += '<path d="M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ' L' + b.x.toFixed(1) + ' ' + b.y.toFixed(1) + '" stroke="' + F.col + '" stroke-width="' + (f === "summer" ? 2 : 1.3) + '" opacity="' + (faint ? 0.3 : 0.8) + '"' + (faint ? ' stroke-dasharray="4 3"' : "") + '/>';
       });
     });
     Object.keys(S.STARS).forEach(function (k) {
-      var st = S.STARS[k], q = proj(pos(k, hour)); if (!q) return;
+      var st = S.STARS[k], q = proj(pos(k, hour, dt)); if (!q) return;
       o += '<circle cx="' + q.x.toFixed(1) + '" cy="' + q.y.toFixed(1) + '" r="' + starR(k) + '" fill="' + (st.col || "#fff") + '" opacity="' + op + '"/>';
       if (!faint && st.name) o += tx(q.x, q.y - starR(k) - 4, st.name, 10.5, k === "altair" || k === "vega" || k === "deneb" ? "#fde68a" : "#c7d2fe");
     });
-    if (label) { var al = proj(pos("altair", hour)); if (al) o += tx(al.x + 9, al.y + 14, label, 10, faint ? "#f9a8d4" : "#f472b6", "start"); }
+    if (label) { var al = proj(pos("altair", hour, dt)); if (al) o += faint ? tx(al.x - 8, al.y + 13, label, 10, "#f9a8d4", "end") : tx(al.x + 9, al.y + 14, label, 10, "#f472b6", "start"); } // 前の 時刻・日にちは 左（東がわ）に 書いて、今の 文字と 重ならない ように
     if (!faint) {
       var fl = [["summer", "deneb", "夏の大三角"], ["cas", "cas3", "カシオペヤ座"], ["dipper", "ud5", "北斗七星"]];
-      fl.forEach(function (x) { var q = proj(pos(x[1], hour)); if (q) o += tx(q.x, q.y + 18, x[2], 10, "#a5b4fc"); });
+      fl.forEach(function (x) { var q = proj(pos(x[1], hour, dt)); if (q) o += tx(q.x, q.y + 18, x[2], 10, "#a5b4fc"); });
     }
     return o;
   }
@@ -131,7 +152,7 @@
     return '<rect x="' + (x - 14 * s) + '" y="' + (y - 44 * s) + '" width="' + 28 * s + '" height="' + 44 * s + '" fill="' + c + '"/>';
   }
   function draw() {
-    var min = Number(tEl.value), hour = min / 60, o = "";
+    var min = Number(tEl.value), hour = mode === "date" ? dHour : min / 60, cur = mode === "date" ? dayToDate(min) : null, o = "";
     if (view === "dome") {
       svg.setAttribute("viewBox", "0 0 360 360");
       o += '<rect width="360" height="360" fill="#f3ebf7"/><circle cx="180" cy="180" r="162" fill="#0b1437" stroke="#334155" stroke-width="4"/>';
@@ -146,13 +167,19 @@
       LAND.forEach(function (l) { var d = ((l.az - C + 540) % 360) - 180; if (Math.abs(d) < 64) o += landmark(180 + d * 2.9, 238, l.k, 0.8); });
     }
     var body = "";
-    if (trailEl.checked) for (var h = 18; h < hour - 0.01; h++) body += drawSet(h, true, hm(h * 60).replace("午後", "").replace("夜中", ""));
-    body += drawSet(hour, false, trailEl.checked ? hm(min).replace("午後", "").replace("夜中", "") : "");
+    if (mode === "date") {
+      // 毎月 20日の 同じ 時刻の 位置を のこす
+      if (trailEl.checked) for (var mo = 6; mo <= 12; mo++) if (dateToDay(mo, 20) < min) body += drawSet(hour, true, mo + "/20", [2026, mo, 20]);
+      body += drawSet(hour, false, trailEl.checked ? cur[1] + "/" + cur[2] : "", cur);
+    } else {
+      if (trailEl.checked) for (var h = 18; h < hour - 0.01; h++) body += drawSet(h, true, hm(h * 60).replace("午後", "").replace("夜中", ""));
+      body += drawSet(hour, false, trailEl.checked ? hm(min).replace("午後", "").replace("夜中", "") : "");
+    }
     if (view === "dome") o += '<clipPath id="cp"><circle cx="180" cy="180" r="162"/></clipPath><g clip-path="url(#cp)">' + body + '</g>';
     else o += '<clipPath id="cp"><rect width="360" height="240"/></clipPath><g clip-path="url(#cp)">' + body + '</g><rect y="238" width="360" height="32" fill="#020617"/>' + (function () { var s = ""; [-60, -45, -30, -15, 0, 15, 30, 45, 60].forEach(function (d) { var az = (Number(view) + d + 360) % 360; if (az % 45 === 0) s += tx(180 + d * 2.9, 262, S.dirName(az, 8), 13, d === 0 ? "#fde68a" : "#e2e8f0"); }); return s; })();
     svg.innerHTML = o;
-    document.getElementById("tlabel").textContent = hm(min);
-    say(hour);
+    document.getElementById("tlabel").textContent = mode === "date" ? cur[1] + "月" + cur[2] + "日" : hm(min);
+    if (mode === "date") saySeason(cur); else say(hour);
   }
   function say(hour) {
     var a = pos("altair", hour), v = pos("vega", hour), b = pos("altair", hour - 1), o = "";
@@ -171,7 +198,31 @@
     document.getElementById("say").innerHTML = o;
   }
 
+  function saySeason(cur) {
+    var a = pos("altair", dHour, cur), j = pos("altair", dHour, [2026, 7, 20]), when = "午後" + (dHour - 12) + "時";
+    var n = Math.round((Date.UTC(cur[0], cur[1] - 1, cur[2]) - Date.UTC(2026, 6, 20)) / 86400000), mins = Math.round(Math.abs(n) * 3.94);
+    var o = "毎日 <b>" + when + "</b>に 見ると…<br>・7月20日：アルタイルは <b>" + S.dirName(j.az) + "</b>・高さ " + Math.round(j.alt) + "度";
+    o += "<br>・" + cur[1] + "月" + cur[2] + "日：" + (a.alt < 0 ? "アルタイルは <b>しずんで 見えない</b>" : "アルタイルは <b>" + S.dirName(a.az) + "</b>・高さ " + Math.round(a.alt) + "度");
+    if (n !== 0) o += "<br>7月20日から " + Math.abs(n) + "日 " + (n > 0 ? "たった" : "前") + "ので、星が 同じ 場所に 来る 時刻は <b>約" + (mins >= 60 ? Math.floor(mins / 60) + "時間" : "") + (mins % 60) + "分 " + (n > 0 ? "早い" : "おそい") + "</b>。だから 同じ 時刻に 見ると、" + (n > 0 ? "<b>西の ほうへ 進んだ</b>" : "<b>まだ 東の ほう</b>の") + " 位置に 見えるよ。";
+    o += '<br><span style="color:#7a6985;font-size:12px">星は 毎日 約4分ずつ 早く 同じ 場所に 来る（1か月で 約2時間）。</span>';
+    document.getElementById("say").innerHTML = o;
+  }
+
   // 操作
+  document.getElementById("modes").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return; mode = b.dataset.m;
+    [].forEach.call(this.children, function (c) { c.classList.toggle("on", c === b); });
+    document.getElementById("timeCtrl").style.display = mode === "time" ? "" : "none";
+    document.getElementById("dateCtrl").style.display = mode === "date" ? "" : "none";
+    document.getElementById("trailLabel").textContent = mode === "date" ? "📅 毎月 20日の 位置を のこして くらべる" : "🕐 1時間ごとの 位置を のこして くらべる";
+    if (mode === "date") { tEl.min = 0; tEl.max = 213; tEl.step = 1; tEl.value = dateToDay(10, 1); }
+    else { tEl.min = 1080; tEl.max = 1560; tEl.step = 5; tEl.value = 1140; }
+    draw();
+  });
+  document.getElementById("dateCtrl").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-h]"); if (!b) return; dHour = Number(b.dataset.h);
+    [].forEach.call(this.querySelectorAll("button[data-h]"), function (c) { c.classList.toggle("on", c === b); }); draw();
+  });
   document.getElementById("tabs").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; view = b.dataset.v; [].forEach.call(this.children, function (c) { c.classList.toggle("on", c === b); }); draw(); });
   tEl.addEventListener("input", draw); trailEl.addEventListener("change", draw);
   dateEl.addEventListener("change", function () { document.getElementById("thu").classList.toggle("on", dateEl.value === "2026-10-01"); document.getElementById("tonight").classList.remove("on"); draw(); });
@@ -180,16 +231,17 @@
   var timer = null, playBtn = document.getElementById("play");
   playBtn.onclick = function () {
     if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "▶"; return; }
-    if (Number(tEl.value) >= Number(tEl.max)) tEl.value = 1080;
+    if (Number(tEl.value) >= Number(tEl.max)) tEl.value = tEl.min;
     playBtn.textContent = "⏸";
-    timer = setInterval(function () { var v = Number(tEl.value) + 5; if (v > Number(tEl.max)) { clearInterval(timer); timer = null; playBtn.textContent = "▶"; return; } tEl.value = v; draw(); }, 80);
+    timer = setInterval(function () { var v = Number(tEl.value) + (mode === "date" ? 1 : 5); if (v > Number(tEl.max)) { clearInterval(timer); timer = null; playBtn.textContent = "▶"; return; } tEl.value = v; draw(); }, 80);
   };
 
   // やってみよう
   var QUIZ = [
     { q: "① 木曜日の 午後7時から 9時までに、アルタイルは どちらへ 動いた？（時間を 動かして たしかめよう）", a: ["南 → 南西（西の ほうへ、少し 低く）", "南 → 南東（東の ほうへ、少し 高く）", "ほとんど 動かなかった"], c: 0, fb: "南の 空から 南西へ。2時間で 50度くらい 西へ 回り、12度ほど 低く なったよ。" },
     { q: "② 午後7時と 9時で、夏の大三角の 形（3つの 星の ならび方）は どうなった？", a: ["ならび方は 同じで、三角の 向きが かたむいた", "三角が 大きく なった", "3つの 星の 順番が 入れかわった"], c: 0, fb: "ならび方は 同じ。全体が 西へ 動くので、向きが かたむいて 見えるよ。" },
-    { q: "③「北の空」を 見て 時間を 動かそう。北斗七星や カシオペヤ座は 何を 中心に 回って いる？", a: ["北極星", "ベガ", "月"], c: 0, fb: "北極星は ほとんど 動かない。北の 空の 星は そのまわりを 回るよ。" }
+    { q: "③「北の空」を 見て 時間を 動かそう。北斗七星や カシオペヤ座は 何を 中心に 回って いる？", a: ["北極星", "ベガ", "月"], c: 0, fb: "北極星は ほとんど 動かない。北の 空の 星は そのまわりを 回るよ。" },
+    { q: "④「📅 日にちで くらべる」で 午後8時に して みよう。7月20日に 東の 空に あった 夏の大三角が、10月1日には 頭の 上（少し 西）に あるのは なぜ？", a: ["星は 毎日 約4分ずつ 早く 同じ 場所に 来るから", "夏の大三角が 少しずつ 自分で 西へ 引っこして きたから", "秋に なると 星の ならび方が 変わって しまうから"], c: 0, fb: "毎日 約4分、1か月で 約2時間 早く なる。7/20から 10/1は 約4時間50分 早いので、同じ 午後8時には もう 頭の 上を こえて いるよ。" }
   ];
   var qz = document.getElementById("quiz");
   QUIZ.forEach(function (it, i) {

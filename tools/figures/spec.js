@@ -213,7 +213,8 @@ module.exports = {
     7: E({ t: "starmove", cap: "ならび方は 同じまま、位置が 西へ 動く" }),
     8: E({ t: "stars", k: "polaris" }),
     10: E(sky({ night: true, marks: [{ u: 0.12, label: "7時 こぶし2こ" }, { u: 0.3, label: "9時 こぶし4こ" }] }, "時刻・方位・高さ を そろえて 書く")),
-    12: E({ t: "skydome", date: [2026, 10, 1], hours: [19, 21], cap: "愛知 10/1：午後7時 → 9時で 西へ・低く" })
+    12: E({ t: "skydome", date: [2026, 10, 1], hours: [19, 21], cap: "愛知 10/1：午後7時 → 9時で 西へ・低く" }),
+    14: E({ t: "skydome", dates: [[2026, 7, 20], [2026, 8, 20], [2026, 10, 1]], hours: [20], cap: "毎日 午後8時：7/20 → 8/20 → 10/1" })
   },
   "理科/水のすがた/sugata01": {
     0: E(BOIL), 1: E(BOIL), 2: E(BOIL), 3: E(EVAP), 4: E(STATES), 5: E(STATES), 6: E(Object.assign({}, STATES, { cap: "温度で すがたが 変わる ＝ 状態変化" })),
