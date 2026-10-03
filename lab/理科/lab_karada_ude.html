@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>うでの 曲げのばしラボ 💪</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-03追加：4年 理科「ヒトの体のつくりと運動」。スライダーで うでを 曲げのばしして、
+     内がわの きん肉（ちぢむと うでが 曲がる）と 外がわの きん肉（ちぢむと うでが のびる）の 動きを 見る。
+     骨は ちぢまない・関節で 曲がる・きん肉は ちぢんで 骨を 引っぱる、の 3つを 目で たしかめる。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #f3ebf7; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 8px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  svg { width: 100%; height: auto; display: block; }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl input { flex: 1; accent-color: #db2777; height: 30px; }
+  .ctl span { font-size: 12px; font-weight: 900; color: var(--sub); white-space: nowrap; }
+  #say b { color: var(--pink); }
+  .q { margin: 8px 0 2px; } .opts { display: flex; flex-direction: column; gap: 5px; }
+  .opts button { font: inherit; font-weight: 900; background: #faf5ff; color: var(--ink); border: 2px solid #e9d5ff; border-radius: 12px; padding: 9px 10px; text-align: left; font-size: 13px; cursor: pointer; }
+  .opts button.ok { background: #dcfce7; border-color: #22c55e; } .opts button.ng { background: #fee2e2; border-color: #f87171; }
+  .fb { font-size: 12.5px; color: var(--sub); min-height: 1em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💪 うでの 曲げのばしラボ</h1>
+  <div class="lead">スライダーを 動かして、うでを 曲げたり のばしたり しよう。どの きん肉が ちぢんで いるかな？ 自分の うでも さわって たしかめよう。</div>
+  <div class="card">
+    <svg id="arm" viewBox="0 0 360 250" role="img" aria-label="うでの 骨と きん肉"></svg>
+    <div class="ctl"><span>のばす</span><input type="range" id="bend" min="0" max="100" value="20" aria-label="うでを 曲げる"><span>曲げる</span></div>
+    <div id="say" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <b>たしかめよう（自分の 体で）</b>
+    <ul style="margin:4px 0 0;padding-left:1.2em">
+      <li>うでを 曲げて、内がわ（力こぶ）を さわる → かたく もり上がる。</li>
+      <li>うでを のばして、外がわ（うでの うら）を さわる → こちらが かたく なる。</li>
+      <li>ひじを 手で にぎって 曲げのばし → 骨と 骨の つなぎ目（関節）で 曲がる。</li>
+    </ul>
+  </div>
+  <div class="card"><b>✏️ やってみよう</b><div id="quiz"></div></div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var svg = document.getElementById("arm"), bend = document.getElementById("bend"), say = document.getElementById("say");
+  var S = { x: 62, y: 108 }, UP = 130, FORE = 116; // かた、上うでの 長さ、前うでの 長さ（骨の 長さは 変わらない）
+  function P(x, y) { return x.toFixed(1) + " " + y.toFixed(1); }
+  function muscle(ax, ay, bx, by, bulge, col, side) {
+    // a → b の 間に ふくらみを 作る（bulge が 大きいほど 太い＝ちぢんで いる）
+    var mx = (ax + bx) / 2, my = (ay + by) / 2, dx = bx - ax, dy = by - ay, len = Math.sqrt(dx * dx + dy * dy), nx = -dy / len * side, ny = dx / len * side;
+    return '<path d="M' + P(ax, ay) + ' Q' + P(mx + nx * bulge, my + ny * bulge) + ' ' + P(bx, by) + ' Q' + P(mx + nx * bulge * 0.15, my + ny * bulge * 0.15) + ' ' + P(ax, ay) + 'z" fill="' + col + '" stroke="#9f1239" stroke-width="1.5"/>';
+  }
+  function draw() {
+    var t = Number(bend.value) / 100, ang = (175 - t * 125) * Math.PI / 180; // ひじの 角度：175度（のばす）〜 50度（曲げる）
+    var E = { x: S.x + UP, y: S.y + 52 }; // ひじ
+    // 上うでは かた → ひじ。前うでは ひじから、上うでに 対して ang の 角度
+    var ua = Math.atan2(E.y - S.y, E.x - S.x), fa = ua + Math.PI - ang, H = { x: E.x + Math.cos(fa) * FORE, y: E.y - Math.sin(Math.PI - fa) * FORE };
+    H = { x: E.x + Math.cos(ua - (Math.PI - ang)) * FORE, y: E.y + Math.sin(ua - (Math.PI - ang)) * FORE };
+    var fx = (H.x - E.x) / FORE, fy = (H.y - E.y) / FORE, ux = Math.cos(ua), uy = Math.sin(ua);
+    // きん肉の つく 場所：内がわ（力こぶ）＝ かたの 近く → 前うでの ひじ寄り。外がわ ＝ かたの 近く → ひじの 先（前うでの うしろ）
+    var bi1 = { x: S.x + ux * 14, y: S.y + uy * 14 }, bi2 = { x: E.x + fx * 26, y: E.y + fy * 26 };
+    var tr1 = { x: S.x + ux * 10, y: S.y + uy * 10 }, tr2 = { x: E.x - fx * 12, y: E.y - fy * 12 };
+    var o = '<rect width="360" height="250" rx="14" fill="#fff7ed"/>';
+    // きん肉（うしろ）
+    o += muscle(tr1.x, tr1.y + 8, tr2.x, tr2.y + 8, 15 + (1 - t) * 26, t < 0.45 ? "#fb7185" : "#fecdd3", 1);
+    o += muscle(bi1.x, bi1.y - 8, bi2.x, bi2.y - 8, 15 + t * 30, t > 0.55 ? "#fb7185" : "#fecdd3", -1);
+    // 骨
+    o += '<path d="M' + P(S.x, S.y) + ' L' + P(E.x, E.y) + '" stroke="#f1f5f9" stroke-width="16" stroke-linecap="round"/><path d="M' + P(S.x, S.y) + ' L' + P(E.x, E.y) + '" stroke="#94a3b8" stroke-width="16" stroke-linecap="round" fill="none" opacity=".35"/>';
+    o += '<path d="M' + P(E.x, E.y) + ' L' + P(H.x, H.y) + '" stroke="#f1f5f9" stroke-width="14" stroke-linecap="round"/><path d="M' + P(E.x, E.y) + ' L' + P(H.x, H.y) + '" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" opacity=".35"/>';
+    o += '<circle cx="' + E.x + '" cy="' + E.y + '" r="11" fill="#fde68a" stroke="#ca8a04" stroke-width="2.5"/>';
+    o += '<circle cx="' + H.x.toFixed(1) + '" cy="' + H.y.toFixed(1) + '" r="13" fill="#ffe4d6" stroke="#fdba74" stroke-width="2"/>';
+    function tx(x, y, s, c, sz, a) { return '<text x="' + x + '" y="' + y + '" font-size="' + (sz || 12) + '" font-weight="900" fill="' + c + '" text-anchor="' + (a || "middle") + '" stroke="#fff7ed" stroke-width="3" paint-order="stroke" font-family="\'Zen Maru Gothic\',sans-serif">' + s + '</text>'; }
+    o += tx(E.x, E.y + 34, "関節（ひじ）", "#a16207") + tx(S.x + 40, S.y + 6, "骨", "#475569") + tx(40, 92, "かた", "#7a6985", 11);
+    o += tx(120, 24, "内がわの きん肉" + (t > 0.55 ? "：ちぢむ" : "：ゆるむ"), t > 0.55 ? "#be123c" : "#9ca3af", 13);
+    o += tx(150, 238, "外がわの きん肉" + (t < 0.45 ? "：ちぢむ" : "：ゆるむ"), t < 0.45 ? "#be123c" : "#9ca3af", 13);
+    svg.innerHTML = o;
+    say.innerHTML = t > 0.55 ? "うでを <b>曲げる</b> とき：<b>内がわの きん肉が ちぢんで</b> 太く なり、骨を 引っぱる。外がわは ゆるむ。"
+      : t < 0.45 ? "うでを <b>のばす</b> とき：<b>外がわの きん肉が ちぢんで</b> 骨を 引っぱる。内がわは ゆるむ。"
+      : "まん中あたり。もっと 動かして、どちらの きん肉が 太く なるか 見よう。";
+  }
+  bend.addEventListener("input", draw); draw();
+
+  var QUIZ = [
+    { q: "① うでを 曲げる とき、ちぢむのは どちら？", a: ["内がわの きん肉", "外がわの きん肉", "ひじの 骨"], c: 0, fb: "内がわ（力こぶ）が ちぢんで 太く なるよ。" },
+    { q: "② うでが 曲がる ところは？", a: ["骨と 骨の つなぎ目（関節）", "骨の まん中", "きん肉の まん中"], c: 0, fb: "骨は かたくて 曲がらない。関節で 曲がるよ。" },
+    { q: "③ きん肉は、どう やって 骨を 動かす？", a: ["ちぢんで 骨を 引っぱる", "のびて 骨を おす", "骨の 中を 通って 回す"], c: 0, fb: "きん肉は ちぢむ ことで 引っぱる。だから 曲げる 用と のばす 用の 2つが 組に なって いるよ。" }
+  ];
+  var qz = document.getElementById("quiz");
+  QUIZ.forEach(function (it) {
+    var div = document.createElement("div");
+    div.innerHTML = '<div class="q">' + it.q + '</div><div class="opts"></div><div class="fb"></div>';
+    var opts = div.querySelector(".opts"), fb = div.querySelector(".fb");
+    it.a.map(function (_, j) { return j; }).sort(function () { return Math.random() - 0.5; }).forEach(function (j) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = it.a[j];
+      b.onclick = function () { [].forEach.call(opts.children, function (x) { x.classList.remove("ok", "ng"); }); b.classList.add(j === it.c ? "ok" : "ng"); fb.textContent = j === it.c ? "⭕ " + it.fb : "🔁 スライダーを 動かして、もう一度 見て みよう。"; };
+      opts.appendChild(b);
+    });
+    qz.appendChild(div);
+  });
+})();
+</script>
+</body>
+</html>

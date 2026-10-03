@@ -202,3 +202,4 @@
 - 子どもの 名前・学校・先生・地域が わかる 言葉を 入れない。追加の しかたは ふだんどおり 3.5 チェックリスト＋台帳同期。
 - `js/detective-log.js`：探偵ラボ 1回（7問）ごとに log_db へ 1行「🔍探偵ラボ記録」（教科・何回目・厳しめ・1問ごとの id／種類／1回目で 正解か／まちがえて 選んだ 答えと ms／正解までの ms を JSON で）。セーブには 合計だけ `saveData.detectiveStats`。くわしい 記録を セーブに 入れないのは 50,000文字 上限の ため。
 - ⚠️ テストの 前に 必ず `window.playerId` が テストくん か 確かめる。ブラウザに 前の ログイン（りお など）が 残って いると、開いた だけで その ID で 自動ログイン→保存が 走る（2026-10-03 に 発生。`localStorage.kids_lab_playerId` を テストくん に してから 開く）。
+- 2026-10-03 ポータルの「足りないもの」対応：算数「式と 計算の 順じょ」（keisan_junjo01、16問・図 steps／distrib・`lab/算数/lab_keisan_junjo.html`）、理科 体の ラボ（`lab/理科/lab_karada_ude.html`）、実験の計画 +6問、漢検7級・使い分けの 図（kanjicard／kanjicmp、`js/figures-extra.js`）、自学ネタ（式と計算・面積・一つの花・ごんぎつね・部首）。足したら `node tools/portal/build-units.js` で 単元の 対応を 作り直し、ポータルの `units` を 更新する。

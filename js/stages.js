@@ -32,6 +32,18 @@
       created: "2026-07-19"
     },
     {
+      // ★2026-10-03追加（ポータルの「足りないもの」：算数「式と計算の順じょ」9/24〜10/16 に アプリの 単元が なかった）
+      // （ ）・×÷ が 先・1つの 式に 表す・計算の きまり（分配・結合）・くふうして 計算。図（steps／distrib）と ラボつき
+      subject: "算数",
+      category: "式と計算（4年）",
+      grade: "4年生",
+      id: "算数/式と計算/keisan_junjo01",
+      name: "式と 計算の 順じょ（（ ）・×÷が 先・計算の きまり）",
+      reward: 10, showCount: 8, video_url: "",
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_keisan_junjo.html",
+      created: "2026-10-03"
+    },
+    {
       subject: "算数",
       category: "角度（4年）",
       grade: "4年生",
@@ -610,7 +622,7 @@
       grade: "4年生",
       id: "理科/体/karada01",
       name: "人の体のつくりと運動（骨と筋肉）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_karada_ude.html",
       created: "2026-07-28"
     },
     // ★STEAM補強：T (Technology) 領域

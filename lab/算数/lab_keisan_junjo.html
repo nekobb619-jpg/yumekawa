@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>計算の順じょラボ 🔢</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-03追加：4年「式と計算の順じょ」。式の 中で「次に 計算する ところ」の 記号（＋−×÷）を タップする。
+     きまり：（ ）の 中 → ×・÷ → ＋・−、同じ 強さなら 左から。合って いれば その 部分が 計算されて 式が 短く なる。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #f3ebf7; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .rule { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12.5px; }
+  .rule span { background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 999px; padding: 2px 10px; color: #6b21a8; font-weight: 900; }
+  #expr { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; min-height: 74px; font-size: 26px; font-weight: 900; }
+  #expr .n { padding: 4px 6px; } #expr .p { color: var(--sub); }
+  #expr button { font: inherit; font-weight: 900; width: 46px; height: 46px; border-radius: 14px; border: 3px solid #e9d5ff; background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  #expr button.ng { background: #fee2e2; border-color: #f87171; }
+  #hist { font-size: 15px; color: var(--sub); text-align: center; min-height: 1.2em; }
+  #msg { text-align: center; min-height: 3.2em; font-size: 14px; }
+  #msg b { color: var(--pink); }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔢 計算の順じょラボ</h1>
+  <div class="lead">式の 中で「次に 計算する ところ」の 記号を タップしよう。合って いると、そこが 計算されて 式が 短く なるよ。</div>
+  <div class="card"><div class="rule"><span>① （ ）の 中</span><span>② × と ÷</span><span>③ ＋ と −</span><span>同じ 強さなら 左から</span></div></div>
+  <div class="card">
+    <div class="bar"><span id="count"></span><span id="score"></span></div>
+    <div id="expr" aria-live="polite"></div>
+    <div id="hist"></div>
+    <div id="msg"></div>
+    <div style="text-align:center"><button class="next" id="next" hidden>つぎの 式へ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>どうして 順番が あるの？</b><br>2 × 3 ＋ 4 を 人に よって ちがう 順で 計算すると、答えが 10 に なったり 14 に なったり して こまる。だから 世界中で 同じ きまりを 使って いるよ。（ ）は「ここを ひとまとまりに して 先に」の しるし。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  // 式（数・記号・かっこを 空白で 区切る）。わり算は わり切れる もの、ひき算は 0より 小さく ならない もの だけ
+  var BANK = ["12 + 8 × 5", "( 12 + 8 ) × 5", "30 − 18 ÷ 6", "40 ÷ ( 2 + 6 )", "6 × 4 − 15 ÷ 3", "20 − ( 8 − 3 ) × 2", "4 + 4 × 4 − 4", "2 × ( 3 + 4 )", "100 − 25 × 3", "( 9 + 6 ) ÷ 3 + 7", "50 − 6 × ( 2 + 5 )", "8 × 5 ÷ 4 + 6", "36 ÷ 4 − 2 × 3", "( 20 − 5 ) × ( 1 + 3 )", "7 + 3 × ( 10 − 4 ) ÷ 2", "45 ÷ 9 + 5 × 2"];
+  var NAME = { "+": "たし算", "−": "ひき算", "×": "かけ算", "÷": "わり算" };
+  var order = BANK.map(function (_, i) { return i; }).sort(function () { return Math.random() - 0.5; }).slice(0, 8);
+  var qi = 0, tok = [], miss = 0, clean = 0, missedThis = false, hist = [];
+  var $ = function (id) { return document.getElementById(id); };
+  function isOp(t) { return t === "+" || t === "−" || t === "×" || t === "÷"; }
+  // 次に 計算する 記号の 場所（tok の 番号）と、その わけ
+  function nextOp() {
+    var lo = 0, hi = tok.length - 1, why = "", close = tok.indexOf(")");
+    if (close >= 0) { var open = close; while (tok[open] !== "(") open--; lo = open + 1; hi = close - 1; why = "（ ）の 中が 先"; }
+    var i;
+    for (i = lo; i <= hi; i++) if (tok[i] === "×" || tok[i] === "÷") return { i: i, why: (why ? why + "。その 中では " : "") + "× と ÷ が 先（左から）" };
+    for (i = lo; i <= hi; i++) if (tok[i] === "+" || tok[i] === "−") return { i: i, why: why || "のこりは ＋ と − を 左から" };
+    return null;
+  }
+  function calc(a, op, b) { return op === "+" ? a + b : op === "−" ? a - b : op === "×" ? a * b : a / b; }
+  function show() { return tok.join(" ").replace(/\( /g, "(").replace(/ \)/g, ")").replace(/\+/g, "＋"); }
+  function render() {
+    $("count").textContent = (qi + 1) + " / " + order.length + " 問";
+    $("score").textContent = "まちがいなしで できた 式：" + clean;
+    $("expr").innerHTML = tok.map(function (t, i) {
+      if (isOp(t)) return '<button type="button" data-i="' + i + '" aria-label="' + NAME[t] + '">' + (t === "+" ? "＋" : t) + '</button>';
+      return '<span class="' + (t === "(" || t === ")" ? "p" : "n") + '">' + t + '</span>';
+    }).join("");
+    $("hist").textContent = hist.length ? hist.join(" ＝ ") : "";
+  }
+  function start() {
+    tok = BANK[order[qi]].split(" "); missedThis = false; hist = [show()];
+    $("msg").innerHTML = "どの 記号から 計算する？"; $("next").hidden = true; render();
+  }
+  $("expr").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-i]"); if (!b) return;
+    var i = Number(b.getAttribute("data-i")), n = nextOp(); if (!n) return;
+    if (i !== n.i) {
+      b.classList.add("ng"); miss++; missedThis = true;
+      $("msg").innerHTML = "🔁 そこは まだ。<b>" + n.why + "</b> だよ。"; return;
+    }
+    var a = Number(tok[i - 1]), c = Number(tok[i + 1]), v = calc(a, tok[i], c), said = a + " " + (tok[i] === "+" ? "＋" : tok[i]) + " " + c + " ＝ " + v;
+    tok.splice(i - 1, 3, String(v));
+    // （数）だけに なった かっこを はずす
+    for (var k = 0; k < tok.length - 2; k++) if (tok[k] === "(" && tok[k + 2] === ")") tok.splice(k, 3, tok[k + 1]);
+    hist.push(show());
+    if (tok.length === 1) {
+      if (!missedThis) clean++;
+      $("msg").innerHTML = "⭕ " + said + "　答えは <b>" + tok[0] + "</b>！" + (missedThis ? "" : " まちがいなし ✨");
+      render(); $("next").hidden = false; $("next").textContent = qi + 1 < order.length ? "つぎの 式へ ▶" : "もう一度 あそぶ 🔁";
+    } else { $("msg").innerHTML = "⭕ " + said + "。<b>" + n.why + "</b>。つぎは どこ？"; render(); }
+  });
+  $("next").addEventListener("click", function () {
+    if (qi + 1 < order.length) qi++; else { order = BANK.map(function (_, i) { return i; }).sort(function () { return Math.random() - 0.5; }).slice(0, 8); qi = 0; clean = 0; miss = 0; }
+    start();
+  });
+  start();
+})();
+</script>
+</body>
+</html>
