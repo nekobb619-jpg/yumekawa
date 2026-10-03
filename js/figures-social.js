@@ -191,6 +191,7 @@
   function ok(x, y, good) { return good ? '<circle cx="' + x + '" cy="' + y + '" r="10" fill="none" stroke="#16a34a" stroke-width="3.5"/>' : L(x - 8, y - 8, x + 8, y + 8, "#dc2626", 3.5) + L(x + 8, y - 8, x - 8, y + 8, "#dc2626", 3.5); }
   function kid(x, y, c) { return '<circle cx="' + x + '" cy="' + (y - 22) + '" r="6" fill="#fde7d7" stroke="' + DARK + '" stroke-width="1.4"/>' + '<path d="M' + (x - 6) + ' ' + (y - 14) + ' h12 l2 12 h-16 z" fill="' + (c || "#a78bfa") + '"/>' + L(x - 3, y - 2, x - 4, y + 8, DARK, 2.4) + L(x + 3, y - 2, x + 4, y + 8, DARK, 2.4); }
   function house(x, y, w, h) { return '<path d="M' + x + ' ' + (y + h) + ' V' + (y + h * 0.35) + ' L' + (x + w / 2) + ' ' + y + ' L' + (x + w) + ' ' + (y + h * 0.35) + ' V' + (y + h) + ' Z" fill="#fff7ed" stroke="' + DARK + '" stroke-width="2"/>'; }
+  // 警戒レベルの 色：1白・2黄・3赤・4紫・5黒（内閣府・気象庁。2026-05-28 から 気象庁の 情報も 同じ 色・レベル名に そろった。洪水注意報・洪水警報は 廃止）
   function flood(s) {
     var out = "", W = "#38bdf8";
     if (s.k === "river") {
@@ -207,7 +208,7 @@
       return out;
     }
     if (s.k === "levels") {
-      var lv = [["1", "早期注意情報", "#fff", DARK], ["2", "大雨・洪水注意報", "#fde047", DARK], ["3", "高齢者等避難", "#ef4444", "#fff"], ["4", "避難指示", "#9333ea", "#fff"], ["5", "緊急安全確保", "#111827", "#fff"]];
+      var lv = [["1", "早期注意情報", "#fff", DARK], ["2", "大雨注意報など", "#fde047", DARK], ["3", "高齢者等避難", "#ef4444", "#fff"], ["4", "避難指示", "#9333ea", "#fff"], ["5", "緊急安全確保", "#111827", "#fff"]];
       lv.forEach(function (l, i) {
         var y = 120 - i * 26, on = s.hl === Number(l[0]);
         out += '<rect x="' + (40 + i * 8) + '" y="' + y + '" width="' + (180 - i * 8) + '" height="22" rx="5" fill="' + l[2] + '" stroke="' + (on ? MARK : "#94a3b8") + '" stroke-width="' + (on ? 3 : 1.4) + '"/>';
