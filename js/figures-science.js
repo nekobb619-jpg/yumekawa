@@ -570,6 +570,33 @@
     return out;
   }
 
+
+  /* ---------------- 条件を そろえる 実験（★2026-10-03追加、実験の 計画）：A と B を ならべ、変えた 条件だけ 色で 示す ----------------
+     s.conds：くらべる 条件の 名前、s.diff：A と B で ちがう 条件（ふつうは 1つ）、s.na / s.nb：A・B の 名前 */
+  function fairtest(s) {
+    var conds = s.conds || ["日光", "水", "空気", "温度"], diff = s.diff || [conds[0]], out = "", bad = diff.length > 1;
+    function has(c, side) { return diff.indexOf(c) < 0 || side === "a"; }
+    [["a", 6, s.na || "A"], ["b", 166, s.nb || "B"]].forEach(function (sd) {
+      var side = sd[0], x = sd[1], cx = x + 74;
+      out += '<rect x="' + x + '" y="4" width="148" height="' + (64 + conds.length * 17) + '" rx="12" fill="#f8fafc" stroke="#c4b5fd" stroke-width="2"/>' + t(cx, 20, sd[2], 12, INK);
+      if (conds.indexOf("日光") >= 0) {
+        if (has("日光", side)) out += '<circle cx="' + (x + 24) + '" cy="36" r="9" fill="#fde047"/>';
+        else out += '<path d="M' + (cx - 26) + ' 66 V30 H' + (cx + 26) + ' V66" fill="#475569" opacity=".55"/>' + t(cx, 44, "おおい", 8, "#fff");
+      }
+      out += '<path d="M' + (cx - 18) + ' 50 H' + (cx + 18) + ' L' + (cx + 13) + ' 66 H' + (cx - 13) + ' Z" fill="#c2410c"/><rect x="' + (cx - 20) + '" y="46" width="40" height="6" rx="2" fill="#9a3412"/>';
+      out += L(cx, 46, cx, 38, "#16a34a", 2.4) + '<ellipse cx="' + (cx - 5) + '" cy="37" rx="5" ry="2.5" fill="#4ade80"/><ellipse cx="' + (cx + 5) + '" cy="37" rx="5" ry="2.5" fill="#4ade80"/>';
+      if (conds.indexOf("水") >= 0 && has("水", side)) out += '<path d="M' + (cx + 28) + ' 36 q4 6 0 9 q-4 -3 0 -9z" fill="#38bdf8"/>';
+      conds.forEach(function (c, i) {
+        var y = 84 + i * 17, ch = diff.indexOf(c) >= 0, yes = has(c, side);
+        out += '<rect x="' + (x + 10) + '" y="' + (y - 11) + '" width="128" height="15" rx="7" fill="' + (ch ? "#fdf2f8" : "#f0fdf4") + '"/>';
+        out += t(x + 16, y, c, 10, ch ? MARK : "#15803d", "start") + t(x + 132, y, yes ? (s.yes && s.yes[c] || "あり") : (s.no && s.no[c] || "なし"), 10, ch ? MARK : "#15803d", "end");
+      });
+    });
+    var yb = 70 + conds.length * 17;
+    out += t(160, yb + 14, bad ? "ちがう 条件が " + diff.length + "つ → どれの せいか わからない" : "ちがうのは「" + diff[0] + "」だけ（ほかは 同じ）", 11, bad ? BLUE : MARK);
+    return out;
+  }
+  T.fairtest = fairtest;
   T.seasons = seasons; T.overwinter = overwinter;
   T.starmove = starmove; T.starcolor = starcolor; T.skydome = skydome;
   T.syringe = syringe; T.airgun = airgun; T.rod = rod; T.plate = plate; T.convection = convection;

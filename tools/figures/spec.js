@@ -99,6 +99,8 @@ const OW = (hl, cap, items) => ({ t: "overwinter", hl, cap, items });
 const MK = (k, hl, cap) => ({ t: "mukashi", k, hl, cap, H: 150 });
 const TAMAGAWA = { t: "flow", nodes: [{ label: "多摩川（羽村）", sub: "水を 取り入れる" }, { label: "玉川上水", sub: "約43kmの 水路" }, { label: "江戸の まち", sub: "飲み水に" }], hl: 2, H: 64, cap: "多摩川の 水を 江戸の まちへ" };
 const UKETSUGI = { t: "flow", nodes: [{ label: "先人が はじめる" }, { label: "保存会で", sub: "教え合う" }, { label: "記録・映像に", sub: "のこす" }, { label: "子どもも 練習", sub: "次の 人へ" }], H: 124, cap: "地域の 人が 受けつぐから 今も 続く" };
+const FT = (o, cap) => Object.assign({ t: "fairtest", cap, H: 92 + (o.conds || [1, 2, 3, 4]).length * 17 }, o);
+const FL = (k, cap, extra) => Object.assign({ t: "flood", k, cap }, extra || {});
 module.exports = {
   "算数/図形/suichoku_heikou01": {
     0: E(PERP), 2: E(PARA), 4: E(PERP), 5: E(RECT_SIDE), 6: E(PERP2), 7: E(PARA),
@@ -561,5 +563,26 @@ module.exports = {
     8: E(UKETSUGI),
     9: E(UKETSUGI),
     11: E(MK("ta", "before", "水不足で こまる 人を 助けたかった"))
+  },
+  "理科/実験計画/exp_design01": {
+    0: E(FT({ conds: ["日光", "水", "空気", "温度"], diff: ["日光"] }, "調べたい 条件だけ 変えて、ほかは そろえる")),
+    1: E(FT({ conds: ["肥料", "土", "水やり", "日光", "温度"], diff: ["肥料"] }, "肥料の 有無だけ 変える")),
+    2: E(FT({ conds: ["日光", "水", "空気", "温度"], diff: ["日光", "水"] }, "条件は 1つずつ 変えて くらべる")),
+    4: E({ t: "rod", cap: "サーモテープ：温度で 色が かわる" }),
+    5: E(G({}, "時間ごとに 温度を はかって グラフに")),
+    6: E({ t: "row", cap: "熱する 場所を 変えて くらべる", items: [{ t: "rod", cap: "はしを 熱する" }, { t: "rod", at: "center", cap: "まん中を 熱する" }] }),
+    7: E(FT({ conds: ["薬", "水", "日光", "温度"], diff: ["薬"], na: "A：薬を つかう", nb: "B：何も しない（対照）", yes: { 薬: "つかう" }, no: { 薬: "つかわない" } }, "何も しない Bと くらべて 本当の 効果か わかる"))
+  },
+  "社会/防災/saigai02": {
+    0: E(FL("river", "ふえた 川には 近づかない")),
+    1: E(FL("underpass", "線路の 下の 低い 道は 水が たまりやすい")),
+    2: E(FL("levels", "レベル4（避難指示）で 全員 避難", { hl: 4 })),
+    3: E(FL("map", "危険な 場所・避難所・にげる 道を たしかめる")),
+    4: E(FL("typhoon", "外の ものは 家に 入れ、まどを しめる")),
+    5: E({ t: "jijo", hl: "自助", cap: "自分で そなえる ＝ 自助" }),
+    6: E({ t: "jijo", hl: "公助", cap: "市・消防・自衛隊が 助ける ＝ 公助" }),
+    7: E(FL("bag", "持ち出しぶくろには 命を 守る ものを")),
+    9: E(FL("upstairs", "外が もう 水びたしなら 2階など 高い ところへ")),
+    10: E(FL("bag", "停電には かい中電灯", { hl: "light" }))
   }
 };

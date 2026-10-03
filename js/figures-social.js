@@ -184,6 +184,68 @@
     }
     return out;
   }
+
+  /* ---------------- 風水害（★2026-10-03追加、風水害から 身を 守る） ----------------
+     s.k：river（ふえた 川に 近づかない）・underpass（線路の 下の 低い 道）・levels（警戒レベル）・map（ハザードマップ）・
+          typhoon（台風の 前の そなえ）・bag（非常持ち出しぶくろ、s.hl で 強調）・upstairs（2階へ） */
+  function ok(x, y, good) { return good ? '<circle cx="' + x + '" cy="' + y + '" r="10" fill="none" stroke="#16a34a" stroke-width="3.5"/>' : L(x - 8, y - 8, x + 8, y + 8, "#dc2626", 3.5) + L(x + 8, y - 8, x - 8, y + 8, "#dc2626", 3.5); }
+  function kid(x, y, c) { return '<circle cx="' + x + '" cy="' + (y - 22) + '" r="6" fill="#fde7d7" stroke="' + DARK + '" stroke-width="1.4"/>' + '<path d="M' + (x - 6) + ' ' + (y - 14) + ' h12 l2 12 h-16 z" fill="' + (c || "#a78bfa") + '"/>' + L(x - 3, y - 2, x - 4, y + 8, DARK, 2.4) + L(x + 3, y - 2, x + 4, y + 8, DARK, 2.4); }
+  function house(x, y, w, h) { return '<path d="M' + x + ' ' + (y + h) + ' V' + (y + h * 0.35) + ' L' + (x + w / 2) + ' ' + y + ' L' + (x + w) + ' ' + (y + h * 0.35) + ' V' + (y + h) + ' Z" fill="#fff7ed" stroke="' + DARK + '" stroke-width="2"/>'; }
+  function flood(s) {
+    var out = "", W = "#38bdf8";
+    if (s.k === "river") {
+      out += '<path d="M0 96 C60 88 100 104 160 96 V150 H0 Z" fill="' + W + '"/><path d="M0 86 C60 78 100 94 160 86" stroke="#0369a1" stroke-width="2" stroke-dasharray="4 4" fill="none"/>' + t(80, 132, "水が ふえた 川", 11, "#fff");
+      out += '<path d="M160 96 L210 60 H320 V150 H160 Z" fill="#bbf7d0"/>' + kid(120, 80, "#fca5a5") + ok(120, 40, false) + t(120, 22, "見に 行く", 10, "#dc2626");
+      out += house(244, 26, 46, 36) + kid(276, 58) + ok(276, 92, true) + t(270, 118, "はなれた 安全な 所", 10, "#15803d");
+      return out;
+    }
+    if (s.k === "underpass") {
+      out += '<path d="M0 60 H90 L130 116 H190 L230 60 H320" fill="none" stroke="#64748b" stroke-width="10"/><path d="M106 84 L130 116 H190 L214 84 Z" fill="' + W + '" opacity=".85"/>';
+      out += '<rect x="96" y="30" width="128" height="14" fill="#94a3b8"/><path d="M96 26 H224" stroke="' + DARK + '" stroke-width="3"/>' + t(160, 20, "線路", 10, DARK);
+      out += '<rect x="138" y="96" width="34" height="14" rx="4" fill="#f87171"/><circle cx="146" cy="112" r="4" fill="' + DARK + '"/><circle cx="164" cy="112" r="4" fill="' + DARK + '"/>';
+      out += arrow(40, 46, 104, 80, "#0369a1") + arrow(280, 46, 216, 80, "#0369a1") + t(160, 138, "低い ところに 水が 流れこむ", 11, MARK);
+      return out;
+    }
+    if (s.k === "levels") {
+      var lv = [["1", "早期注意情報", "#fff", DARK], ["2", "大雨・洪水注意報", "#fde047", DARK], ["3", "高齢者等避難", "#ef4444", "#fff"], ["4", "避難指示", "#9333ea", "#fff"], ["5", "緊急安全確保", "#111827", "#fff"]];
+      lv.forEach(function (l, i) {
+        var y = 120 - i * 26, on = s.hl === Number(l[0]);
+        out += '<rect x="' + (40 + i * 8) + '" y="' + y + '" width="' + (180 - i * 8) + '" height="22" rx="5" fill="' + l[2] + '" stroke="' + (on ? MARK : "#94a3b8") + '" stroke-width="' + (on ? 3 : 1.4) + '"/>';
+        out += t(56 + i * 8, y + 16, "レベル" + l[0], 10, l[3], "start") + t(214, y + 16, l[1], 10, l[3], "end");
+      });
+      out += arrow(270, 50, 230, 54, MARK) + t(282, 46, "4で", 11, MARK) + t(282, 62, "全員", 11, MARK) + t(282, 78, "避難", 11, MARK);
+      return out;
+    }
+    if (s.k === "map") {
+      out += '<rect x="10" y="8" width="300" height="130" rx="8" fill="#fefce8" stroke="#94a3b8" stroke-width="2"/>';
+      out += '<path d="M10 104 C80 92 140 120 310 98 V138 H10 Z" fill="' + W + '"/><path d="M10 80 C80 68 140 96 310 74 V98 C140 120 80 92 10 104 Z" fill="#fbcfe8"/>' + t(250, 92, "水に つかる おそれ", 9, "#be185d") + t(60, 128, "川", 11, "#fff");
+      out += '<path d="M250 20 L276 36 L250 52 L224 36 Z" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>' + t(250, 40, "避難所", 9, "#15803d");
+      out += house(84, 46, 22, 20) + t(95, 78, "家", 9, DARK) + '<path d="M108 54 C150 50 190 36 222 36" fill="none" stroke="' + MARK + '" stroke-width="3" stroke-dasharray="6 4"/>' + arrowHead(222, 36, 0) + t(160, 30, "にげる 道", 10, MARK);
+      return out;
+    }
+    if (s.k === "typhoon") {
+      out += house(100, 24, 120, 100) + '<rect x="122" y="70" width="30" height="26" fill="#bae6fd" stroke="' + DARK + '" stroke-width="2"/><rect x="168" y="70" width="30" height="26" fill="#bae6fd" stroke="' + DARK + '" stroke-width="2"/>' + L(122, 70, 198, 70, DARK, 1) + t(160, 114, "まどを しめる・雨戸", 9, DARK);
+      out += '<path d="M40 118 h20 l-3 16 h-14 z" fill="#c2410c"/><ellipse cx="50" cy="112" rx="14" ry="9" fill="#4ade80"/>' + arrow(66, 120, 116, 104, MARK) + t(60, 100, "しまう", 10, MARK);
+      [30, 46, 62].forEach(function (y, i) { out += '<path d="M' + (236 + i * 6) + ' ' + y + ' q20 -8 40 0 q8 4 0 8" fill="none" stroke="#94a3b8" stroke-width="2.4"/>'; });
+      return out + t(268, 96, "強い 風", 10, SUB);
+    }
+    if (s.k === "bag") {
+      out += '<path d="M40 40 Q40 24 60 24 H120 Q140 24 140 40 V132 H40 Z" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/><path d="M66 24 Q90 2 114 24" fill="none" stroke="#b91c1c" stroke-width="4"/>' + t(90, 84, "持ち出し", 11, "#7f1d1d") + t(90, 100, "ぶくろ", 11, "#7f1d1d");
+      [["water", "飲み水"], ["light", "かい中電灯"], ["aid", "救急箱"], ["food", "食料"], ["radio", "ラジオ"]].forEach(function (it, i) {
+        var y = 20 + i * 24, on = s.hl === it[0];
+        out += '<rect x="170" y="' + y + '" width="130" height="20" rx="8" fill="' + (on ? "#fdf2f8" : "#f0fdf4") + '" stroke="' + (on ? MARK : "#86efac") + '" stroke-width="' + (on ? 3 : 1.4) + '"/>' + t(235, y + 14, it[1], 11, on ? MARK : "#15803d") + L(142, 78, 168, y + 10, "#cbd5e1", 1);
+      });
+      return out;
+    }
+    if (s.k === "upstairs") {
+      out += house(90, 10, 140, 130) + L(90, 76, 230, 76, DARK, 2) + '<rect x="0" y="110" width="320" height="40" fill="' + W + '" opacity=".75"/>' + t(36, 132, "ひざまで 水", 10, "#0369a1");
+      out += kid(190, 70) + ok(190, 30, true) + t(150, 58, "2階", 12, DARK) + arrow(140, 104, 176, 74, MARK);
+      out += kid(266, 120, "#fca5a5") + ok(296, 92, false) + t(282, 72, "外へ", 10, "#dc2626");
+      return out;
+    }
+    return out;
+  }
+  T.flood = flood;
   T.mukashi = mukashi;
   T.mapsym = mapsym; T.mapdir = mapdir; T.flow = flow; T.threeR = threeR; T.inland = inland; T.phones = phones; T.jijo = jijo;
 })();
