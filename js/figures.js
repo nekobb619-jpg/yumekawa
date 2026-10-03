@@ -369,12 +369,13 @@
     if (spec.t === "row") return rowHtml(spec);
     var body = draw(spec);
     if (!body) return "";
-    var h = 150 + (spec.cap ? 24 : 0);
+    // 図の 高さ：ふつうは 150。日本地図や 長い 流れ図は spec.H か 種類ごとの H で 高く する
+    var fn = TYPES[spec.t], h = (spec.H || (fn && fn.H) || 150) + (spec.cap ? 24 : 0);
     return '<svg class="fig-svg" viewBox="0 0 320 ' + h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(spec.cap || "図") + '">' +
       body + (spec.cap ? text(160, h - 8, spec.cap, 14, INK) : "") + '</svg>';
   };
 
-  // 問題 → 図（js/figure-map.js の window.FIGURE_MAP。キーは問題文の空白をぬいたもの）
+  // 問題 → 図（js/figure-map.js の window.FIGURE_MAP。キーは問題文の空白をぬいたもの。同じ文が ほかに ある 問題は「問題文‖正解」）
   function key(s) { return String(s || "").replace(/\s+/g, ""); }
   window.figuresFor = function (q) {
     if (!q || !window.FIGURE_MAP) return null;
@@ -382,7 +383,9 @@
       window._figIndex = {};
       Object.keys(window.FIGURE_MAP).forEach(function (k) { window._figIndex[key(k)] = window.FIGURE_MAP[k]; });
     }
-    return window._figIndex[key(q.q)] || null;
+    // 同じ 問題文で 答えが ちがう 問題は「問題文‖正解」で 登録して ある（tools/figures/build-figure-map.js）
+    var ans = q.a && q.a.length ? q.a[q.c] : (q.correct_answers || [])[0];
+    return window._figIndex[key(q.q) + "‖" + key(ans)] || window._figIndex[key(q.q)] || null;
   };
   // 問題画面・解説に図を入れる（index.html から呼ぶ）
   window.appendFigure = function (container, spec, where) {

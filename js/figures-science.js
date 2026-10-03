@@ -421,6 +421,36 @@
   }
   function P2(x, y) { return { x: x, y: y }; }
 
+  /* ---------------- 星座の 動き（★2026-10-03追加）：同じ 星座を 2つの 時刻で くらべる ---------------- */
+  // 南の 空を 見た ところ（左が 東・右が 西）。並び方は 同じまま、時間が たつと 西へ 動く
+  var SCORPIUS = [[-34, -26], [-30, -16], [-24, -6], [-10, -4], [0, 6], [6, 18], [10, 30], [20, 38], [32, 36], [38, 26], [34, 18]];
+  function starmove(s) {
+    var out = '<rect x="0" y="0" width="320" height="150" rx="10" fill="#1e1b4b"/>';
+    out += '<path d="M0 132 Q160 118 320 132 V150 H0z" fill="#334155"/>';
+    out += t(18, 146, "東", 12, "#e0e7ff") + t(160, 146, "南", 12, "#e0e7ff") + t(302, 146, "西", 12, "#e0e7ff");
+    function con(cx, cy, faint, label) {
+      var o = '<path d="M' + SCORPIUS.map(function (p) { return (cx + p[0]) + ' ' + (cy + p[1]); }).join(" L") + '" fill="none" stroke="' + (faint ? "#6366f1" : "#a5b4fc") + '" stroke-width="1.4"' + (faint ? ' stroke-dasharray="3 3"' : "") + '/>';
+      SCORPIUS.forEach(function (p, i) { var red = i === 3; o += '<circle cx="' + (cx + p[0]) + '" cy="' + (cy + p[1]) + '" r="' + (red ? 4.5 : 2.6) + '" fill="' + (red ? "#f87171" : "#fff") + '" opacity="' + (faint ? 0.55 : 1) + '"/>'; });
+      return o + t(cx, cy - 36, label, 12, faint ? "#a5b4fc" : "#fde047");
+    }
+    out += con(98, 82, true, s.from || "午後8時") + con(222, 74, false, s.to || "午後9時");
+    out += '<path d="M130 40 Q160 26 190 34" fill="none" stroke="' + MARK + '" stroke-width="2.4"/>' + arrowHead(190, 34, 0.3, MARK);
+    out += t(160, 20, s.note === false ? "西へ 動く" : "西へ 動く（ならび方は 同じ）", 11, "#f9a8d4");
+    return out;
+  }
+  // 星の 色を くらべる
+  function starcolor(s) {
+    var items = s.items || [["ベガ", "こと座", "#e0f2fe", "白っぽい"], ["アンタレス", "さそり座", "#f87171", "赤っぽい"]], out = '<rect x="0" y="0" width="320" height="150" rx="10" fill="#1e1b4b"/>';
+    var w = 320 / items.length;
+    items.forEach(function (it, i) {
+      var cx = w * i + w / 2, on = s.hl === it[0];
+      out += '<circle cx="' + cx + '" cy="62" r="24" fill="' + it[2] + '" opacity=".25"/><circle cx="' + cx + '" cy="62" r="13" fill="' + it[2] + '"/>';
+      out += t(cx, 112, it[0] + "（" + it[1] + "）", 12, on ? "#fde047" : "#e0e7ff") + t(cx, 132, it[3], 13, on ? "#fde047" : "#c7d2fe");
+    });
+    return out;
+  }
+
+  T.starmove = starmove; T.starcolor = starcolor;
   T.syringe = syringe; T.airgun = airgun; T.rod = rod; T.plate = plate; T.convection = convection;
   T.slope = slope; T.soil = soil; T.puddles = puddles; T.magnets = magnets; T.arm = arm;
   T.circuit = circuit; T.skypath = skypath; T.sunmoon = sunmoon; T.moonshapes = moonshapes; T.stars = stars;

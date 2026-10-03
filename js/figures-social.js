@@ -26,7 +26,19 @@
     post: { name: "郵便局", draw: function (x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="22" fill="none" stroke="' + DARK + '" stroke-width="3"/>' + L(x - 11, y - 10, x + 11, y - 10) + L(x - 11, y - 3, x + 11, y - 3) + L(x, y - 3, x, y + 13); } },
     fire: { name: "消防署", draw: function (x, y) { return L(x, y - 2, x, y + 20) + '<path d="M' + (x - 16) + ' ' + (y - 20) + ' Q' + (x - 14) + ' ' + (y - 2) + ' ' + x + ' ' + (y - 2) + ' Q' + (x + 14) + ' ' + (y - 2) + ' ' + (x + 16) + ' ' + (y - 20) + '" fill="none" stroke="' + DARK + '" stroke-width="3" stroke-linecap="round"/>'; } },
     cityhall: { name: "市役所", draw: function (x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="22" fill="none" stroke="' + DARK + '" stroke-width="3"/><circle cx="' + x + '" cy="' + y + '" r="11" fill="none" stroke="' + DARK + '" stroke-width="3"/>'; } },
-    rice: { name: "田", draw: function (x, y) { var o = ""; [[-12, -10], [12, -10], [0, 12]].forEach(function (d) { o += L(x + d[0] - 3, y + d[1] - 7, x + d[0] - 3, y + d[1] + 7, DARK, 2.6) + L(x + d[0] + 3, y + d[1] - 7, x + d[0] + 3, y + d[1] + 7, DARK, 2.6); }); return o; } }
+    rice: { name: "田", draw: function (x, y) { var o = ""; [[-12, -10], [12, -10], [0, 12]].forEach(function (d) { o += L(x + d[0] - 3, y + d[1] - 7, x + d[0] - 3, y + d[1] + 7, DARK, 2.6) + L(x + d[0] + 3, y + d[1] - 7, x + d[0] + 3, y + d[1] + 7, DARK, 2.6); }); return o; } },
+    // ★2026-10-03追加：高等学校（文を ⭕で かこむ）・工場（歯車）・JR線（白と 黒が こうご）
+    highschool: { name: "高等学校", draw: function (x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="23" fill="none" stroke="' + DARK + '" stroke-width="3"/>' + t(x, y + 10, "文", 28, DARK, "middle", "serif"); } },
+    factory: { name: "工場", draw: function (x, y) {
+      var p = [], n = 8;
+      for (var i = 0; i < n * 4; i++) { var a = (i / (n * 4)) * Math.PI * 2 - Math.PI / 2, r = (i % 4 < 2) ? 22 : 16; p.push((x + Math.cos(a) * r).toFixed(1) + " " + (y + Math.sin(a) * r).toFixed(1)); }
+      return '<path d="M' + p.join(" L") + 'z" fill="none" stroke="' + DARK + '" stroke-width="3" stroke-linejoin="round"/><circle cx="' + x + '" cy="' + y + '" r="6" fill="none" stroke="' + DARK + '" stroke-width="3"/>';
+    } },
+    jr: { name: "JR線", draw: function (x, y) {
+      var o = '<rect x="' + (x - 32) + '" y="' + (y - 5) + '" width="64" height="10" fill="#fff" stroke="' + DARK + '" stroke-width="2"/>';
+      for (var i = 0; i < 4; i++) o += '<rect x="' + (x - 32 + i * 16) + '" y="' + (y - 5) + '" width="8" height="10" fill="' + DARK + '"/>';
+      return o;
+    } }
   };
   function mapsym(s) {
     var items = s.items, n = items.length, w = 320 / n, out = "";

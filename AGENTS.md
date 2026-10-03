@@ -185,3 +185,6 @@
 - 問題・解説の図は `js/figures.js`（図の部品）＋ `tools/figures/spec.js`（単元id→問題番号→図）で付ける。問題データ（js/quizzes）は書きかえない。
 - spec.js を直したら `node tools/figures/build-figure-map.js` で `js/figure-map.js` を作り直し、出力の「番号: 問題文 => 図」を目で確かめる。問題の並びを変えたら必ず作り直す。
 - `fig`（問題の図）は見て考える問題だけ。答えが図に出てしまう問題（定義を聞く問題など）は `explain_fig`（解説の図）にする。
+- 図の部品のファイル：`figures.js`（算数）・`figures-science.js`（理科）・`figures-social.js`（地図記号など）・`figures-japan.js`（47都道府県の マス目地図・土地の高さ・縮尺・8方位）・`figures-kokugo.js`（こそあど・指示語・3つの論理・かかり方・お話の山・変化・つなぎ言葉）。図の高さは ふつう150、`spec.H` か 部品の `.H` で 変えられる。
+- 同じ 問題文で 答えが ちがう 問題（【ニコに おしえてあげよう】など）は、build が「問題文‖正解」で 登録し、`figuresFor` も その順で 引く。2026-10-03までは 問題文だけで 引いていたため、ほかの 単元の【ニコに…】に 別の 図が 出る 不具合が あった。
+- 図を まとめて 見る ときは `tools/figures/gallery.html?from=番号` や `?q=問題文の一部`（確認用、アプリからは 使わない）。
