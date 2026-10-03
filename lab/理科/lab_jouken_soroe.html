@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>条件そろえラボ 🧪</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-03追加：4年 理科「実験の 計画」。水の じょう発を 題材に、A と B の 条件を 自分で 決めて 実験する。
+     「調べたい 条件だけ 変えて、ほかは そろえる」と 結果から 原因が 言える。2つ いじょう 変えると 原因が 分からない、
+     何も 変えないと くらべられない、を 体験する。へる 量は この ラボの 中の きまり（日なた×2・ふた×0.1・皿×2）で 作った もの。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #f3ebf7; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 8px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  #mission { font-size: 15px; font-weight: 900; color: #6b21a8; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 5px 4px; text-align: center; font-size: 13px; }
+  th { color: var(--sub); font-size: 12px; }
+  td.name { text-align: left; font-weight: 900; }
+  .tg { font: inherit; font-weight: 900; font-size: 12.5px; width: 100%; padding: 8px 4px; border-radius: 12px; border: 2px solid #e9d5ff; background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  tr.diff td.name { color: var(--pink); } tr.diff .tg { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d; }
+  button.run { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 12px 18px; color: #fff; background: linear-gradient(135deg, #10b981, #059669); cursor: pointer; width: 100%; font-size: 15px; }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 10px 16px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  svg { width: 100%; height: auto; display: block; }
+  #verdict b { color: var(--pink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧪 条件そろえラボ</h1>
+  <div class="lead">水の じょう発の 実験を 計画しよう。A と B の 条件を 自分で 決めて「実験する」。調べたい ことが 分かる 計画に なって いるかな？</div>
+  <div class="card"><div id="mission"></div><div style="font-size:12px;color:#7a6985" id="count"></div></div>
+  <div class="card">
+    <table>
+      <tr><th style="text-align:left">条件</th><th>A</th><th>B</th></tr>
+      <tbody id="conds"></tbody>
+    </table>
+    <div style="font-size:12px;color:#7a6985;margin:4px 0 8px">ボタンを おすと 条件が 切りかわるよ。ピンクの 行 ＝ A と B で ちがう 条件</div>
+    <button class="run" id="run">▶ 実験する（3日後）</button>
+  </div>
+  <div class="card" id="result" hidden>
+    <svg id="pic" viewBox="0 0 320 130" role="img" aria-label="実験の 結果"></svg>
+    <div id="verdict"></div>
+    <div style="text-align:center;margin-top:8px"><button class="next" id="next" hidden>つぎの ぎもんへ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>実験の きまり</b><br>・調べたい 条件 <b>1つだけ</b>を 変える。<br>・ほかの 条件は <b>ぜんぶ 同じ</b>に そろえる。<br>そう すると、結果の ちがいは「変えた 条件の せい」と 言える。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var CONDS = [
+    { k: "place", name: "置く 場所", v: ["日なた", "日かげ"] },
+    { k: "lid", name: "ふた", v: ["なし", "あり"] },
+    { k: "dish", name: "入れ物", v: ["コップ", "口の 広い 皿"] },
+    { k: "amount", name: "水の 量", v: ["100mL", "200mL"] }
+  ];
+  var MISSIONS = [
+    { q: "ぎもん①：日なたの ほうが、水は 早く へる？", target: "place", yes: "日なたの ほうが 早く へった。日光で あたためられると、じょう発が 進むね。" },
+    { q: "ぎもん②：ふたを すると、水は へりにくい？", target: "lid", yes: "ふたを すると ほとんど へらなかった。水じょう気が 外へ 出て いけないからだね。" },
+    { q: "ぎもん③：口の 広い 入れ物の ほうが、水は 早く へる？", target: "dish", yes: "口の 広い 皿の ほうが 早く へった。空気に ふれる 面が 広いからだね。" }
+  ];
+  var mi = 0, A = {}, B = {};
+  var $ = function (id) { return document.getElementById(id); };
+  function reset() { CONDS.forEach(function (c) { A[c.k] = Math.random() < 0.5 ? 0 : 1; B[c.k] = Math.random() < 0.5 ? 0 : 1; }); }
+  // 3日で へる 水の 量（mL）：この ラボの 中の きまり
+  function loss(s) { var x = 10; if (s.place === 0) x *= 2; if (s.lid === 1) x *= 0.1; if (s.dish === 1) x *= 2; return Math.round(x); }
+  function render() {
+    $("mission").textContent = MISSIONS[mi].q; $("count").textContent = (mi + 1) + " / " + MISSIONS.length;
+    $("conds").innerHTML = CONDS.map(function (c) {
+      return '<tr class="' + (A[c.k] !== B[c.k] ? "diff" : "") + '"><td class="name">' + c.name + '</td><td><button type="button" class="tg" data-s="A" data-k="' + c.k + '">' + c.v[A[c.k]] + '</button></td><td><button type="button" class="tg" data-s="B" data-k="' + c.k + '">' + c.v[B[c.k]] + '</button></td></tr>';
+    }).join("");
+  }
+  $("conds").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-k]"); if (!b) return;
+    var s = b.getAttribute("data-s") === "A" ? A : B, k = b.getAttribute("data-k"); s[k] = s[k] ? 0 : 1;
+    $("result").hidden = true; render();
+  });
+  function cup(x, s, label) {
+    var total = s.amount ? 200 : 100, left = total - loss(s), wide = s.dish === 1, w = wide ? 96 : 56, h = wide ? 34 : 74, y0 = 104 - h, fillH = Math.max(3, (h - 3) * left / 200);
+    var o = '<rect x="' + (x - w / 2) + '" y="' + (104 - fillH) + '" width="' + w + '" height="' + fillH + '" fill="#93c5fd"/>';
+    o += '<path d="M' + (x - w / 2) + ' ' + y0 + ' V104 H' + (x + w / 2) + ' V' + y0 + '" fill="none" stroke="#475569" stroke-width="3" stroke-linejoin="round"/>';
+    if (s.lid === 1) o += '<rect x="' + (x - w / 2 - 4) + '" y="' + (y0 - 7) + '" width="' + (w + 8) + '" height="6" rx="3" fill="#a78bfa"/>';
+    o += s.place === 0 ? '<circle cx="' + (x + 48) + '" cy="18" r="10" fill="#fb923c"/>' : '<path d="M' + (x + 30) + ' 8 h36 v22 h-36z" fill="#cbd5e1"/>';
+    o += '<text x="' + x + '" y="122" font-size="12" font-weight="900" fill="#4a3b52" text-anchor="middle" font-family="\'Zen Maru Gothic\',sans-serif">' + label + '：' + loss(s) + 'mL へった</text>';
+    return o;
+  }
+  $("run").addEventListener("click", function () {
+    var m = MISSIONS[mi], diff = CONDS.filter(function (c) { return A[c.k] !== B[c.k]; }), names = diff.map(function (c) { return c.name; });
+    $("pic").innerHTML = '<rect width="320" height="130" rx="12" fill="#fff7ed"/>' + cup(86, A, "A") + cup(236, B, "B");
+    var v, ok = false;
+    if (!diff.length) v = "🔁 A と B の 条件が <b>ぜんぶ 同じ</b>。これでは くらべられないよ。調べたい 条件を 1つ 変えよう。";
+    else if (diff.length > 1) v = "🔁 A と B で <b>" + names.join("・") + "</b> の " + diff.length + "つが ちがう。へり方が ちがっても、<b>どの 条件の せいか 分からない</b>。変えるのは 1つだけに しよう。";
+    else if (diff[0].k !== m.target) v = "🔁 変えたのは <b>" + names[0] + "</b> だけ。計画は 正しいけれど、今の ぎもんで 調べたいのは べつの 条件だよ。";
+    else { ok = true; v = "⭕ 変えたのは <b>" + names[0] + "</b> だけ。ほかは そろって いるので、ちがいは " + names[0] + " の せいと 言える！<br>" + m.yes; }
+    $("verdict").innerHTML = v; $("result").hidden = false;
+    $("next").hidden = !ok; $("next").textContent = mi + 1 < MISSIONS.length ? "つぎの ぎもんへ ▶" : "もう一度 あそぶ 🔁";
+    $("result").scrollIntoView({ block: "nearest" });
+  });
+  $("next").addEventListener("click", function () { mi = (mi + 1) % MISSIONS.length; reset(); $("result").hidden = true; render(); });
+  reset(); render();
+})();
+</script>
+</body>
+</html>

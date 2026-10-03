@@ -662,7 +662,7 @@
       grade: "4年生",
       id: "理科/実験計画/exp_design01",
       name: "実験の計画と条件そろえ（理科の探究）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_jouken_soroe.html",
       created: "2026-08-11"
     },
     // ★算数発展：今後拡大する主要3単元（2桁わり算筆算・がい数・分数）
