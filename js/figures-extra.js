@@ -71,5 +71,45 @@
     return out;
   }
 
-  T.steps = steps; T.distrib = distrib; T.kanjicard = kanjicard; T.kanjicmp = kanjicmp;
+  /* ---------------- 円と 球（★2026-10-03 塾の 診断テストから：半径・直径・ならべた 長さ・中心の 間） ---------------- */
+  // mode "rd"   … 円 1つ。d: 直径の 表示、r: 半径の 表示（"？" も 可）
+  // mode "nest" … 同じ 中心の 大小 2つの 円。big / small: 右に 出す 言葉、ratio: 小÷大
+  // mode "row"  … 同じ 円を n こ ならべて 箱に 入れる。w: 箱の 横の 表示、d: 円 1この 表示、half: 半径で しめす
+  // mode "chain"… くっついた 円（rs: 半径の ならび）。中心を 線で むすぶ。labels: 円ごとの 表示、mid: 中心の 間の 表示
+  function circles(s) {
+    var BLUE = "#2563eb", m = s.mode || "rd", out = "";
+    function ln(x1, y1, x2, y2, c, w, dash) { return '<path d="M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + c + '" stroke-width="' + (w || 3) + '" stroke-linecap="round"' + (dash ? ' stroke-dasharray="5 4"' : "") + '/>'; }
+    function circ(x, y, r, fill, st) { return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fill + '" stroke="' + st + '" stroke-width="3"/>'; }
+    function dot(x, y) { return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.2" fill="' + DARK + '"/>'; }
+    if (m === "rd" || m === "nest") {
+      var cx = 100, cy = 68, R = 54;
+      out += circ(cx, cy, R, "#faf5ff", INK);
+      if (m === "rd") {
+        out += ln(cx - R, cy, cx + R, cy, MARK, 3) + ln(cx, cy, cx + R * 0.64, cy - R * 0.77, BLUE, 3) + dot(cx, cy);
+        out += ln(178, 46, 192, 46, BLUE, 3) + t(198, 51, "半径 " + s.r, 14, BLUE, "start") + ln(178, 80, 192, 80, MARK, 3) + t(198, 85, "直径 " + s.d, 14, MARK, "start");
+      } else {
+        var r = R * (s.ratio || 1 / 3);
+        out += ln(cx - R, cy, cx + R, cy, INK, 2.5, true) + circ(cx, cy, r, "#fce7f3", MARK) + ln(cx, cy, cx, cy - r, BLUE, 3) + dot(cx, cy);
+        out += ln(172, 46, 186, 46, INK, 2.5, true) + t(192, 51, s.big, 13, INK, "start") + ln(172, 80, 186, 80, BLUE, 3) + t(192, 85, s.small, 13, BLUE, "start");
+      }
+      return out;
+    }
+    if (m === "row") {
+      var n = s.n || 4, W = Math.min(260, n * 56), rr = W / (2 * n), x0 = 160 - W / 2, y = 64;
+      out += '<rect x="' + x0 + '" y="' + (y - rr) + '" width="' + W + '" height="' + (rr * 2) + '" fill="#fff" stroke="' + DARK + '" stroke-width="2.5"/>';
+      for (var i = 0; i < n; i++) out += circ(x0 + rr + i * rr * 2, y, rr, "#faf5ff", INK) + dot(x0 + rr + i * rr * 2, y);
+      out += ln(s.half ? x0 + rr : x0, y, x0 + rr * 2, y, MARK, 3) + t(x0 + rr, y - rr - 8, s.d, 12.5, MARK);
+      out += ln(x0, y + rr + 12, x0 + W, y + rr + 12, BLUE, 2) + ln(x0, y + rr + 7, x0, y + rr + 17, BLUE, 2) + ln(x0 + W, y + rr + 7, x0 + W, y + rr + 17, BLUE, 2) + t(160, y + rr + 30, s.w, 13, BLUE);
+      return out;
+    }
+    var rs = s.rs || [3, 5], sum = 0, mx = 0; rs.forEach(function (v) { sum += v; mx = Math.max(mx, v); });
+    var k = Math.min(250 / (2 * sum), 46 / mx), x = 160 - sum * k, cy2 = 70, cs = [];
+    rs.forEach(function (v, j) { x += v * k; cs.push(x); out += circ(x, cy2, v * k, j % 2 ? "#fce7f3" : "#faf5ff", j % 2 ? MARK : INK); x += v * k; });
+    for (var j = 0; j < cs.length - 1; j++) out += ln(cs[j], cy2, cs[j + 1], cy2, BLUE, 3);
+    cs.forEach(function (c, j) { out += dot(c, cy2); if (s.labels && s.labels[j]) out += t(c, Math.min(134, cy2 + rs[j] * k + 16), s.labels[j], 12, j % 2 ? MARK : INK); });
+    if (s.mid) out += t((cs[0] + cs[cs.length - 1]) / 2, 13, "中心の 間 " + s.mid, 12.5, BLUE);
+    return out;
+  }
+
+  T.steps = steps; T.distrib = distrib; T.kanjicard = kanjicard; T.kanjicmp = kanjicmp; T.circles = circles;
 })();

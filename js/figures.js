@@ -272,7 +272,7 @@
     var xs = spec.xs, ys = spec.ys, lo = spec.ymin, hi = spec.ymax, X0 = 52, X1 = 300, Y0 = 128, Y1 = 14, out = "";
     var px = function (i) { return X0 + 10 + i * (X1 - X0 - 20) / (xs.length - 1); };
     var py = function (v) { return Y0 - (v - lo) / (hi - lo) * (Y0 - Y1); };
-    for (var g = lo; g <= hi; g += (spec.step || 5)) { out += line(P(X0, py(g)), P(X1, py(g)), { w: 1, color: "#e9d5ff" }) + text(X0 - 6, py(g) + 4, g, 10, SUB, "end"); }
+    for (var g = lo; g <= hi; g += (spec.step || 5)) { out += line(P(X0, py(g)), P(X1, py(g)), { w: 1, color: spec.lab && (g - lo) % spec.lab === 0 ? "#c4b5fd" : "#e9d5ff" }) + (!spec.lab || (g - lo) % spec.lab === 0 ? text(X0 - 6, py(g) + 4, g, 10, SUB, "end") : ""); } // lab: 数字を 書く 間かく（目もりを 自分で 読む 問題用）
     out += line(P(X0, Y0), P(X1, Y0), { w: 2, color: SUB }) + line(P(X0, Y0 + 14), P(X0, Y1), { w: 2, color: SUB });
     if (spec.wave) out += '<path d="M' + (X0 - 7) + ' ' + (Y0 + 6) + ' q3.5 -4 7 0 t7 0" fill="none" stroke="' + MARK + '" stroke-width="2.4"/><path d="M' + (X0 - 7) + ' ' + (Y0 + 10) + ' q3.5 -4 7 0 t7 0" fill="none" stroke="' + MARK + '" stroke-width="2.4"/>';
     xs.forEach(function (x, i) { out += text(px(i), Y0 + 15, x, 10, SUB); });
