@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星の動きラボ 🌌</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-03追加：10/1（木）に 愛知で 夏の大三角を 観察 →「動いたのは 分かったが、どう 動いたか 分かりにくかった」を 受けて。
+     その 日・その 場所の 本当の 星の 位置を、時刻を 動かして 見くらべる。計算は ../../js/sky-calc.js。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --lav: #a855f7; --night: #0f172a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #f3ebf7; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 10px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .place { font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 8px; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  input[type=date] { font-family: inherit; font-size: 14px; font-weight: 700; padding: 6px 8px; border: 2px solid #e9d5ff; border-radius: 10px; color: var(--ink); }
+  button { font-family: inherit; font-weight: 900; border: none; border-radius: 12px; cursor: pointer; }
+  .chip { background: #f3e8ff; color: #7e22ce; padding: 8px 11px; font-size: 13px; }
+  .chip.on { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 6px; }
+  .tabs button { flex: 0 0 auto; background: #fff; color: var(--sub); padding: 8px 10px; font-size: 12.5px; border: 2px solid #e9d5ff; }
+  .tabs button.on { background: #1e1b4b; color: #fde68a; border-color: #1e1b4b; }
+  #sky { width: 100%; height: auto; display: block; border-radius: 18px; background: var(--night); }
+  .time { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
+  .time input { flex: 1; accent-color: #db2777; height: 28px; }
+  #play { width: 44px; height: 40px; background: #db2777; color: #fff; font-size: 16px; }
+  #tlabel { font-size: 18px; font-weight: 900; color: var(--pink); min-width: 92px; text-align: right; }
+  .check { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin: 2px 0 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 11px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .card h2 { font-size: 15px; margin: 0 0 4px; color: #6b21a8; }
+  #say b { color: var(--pink); }
+  .card ul { margin: 0; padding-left: 1.2em; } .card li { margin: 2px 0; }
+  .q { margin: 8px 0 2px; } .opts { display: flex; flex-direction: column; gap: 5px; }
+  .opts button { background: #faf5ff; color: var(--ink); border: 2px solid #e9d5ff; padding: 9px 10px; text-align: left; font-size: 13px; }
+  .opts button.ok { background: #dcfce7; border-color: #22c55e; } .opts button.ng { background: #fee2e2; border-color: #f87171; }
+  .fb { font-size: 12.5px; color: var(--sub); min-height: 1em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌌 星の動きラボ</h1>
+  <div class="place">📍 愛知県（名古屋）の 空 ／ 本当の 星の 位置を 計算して いるよ</div>
+  <div class="row">
+    <input type="date" id="date" value="2026-10-01">
+    <button class="chip on" id="thu">📅 木曜日（10/1）の 観察</button>
+    <button class="chip" id="tonight">🌙 今夜</button>
+  </div>
+  <div class="tabs" id="tabs">
+    <button data-v="dome" class="on">⬆️ 見上げる（空ぜんぶ）</button>
+    <button data-v="180">南の空</button><button data-v="270">西の空</button><button data-v="0">北の空</button><button data-v="90">東の空</button>
+  </div>
+  <svg id="sky" viewBox="0 0 360 360" role="img" aria-label="星の 位置"></svg>
+  <div class="time"><button id="play" aria-label="時間を すすめる">▶</button><input type="range" id="t" min="1080" max="1560" step="5" value="1140"><span id="tlabel"></span></div>
+  <label class="check"><input type="checkbox" id="trail" checked> 🕐 1時間ごとの 位置を のこして くらべる</label>
+
+  <div class="card" id="say"></div>
+
+  <div class="card">
+    <h2>🤔 頭の 上の 星は、どうして 分かりにくいの？</h2>
+    <ul>
+      <li>まわりに <b>目印が ない</b> ので、どれだけ 動いたか くらべにくい。</li>
+      <li>真上を 見ると、体の 向きで 東と 西が 分からなく なりやすい。<b>南を 向いて 見上げると、左が 東・右が 西</b>。</li>
+      <li>頭の 上を 通る 星は、<b>西へ 動きながら 三角の 向きが かたむいて</b> 見える（形＝ならび方は 同じ）。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🔭 つぎの 観察の コツ</h2>
+    <ul>
+      <li><b>同じ 場所</b>に 立ち、足もとに しるしを つける。</li>
+      <li>頭の 真上より、<b>少し 低い 星</b>（10月の 夜なら 南の 空の アルタイル）を 見る。</li>
+      <li><b>屋根・電柱・木</b>など 目印と いっしょに、星の 位置を 絵に かく。</li>
+      <li><b>1時間ごと</b>に、時刻・方位・高さ（こぶし いくつ分）を 書く。</li>
+      <li>同じ 場所から スマホで 写真を とって、あとで 2まいを くらべる。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>✏️ やってみよう（木曜日の 空で）</h2>
+    <div id="quiz"></div>
+  </div>
+</div>
+<script src="../../js/sky-calc.js"></script>
+<script>
+(function () {
+  var S = window.SKY, P = S.PLACES.nagoya, svg = document.getElementById("sky");
+  var view = "dome", dateEl = document.getElementById("date"), tEl = document.getElementById("t"), trailEl = document.getElementById("trail");
+  var LAND = [{ az: 180, k: "house", name: "家の 屋根" }, { az: 222, k: "pole", name: "電柱" }, { az: 262, k: "tree", name: "木" }, { az: 128, k: "tree", name: "木" }, { az: 330, k: "bldg", name: "マンション" }, { az: 45, k: "pole", name: "電柱" }, { az: 80, k: "bldg", name: "マンション" }];
+  function ymd() { var v = (dateEl.value || "2026-10-01").split("-").map(Number); return v; }
+  function hm(min) { var h = Math.floor(min / 60), m = min % 60, hh = h % 24; return (hh < 12 ? (h >= 24 ? "夜中" : "午前") : "午後") + (hh % 12 === 0 && hh >= 12 ? 12 : hh % 12) + "時" + (m ? m + "分" : ""); }
+  function pos(key, hour) { var v = ymd(), d = new Date(Date.UTC(v[0], v[1] - 1, v[2] + Math.floor(hour / 24))); return S.altaz(S.STARS[key], d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), hour % 24, P); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  function tx(x, y, s, size, col, anchor, extra) { return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="' + size + '" font-weight="900" fill="' + col + '" text-anchor="' + (anchor || "middle") + '" font-family="\'Zen Maru Gothic\',sans-serif"' + (extra || "") + '>' + esc(s) + '</text>'; }
+
+  // 画面の 座標へ（見上げる：円の 中、方角の 空：横長）
+  function proj(p) {
+    if (view === "dome") { if (p.alt < -2) return null; return S.domeXY({ alt: Math.max(p.alt, 0), az: p.az }, 180, 180, 160); }
+    var C = Number(view), d = ((p.az - C + 540) % 360) - 180;
+    if (Math.abs(d) > 66 || p.alt < -4) return null;
+    return { x: 180 + d * 2.9, y: 236 - p.alt * 2.6 };
+  }
+  function starR(k) { var m = S.STARS[k].mag; return Math.max(1.6, 4.6 - m * 1.1); }
+
+  function drawSet(hour, faint, label) {
+    var o = "", op = faint ? 0.38 : 1;
+    Object.keys(S.FIGS).forEach(function (f) {
+      var F = S.FIGS[f];
+      F.lines.forEach(function (ln) {
+        var a = proj(pos(ln[0], hour)), b = proj(pos(ln[1], hour));
+        if (a && b) o += '<path d="M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ' L' + b.x.toFixed(1) + ' ' + b.y.toFixed(1) + '" stroke="' + F.col + '" stroke-width="' + (f === "summer" ? 2 : 1.3) + '" opacity="' + (faint ? 0.3 : 0.8) + '"' + (faint ? ' stroke-dasharray="4 3"' : "") + '/>';
+      });
+    });
+    Object.keys(S.STARS).forEach(function (k) {
+      var st = S.STARS[k], q = proj(pos(k, hour)); if (!q) return;
+      o += '<circle cx="' + q.x.toFixed(1) + '" cy="' + q.y.toFixed(1) + '" r="' + starR(k) + '" fill="' + (st.col || "#fff") + '" opacity="' + op + '"/>';
+      if (!faint && st.name) o += tx(q.x, q.y - starR(k) - 4, st.name, 10.5, k === "altair" || k === "vega" || k === "deneb" ? "#fde68a" : "#c7d2fe");
+    });
+    if (label) { var al = proj(pos("altair", hour)); if (al) o += tx(al.x + 9, al.y + 14, label, 10, faint ? "#f9a8d4" : "#f472b6", "start"); }
+    if (!faint) {
+      var fl = [["summer", "deneb", "夏の大三角"], ["cas", "cas3", "カシオペヤ座"], ["dipper", "ud5", "北斗七星"]];
+      fl.forEach(function (x) { var q = proj(pos(x[1], hour)); if (q) o += tx(q.x, q.y + 18, x[2], 10, "#a5b4fc"); });
+    }
+    return o;
+  }
+  function landmark(x, y, k, s) {
+    s = s || 1; var c = "#020617";
+    if (k === "house") return '<path d="M' + (x - 22 * s) + ' ' + y + ' V' + (y - 14 * s) + ' L' + x + ' ' + (y - 30 * s) + ' L' + (x + 22 * s) + ' ' + (y - 14 * s) + ' V' + y + 'z" fill="' + c + '"/>';
+    if (k === "pole") return '<rect x="' + (x - 2 * s) + '" y="' + (y - 52 * s) + '" width="' + 4 * s + '" height="' + 52 * s + '" fill="' + c + '"/><rect x="' + (x - 12 * s) + '" y="' + (y - 46 * s) + '" width="' + 24 * s + '" height="' + 3 * s + '" fill="' + c + '"/>';
+    if (k === "tree") return '<rect x="' + (x - 3 * s) + '" y="' + (y - 16 * s) + '" width="' + 6 * s + '" height="' + 16 * s + '" fill="' + c + '"/><circle cx="' + x + '" cy="' + (y - 28 * s) + '" r="' + 16 * s + '" fill="' + c + '"/>';
+    return '<rect x="' + (x - 14 * s) + '" y="' + (y - 44 * s) + '" width="' + 28 * s + '" height="' + 44 * s + '" fill="' + c + '"/>';
+  }
+  function draw() {
+    var min = Number(tEl.value), hour = min / 60, o = "";
+    if (view === "dome") {
+      svg.setAttribute("viewBox", "0 0 360 360");
+      o += '<rect width="360" height="360" fill="#f3ebf7"/><circle cx="180" cy="180" r="162" fill="#0b1437" stroke="#334155" stroke-width="4"/>';
+      [30, 60].forEach(function (a) { o += '<circle cx="180" cy="180" r="' + (160 * (90 - a) / 90) + '" fill="none" stroke="#334155" stroke-dasharray="3 5"/>'; });
+      o += '<path d="M180 174 V186 M174 180 H186" stroke="#64748b" stroke-width="1.5"/>' + tx(180, 199, "頭の 真上", 9, "#64748b");
+      o += tx(180, 34, "北", 15, "#e2e8f0") + tx(180, 340, "南", 15, "#e2e8f0") + tx(36, 185, "東", 15, "#e2e8f0") + tx(324, 185, "西", 15, "#e2e8f0");
+    } else {
+      svg.setAttribute("viewBox", "0 0 360 270");
+      o += '<rect width="360" height="270" fill="#0b1437"/>';
+      for (var a = 10; a <= 80; a += 10) { var y = 236 - a * 2.6; o += '<path d="M0 ' + y + ' H360" stroke="#1e293b" stroke-dasharray="2 5"/>' + tx(4, y + 4, "こぶし" + a / 10, 8.5, "#475569", "start"); }
+      var C = Number(view);
+      LAND.forEach(function (l) { var d = ((l.az - C + 540) % 360) - 180; if (Math.abs(d) < 64) o += landmark(180 + d * 2.9, 238, l.k, 0.8); });
+    }
+    var body = "";
+    if (trailEl.checked) for (var h = 18; h < hour - 0.01; h++) body += drawSet(h, true, hm(h * 60).replace("午後", "").replace("夜中", ""));
+    body += drawSet(hour, false, trailEl.checked ? hm(min).replace("午後", "").replace("夜中", "") : "");
+    if (view === "dome") o += '<clipPath id="cp"><circle cx="180" cy="180" r="162"/></clipPath><g clip-path="url(#cp)">' + body + '</g>';
+    else o += '<clipPath id="cp"><rect width="360" height="240"/></clipPath><g clip-path="url(#cp)">' + body + '</g><rect y="238" width="360" height="32" fill="#020617"/>' + (function () { var s = ""; [-60, -45, -30, -15, 0, 15, 30, 45, 60].forEach(function (d) { var az = (Number(view) + d + 360) % 360; if (az % 45 === 0) s += tx(180 + d * 2.9, 262, S.dirName(az, 8), 13, d === 0 ? "#fde68a" : "#e2e8f0"); }); return s; })();
+    svg.innerHTML = o;
+    document.getElementById("tlabel").textContent = hm(min);
+    say(hour);
+  }
+  function say(hour) {
+    var a = pos("altair", hour), v = pos("vega", hour), b = pos("altair", hour - 1), o = "";
+    if (a.alt < 0) { o = "アルタイルは もう <b>西の 空に しずんだ</b> よ。夏の大三角は 夜の はじめに 見よう。"; }
+    else {
+      o = "アルタイルは いま <b>" + S.dirName(a.az) + "の 空</b>、高さ <b>" + Math.round(a.alt) + "度</b>（こぶし 約" + Math.round(a.alt / 10) + "つ分）。";
+      if (hour - 1 >= 18) {
+        // 空の 上での 本当の 動いた 長さ（こぶしで はかれる 角度）
+        var R = Math.PI / 180, cosd = Math.sin(a.alt * R) * Math.sin(b.alt * R) + Math.cos(a.alt * R) * Math.cos(b.alt * R) * Math.cos((a.az - b.az) * R);
+        var sep = Math.acos(Math.min(1, Math.max(-1, cosd))) / R, dz = ((a.az - b.az + 540) % 360) - 180, da = Math.round(a.alt - b.alt);
+        o += "<br>1時間で <b>" + (dz > 0 ? "西" : "東") + "の ほうへ 約" + Math.round(sep) + "度</b>（こぶし 約" + (Math.round(sep / 5) / 2) + "つ分）動いて、" + (da < 0 ? "<b>" + (-da) + "度 低く</b>" : "<b>" + da + "度 高く</b>") + " なったよ。";
+      }
+      if (v.alt > 70) o += "<br>ベガは ほぼ <b>頭の 真上</b>。真上の 星は 動きが 分かりにくいから、アルタイルを 見よう。";
+    }
+    o += '<br><span style="color:#7a6985;font-size:12px">星は 東から のぼり、南の 空を 通って、西へ しずむ。北の 空の 星は 北極星を 中心に 回るよ。</span>';
+    document.getElementById("say").innerHTML = o;
+  }
+
+  // 操作
+  document.getElementById("tabs").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; view = b.dataset.v; [].forEach.call(this.children, function (c) { c.classList.toggle("on", c === b); }); draw(); });
+  tEl.addEventListener("input", draw); trailEl.addEventListener("change", draw);
+  dateEl.addEventListener("change", function () { document.getElementById("thu").classList.toggle("on", dateEl.value === "2026-10-01"); document.getElementById("tonight").classList.remove("on"); draw(); });
+  document.getElementById("thu").onclick = function () { dateEl.value = "2026-10-01"; tEl.value = 1140; this.classList.add("on"); document.getElementById("tonight").classList.remove("on"); draw(); };
+  document.getElementById("tonight").onclick = function () { var d = new Date(); dateEl.value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); tEl.value = 1140; this.classList.add("on"); document.getElementById("thu").classList.remove("on"); draw(); };
+  var timer = null, playBtn = document.getElementById("play");
+  playBtn.onclick = function () {
+    if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "▶"; return; }
+    if (Number(tEl.value) >= Number(tEl.max)) tEl.value = 1080;
+    playBtn.textContent = "⏸";
+    timer = setInterval(function () { var v = Number(tEl.value) + 5; if (v > Number(tEl.max)) { clearInterval(timer); timer = null; playBtn.textContent = "▶"; return; } tEl.value = v; draw(); }, 80);
+  };
+
+  // やってみよう
+  var QUIZ = [
+    { q: "① 木曜日の 午後7時から 9時までに、アルタイルは どちらへ 動いた？（時間を 動かして たしかめよう）", a: ["南 → 南西（西の ほうへ、少し 低く）", "南 → 南東（東の ほうへ、少し 高く）", "ほとんど 動かなかった"], c: 0, fb: "南の 空から 南西へ。2時間で 50度くらい 西へ 回り、12度ほど 低く なったよ。" },
+    { q: "② 午後7時と 9時で、夏の大三角の 形（3つの 星の ならび方）は どうなった？", a: ["ならび方は 同じで、三角の 向きが かたむいた", "三角が 大きく なった", "3つの 星の 順番が 入れかわった"], c: 0, fb: "ならび方は 同じ。全体が 西へ 動くので、向きが かたむいて 見えるよ。" },
+    { q: "③「北の空」を 見て 時間を 動かそう。北斗七星や カシオペヤ座は 何を 中心に 回って いる？", a: ["北極星", "ベガ", "月"], c: 0, fb: "北極星は ほとんど 動かない。北の 空の 星は そのまわりを 回るよ。" }
+  ];
+  var qz = document.getElementById("quiz");
+  QUIZ.forEach(function (it, i) {
+    var div = document.createElement("div");
+    div.innerHTML = '<div class="q">' + it.q + '</div><div class="opts"></div><div class="fb"></div>';
+    var opts = div.querySelector(".opts"), fb = div.querySelector(".fb");
+    // 正解が いつも 1番目に ならないように 並べかえる
+    var order = it.a.map(function (_, j) { return j; }).sort(function () { return Math.random() - 0.5; });
+    order.forEach(function (j) { var txt = it.a[j];
+      var b = document.createElement("button"); b.textContent = txt;
+      b.onclick = function () { [].forEach.call(opts.children, function (x) { x.classList.remove("ok", "ng"); }); b.classList.add(j === it.c ? "ok" : "ng"); fb.textContent = j === it.c ? "⭕ " + it.fb : "🔁 もう一度、時間を 動かして 見て みよう。"; };
+      opts.appendChild(b);
+    });
+    qz.appendChild(div);
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

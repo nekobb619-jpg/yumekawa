@@ -278,7 +278,7 @@
       grade: "4年生",
       id: "理科/星/hoshi01",
       name: "夏の星空と月の動き",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_hoshi_ugoki.html",
       created: "2026-07-18"
     },
     {
@@ -289,7 +289,7 @@
       grade: "4年生",
       id: "理科/星/kansatsu01",
       name: "月と星の観察名人（記録とレポート）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_hoshi_ugoki.html",
       created: "2026-10-02"
     },
     {

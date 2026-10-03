@@ -450,7 +450,29 @@
     return out;
   }
 
-  T.starmove = starmove; T.starcolor = starcolor;
+  // 空ぜんぶ（南を 向いて 見上げた 向き）に、2つの 時刻の 夏の大三角を 重ねる。位置は js/sky-calc.js で 計算（愛知・名古屋）
+  function skydome(s) {
+    var SK = window.SKY; if (!SK) return "";
+    var cx = 160, cy = 100, R = 92, d = s.date || [2026, 10, 1], hours = s.hours || [19, 21], out = "";
+    out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 2) + '" fill="#0b1437" stroke="#334155" stroke-width="3"/>';
+    out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R * 2 / 3) + '" fill="none" stroke="#334155" stroke-dasharray="3 4"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (R / 3) + '" fill="none" stroke="#334155" stroke-dasharray="3 4"/>';
+    out += t(cx, cy - R + 14, "北", 12, "#e2e8f0") + t(cx, cy + R - 5, "南", 12, "#e2e8f0") + t(cx - R + 12, cy + 4, "東", 12, "#e2e8f0") + t(cx + R - 12, cy + 4, "西", 12, "#e2e8f0");
+    out += '<path d="M' + cx + ' ' + (cy - 4) + ' V' + (cy + 4) + ' M' + (cx - 4) + ' ' + cy + ' H' + (cx + 4) + '" stroke="#64748b" stroke-width="1.4"/>';
+    var keys = ["vega", "deneb", "altair"], prev = null;
+    hours.forEach(function (h, i) {
+      var last = i === hours.length - 1, pts = keys.map(function (k) { return SK.domeXY(SK.altaz(SK.STARS[k], d[0], d[1], d[2], h), cx, cy, R); });
+      out += '<path d="M' + pts.map(function (p) { return p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(" L") + 'z" fill="' + (last ? "rgba(253,230,138,.12)" : "none") + '" stroke="' + (last ? "#fde68a" : "#a5b4fc") + '" stroke-width="' + (last ? 2 : 1.4) + '"' + (last ? "" : ' stroke-dasharray="4 3"') + '/>';
+      pts.forEach(function (p) { out += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3.4" fill="' + (last ? "#fff" : "#a5b4fc") + '"/>'; });
+      out += t(pts[2].x + (last ? 10 : -10), pts[2].y + 14, "午後" + (h > 12 ? h - 12 : h) + "時", 11, last ? "#fde68a" : "#a5b4fc", last ? "start" : "end");
+      if (prev) out += '<path d="M' + prev.x.toFixed(1) + ' ' + prev.y.toFixed(1) + ' L' + pts[2].x.toFixed(1) + ' ' + pts[2].y.toFixed(1) + '" stroke="' + MARK + '" stroke-width="2.2"/>' + arrowHead(pts[2].x, pts[2].y, Math.atan2(pts[2].y - prev.y, pts[2].x - prev.x), MARK);
+      prev = pts[2];
+    });
+    out += t(8, 18, "南を 向いて", 10, SUB, "start") + t(8, 31, "見上げた 空", 10, SUB, "start") + t(312, 18, "アルタイルの", 10, MARK, "end") + t(312, 31, "動き →", 10, MARK, "end");
+    return out;
+  }
+  skydome.H = 196;
+
+  T.starmove = starmove; T.starcolor = starcolor; T.skydome = skydome;
   T.syringe = syringe; T.airgun = airgun; T.rod = rod; T.plate = plate; T.convection = convection;
   T.slope = slope; T.soil = soil; T.puddles = puddles; T.magnets = magnets; T.arm = arm;
   T.circuit = circuit; T.skypath = skypath; T.sunmoon = sunmoon; T.moonshapes = moonshapes; T.stars = stars;
