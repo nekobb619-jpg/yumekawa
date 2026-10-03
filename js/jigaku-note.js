@@ -2,9 +2,11 @@
    jigaku-note.js — 自学ノートの ネタ帳（どうぐばこ「📓 自学ノート」）
    ★2026-10-03追加（ユーザー：宿題・毎週の 自学ノートで「何を 書くか」自分で 決められずに 迷う。
      先生の A・Bメニュー、5分間サバイバル（ヒラメ・年輪・オウムは 書いた）、図鑑「科学の実験」は 未使用、
-     ノート1ページ（たて書き 20字×15行）でも よい、愛知県 小牧市 在住）
+     ノート1ページでも よい、愛知県 小牧市 在住）
    - ネタを 3つ 出して 選ぶだけに する（選ぶ 負担を へらす）。カードは 先生の メニューの どれに あたるかを 表示
-   - ノートと 同じ たて書き 20字×15行の マス目で「そのまま 写せる 完成形」を 見せる
+   - ノートと 同じ マス目で「そのまま 写せる 完成形」を 見せる。★2026-10-03変更（保護者）：ノートは 基本 横書き
+     （同じ ノートを 横に して 1行 15マス×20行）。自分で 書く 行（予想・結果・思った こと など）の 下に あき行を 足して、
+     1ページが うまるように する
    - 文は ぜんぶ この アプリ用に 書いた もの（本の 文を 写したり 短く したり した ものでは ない）。
      サバイバルの 本と 同じ ぎもんを あつかう カードは「本も 読んで くらべよう」と すすめる
    - 書けたら ✅：その日 はじめての 1つは +25pt（保護者：Qは チートしやすいので pt に）。saveData.jigakuDone に のこして 次から 後ろに 回す。log_db「📓自学ノート」
@@ -133,22 +135,43 @@
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   // アプリの 文の「わかち書き」の 空白は、ノートには 書かない
   function clean(s) { return String(s).replace(/<[^>]+>/g, "").replace(/[  ]+/g, ""); }
-  // 20字ずつの 行に 分ける（行の 頭に 。、」）が 来たら 前の 行の 最後の マスに 入れる）
+  // 横書きの マス目：1行 NOTE_W マス、1ページ NOTE_H 行（たて書き 20字×15行の ノートを 横に した 形）
+  var NOTE_W = 15, NOTE_H = 20;
+  // NOTE_W 字ずつの 行に 分ける（行の 頭に 。、」）が 来たら 前の 行の 最後の マスに 入れる）
   var HEAD_NG = "。、」）』ー？！";
-  function columns(page) {
-    var cols = [];
-    page.forEach(function (p) {
-      var t = clean(p);
-      if (!t) { cols.push([]); return; }
-      var chars = Array.from(t), col = [];
-      chars.forEach(function (ch) {
-        if (col.length === 20) { cols.push(col); col = []; }
-        if (!col.length && cols.length && HEAD_NG.indexOf(ch) >= 0 && cols[cols.length - 1].length) { var prev = cols[cols.length - 1]; prev[prev.length - 1] += ch; return; }
-        col.push(ch);
-      });
-      if (col.length) cols.push(col);
+  function wrap(t) {
+    if (!t) return [[]];
+    var rows = [], row = [];
+    Array.from(t).forEach(function (ch) {
+      if (row.length === NOTE_W) { rows.push(row); row = []; }
+      if (!row.length && rows.length && HEAD_NG.indexOf(ch) >= 0) { var prev = rows[rows.length - 1]; prev[prev.length - 1] += ch; return; }
+      row.push(ch);
     });
-    return cols;
+    if (row.length) rows.push(row);
+    return rows;
+  }
+  // 自分で 書く 行か（予想・結果・思った こと・（調べて 書く）・一位〇〇 など）。1行目（題）・選たくし・答え・説明の 文は ちがう
+  function writable(t, i) {
+    if (!i || !t || /^[アイウ]　|^答え/.test(t)) return false;
+    if (/[①〇]|（[^）]*(書く|書いて|調べ|あれば|考え|表|絵|一日目|今週|五年生|十九才)[^）]*）|　.*？$/.test(t)) return true;
+    return Array.from(t).length <= 16 && !/[。？（]/.test(t);
+  }
+  // ページを うめる：自分で 書く 行の 下に あき行（blank）を 足して、最後の ページの 下まで うめる
+  function layout(page) {
+    var paras = page.map(function (p, i) { var t = clean(p); return { rows: wrap(t), w: writable(t, i), add: 0 }; });
+    if (!paras.some(function (p) { return p.w; })) paras.push({ rows: wrap("思ったこと"), w: true, add: 0, auto: true });
+    var used = 1, ws = paras.filter(function (p) { return p.w; }); // 1 ＝ 日づけの 行
+    paras.forEach(function (p) { used += p.rows.length; });
+    var extra = Math.ceil(used / NOTE_H) * NOTE_H - used, each = Math.floor(extra / ws.length), rest = extra % ws.length;
+    ws.forEach(function (p, k) { p.add = each + (k >= ws.length - rest ? 1 : 0); }); // あまりは 後ろ（思った こと など）へ
+    if (paras[paras.length - 1].auto && !paras[paras.length - 1].add) paras.pop(); // 足した「思ったこと」を 書く 場所が ない ときは 出さない
+    var d = new Date(window.currentServerTime || Date.now());
+    var out = [{ cells: ["（", String(d.getMonth() + 1), "／", String(d.getDate()), "）"] }]; // 数字は 1マスに（ノートの 書き方と 同じ）
+    paras.forEach(function (p) {
+      p.rows.forEach(function (r) { out.push({ cells: r }); });
+      for (var k = 0; k < p.add; k++) out.push({ cells: [], blank: true });
+    });
+    return out;
   }
   function done() { var sd = window.saveData || {}; return Array.isArray(sd.jigakuDone) ? sd.jigakuDone : []; }
 
@@ -206,29 +229,27 @@
         '<div style="font-size:15px;margin-top:2px;">' + (ok ? "✅ " : (c.hot ? "⭐ " : "")) + esc(c.title) + '</div></button>';
     }).join("");
     shell('<div style="font-size:18px;font-weight:900;color:#6b21a8;text-align:center;">📓 今日の 自学ネタ</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 8px;line-height:1.6;">まよったら 上の 3つから 1つ えらぶだけ。<br>ノート 1ページ（たて書き 20字×15行）に 入る 形に して あるよ。⭐ ＝ 今の 勉強と つながる ネタ</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 8px;line-height:1.6;">まよったら 上の 3つから 1つ えらぶだけ。<br>ノート 1ページ（横書き 1行 15マス）に 入る 形に して あるよ。⭐ ＝ 今の 勉強と つながる ネタ</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;"><button style="' + BTN + 'padding:7px 9px;font-size:12px;' + (k === "all" ? "background:#db2777;color:#fff;" : "background:#fce7f3;color:#9d174d;") + '" onclick="window.openJigakuNote(\'all\')">🎲 おまかせ 3つ</button>' + chips + '</div>' +
       cards +
       '<button style="' + BTN + 'width:100%;margin-top:10px;padding:11px;font-size:14px;color:#92400e;background:#fef3c7;" onclick="window.openYokatta()">🌼 今日の よかった を 書く（よかった帳）</button>' +
       '<button style="' + BTN + 'width:100%;margin-top:8px;padding:10px;font-size:13px;color:#7e22ce;background:#f3e8ff;" onclick="window.closeJigakuNote()">とじる</button>');
   };
   function findCard(id) { var a = appCard(); return (a && a.id === id) ? a : CARDS.filter(function (c) { return c.id === id; })[0]; }
-  // ノートと 同じ たて書きの マス目（右から 左へ。1ページ 15行）
+  // ノートと 同じ 横書きの マス目（左から 右へ。1ページ NOTE_H 行）。うすい 黄色の 行は 自分で 書く ところ
   function notebook(c) {
-    var cols = columns(c.page), pages = [], d = new Date(window.currentServerTime || Date.now());
-    var dateCol = ["（", String(d.getMonth() + 1), "／", String(d.getDate()), "）"]; // 数字は 1マスに（ノートの 書き方と 同じ）
-    cols.unshift(dateCol);
-    for (var i = 0; i < cols.length; i += 15) pages.push(cols.slice(i, i + 15));
-    var cell = "width:19px;height:19px;border:1px solid #99f6e4;margin:-1px 0 0 -1px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#334155;writing-mode:vertical-rl;font-family:'Klee One','Zen Maru Gothic',serif;";
+    var rows = layout(c.page), pages = [];
+    for (var i = 0; i < rows.length; i += NOTE_H) pages.push(rows.slice(i, i + NOTE_H));
+    var cell = "width:22px;height:22px;box-sizing:border-box;border:1px solid #99f6e4;margin:0 0 0 -1px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#334155;font-family:'Klee One','Zen Maru Gothic',serif;";
     return pages.map(function (pg, pi) {
-      var html = '<div style="display:flex;flex-direction:row-reverse;justify-content:flex-start;gap:0;padding:6px;background:#fff;border:2px solid #5eead4;border-radius:8px;overflow-x:auto;">';
-      for (var x = 0; x < 15; x++) {
-        var col = pg[x] || [];
-        html += '<div style="display:flex;flex-direction:column;margin-left:-1px;">';
-        for (var y = 0; y < 20; y++) html += '<div style="' + cell + '">' + esc(col[y] || "") + '</div>';
+      var html = '<div style="overflow-x:auto;text-align:center;"><div style="display:inline-block;padding:6px 6px 6px 7px;background:#fff;border:2px solid #5eead4;border-radius:8px;">';
+      for (var y = 0; y < NOTE_H; y++) {
+        var r = pg[y] || { cells: [] };
+        html += '<div style="display:flex;margin-top:' + (y ? -1 : 0) + 'px;' + (r.blank ? "background:#fef9c3;" : "") + '">';
+        for (var x = 0; x < NOTE_W; x++) { var ch = r.cells[x] || ""; html += '<div style="' + cell + 'font-size:' + (Array.from(ch).length > 1 ? 12 : 15) + 'px;">' + esc(ch) + '</div>'; }
         html += '</div>';
       }
-      return '<div style="font-size:11px;font-weight:900;color:#0f766e;margin:8px 0 3px;">📓 ノート ' + (pi + 1) + 'ページめ' + (pages.length > 1 ? "（全" + pages.length + "ページ）" : "") + '</div>' + html + '</div>';
+      return '<div style="font-size:11px;font-weight:900;color:#0f766e;margin:8px 0 3px;">📓 ノート ' + (pi + 1) + 'ページめ' + (pages.length > 1 ? "（全" + pages.length + "ページ）" : "") + '</div>' + html + '</div></div>';
     }).join("");
   }
   window.showJigakuCard = function (id) {
@@ -237,9 +258,8 @@
     shell('<div style="font-size:11px;font-weight:900;color:#a21caf;">' + KIND[c.kind] + '　先生の メニュー：' + esc(c.menu) + '</div>' +
       '<div style="font-size:17px;font-weight:900;color:#6b21a8;margin:2px 0 6px;">' + esc(c.title) + '</div>' +
       (c.note ? '<div style="background:#fefce8;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:800;color:#854d0e;line-height:1.6;">💡 ' + esc(c.note) + '</div>' : '') +
-      '<div style="font-size:12px;font-weight:700;color:#7a6985;margin-top:6px;">（　）の ところは 自分で 書こう。線は じょうぎで。</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#7a6985;margin-top:6px;">（　）の ところと、<span style="background:#fef9c3;padding:0 3px;">うすい 黄色の 行</span>は 自分で 書こう。1ページ うめられるよ。線は じょうぎで。</div>' +
       notebook(c) +
-      '<details style="margin-top:8px;font-size:13px;font-weight:700;color:#4a3b52;"><summary style="cursor:pointer;color:#7e22ce;">横書きで 読む</summary><div style="line-height:1.8;margin-top:4px;">' + c.page.map(function (p) { return esc(clean(p)); }).join("<br>") + '</div></details>' +
       '<div style="display:grid;gap:8px;margin-top:12px;">' +
         '<button style="' + BTN + 'padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#10b981,#059669);" onclick="window.jigakuDone(\'' + id + '\')">' + (ok ? "✅ 書けた（もう一度 記録）" : "✅ ノートに 書けた！") + '</button>' +
         '<button style="' + BTN + 'padding:10px;font-size:13px;color:#7e22ce;background:#f3e8ff;" onclick="window.openJigakuNote()">◀ ほかの ネタを 見る</button>' +
@@ -265,6 +285,10 @@
        ものだけ 1こ 1Q（1日 YK_DAY_MAX まで）。前に 書いた 文と ほぼ 同じ 文は ng（使い回し 対策）。
        GAS は generated_questions しか 返さないので、判定は その 形（category="ok"/"ng"、question_text＝ひとこと）で 受け取る。 */
   var YK_DAY_MAX = 2, YK_WAIT_MS = 60 * 60 * 1000;
+  // ★2026-10-03（保護者）：よかった帳は りさ（大人・母）も 使う。大人の アカウントは 見直しの 一言を 大人向けに する
+  //   （index.html の PTS_ANTI_FARM_EXEMPT_PLAYER_IDS と 同じ 人。セーブ・Q の しくみは 子どもと 同じ）
+  var YK_ADULT_IDS = ["りさ"];
+  function ykAdult() { return YK_ADULT_IDS.indexOf(window.playerId) >= 0; }
   function ylog() { var sd = window.saveData || {}; return Array.isArray(sd.yokattaLog) ? sd.yokattaLog : []; }
   function ykMark(e) {
     if (e.st === "ok") return '<span style="color:#059669;">⭕</span>';
@@ -285,7 +309,7 @@
     }).join("");
     var inputs = [0, 1, 2].map(function (i) { return '<input id="yk-in' + i + '" maxlength="60" placeholder="よかった ' + "①②③".charAt(i) + '" style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border:2px solid #fde68a;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;">'; }).join("");
     shell('<div style="font-size:18px;font-weight:900;color:#b45309;text-align:center;">🌼 今日の よかった さがし</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 6px;line-height:1.6;">ポリアンナの「よかったさがし」。<br>小さな ことで いいよ。「給食の カレーが おいしかった」のように、文で 書こう。<br>あとで ニコ先生が 読んで、ちゃんと 文に なって いたら 1こ 1Q（1日 ' + YK_DAY_MAX + 'Qまで）。</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 6px;line-height:1.6;">ポリアンナの「よかったさがし」。<br>小さな ことで いいよ。「' + (ykAdult() ? "朝の コーヒーが おいしかった" : "給食の カレーが おいしかった") + '」のように、文で 書こう。<br>あとで ニコ先生が 読んで、ちゃんと 文に なって いたら 1こ 1Q（1日 ' + YK_DAY_MAX + 'Qまで）。</div>' +
       (todays.length ? '<div style="background:#fefce8;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;color:#854d0e;">今日は もう ' + todays.length + 'こ 見つけたね！ まだ あれば 書こう</div>' : '') +
       inputs +
       '<button style="' + BTN + 'width:100%;margin-top:10px;padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#f59e0b,#ec4899);" onclick="window.yokattaSave()">🌼 よかった帳に のこす</button>' +
@@ -326,12 +350,14 @@
     if (!pend.length) return Promise.resolve(null);
     window._ykReviewing = true;
     var ref = all.filter(function (e) { return e.st === "ok"; }).slice(-10).map(function (e) { return e.t; });
+    var adult = ykAdult();
     var systemPrompt = [
-      "あなたは小学4年生の「よかった日記」を読む先生です。番号つきの各文が「その日のよかったことを、意味の通る文で書いているか」を判定します。",
+      adult ? "あなたは大人（子どもの保護者）が書いた「よかった日記」を読む、あたたかい聞き手です。番号つきの各文が「その日のよかったことを、意味の通る文で書いているか」を判定します。"
+            : "あなたは小学4年生の「よかった日記」を読む先生です。番号つきの各文が「その日のよかったことを、意味の通る文で書いているか」を判定します。",
       "ng にするもの：意味のない文字の並び、同じ文字のくり返し、1〜3文字だけ、よかったことと関係ない言葉、【前に書いた文】や同じ日のほかの文とほとんど同じ文（使い回し）。",
       "短くても意味が通れば ok。漢字やひらがなのまちがいは気にしない。",
       "出力は次のJSONだけ（前置き・コードブロック記号なし）。文1つにつき generated_questions の要素を1つ、入力と同じ順番で：",
-      '{"generated_questions":[{"question_id":"r0","category":"ok または ng","question_text":"子どもへのやさしい一言（25字以内。ngなら、どう書けばよいかのヒント）","options":["-","-","-","-"],"correct_index":0,"explanation":"判定のりゆう（短く）"}]}'
+      '{"generated_questions":[{"question_id":"r0","category":"ok または ng","question_text":"' + (adult ? "書いた人へのあたたかい一言（25字以内。大人向けのていねいな言い方で、子ども向けの言い方にしない" : "子どもへのやさしい一言（25字以内") + '。ngなら、どう書けばよいかのヒント）","options":["-","-","-","-"],"correct_index":0,"explanation":"判定のりゆう（短く）"}]}'
     ].join("\n");
     var userPrompt = (ref.length ? "【前に書いた文】\n" + ref.join("\n") + "\n\n" : "") + "【判定する文】\n" + pend.map(function (e, i) { return i + ": " + e.t; }).join("\n");
     return window.postToGAS({ action: "GENERATE_QUIZ_QUESTIONS", systemPrompt: systemPrompt, userPrompt: userPrompt }).then(function (res) {
@@ -384,5 +410,5 @@
       return r;
     };
   }
-  window.JIGAKU_NOTE = { CARDS: CARDS, columns: columns };
+  window.JIGAKU_NOTE = { CARDS: CARDS, layout: layout, NOTE_W: NOTE_W, NOTE_H: NOTE_H };
 })();
