@@ -5358,7 +5358,8 @@ window.computeStageClearReward = function(stageId, opts) {
   const isPerfect = (bonusEligible && opts.totalMistakes === 0 && !isReview && !isMaster);
   const pBonus = isPerfect ? 5 : 0;
 
-  const earnedQ = isMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * boostMultiplier * starBuffMultiplier);
+  // ★2026-10-04追加：noQ（確認テスト。例：2年の 漢字の ふく習）の ステージは Q を 出さない
+  const earnedQ = opts.noQ ? 0 : isMaster ? baseReward : Math.floor((baseReward + vBonus + lBonus + pBonus) * boostMultiplier * starBuffMultiplier);
 
   return { isCleared, isRecompleteAfterNewQuestion, caseType, newQidsInSession, baseReward, vBonus, lBonus, pBonus, earnedQ, masterCapHit };
 };
@@ -6427,15 +6428,16 @@ window.triggerCorrectAnswer = function(current) {
     const isCleared = (window.currentStage.id) ? (window.saveData.clearedStages[window.currentStage.id] && !window.hasNewQuestionsSinceCleared(window.currentStage.id)) : false;
     let basePts = window.currentFirstTry ? 10 : 5;
     if(window.activeItemBuff === 'hourglass') { basePts = 10; }
+    const noQStage = !!(window.currentStage && window.currentStage.noQ); if (noQStage) basePts = 0; // ★2026-10-04：確認テストは pt も 0
     if (window.currentStage.isMaster) { basePts = 0; finalEarnedPts = 0; window.saveData.pts += basePts; } else if (isCleared && !window.currentStage.isReview && window.activeItemBuff !== 'hourglass') {
       const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
       let n = 1; if (window.saveData.dailyLoopCounts && window.saveData.dailyLoopCounts[window.currentStage.id]) { n = window.saveData.dailyLoopCounts[window.currentStage.id] + 1; }
       let penalty = n * n; let finalPts = basePts - penalty; if (finalPts < 0) finalPts = 0; finalEarnedPts = finalPts; window.saveData.pts += finalPts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + finalPts;
     } else {
       let stgReward = (window.currentStage.reward !== undefined && window.currentStage.reward !== "") ? Number(window.currentStage.reward) : 10;
-      finalEarnedQ = isCleared ? 2 : stgReward;
+      finalEarnedQ = noQStage ? 0 : isCleared ? 2 : stgReward;
       let isPerfectForDisplay = (!isCleared && window.totalMistakes === 0 && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster);
-      if (isPerfectForDisplay) { finalEarnedQ += 5; }
+      if (isPerfectForDisplay && !noQStage) { finalEarnedQ += 5; }
       finalEarnedQ = Math.floor(finalEarnedQ * window.activeBoostMultiplier * window.getLuckyBuffMultiplier()); finalEarnedPts = basePts; window.saveData.pts += basePts; window.sessionEarnedPts = (window.sessionEarnedPts || 0) + basePts;
     }
     document.getElementById("job-title").textContent = current.job_title || "クリア！";
@@ -6460,7 +6462,7 @@ window.triggerCorrectAnswer = function(current) {
       if(!window.saveData.kakera) window.saveData.kakera = 0; window.saveData.kakera += 1; window.speakText("欠片発見", "ja-JP"); document.getElementById("job-title").textContent = "🧩 【欠片センサー作動！】 " + (current.job_title || "クリア！");
     }
     let thinkingBonusMsg = "";
-    if (window.currentFirstTry && current.thinking && !window.weakAttackModeActive && !kakeraCapped) {
+    if (window.currentFirstTry && current.thinking && !window.weakAttackModeActive && !kakeraCapped && !(window.currentStage && window.currentStage.noQ)) {
       window.saveData.q += 1;
       thinkingBonusMsg = "💡 ひらめきボーナス！ ＋1Q";
       if (Math.random() < 0.3) {
@@ -6636,7 +6638,8 @@ window.exitToMainMenu = function() {
       starBuffMultiplier: window.getStarBuffMultiplier(),
       currentServerTime: window.currentServerTime,
       MASTER_DAILY_Q_CAP: window.MASTER_DAILY_Q_CAP,
-      MASTER_LOOP_REWARD_Q: window.MASTER_LOOP_REWARD_Q
+      MASTER_LOOP_REWARD_Q: window.MASTER_LOOP_REWARD_Q,
+      noQ: !!(window.currentStage && window.currentStage.noQ)
     });
     let isCleared = rewardResult.isCleared;
     let baseReward = rewardResult.baseReward;

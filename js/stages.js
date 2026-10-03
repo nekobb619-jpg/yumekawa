@@ -943,9 +943,21 @@
       category: "漢字の ふく習（2年・9級）",
       grade: "4年生",
       id: "漢検/9級/dai1kai",
-      name: "9級 だい1回：細・谷・弟・船・晴・雲・兄・姉・妹・寺",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      name: "【確認テスト】2年の 漢字：細・谷・弟・船・晴・雲・兄・姉・妹・寺",
+      noQ: true, // ★2026-10-04：下の 学年の ふく習は Q・pt を 出さない（保護者の 方針）。index.html の noQ を 参照
+      reward: 0, showCount: 8, video_url: "", lab_url: "",
       created: "2026-10-03"
+    },
+    {
+      // ★2026-10-04追加（塾の 診断テスト 小4国語：物語文が 10 / 50。慣用句の 意味・書きぬき・人物像で 落とした）
+      // 短い お話（オリジナル 2本）を 読んで、行動や 表情から 気持ちを 読む・本文から 書きぬく・こんきょを さがす
+      subject: "国語",
+      category: "読解（4年）",
+      grade: "4年生",
+      id: "国語/読解/monogatari01",
+      name: "物語文の 読みとり（気持ち・慣用句・書きぬき・人物像）",
+      reward: 10, showCount: 7, video_url: "", lab_url: "",
+      created: "2026-10-04"
     }
   ];
 
