@@ -744,7 +744,59 @@
       '<div class="growth-stat-card">' +
         '<div class="growth-stat-label">連続がんばり日数 / これまでの総チャレンジ数</div>' +
         '<div class="growth-stat-value">' + r.streakCount + '<span>日連続</span> ／ ' + r.totalCount + '<span>問</span></div>' +
-      '</div>';
+      '</div>' +
+      (PORTAL_LEARNER_IDS[kidId] ? '<div class="growth-stat-card"><div class="growth-stat-label">📋 こども学習サポートポータル</div>' +
+        '<button type="button" style="width:100%;padding:10px;border:none;border-radius:12px;background:#0f766e;color:#fff;font-weight:900;font-size:14px;cursor:pointer;" onclick="window.copyPortalWeek()">この1週間を ポータル用に コピー</button>' +
+        '<div id="pr-portal-msg" style="font-size:11px;margin-top:6px;color:#475569;line-height:1.6;">名前は 入りません（' + PORTAL_LEARNER_IDS[kidId] + '）。ポータルの「アプリの記録を取りこむ」に 貼りつけてください。</div></div>' : '');
+  };
+
+  /* ★2026-10-03追加：こども学習サポートポータル（claude.ai の 非公開ページ）へ 渡す 1週間の まとめ。
+     名前・文章（よかった帳の 中身など）は 入れず、数だけ。学習者は 仮ID（Learner-A）で 表す（Vault の AURA_KIDS/Privacy_and_Data_Boundary.md）。 */
+  var PORTAL_LEARNER_IDS = { "りお": "Learner-A" };
+  function isoWeek_(d) {
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return t.getUTCFullYear() + "-W" + ("0" + Math.ceil(((t - y0) / 86400000 + 1) / 7)).slice(-2);
+  }
+  function ymd_(d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); } // 日本時間の 日付のまま
+  window.buildPortalWeek = function (sd, learner) {
+    var now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
+    var from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).getTime();
+    var logs = ((sd && sd.answerLogs) || []).filter(function (l) { return l && l.ts >= from; });
+    var r = window.computeParentReport(sd), subjects = {}, units = {};
+    logs.forEach(function (l) {
+      var sub = (window.resolveCategorySubject && window.resolveCategorySubject(l.category)) || "その他";
+      var S = subjects[sub] = subjects[sub] || { n: 0, ok: 0 };
+      var U = units[l.category] = units[l.category] || { subject: sub, n: 0, ok: 0, hint: 0, ms: 0, timed: 0 };
+      S.n++; U.n++;
+      if (l.correct) { S.ok++; U.ok++; }
+      if (l.hintItemUsed) U.hint++;
+      if (typeof l.answerTimeMs === "number" && l.answerTimeMs < 600000) { U.ms += l.answerTimeMs; U.timed++; }
+    });
+    var inWeek = function (list) { return (Array.isArray(list) ? list : []).filter(function (e) { return e && e.at && e.at >= from; }).length; };
+    return {
+      kind: "aura-kids-week", v: 1, learner: learner, week: isoWeek_(now),
+      from: ymd_(new Date(from)), to: ymd_(now),
+      answered: logs.length, correct: logs.filter(function (l) { return l.correct; }).length, minutes: r.weekTimeMin,
+      days: r.days.map(function (d) { return { d: d.label, n: d.count, min: Math.round(d.timeMs / 60000) }; }),
+      subjects: subjects,
+      units: Object.keys(units).map(function (k) { var u = units[k]; return { unit: k, subject: u.subject, n: u.n, ok: u.ok, hint: u.hint, avgSec: u.timed ? Math.round(u.ms / u.timed / 1000) : null }; }),
+      weak: r.weakAreas.map(function (w) { return { unit: w.category, rate: Math.round(w.correctRate * 100) }; }),
+      strong: r.strongAreas.map(function (w) { return { unit: w.category, rate: Math.round(w.correctRate * 100) }; }),
+      weakLeft: Array.isArray(sd && sd.weakQuestions) ? sd.weakQuestions.length : 0,
+      streak: r.streakCount, totalAnswers: r.totalCount,
+      clearedUnits: sd && sd.clearedStages ? Object.keys(sd.clearedStages).length : 0,
+      yokatta: inWeek(sd && sd.yokattaLog)
+    };
+  };
+  window.copyPortalWeek = function () {
+    var kidId = parentReportActiveKid_, sd = kidId ? parentReportKidCache_[kidId] : null, msg = document.getElementById("pr-portal-msg");
+    if (!sd || !PORTAL_LEARNER_IDS[kidId]) return;
+    var text = JSON.stringify(window.buildPortalWeek(sd, PORTAL_LEARNER_IDS[kidId]));
+    var done = function () { if (msg) msg.innerHTML = "✅ コピーしました。ポータルの「アプリの記録を取りこむ」に 貼りつけてください。"; };
+    var fallback = function () { if (msg) msg.innerHTML = 'コピーできなかったので、下の 文を 長おしで ぜんぶ 選んで コピーしてください。<textarea readonly style="width:100%;height:80px;font-size:10px;margin-top:4px;">' + text.replace(/</g, "&lt;") + '</textarea>'; };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
   };
 
   /* ---------------------------------------------------------------------
