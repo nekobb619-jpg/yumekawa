@@ -11,7 +11,7 @@
   var FEATURES = {
     tutorPlanStart: "プランのボタン", openBookModal: "おはなし", launchBossQuest: "なぞとき",
     launchWeakAttackLab: "苦手撃破ラボ", startDetectiveLab: "探偵ラボ", openBriefing: "ステージを開く",
-    openFriendsModal: "なかま", openNakamaEgg: "たまごを割る", openTutorScreen: "チューター", openGrowthModal: "せいちょう",
+    openFriendsModal: "なかま", openStickerBook: "シール帳", openNakamaEgg: "たまごを割る", openTutorScreen: "チューター", openGrowthModal: "せいちょう",
     openWeeklyMissionModal: "今週のもくひょう", openReadingNote: "読書ノート", openBookshelf: "本だな",
     openObservationNote: "かんさつ記録", openObservationList: "かんさつを見る", openHissanSheet: "筆算シート", openKanjiSheet: "漢字シート", openJigakuNote: "自学ノート", openYokatta: "よかった帳",
     openStampModal: "ログインスタンプ", openTreasureBookModal: "お宝図鑑", openGachaModal: "ガチャ", openKuroPonModal: "クロぽん",

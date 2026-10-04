@@ -387,6 +387,7 @@
     // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）を 1こ、3日れんぞくごとに もう1こ
     var eggGift = (data.tutorPlanStreak % 3 === 0) ? 2 : 1;
     if (window.grantNakamaEgg) window.grantNakamaEgg(eggGift, "まなびプラン達成" + (eggGift === 2 ? "＋3日れんぞく" : ""));
+    if (window.grantStickerPack) window.grantStickerPack("plan"); // ★2026-10-04：🎀シール帳の ふくろ
     if (window.saveGame) window.saveGame();
     if (window.syncWithGoogleSpreadsheet) {
       window.syncWithGoogleSpreadsheet("LOG", {

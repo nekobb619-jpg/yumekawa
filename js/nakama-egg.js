@@ -2,7 +2,7 @@
    nakama-egg.js — 「なかまのたまご」（まなびのなかま の ガチャ）
    ★2026-10-03追加：ふつうのガチャを コンプした 子むけの 新しい コレクション
    - たまごの 入手：きょうのまなびプランを 全部できた日に 1こ（3日れんぞくごとに +1こ）／🧩6枚と 交換／はじめての 1こは プレゼント
-   - 9ひきの オリジナルの 動物（★1〜★4）。同じ子が 出ると なかよしLv が 上がり（最大3）、その子の「ひみつ（本当の 豆ちしき）」が 1つずつ 開く
+   - 10ぴきの オリジナルの 動物（★2026-10-04：モナちゃんを 追加）（★1〜★4）。同じ子が 出ると なかよしLv が 上がり（最大3）、その子の「ひみつ（本当の 豆ちしき）」が 1つずつ 開く
    - Lv3 の あとの ダブりは 🧩2枚に なって もどる
    - saveData.friendEggs[id] = { count, lv }、nakamaEggs（持っている たまごの数）、nakamaEggWelcome（プレゼント済み）
    - たまごを わるたびに log_db に「🥚なかまのたまご」を 記録する
@@ -103,6 +103,20 @@
         blush(18, 46, 43) + '<path d="M52 52 q6 -6 4 -14" stroke="#16a34a" stroke-width="2" fill="none"/><ellipse cx="57" cy="40" rx="3" ry="5" fill="#4ade80" transform="rotate(20 57 40)"/>' + star(m, 8, 8) + '</svg>';
     },
     // ラッコ
+    // ゴマフアザラシの 赤ちゃん「モナちゃん」（もちくんの 妹分）：まっ白な うぶ毛、ピンクに そまった ほっぺ、耳の 上に リボン
+    mona: function (m) {
+      return open("モナちゃん") + shadow() +
+        '<path d="M48 51 Q59 48 58 57 Q53 59 46 57z" fill="#f1eef5" stroke="#dcd5e4" stroke-width="1.3"/>' +
+        '<ellipse cx="31" cy="41" rx="23" ry="18.5" fill="#fff" stroke="#e3dcea" stroke-width="1.6"/>' +
+        '<ellipse cx="11" cy="51" rx="5.4" ry="3" fill="#f1eef5" stroke="#dcd5e4" stroke-width="1.1" transform="rotate(-25 11 51)"/>' +
+        '<path d="M41 24 L50 18 Q52 25 47 29z M41 24 L33 18 Q31 24 35 28z" fill="#f9a8d4" stroke="#db2777" stroke-width="1.1" stroke-linejoin="round"/><circle cx="41" cy="24.5" r="2.6" fill="#f472b6" stroke="#db2777" stroke-width="1"/>' +
+        (m === "happy" || m === "cheer" ? eyes(m, 23, 38, 38, 2.5) :
+          '<circle cx="23" cy="37.5" r="3.7" fill="#1f1828"/><circle cx="38" cy="37.5" r="3.7" fill="#1f1828"/><circle cx="24.4" cy="35.9" r="1.5" fill="#fff"/><circle cx="39.4" cy="35.9" r="1.5" fill="#fff"/>' +
+          '<path d="M18.6 34.6 l-2 -1.6 M19.6 33 l-1.4 -2 M42.4 34.6 l2 -1.6 M41.4 33 l1.4 -2" stroke="#1f1828" stroke-width="1.1" stroke-linecap="round"/>') +
+        '<ellipse cx="30.5" cy="43" rx="2.3" ry="1.6" fill="#2b2135"/>' + '<path d="M28 45.6 q2.5 2.2 5 0" fill="none" stroke="#2b2135" stroke-width="1.3" stroke-linecap="round"/>' +
+        '<ellipse cx="16.5" cy="44" rx="4.6" ry="3" fill="#fb7185" opacity=".7"/><ellipse cx="44.5" cy="44" rx="4.6" ry="3" fill="#fb7185" opacity=".7"/>' +
+        '<path d="M14.6 44 h3.6 M43 44 h3.6" stroke="#fff" stroke-width=".9" stroke-linecap="round" opacity=".8"/>' + star(m, 56, 12) + '</svg>';
+    },
     rakkon: function (m) {
       return open("らっこん") + shadow() +
         '<ellipse cx="32" cy="42" rx="24" ry="16" fill="#7c5a3a"/>' +
@@ -137,6 +151,7 @@
     { id: "ho", name: "ほーちゃん", kind: "フクロウ", rarity: 2, secrets: ["首を ぐるっと 大きく 回せる（約270度）よ。", "夜に 狩り（かり）を する 鳥。", "羽の ふちが ギザギザで、音を ほとんど 立てずに とべるよ。"] },
     { id: "yukari", name: "ゆーかり", kind: "コアラ", rarity: 3, secrets: ["ユーカリの 葉を 食べるよ。", "オーストラリアに すむ 動物。", "赤ちゃんは お母さんの おなかの ふくろで 育つ（有袋類：ゆうたいるい）よ。"] },
     { id: "rakkon", name: "らっこん", kind: "ラッコ", rarity: 3, secrets: ["おなかの 上で 石を 使って、貝を わって 食べるよ。", "ねる ときに 流されないよう、海そうを 体に まきつける ことが あるよ。", "毛が とても こくて、つめたい 海でも 体が あたたかいんだ。"] },
+    { id: "mona", name: "モナちゃん", kind: "ゴマフアザラシの 赤ちゃん（もちくんの 妹分）", rarity: 3, secrets: ["ゴマフアザラシは、冬に 流氷（りゅうひょう）の 上で 赤ちゃんを 産むよ。", "赤ちゃんの 白い 毛は、氷や 雪の 上で 目立ちにくい 色なんだ。", "アザラシには 耳たぶが なく、小さな 耳の あなだけ。耳たぶが あるのは アシカの なかまだよ。"] },
     { id: "shirotama", name: "しろたま", kind: "ホッキョクグマの 赤ちゃん", rarity: 4, secrets: ["北極（ほっきょく）の 氷の 海の まわりに すむよ。", "白く 見える 毛は、じつは すきとおって いて、はだは 黒いんだ。", "生まれた ときは 600g くらい。大人は とても 大きく なるよ。"] }
   ].map(function (f) { f.svg = ART[f.id]; f.egg = true; return f; });
 

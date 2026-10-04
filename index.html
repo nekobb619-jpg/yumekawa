@@ -711,6 +711,7 @@
   <div class="tile-grid">
     <button class="tile" onclick="window.openFriendsModal()"><span class="ti" id="friends-tile-art">🐾</span>まなびの なかま<small>🥚 たまごガチャ</small></button>
     <button class="tile" onclick="window.openJigakuNote()"><span class="ti">📓</span>自学ノート<small>今日の ネタ・1ページ</small></button>
+    <button class="tile" onclick="window.openStickerBook()"><span class="ti">🎀</span>シール帳<small>あつめる・かざる・おくる</small></button>
     <button class="tile" onclick="window.openYokatta()"><span class="ti">🌼</span>よかった帳<small>今日の よかった・家族で</small></button>
     <button class="tile" onclick="window.openKanjiSheet()"><span class="ti">✍️</span>漢字シート<small>書き取り・印刷</small></button>
     <button class="tile" onclick="window.openHissanSheet()"><span class="ti">✏️</span>筆算シート<small>わり算・印刷</small></button>
@@ -1351,6 +1352,13 @@ window.normalizeSaveData = function(data) {
   normalized.uiBonusTenths = Number(normalized.uiBonusTenths || 0); // ★2026-10-03：メインの ボタンを 1日1回 開くと 0.1pt（js/usage-log.js）
   normalized.friendEggs = (normalized.friendEggs && typeof normalized.friendEggs === "object") ? normalized.friendEggs : {}; // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）
   normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
+  // ★2026-10-04追加：🎀シール帳（js/sticker-book.js）。Q・pt とは べつ。プレゼントの 送り先に 見せる stickerOut は core 行に 置く
+  normalized.stickers = (normalized.stickers && typeof normalized.stickers === "object") ? normalized.stickers : {};
+  normalized.stickerPacks = Number(normalized.stickerPacks || 0);
+  normalized.stickerPages = Array.isArray(normalized.stickerPages) ? normalized.stickerPages : [[], [], []];
+  normalized.stickerWear = (normalized.stickerWear && typeof normalized.stickerWear === "object") ? normalized.stickerWear : {};
+  normalized.stickerOut = Array.isArray(normalized.stickerOut) ? normalized.stickerOut : [];
+  normalized.stickerSeen = Array.isArray(normalized.stickerSeen) ? normalized.stickerSeen : [];
   normalized.nakamaEggWelcome = !!normalized.nakamaEggWelcome;
   normalized.selectedFriend = normalized.selectedFriend || ""; // ★2026-10-02追加：まなびのなかま（js/mascots.js）。空＝まだ選んでいない（アバターが🦭ならもちくん、それ以外はもちっこ）
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため
@@ -1476,6 +1484,13 @@ window.sessionMissedQuestions = []; window.reviewChatIdx = 0;
 window.activeBoostMultiplier = 1.0;
 window.tapCount = 0; window.tapTimer = null;
 window.playerId = localStorage.getItem("kids_lab_playerId") || "";
+// ★2026-10-04追加：開発用の アドレス（localhost）では、家族の アカウントで 自動ログインしない。
+//   確認用の ブラウザに 家族の playerId が 残って いて、開いた だけで ログイン・保存が 走りかけた ことが 2回 あった（10/3・10/4）。
+//   localhost で 自動ログインして よいのは「テスト」で 始まる アカウントだけ。それ以外は 名前えらびの 画面から。
+if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && window.playerId && window.playerId.indexOf("テスト") !== 0) {
+  console.warn("[dev guard] localhost では " + window.playerId + " で 自動ログインしません");
+  window.playerId = "";
+}
 window.weakAttackModeActive = false;
 window.currentWeakQuestionObj = null;
 window.weakInitialCountAtLaunch = 0;
@@ -6650,6 +6665,8 @@ window.exitToMainMenu = function() {
     let earnedQ = rewardResult.earnedQ;
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
+    // ★2026-10-04追加：🎀シール帳の ふくろ（ステージを 最後まで やった 日に 1つ。種類ごとに 1日 1つ＝周回で ふえない）
+    if (window.grantStickerPack && !window.currentActiveStageIsReview) { try { window.grantStickerPack("stage"); } catch (e) {} }
     // ★2026-08-08追加：まる暗記対策。済単元の周回プレイ（isCleared）のときだけ、
     //   周回数（loopCounts）を見て問題内容の自動リフレッシュを検討する（js/adaptive-question-generator.js）。
     //   通信はバックグラウンドで行い、このクリア処理自体はブロックしない。
@@ -6856,6 +6873,7 @@ window.initQAMode();
 <script src="./js/kanji-sheet.js"></script>
 <script src="./js/jigaku-note.js"></script>
 <script src="./js/detective-log.js"></script>
+<script src="./js/sticker-book.js"></script>
 <script src="./js/usage-log.js"></script>
 </body>
 </html>

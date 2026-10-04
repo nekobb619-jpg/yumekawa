@@ -320,6 +320,7 @@
     sd.jigakuDone = done().filter(function (x) { return x !== id; }).concat([id]).slice(-60);
     var reward = sd.jigakuLastDate === t ? 0 : JIGAKU_PTS;
     sd.jigakuLastDate = t; sd.pts = (Number(sd.pts) || 0) + reward;
+    if (window.grantStickerPack) window.grantStickerPack("jigaku"); // ★2026-10-04：🎀シール帳の ふくろ（1日 1つ）
     if (window.saveGame) window.saveGame(); if (window.updateUI) window.updateUI();
     if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "📓自学ノート", msg: (c.title || id) + "（" + (KIND[c.kind] || "") + "）" + (reward ? " +" + reward + "pt" : "") });
     var r = document.getElementById("jigaku-result");
