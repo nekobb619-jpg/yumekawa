@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>わり算の筆算シート</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<!-- ★2026-10-03追加：3けた÷2けたの 筆算シート（印刷用）。?no=1234 で 8問、?mode=memo で おぼえがきメモ、&answers=1 で 答えも 表示。
+<!-- ★2026-10-04追加：3けた÷1けたの シート（?type=1 または シート番号が 10000 以上）。ほじょ計算の らん つき。
+     ★2026-10-03追加：3けた÷2けたの 筆算シート（印刷用）。?no=1234 で 8問、?mode=memo で おぼえがきメモ、&answers=1 で 答えも 表示。
      問題は js/hissan-sheet.js の HISSAN.make(no) で 作るので、アプリの 答え合わせと 同じ 問題に なる。 -->
 <style>
   :root { --ink: #4a3b52; --line: #c4b5fd; --soft: #7a6985; --accent: #db2777; }
@@ -46,24 +47,30 @@
 <body>
 <div class="bar">
   <button class="main" onclick="window.print()">🖨️ 印刷する</button>
-  <button onclick="location.href='?no=' + (1000 + Math.floor(Math.random() * 9000))">🔄 べつの シート</button>
-  <button onclick="location.href='?mode=memo'">📝 おぼえがきメモ</button>
+  <button id="newbtn">🔄 べつの シート</button>
+  <button id="swbtn"></button>
+  <button id="memobtn">📝 おぼえがきメモ</button>
   <button id="ansbtn">👀 答え（おうちの人用）</button>
 </div>
 <div id="root"></div>
 <script>window.HISSAN_PRINT_PAGE = true;</script>
-<script src="./js/hissan-sheet.js"></script>
+<script src="./js/hissan-sheet.js?v=20261004"></script>
 <script>
 (function () {
   var qs = new URLSearchParams(location.search);
-  var mode = qs.get("mode"), no = Number(qs.get("no")) || (1000 + Math.floor(Math.random() * 9000)), showAns = qs.get("answers") === "1";
-  var root = document.getElementById("root"), H = window.HISSAN;
+  var mode = qs.get("mode"), showAns = qs.get("answers") === "1";
+  function newNo(t1) { return (t1 ? 10000 : 1000) + Math.floor(Math.random() * 9000); }
+  var no = Number(qs.get("no")) || newNo(qs.get("type") === "1");
+  var root = document.getElementById("root"), H = window.HISSAN, D1 = mode === "memo" ? qs.get("type") === "1" : H.isD1(no);
+  document.getElementById("newbtn").onclick = function () { location.href = "?no=" + newNo(D1); };
+  document.getElementById("memobtn").onclick = function () { location.href = "?mode=memo" + (D1 ? "&type=1" : ""); };
+  var sw = document.getElementById("swbtn"); sw.textContent = D1 ? "÷2けた の シートへ" : "÷1けた の シートへ"; sw.onclick = function () { location.href = "?no=" + newNo(!D1); };
   document.getElementById("ansbtn").onclick = function () { location.href = "?no=" + no + (showAns ? "" : "&answers=1"); };
   if (mode === "memo") { document.getElementById("ansbtn").style.display = "none"; }
 
   // 方眼の 筆算わく（8列×7行）。わる数は 0〜1列、わられる数は 3〜5列。商は 1行目
   function frame(p, ans) {
-    var C = 10, cols = 8, rows = 7, W = cols * C, Hh = rows * C, s = '<svg viewBox="-1 -1 ' + (W + 2) + ' ' + (Hh + 2) + '" xmlns="http://www.w3.org/2000/svg">';
+    var C = 10, cols = 8, rows = p.rows || 7, W = cols * C, Hh = rows * C, s = '<svg viewBox="-1 -1 ' + (W + 2) + ' ' + (Hh + 2) + '" xmlns="http://www.w3.org/2000/svg">';
     for (var i = 0; i <= cols; i++) s += '<line x1="' + i * C + '" y1="0" x2="' + i * C + '" y2="' + Hh + '" stroke="#e9d5ff" stroke-width=".4"/>';
     for (var j = 0; j <= rows; j++) s += '<line x1="0" y1="' + j * C + '" x2="' + W + '" y2="' + j * C + '" stroke="#e9d5ff" stroke-width=".4"/>';
     var d = String(p.divisor), n = String(p.dividend);
@@ -80,6 +87,13 @@
     return s + '</svg>';
   }
 
+  if (mode === "memo" && D1) {
+    root.innerHTML = '<div class="page memo-page"><h1>📝 わり算の 筆算 おぼえがきメモ（÷ 1けた）</h1>' +
+      H.MEMO1.map(function (m) { return '<div class="memo-row"><b>' + m[0] + '</b><div>' + m[1] + '</div></div>'; }).join("") +
+      '<div class="ex"><div style="width:64mm;">' + frame({ rows: 8, divisor: 4, dividend: 756, q: 189, work: [[2, 3, 4], [3, 3, 3], [3, 4, 5, "#db2777"], [4, 3, 3], [4, 4, 2], [5, 4, 3], [5, 5, 6, "#db2777"], [6, 4, 3], [6, 5, 6], [7, 5, 0]], lines: [[2, 3, 3], [4, 3, 4], [6, 4, 5]] }, true) + '</div>' +
+      '<div style="font-size:13pt;font-weight:700;line-height:1.8;">れい：756 ÷ 4<br>百：7 ÷ 4 → <b style="color:#db2777">1</b>　ほじょ計算 4×1＝4<br>十：35 ÷ 4 → <b style="color:#db2777">8</b>　ほじょ計算 4×8＝32<br>一：36 ÷ 4 → <b style="color:#db2777">9</b>　ほじょ計算 4×9＝36<br>＝ 189<br>たしかめ：4×189＝756 ✅</div></div></div>';
+    return;
+  }
   if (mode === "memo") {
     var ex = { dividend: 823, divisor: 34 };
     root.innerHTML = '<div class="page memo-page"><h1>📝 わり算の 筆算 おぼえがきメモ</h1>' +
@@ -92,11 +106,12 @@
   var probs = H.make(no);
   var d = new Date();
   root.innerHTML = '<div class="page">' +
-    '<div class="head"><h1>✏️ わり算の 筆算シート（3けた ÷ 2けた）</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／8</div></div>' +
-    '<div class="memo">' + H.MEMO.map(function (m) { return '<span><b>' + m[0] + '</b> ' + m[1] + '</span>'; }).join("") + '</div>' +
+    '<div class="head"><h1>✏️ わり算の 筆算シート（3けた ÷ ' + (D1 ? "1" : "2") + 'けた）</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／8</div></div>' +
+    '<div class="memo">' + (D1 ? H.MEMO1 : H.MEMO).map(function (m) { return '<span><b>' + m[0] + '</b> ' + m[1] + '</span>'; }).join("") + '</div>' +
     '<div class="grid">' + probs.map(function (p, i) {
       var brk = i === 4 ? '</div><div class="pb"></div><div class="head2">シート No.<b>' + no + '</b> の つづき（5〜8）</div><div class="grid">' : '';
-      return brk + '<div class="prob"><div class="t">(' + (i + 1) + ') ' + p.dividend + ' ÷ ' + p.divisor + '<span>' + p.kind + '</span></div>' + frame(p, showAns) +
+      if (D1) p.rows = 8;
+      return brk + '<div class="prob"><div class="t">(' + (i + 1) + ') ' + p.dividend + ' ÷ ' + p.divisor + '<span>' + p.kind + (D1 ? "　右の あきは ほじょ計算に 使おう" : "") + '</span></div>' + frame(p, showAns) +
         '<div class="chk">答え：＿＿＿ あまり ＿＿＿　／　たしかめ：' + p.divisor + ' × ＿＿ ＋ ＿＿ ＝ ' + p.dividend + '</div>' +
         (showAns ? '<div class="ans">答え ' + p.q + (p.r ? ' あまり ' + p.r : '（わりきれる）') + '　たしかめ ' + p.divisor + '×' + p.q + '＋' + p.r + '＝' + p.dividend + '</div>' : '') + '</div>';
     }).join("") + '</div>' +

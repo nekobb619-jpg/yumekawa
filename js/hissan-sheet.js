@@ -5,6 +5,8 @@
    - アプリ側：openHissanSheet() … 印刷・おぼえがきメモ・答え合わせ
    - 答え合わせの ごほうび：その日 はじめて 答え合わせした シートだけ、正解1問 ＝ 1Q（最大8Q）。log_db「✏️筆算シート」
    - わり算の ステージの 説明画面に「紙の 筆算シートで 練習」ボタンを 足す
+   ★2026-10-04追加：3けた ÷ 1けた の シート（シート番号が 10000 以上）。学校で 習った 言い方
+     「たてる・かける・うつす・ひく・おろす」と、横に かけ算を 書く「ほじょ計算」に そろえた（MEMO1）
    ===================================================================== */
 (function () {
   "use strict";
@@ -16,7 +18,29 @@
   function ri(r, a, b) { return a + Math.floor(r() * (b - a + 1)); }
 
   // 8問の 種類：商が1けた（見当どおり／見当の 直しが いりやすい）・商が2けた・商の 一の位が 0・わりきれる
+  function isD1(no) { return Number(no) >= 10000; }
+  // 3けた ÷ 1けた の 8問：商が 3けた／商が 2けた（百の位に たたない）／商の 十の位が 0／商の 一の位が 0／わりきれる
+  function make1(no) {
+    var r = rng(no * 104729 + 7), out = [], used = {}, guard = 0;
+    function add(d, q, rem, kind) {
+      var n = d * q + rem;
+      if (n < 100 || n > 999 || rem >= d || used[n + "/" + d]) return false;
+      used[n + "/" + d] = 1; out.push({ dividend: n, divisor: d, q: q, r: rem, kind: kind }); return true;
+    }
+    function loop(fn) { var ok = false; while (!ok && guard++ < 8000) ok = fn(); }
+    loop(function () { var d = ri(r, 2, 4); return add(d, ri(r, 101, Math.floor(999 / d)), ri(r, 1, d - 1), "商が 3けた"); });
+    loop(function () { var d = ri(r, 3, 6); var q = ri(r, 101, Math.floor(999 / d)); return q % 10 !== 0 && Math.floor(q / 10) % 10 !== 0 && add(d, q, 0, "商が 3けた（わりきれる）"); });
+    loop(function () { var d = ri(r, 5, 9); return add(d, ri(r, 12, 99), ri(r, 1, d - 1), "商が 2けた"); });
+    loop(function () { var d = ri(r, 6, 9); var q = ri(r, 12, 99); return d * q >= 100 && add(d, q, ri(r, 1, d - 1), "商が 2けた"); });
+    loop(function () { var d = ri(r, 2, 9); var q = ri(r, 1, Math.floor(99 / d)) * 100 + ri(r, 1, 9); return add(d, q, ri(r, 0, d - 1), "商の 十の位が 0"); });
+    loop(function () { var d = ri(r, 3, 8); var q = ri(r, 1, Math.floor(99 / d)) * 100 + ri(r, 1, 9); return add(d, q, ri(r, 1, d - 1), "商の 十の位が 0"); });
+    loop(function () { var d = ri(r, 3, 9); var q = ri(r, 2, Math.floor(999 / d / 10)) * 10; return q % 100 !== 0 && add(d, q, ri(r, 1, d - 1), "商の 一の位が 0"); });
+    loop(function () { var d = ri(r, 4, 9); return add(d, ri(r, 13, 99), 0, "商が 2けた（わりきれる）"); });
+    for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = out[i]; out[i] = out[j]; out[j] = t; }
+    return out;
+  }
   function make(no) {
+    if (isD1(no)) return make1(no);
     var r = rng(no * 7919 + 13), out = [], used = {};
     function add(d, q, rem, kind) {
       var n = d * q + rem;
@@ -47,7 +71,17 @@
     ["0 に 注意", "商が たたない 位には 0 を 書く（615 ÷ 30 ＝ 20 あまり 15）。"],
     ["✅ たしかめ", "わる数 × 商 ＋ あまり ＝ わられる数。あまり ＜ わる数 かも 見る。"]
   ];
-  window.HISSAN = { make: make, MEMO: MEMO };
+  // 3けた ÷ 1けた 用（学校の 言い方）
+  var MEMO1 = [
+    ["① たてる", "商を たてる。上の 位から、わる数が 入るかを 見る。"],
+    ["② かける", "たてた 商 × わる数（横に ほじょ計算を 書く）。"],
+    ["③ うつす", "ほじょ計算の 答えを 下に うつす。"],
+    ["④ ひく", "上の 数から ひく。答えは わる数より 小さい？"],
+    ["⑤ おろす", "つぎの 位の 数を おろして、① に もどる。"],
+    ["0 に 注意", "わる数が 入らない 位には、商に 0 を 書く（824 ÷ 8 ＝ 103）。"],
+    ["✅ たしかめ", "わる数 × 商 ＋ あまり ＝ わられる数。あまり ＜ わる数 かも 見る。"]
+  ];
+  window.HISSAN = { make: make, MEMO: MEMO, MEMO1: MEMO1, isD1: isD1 };
   if (typeof document === "undefined" || !document.body || window.HISSAN_PRINT_PAGE) return; // 印刷ページでは ここまで
 
   /* ---------------- アプリ側 ---------------- */
@@ -68,22 +102,25 @@
 
   window.openHissanSheet = function () {
     var sd = window.saveData || {}, last = sd.hissanLastNo || "";
-    var memo = MEMO.slice(0, 4).map(function (m) { return '<b>' + m[0] + '</b>'; }).join(" → ");
+    var memo = MEMO1.slice(0, 5).map(function (m) { return '<b>' + m[0] + '</b>'; }).join(" → ");
     shell(
       '<div style="font-size:18px;font-weight:900;color:#6b21a8;text-align:center;">✏️ わり算の 筆算シート</div>' +
-      '<div style="font-size:12px;font-weight:700;color:var(--text-soft);text-align:center;margin:4px 0 10px;line-height:1.6;">3けた ÷ 2けた は、紙に 書いて とくのが いちばん。<br>印刷して とく → アプリで 答え合わせ（その日 1まい目は 1問1Q）</div>' +
+      '<div style="font-size:12px;font-weight:700;color:var(--text-soft);text-align:center;margin:4px 0 10px;line-height:1.6;">わり算の 筆算は、紙に 書いて とくのが いちばん。<br>印刷して とく → アプリで 答え合わせ（その日 1まい目は 1問1Q）</div>' +
       '<div style="background:#faf5ff;border-radius:14px;padding:8px 10px;font-size:12.5px;font-weight:800;color:#6b21a8;text-align:center;margin-bottom:10px;">' + memo + '</div>' +
       '<div style="display:grid;gap:8px;">' +
-        '<button style="' + BTN + 'padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#ec4899,#a855f7);" onclick="window.printHissanSheet()">📄 新しい シートを 印刷する</button>' +
-        '<button style="' + BTN + 'padding:11px;font-size:14px;color:#92400e;background:#fef3c7;" onclick="window.open(\'./hissan_sheet.html?mode=memo\', \'_blank\')">📝 おぼえがきメモ（つくえに おこう）</button>' +
+        '<button style="' + BTN + 'padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);" onclick="window.printHissanSheet(1)">📄 3けた ÷ 1けた の シートを 印刷する</button>' +
+        '<button style="' + BTN + 'padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#ec4899,#a855f7);" onclick="window.printHissanSheet()">📄 3けた ÷ 2けた の シートを 印刷する</button>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+        '<button style="' + BTN + 'padding:10px 6px;font-size:12.5px;color:#075985;background:#e0f2fe;" onclick="window.open(\'./hissan_sheet.html?mode=memo&type=1\', \'_blank\')">📝 メモ（÷1けた）</button>' +
+        '<button style="' + BTN + 'padding:10px 6px;font-size:12.5px;color:#92400e;background:#fef3c7;" onclick="window.open(\'./hissan_sheet.html?mode=memo\', \'_blank\')">📝 メモ（÷2けた）</button></div>' +
         '<button style="' + BTN + 'padding:11px;font-size:14px;color:#065f46;background:#d1fae5;" onclick="window.hissanCheckForm()">✅ 答え合わせ' + (last ? '（シート No.' + esc(last) + '）' : '') + '</button>' +
         '<button style="' + BTN + 'padding:9px;font-size:13px;color:#7e22ce;background:#f3e8ff;" onclick="window.closeHissanSheet()">とじる</button>' +
       '</div>'
     );
   };
 
-  window.printHissanSheet = function () {
-    var no = 1000 + Math.floor(Math.random() * 9000);
+  window.printHissanSheet = function (type) {
+    var no = type === 1 ? 10000 + Math.floor(Math.random() * 9000) : 1000 + Math.floor(Math.random() * 9000);
     if (window.saveData) { window.saveData.hissanLastNo = no; if (window.saveGame) window.saveGame(); }
     window.open("./hissan_sheet.html?no=" + no, "_blank");
     window.openHissanSheet();
@@ -128,7 +165,7 @@
     sd.hissanChecks.push({ no: no, d: t, ok: ok, rewarded: reward > 0 });
     if (sd.hissanChecks.length > 10) sd.hissanChecks = sd.hissanChecks.slice(-10);
     if (window.saveGame) window.saveGame(); if (window.updateUI) window.updateUI();
-    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "✏️筆算シート", msg: "No." + no + " 正解" + ok + "/8" + (wrongs.length ? " ちがう:" + wrongs.join(",") : "") + " +" + reward + "Q" + (already ? "（2回目以降）" : rewardedToday ? "（きょう2まい目）" : "") });
+    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "✏️筆算シート", msg: (isD1(no) ? "÷1けた " : "÷2けた ") + "No." + no + " 正解" + ok + "/8" + (wrongs.length ? " ちがう:" + wrongs.join(",") : "") + " +" + reward + "Q" + (already ? "（2回目以降）" : rewardedToday ? "（きょう2まい目）" : "") });
     var res = document.getElementById("hs-result");
     if (res) res.innerHTML = '<div style="background:#ecfdf5;border-radius:14px;padding:10px;text-align:center;font-weight:900;color:#065f46;">' + ok + ' ／ 8 問 正解！' + (reward ? '　🎁 +' + reward + 'Q' : '') +
       (wrongs.length ? '<div style="font-size:12px;color:#b45309;margin-top:6px;line-height:1.6;">🔁 の 問題は、たしかめ算（わる数 × 商 ＋ あまり）で 見なおそう。<br>あまりが わる数より 大きく なって いない？</div>' : '<div style="font-size:12px;margin-top:4px;">ぜんぶ 正解！ すごい！</div>') + '</div>';
