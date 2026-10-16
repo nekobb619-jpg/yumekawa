@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仮の商ラボ（÷2けた） ✏️</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-16追加：4年「2けたでわる わり算の筆算」。①わる数を 何十と みる（一の位が 5 以上なら 切り上げ）
+     ②見当の 商を たてる ③かけて たしかめ、大きすぎたら 1 小さく、あまりが わる数 以上なら 1 大きく。
+     対策会議（10/5）の 次の一手「見当 → その 位の 商だけ 直す」と そろえて ある。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #f3ebf7; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; }
+  .prob { text-align: center; font-size: 32px; font-weight: 900; margin: 6px 0 2px; letter-spacing: .04em; }
+  .steps { display: flex; gap: 6px; justify-content: center; margin: 4px 0 8px; flex-wrap: wrap; }
+  .steps span { font-size: 11.5px; padding: 1px 9px; border-radius: 999px; border: 2px solid var(--line); color: var(--sub); }
+  .steps span.on { background: #faf5ff; color: #6b21a8; border-color: #c084fc; }
+  .steps span.done { color: #16a34a; border-color: #86efac; }
+  .ask { text-align: center; font-size: 15px; min-height: 2.6em; }
+  .ch { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
+  .ch button { font: inherit; font-weight: 900; font-size: 17px; min-width: 92px; padding: 9px 12px; border-radius: 14px; border: 3px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .ch button.ng { background: #fee2e2; border-color: #f87171; color: #991b1b; }
+  .work { font-size: 15px; text-align: center; color: var(--ink); min-height: 1.4em; }
+  .work .bad { color: #dc2626; } .work .good { color: #16a34a; }
+  #msg { text-align: center; min-height: 3em; font-size: 14px; }
+  #msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✏️ 仮の商ラボ（÷2けた）</h1>
+  <div class="lead">わる数を 何十と みて、見当の 商を たてよう。かけて たしかめて、大きすぎたら 1 小さく、あまりが 大きすぎたら 1 大きく。直すのは その 位の 商だけ！</div>
+  <div class="card">
+    <div class="bar"><span id="count"></span><span id="score"></span></div>
+    <div class="prob" id="prob" aria-live="polite"></div>
+    <div class="steps"><span id="s1">① 何十と みる</span><span id="s2">② 見当の 商</span><span id="s3">③ たしかめ・直す</span></div>
+    <div class="ask" id="ask"></div>
+    <div class="ch" id="ch"></div>
+    <div class="work" id="work"></div>
+    <div id="msg"></div>
+    <div style="text-align:center"><button class="next" id="next" hidden>つぎの 問題へ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>見当が はずれても だいじょうぶ</b><br>わる数を 何十と みると、商が 1 くらい ずれる ことが ある。かけた 答えが わられる数より 大きければ 商を 1 小さく、ひいた のこりが わる数 いじょう なら 1 大きく する。問題を はじめから 書き直さず、その 商だけ 直せば いい。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var N = 8, qi = 0, clean = 0, P = null, step = 0, cur = 0, miss = false;
+  var $ = function (id) { return document.getElementById(id); };
+  function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function make() {
+    for (var k = 0; k < 200; k++) {
+      var d = rnd(12, 98); if (d % 10 === 0) continue;
+      var q = rnd(2, 9), r = rnd(0, d - 1), D = d * q + r; if (D >= d * 10 || D < 100 && Math.random() < 0.5) continue;
+      var R = d % 10 >= 5 ? Math.ceil(d / 10) * 10 : Math.floor(d / 10) * 10, est = Math.max(1, Math.min(9, Math.floor(D / R)));
+      if (est === q && Math.random() < 0.6) continue; // 直す 練習が できる 問題を 多めに
+      return { D: D, d: d, q: q, r: r, R: R, est: est };
+    }
+    return { D: 156, d: 24, q: 6, r: 12, R: 20, est: 7 };
+  }
+  function setStep(n) { ["s1", "s2", "s3"].forEach(function (id, i) { $(id).className = i + 1 < n ? "done" : i + 1 === n ? "on" : ""; }); step = n; }
+  function buttons(list) { $("ch").innerHTML = list.map(function (x) { return '<button type="button" data-v="' + x.v + '">' + x.l + "</button>"; }).join(""); }
+  function start() {
+    P = make(); miss = false; cur = 0;
+    $("count").textContent = (qi + 1) + " / " + N; $("score").textContent = "まちがいなし：" + clean;
+    $("prob").textContent = P.D + " ÷ " + P.d; $("work").innerHTML = ""; $("next").hidden = true;
+    setStep(1);
+    var lo = Math.floor(P.d / 10) * 10, hi = lo + 10;
+    $("ask").innerHTML = "わる数 <b>" + P.d + "</b> を 何十と みる？";
+    buttons([{ v: lo, l: lo }, { v: hi, l: hi }]);
+    $("msg").innerHTML = "一の位を 見よう。5 いじょう なら 切り上げ。";
+  }
+  function askEst() {
+    setStep(2);
+    var c = [P.est - 1, P.est, P.est + 1].filter(function (x) { return x >= 1 && x <= 9; });
+    $("ask").innerHTML = P.R + " で わると 見て、見当の 商は？<br><span style='font-size:12.5px;color:#7a6985'>" + P.R + " × □ が " + P.D + " を こえない、いちばん 大きい □</span>";
+    buttons(c.map(function (x) { return { v: x, l: x }; }));
+    $("msg").innerHTML = "";
+  }
+  function askCheck() {
+    setStep(3);
+    var m = P.d * cur, left = P.D - m;
+    $("work").innerHTML = P.d + " × " + cur + " ＝ " + m + (m > P.D ? '　<span class="bad">' + P.D + " より 大きい！</span>" : "　" + P.D + " − " + m + " ＝ " + left + (left >= P.d ? '　<span class="bad">' + P.d + " いじょう のこった！</span>" : '　<span class="good">' + P.d + " より 小さい</span>"));
+    $("ask").innerHTML = "商 <b>" + cur + "</b> で よい？";
+    buttons([{ v: "down", l: "1 小さく" }, { v: "ok", l: "これで OK" }, { v: "up", l: "1 大きく" }]);
+  }
+  $("ch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-v]"); if (!b || !$("next").hidden) return;
+    var v = b.getAttribute("data-v");
+    if (step === 1) {
+      if (Number(v) !== P.R) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 一の位は「" + (P.d % 10) + "」。" + (P.d % 10 >= 5 ? "5 いじょう なので 切り上げ" : "4 いか なので 切り捨て") + " だよ。"; return; }
+      $("msg").innerHTML = "⭕ " + P.d + " → " + P.R; return askEst();
+    }
+    if (step === 2) {
+      if (Number(v) !== P.est) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + P.R + " × " + v + " ＝ " + P.R * v + "。" + (P.R * v > P.D ? P.D + " を こえて いるよ。" : "もう 1つ 大きく しても こえないよ。"); return; }
+      cur = P.est; $("msg").innerHTML = "⭕ 見当の 商は " + cur + "。かけて たしかめよう。"; return askCheck();
+    }
+    var m = P.d * cur, left = P.D - m, need = m > P.D ? "down" : left >= P.d ? "up" : "ok";
+    if (v !== need) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + (need === "down" ? "かけた 答えが " + P.D + " より 大きいよ。" : need === "up" ? "のこりが わる数 " + P.d + " いじょう あるよ。" : "かけた 答えは こえて いないし、のこりも " + P.d + " より 小さいよ。"); return; }
+    if (need === "down") { cur--; $("msg").innerHTML = "⭕ 1 小さく して " + cur + "。"; return askCheck(); }
+    if (need === "up") { cur++; $("msg").innerHTML = "⭕ 1 大きく して " + cur + "。"; return askCheck(); }
+    if (!miss) clean++;
+    $("score").textContent = "まちがいなし：" + clean; $("ch").innerHTML = ""; setStep(4);
+    $("ask").innerHTML = "<b>" + P.D + " ÷ " + P.d + " ＝ " + P.q + (P.r ? " あまり " + P.r : "") + "</b>";
+    $("work").innerHTML = "たしかめ：" + P.d + " × " + P.q + (P.r ? " ＋ " + P.r : "") + " ＝ " + P.D + ' <span class="good">✔</span>';
+    $("msg").innerHTML = (P.est !== P.q ? "見当は " + P.est + " だったけど、" + Math.abs(P.est - P.q) + (P.est > P.q ? " 小さく" : " 大きく") + " 直して 正解！" : "見当が ぴったり！") + (miss ? "" : " ✨");
+    $("next").hidden = false; $("next").textContent = qi + 1 < N ? "つぎの 問題へ ▶" : "もう一度 あそぶ 🔁";
+  });
+  $("next").addEventListener("click", function () { if (qi + 1 < N) qi++; else { qi = 0; clean = 0; } start(); });
+  start();
+})();
+</script>
+</body>
+</html>

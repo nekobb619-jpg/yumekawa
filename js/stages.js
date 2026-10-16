@@ -310,7 +310,7 @@
       grade: "4年生",
       id: "理科/季節と生き物/kisetsu01",
       name: "季節と生き物のようす",
-      reward: 10, showCount: 11, video_url: "", lab_url: "",
+      reward: 10, showCount: 11, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_kisetsu.html",
       created: "2026-07-20"
     },
     {
@@ -672,7 +672,7 @@
       grade: "4年生",
       id: "算数/わり算/hissan_2digit01",
       name: "２けたでわるわり算の筆算（見当の商と修正）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_hissan2.html",
       created: "2026-08-11"
     },
     {
