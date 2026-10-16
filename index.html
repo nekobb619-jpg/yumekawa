@@ -1371,6 +1371,8 @@ window.normalizeSaveData = function(data) {
   normalized.stickerWear = (normalized.stickerWear && typeof normalized.stickerWear === "object") ? normalized.stickerWear : {};
   normalized.stickerOut = Array.isArray(normalized.stickerOut) ? normalized.stickerOut : [];
   normalized.stickerSeen = Array.isArray(normalized.stickerSeen) ? normalized.stickerSeen : [];
+  normalized.stickerBgs = Array.isArray(normalized.stickerBgs) ? normalized.stickerBgs : []; // ★2026-10-16：Q で 買った シール帳の 背景
+  normalized.stickerPageBg = Array.isArray(normalized.stickerPageBg) ? normalized.stickerPageBg : ["yume", "yozora", "shima"];
   normalized.nakamaEggWelcome = !!normalized.nakamaEggWelcome;
   normalized.selectedFriend = normalized.selectedFriend || ""; // ★2026-10-02追加：まなびのなかま（js/mascots.js）。空＝まだ選んでいない（アバターが🦭ならもちくん、それ以外はもちっこ）
   normalized.detectiveSeenIds = normalized.detectiveSeenIds || []; // ★2026-10-02追加：探偵ラボ専用バンクの出題済みid（古い順）。未出題の問題を優先するため

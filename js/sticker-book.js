@@ -9,7 +9,7 @@
    - プレゼント：りお・りさ・papa の 間で 1日 3まいまで。おくる 人の セーブに「だれに・何を」を 書き、
        うけとる 人の アプリが GAS の LOGIN（読むだけ）で それを 読んで うけとる。相手の セーブには 書きこまない。GAS の 変更なし
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
-   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定）／
+   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
    ===================================================================== */
@@ -112,6 +112,20 @@
   };
   var LIST = Object.keys(NAMES).map(function (id) { return { id: id, name: NAMES[id][0], r: NAMES[id][1], wear: NAMES[id][2] || null, art: ART[id] }; });
   var BY = {}; LIST.forEach(function (s) { BY[s.id] = s; });
+  // ★2026-10-16：はる ページの 背景。はじめの 3つは 無料、ほかは Q で 買う（1回 買えば ずっと 使える）
+  var BG_COST = 30;
+  var BGS = [
+    { id: "yume", n: "ゆめ", free: 1, css: "radial-gradient(#ddd6fe 1.4px,transparent 1.6px) 0 0/18px 18px,#faf5ff" },
+    { id: "yozora", n: "よぞら", free: 1, css: "radial-gradient(#fde68a 1px,transparent 1.3px) 6px 9px/34px 34px,radial-gradient(#fff 1px,transparent 1.2px) 20px 24px/46px 46px,linear-gradient(170deg,#1f1b2e,#4c1d95)" },
+    { id: "shima", n: "しましま", free: 1, css: "repeating-linear-gradient(135deg,#fdf2f8 0 14px,#fff 14px 28px)" },
+    { id: "umi", n: "うみ", css: "radial-gradient(circle at 20% 110%,rgba(255,255,255,.55) 0 7px,transparent 8px) 0 0/58px 38px,linear-gradient(180deg,#bae6fd 0%,#38bdf8 55%,#0369a1 100%)" },
+    { id: "sakura", n: "さくら", css: "radial-gradient(#fbcfe8 3px,transparent 3.5px) 0 0/30px 30px,radial-gradient(#f9a8d4 2px,transparent 2.5px) 15px 15px/30px 30px,#fff1f2" },
+    { id: "mori", n: "もり", css: "radial-gradient(#bbf7d0 6px,transparent 7px) 0 0/36px 36px,linear-gradient(180deg,#dcfce7,#86efac)" },
+    { id: "niji", n: "にじ", css: "linear-gradient(180deg,#fecaca,#fed7aa,#fef08a,#bbf7d0,#bfdbfe,#ddd6fe)" },
+    { id: "yuki", n: "ゆきの よる", css: "radial-gradient(#fff 1.6px,transparent 2px) 0 0/22px 22px,radial-gradient(#e0f2fe 1px,transparent 1.4px) 11px 11px/22px 22px,linear-gradient(180deg,#1e3a8a,#312e81)" },
+    { id: "ichigo", n: "いちごチェック", css: "repeating-linear-gradient(0deg,rgba(244,114,182,.35) 0 16px,transparent 16px 32px),repeating-linear-gradient(90deg,rgba(244,114,182,.35) 0 16px,#fff 16px 32px)" }
+  ];
+  var BGBY = {}; BGS.forEach(function (b) { BGBY[b.id] = b; });
   var SLOTS = [["head", "あたま"], ["face", "かお"], ["body", "からだ"], ["around", "まわり"]];
   var TF = { head: "translate(19 -1) scale(.55)", face: "translate(15.6 21.5) scale(.72)", body: "translate(18 41) scale(.6)", around: "scale(1.6)" };
   function svg(id, px) { var s = BY[id]; return s ? '<svg viewBox="0 0 40 40" width="' + (px || 40) + '" height="' + (px || 40) + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + s.name + '">' + s.art() + '</svg>' : ""; }
@@ -127,6 +141,9 @@
     if (!d.stickerWear || typeof d.stickerWear !== "object") d.stickerWear = {};
     if (!Array.isArray(d.stickerOut)) d.stickerOut = [];
     if (!Array.isArray(d.stickerSeen)) d.stickerSeen = [];
+    if (!Array.isArray(d.stickerBgs)) d.stickerBgs = [];
+    if (!Array.isArray(d.stickerPageBg)) d.stickerPageBg = ["yume", "yozora", "shima"];
+    while (d.stickerPageBg.length < 3) d.stickerPageBg.push(["yume", "yozora", "shima"][d.stickerPageBg.length]);
     var t = today();
     if (!d.stickerDay || d.stickerDay.d !== t) d.stickerDay = { d: t, k: {}, g: 0 };
     if (!d.stickerDay.k) d.stickerDay.k = {};
@@ -135,6 +152,8 @@
   function today() { var x = new Date(window.currentServerTime || Date.now()); return x.getFullYear() + "-" + (x.getMonth() + 1) + "-" + x.getDate(); }
   function log(msg) { try { if (window.syncWithGoogleSpreadsheet && window.saveData) window.syncWithGoogleSpreadsheet("LOG", { stage: "🎀シール帳", msg: msg }); } catch (e) {} }
   function save() { if (window.saveGame) window.saveGame(); }
+  function hasBg(id) { var b = BGBY[id]; return !!b && (b.free || ensure().stickerBgs.indexOf(id) >= 0); }
+  function pageBg(i) { var id = ensure().stickerPageBg[i]; return BGBY[id] && hasBg(id) ? BGBY[id] : BGS[i]; }
   function owned(id) { return Number(ensure().stickers[id] || 0); }
   function placed(id) { var c = 0; ensure().stickerPages.forEach(function (p) { p.forEach(function (x) { if (x.s === id) c++; }); }); return c; }
   function free(id) { return Math.max(0, owned(id) - placed(id)); }
@@ -262,12 +281,21 @@
     }).join("");
     var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("");
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
-      '<button type="button" class="stk-mini" data-a="lock" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 固定する") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
+      '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
-    return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + ["ゆめ", "よぞら", "しましま"][i] + '（' + (d.stickerPages[i] || []).length + '）</button>'; }).join("") + '</div>' +
-      '<div class="stk-page p' + ui.page + '" id="stk-page">' + items + '</div>' + tools +
+    return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + (d.stickerPages[i] || []).length + '）</button>'; }).join("") + '</div>' +
+      '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>' + tools +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
+      '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
       '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>');
+  }
+  function bgPickHtml() {
+    var d = ensure(), cur = d.stickerPageBg[ui.page];
+    return '<div class="stk-note" style="text-align:center;margin-top:6px">この ページの 背景を えらぼう。🔒 は ' + BG_COST + 'Q で 買えるよ（1回 買えば どの ページでも ずっと 使える）。いまの Q：' + Number((window.saveData || {}).q || 0) + '</div>' +
+      '<div class="stk-grid" style="margin-top:6px">' + BGS.map(function (b) {
+        var own = hasBg(b.id), on = cur === b.id || (!BGBY[cur] && pageBg(ui.page).id === b.id);
+        return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
+      }).join("") + '</div>';
   }
   function bindPage() {
     var page = document.getElementById("stk-page"); if (!page) return;
@@ -408,6 +436,19 @@
     if (a === "gpick") { ui.giftPick = ui.giftPick === v ? "" : v; return render(); }
     if (a === "send") return sendGift();
     if (a === "check") return checkInbox();
+    if (a === "bgopen") { ui.bgOpen = !ui.bgOpen; return render(); }
+    if (a === "bg") {
+      var b = BGBY[v]; if (!b) return;
+      if (!hasBg(v)) {
+        var q = Number((window.saveData || {}).q || 0);
+        if (q < BG_COST) { toast("あと " + (BG_COST - q) + "Q で「" + b.n + "」が 買えるよ"); return; }
+        if (!window.confirm(BG_COST + "Q で 背景「" + b.n + "」を 買う？")) return;
+        window.saveData.q = q - BG_COST; d.stickerBgs.push(v);
+        log("背景「" + b.n + "」を " + BG_COST + "Q で 買った");
+        if (window.updateUI) { try { window.updateUI(); } catch (e) {} }
+      }
+      d.stickerPageBg[ui.page] = v; save(); return render();
+    }
     if (a === "lockall" || a === "unlockall") { pg.forEach(function (y) { if (a === "lockall") y.lk = 1; else delete y.lk; }); toast(a === "lockall" ? "この ページの シールを ぜんぶ 固定したよ 📌" : "固定を はずしたよ"); save(); return render(); }
     if (!x) return;
     if (a === "lock") { if (x.lk) delete x.lk; else x.lk = 1; save(); return render(); }
