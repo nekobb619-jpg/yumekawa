@@ -3,11 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>仮の商ラボ（÷2けた） ✏️</title>
+<title>÷2けたの 筆算ラボ ✏️</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <!-- ★2026-10-16追加：4年「2けたでわる わり算の筆算」。①わる数を 何十と みる（一の位が 5 以上なら 切り上げ）
      ②見当の 商を たてる ③かけて たしかめ、大きすぎたら 1 小さく、あまりが わる数 以上なら 1 大きく。
-     対策会議（10/5）の 次の一手「見当 → その 位の 商だけ 直す」と そろえて ある。 -->
+     対策会議（10/5）の 次の一手「見当 → その 位の 商だけ 直す」と そろえて ある。
+     ★同日 改修（保護者：4桁÷2桁も あるよ）：本物の 筆算の 形で 位ごとに すすめる。
+     「3けた ÷ 2けた」「4けた ÷ 2けた」を えらべる（#4 で 4けたから 開く）。商が 何の位から たつか → 位ごとに
+     見当 → たしかめ・直す → おろす。われない 位には 0 を たてる 問題も まぜる。 -->
 <style>
   :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
   * { box-sizing: border-box; }
@@ -15,17 +18,31 @@
   .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
   h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
   .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .modes { display: flex; gap: 8px; }
+  .modes button { flex: 1; font: inherit; font-weight: 900; font-size: 14px; padding: 8px 6px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .modes button.on { background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; border-color: transparent; }
   .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; }
-  .prob { text-align: center; font-size: 32px; font-weight: 900; margin: 6px 0 2px; letter-spacing: .04em; }
-  .steps { display: flex; gap: 6px; justify-content: center; margin: 4px 0 8px; flex-wrap: wrap; }
-  .steps span { font-size: 11.5px; padding: 1px 9px; border-radius: 999px; border: 2px solid var(--line); color: var(--sub); }
+  .prob { text-align: center; font-size: 26px; font-weight: 900; margin: 4px 0 2px; letter-spacing: .04em; }
+  .steps { display: flex; gap: 5px; justify-content: center; margin: 4px 0 8px; flex-wrap: wrap; }
+  .steps span { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 2px solid var(--line); color: var(--sub); }
   .steps span.on { background: #faf5ff; color: #6b21a8; border-color: #c084fc; }
   .steps span.done { color: #16a34a; border-color: #86efac; }
+  /* 筆算の 形 */
+  .hs { display: flex; justify-content: center; margin: 4px 0 6px; }
+  .hs table { border-collapse: collapse; font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .hs td { width: 30px; height: 34px; text-align: center; padding: 0; }
+  .hs td.dv { width: auto; padding-right: 6px; text-align: right; white-space: nowrap; }
+  .hs td.br { border-top: 3px solid var(--ink); }
+  .hs td.brl { border-left: 3px solid var(--ink); border-top-left-radius: 14px; }
+  .hs td.ul { border-bottom: 2px solid var(--ink); }
+  .hs td.q { color: #6b21a8; }
+  .hs td.cur { background: #fdf2f8; color: var(--pink); }
+  .hs td.qnow { background: #fde68a; border-radius: 8px; }
   .ask { text-align: center; font-size: 15px; min-height: 2.6em; }
   .ch { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
-  .ch button { font: inherit; font-weight: 900; font-size: 17px; min-width: 92px; padding: 9px 12px; border-radius: 14px; border: 3px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .ch button { font: inherit; font-weight: 900; font-size: 16px; min-width: 84px; padding: 9px 12px; border-radius: 14px; border: 3px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
   .ch button.ng { background: #fee2e2; border-color: #f87171; color: #991b1b; }
-  .work { font-size: 15px; text-align: center; color: var(--ink); min-height: 1.4em; }
+  .work { font-size: 14.5px; text-align: center; color: var(--ink); min-height: 1.4em; }
   .work .bad { color: #dc2626; } .work .good { color: #16a34a; }
   #msg { text-align: center; min-height: 3em; font-size: 14px; }
   #msg b { color: var(--pink); }
@@ -34,86 +51,179 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>✏️ 仮の商ラボ（÷2けた）</h1>
-  <div class="lead">わる数を 何十と みて、見当の 商を たてよう。かけて たしかめて、大きすぎたら 1 小さく、あまりが 大きすぎたら 1 大きく。直すのは その 位の 商だけ！</div>
+  <h1>✏️ ÷2けたの 筆算ラボ</h1>
+  <div class="lead">わる数を 何十と みて、位ごとに 見当の 商を たてよう。かけて ひいて たしかめ、大きすぎたら 1 小さく、のこりが 大きすぎたら 1 大きく。直すのは その 位の 商だけ！</div>
+  <div class="card"><div class="modes" id="modes"><button type="button" data-m="3">3けた ÷ 2けた</button><button type="button" data-m="4">4けた ÷ 2けた</button></div></div>
   <div class="card">
     <div class="bar"><span id="count"></span><span id="score"></span></div>
     <div class="prob" id="prob" aria-live="polite"></div>
-    <div class="steps"><span id="s1">① 何十と みる</span><span id="s2">② 見当の 商</span><span id="s3">③ たしかめ・直す</span></div>
+    <div class="steps"><span id="s1">何十と みる</span><span id="s2">どの 位から</span><span id="s3">見当</span><span id="s4">たしかめ・直す</span><span id="s5">おろす</span></div>
+    <div class="hs" id="hs"></div>
     <div class="ask" id="ask"></div>
     <div class="ch" id="ch"></div>
     <div class="work" id="work"></div>
     <div id="msg"></div>
     <div style="text-align:center"><button class="next" id="next" hidden>つぎの 問題へ ▶</button></div>
   </div>
-  <div class="card">💡 <b>見当が はずれても だいじょうぶ</b><br>わる数を 何十と みると、商が 1 くらい ずれる ことが ある。かけた 答えが わられる数より 大きければ 商を 1 小さく、ひいた のこりが わる数 いじょう なら 1 大きく する。問題を はじめから 書き直さず、その 商だけ 直せば いい。</div>
+  <div class="card">💡 <b>4けた ÷ 2けたの コツ</b><br>① 上から 2けたが わる数より 小さければ、商は 十の位から（2けた）。大きければ 百の位から（3けた）。<br>② 位ごとに「見当 → かけて ひく → たしかめ → おろす」を くり返す。<br>③ おろした 数が わる数より 小さい ときは、その 位に <b>0</b> を 書いて、もう 1つ おろす。</div>
 </div>
 <script>
 (function () {
   "use strict";
-  var N = 8, qi = 0, clean = 0, P = null, step = 0, cur = 0, miss = false;
+  var PLACE = ["一の位", "十の位", "百の位", "千の位"];
+  var mode = location.hash === "#4" ? 4 : 3, N = 6, qi = 0, clean = 0, miss = false;
+  var P = null, phase = "", p = 0, cur = 0, qd = 0, tryQ = 0, rows = [], qs = [];
   var $ = function (id) { return document.getElementById(id); };
   function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
   function make() {
-    for (var k = 0; k < 200; k++) {
+    for (var k = 0; k < 400; k++) {
       var d = rnd(12, 98); if (d % 10 === 0) continue;
-      var q = rnd(2, 9), r = rnd(0, d - 1), D = d * q + r; if (D >= d * 10 || D < 100 && Math.random() < 0.5) continue;
-      var R = d % 10 >= 5 ? Math.ceil(d / 10) * 10 : Math.floor(d / 10) * 10, est = Math.max(1, Math.min(9, Math.floor(D / R)));
-      if (est === q && Math.random() < 0.6) continue; // 直す 練習が できる 問題を 多めに
-      return { D: D, d: d, q: q, r: r, R: R, est: est };
+      var lo = mode === 4 ? 1000 : 100, hi = mode === 4 ? 9999 : 999, q, r = rnd(0, d - 1);
+      if (mode === 4 && Math.random() < 0.25) { // 商に 0 が たつ 問題（例：204・310）
+        q = Math.random() < 0.5 ? rnd(1, 9) * 100 + rnd(1, 9) : rnd(1, 9) * 100 + rnd(1, 9) * 10;
+      } else q = mode === 4 ? (Math.random() < 0.3 ? rnd(11, 99) : rnd(100, 999)) : rnd(2, 99); // 4けた：2けたの 商と 3けたの 商が だいたい 半分ずつ に なる
+      var D = d * q + r; if (D < lo || D > hi) continue;
+      if (mode === 3 && q < 10 && Math.random() < 0.5) continue; // 3けたは 2けたの 商を 多めに
+      return { D: D, d: d, q: q, r: r, s: String(D), R: d % 10 >= 5 ? Math.ceil(d / 10) * 10 : Math.floor(d / 10) * 10 };
     }
-    return { D: 156, d: 24, q: 6, r: 12, R: 20, est: 7 };
+    return mode === 4 ? { D: 7140, d: 35, q: 204, r: 0, s: "7140", R: 40 } : { D: 864, d: 29, q: 29, r: 23, s: "864", R: 30 };
   }
-  function setStep(n) { ["s1", "s2", "s3"].forEach(function (id, i) { $(id).className = i + 1 < n ? "done" : i + 1 === n ? "on" : ""; }); step = n; }
+  function firstPos() { for (var i = 0; i < P.s.length; i++) if (Number(P.s.slice(0, i + 1)) >= P.d) return i; return P.s.length - 1; }
+  function placeName(i) { return PLACE[P.s.length - 1 - i]; }
+  function setStep(n) { for (var i = 1; i <= 5; i++) $("s" + i).className = i < n ? "done" : i === n ? "on" : ""; }
   function buttons(list) { $("ch").innerHTML = list.map(function (x) { return '<button type="button" data-v="' + x.v + '">' + x.l + "</button>"; }).join(""); }
+  // 筆算の 表：列 0..n-1 ＝ わられる数の 位。rows ＝ [{num, end, ul, ulFrom}]（end 列で 右そろえ）
+  function cells(num, end) { var o = {}, t = String(num); for (var i = 0; i < t.length; i++) o[end - t.length + 1 + i] = t[i]; return o; }
+  function draw(focus) {
+    var n = P.s.length, h = '<table aria-label="' + P.D + " ÷ " + P.d + ' の 筆算">', c;
+    h += '<tr><td class="dv"></td>';
+    for (c = 0; c < n; c++) { var isNow = c === p && (phase === "est" || phase === "check"); h += '<td class="q' + (isNow ? " qnow" : "") + '">' + (qs[c] != null ? qs[c] : isNow ? "？" : "") + "</td>"; }
+    h += '</tr><tr><td class="dv">' + P.d + "</td>";
+    for (c = 0; c < n; c++) h += '<td class="br' + (c === 0 ? " brl" : "") + (focus && focus.row === -1 && c >= focus.from && c <= focus.to ? " cur" : "") + '">' + P.s[c] + "</td>";
+    h += "</tr>";
+    rows.forEach(function (rw, ri) {
+      var m = cells(rw.num, rw.end); h += '<tr><td class="dv"></td>';
+      for (var c2 = 0; c2 < n; c2++) {
+        var cl = (rw.ul && c2 >= rw.ulFrom && c2 <= rw.end ? " ul" : "") + (focus && focus.row === ri && c2 >= focus.from && c2 <= focus.to ? " cur" : "");
+        h += '<td class="' + cl.trim() + '">' + (m[c2] != null ? m[c2] : "") + "</td>";
+      }
+      h += "</tr>";
+    });
+    $("hs").innerHTML = h + "</table>";
+  }
+  // いま わって いる 数（cur）が どこに 書いて あるか（さいしょは わられる数の 上の けた、あとは いちばん 下の 行）
+  function curFocus() { var t = String(cur).length; return rows.length ? { row: rows.length - 1, from: p - t + 1, to: p } : { row: -1, from: 0, to: p }; }
   function start() {
-    P = make(); miss = false; cur = 0;
+    P = make(); miss = false; rows = []; qs = []; p = 0; cur = 0;
     $("count").textContent = (qi + 1) + " / " + N; $("score").textContent = "まちがいなし：" + clean;
     $("prob").textContent = P.D + " ÷ " + P.d; $("work").innerHTML = ""; $("next").hidden = true;
-    setStep(1);
-    var lo = Math.floor(P.d / 10) * 10, hi = lo + 10;
+    phase = "round"; setStep(1); draw();
+    var lo = Math.floor(P.d / 10) * 10;
     $("ask").innerHTML = "わる数 <b>" + P.d + "</b> を 何十と みる？";
-    buttons([{ v: lo, l: lo }, { v: hi, l: hi }]);
+    buttons([{ v: lo, l: lo }, { v: lo + 10, l: lo + 10 }]);
     $("msg").innerHTML = "一の位を 見よう。5 いじょう なら 切り上げ。";
   }
-  function askEst() {
-    setStep(2);
-    var c = [P.est - 1, P.est, P.est + 1].filter(function (x) { return x >= 1 && x <= 9; });
-    $("ask").innerHTML = P.R + " で わると 見て、見当の 商は？<br><span style='font-size:12.5px;color:#7a6985'>" + P.R + " × □ が " + P.D + " を こえない、いちばん 大きい □</span>";
+  function askPlace() {
+    phase = "place"; setStep(2); draw();
+    // 2けたで わるので、いちばん 上の 位には たたない → 3けた：十・一／4けた：百・十 の どちらか
+    $("ask").innerHTML = "商は 何の位から たつ？<br><span style='font-size:12.5px;color:#7a6985'>左から 数を 見て、" + P.d + " で われる ところを さがそう</span>";
+    buttons([1, 2].map(function (i) { return { v: i, l: placeName(i) }; }));
+  }
+  function startDigit() {
+    phase = "est"; setStep(3); draw(curFocus());
+    if (cur < P.d) { // われない 位
+      $("ask").innerHTML = placeName(p) + "： <b>" + cur + "</b> ÷ " + P.d + "<br><span style='font-size:12.5px;color:#7a6985'>" + cur + " と わる数 " + P.d + " を くらべよう</span>";
+      buttons([{ v: 0, l: "0 を たてる" }, { v: 1, l: "1 を たてる" }]);
+      return;
+    }
+    var e = Math.max(1, Math.min(9, Math.floor(cur / P.R))); P.est = e;
+    var c = [e - 1, e, e + 1].filter(function (x) { return x >= 1 && x <= 9; });
+    $("ask").innerHTML = placeName(p) + "： <b>" + cur + "</b> ÷ " + P.d + "<br><span style='font-size:12.5px;color:#7a6985'>" + P.R + " で わると 見て、" + P.R + " × □ が " + cur + " を こえない いちばん 大きい □</span>";
     buttons(c.map(function (x) { return { v: x, l: x }; }));
-    $("msg").innerHTML = "";
   }
   function askCheck() {
-    setStep(3);
-    var m = P.d * cur, left = P.D - m;
-    $("work").innerHTML = P.d + " × " + cur + " ＝ " + m + (m > P.D ? '　<span class="bad">' + P.D + " より 大きい！</span>" : "　" + P.D + " − " + m + " ＝ " + left + (left >= P.d ? '　<span class="bad">' + P.d + " いじょう のこった！</span>" : '　<span class="good">' + P.d + " より 小さい</span>"));
-    $("ask").innerHTML = "商 <b>" + cur + "</b> で よい？";
+    phase = "check"; setStep(4);
+    var m = P.d * tryQ, left = cur - m;
+    qs[p] = tryQ; draw(curFocus());
+    $("work").innerHTML = P.d + " × " + tryQ + " ＝ " + m + (m > cur ? '　<span class="bad">' + cur + " より 大きい！</span>" : "　" + cur + " − " + m + " ＝ " + left + (left >= P.d ? '　<span class="bad">' + P.d + " いじょう のこった！</span>" : '　<span class="good">' + P.d + " より 小さい</span>"));
+    $("ask").innerHTML = "商 <b>" + tryQ + "</b> で よい？";
     buttons([{ v: "down", l: "1 小さく" }, { v: "ok", l: "これで OK" }, { v: "up", l: "1 大きく" }]);
+  }
+  // その 位の 商が 決まった → かけ算・ひき算を 書いて、おろす か おわり（0 の 位は 書かずに そのまま おろす）
+  function settle() {
+    qs[p] = qd;
+    if (qd > 0) {
+      var prod = P.d * qd;
+      rows.push({ num: prod, end: p, ul: true, ulFrom: Math.min(p - String(cur).length + 1, p - String(prod).length + 1) });
+      rows.push({ num: cur - prod, end: p });
+    }
+    var rem = cur - P.d * qd;
+    if (p === P.s.length - 1) return finish();
+    phase = "down"; setStep(5); draw(); $("work").innerHTML = "";
+    $("ask").innerHTML = "つぎの 位の <b>" + P.s[p + 1] + "</b> を おろそう" + (rem === 0 ? "<br><span style='font-size:12.5px;color:#7a6985'>のこりは 0</span>" : "");
+    buttons([{ v: "bring", l: "▼ " + P.s[p + 1] + " を おろす" }]);
+  }
+  function bringDown() {
+    cur = (cur - P.d * qd) * 10 + Number(P.s[p + 1]); p++;
+    var last = rows[rows.length - 1]; last.num = cur; last.end = p;
+    $("msg").innerHTML = "⬇ おろして <b>" + cur + "</b>。" + (cur < P.d ? cur + " は " + P.d + " より 小さいね。" : "また 見当を つけよう。");
+    startDigit();
+  }
+  function finish() {
+    phase = "done"; setStep(6); draw(); $("ch").innerHTML = "";
+    if (!miss) clean++;
+    $("score").textContent = "まちがいなし：" + clean;
+    $("ask").innerHTML = "<b>" + P.D + " ÷ " + P.d + " ＝ " + P.q + (P.r ? " あまり " + P.r : "") + "</b>";
+    $("work").innerHTML = "たしかめ：" + P.d + " × " + P.q + (P.r ? " ＋ " + P.r : "") + " ＝ " + P.D + ' <span class="good">✔</span>';
+    $("msg").innerHTML = (String(P.q).indexOf("0") >= 0 ? "0 の 位も わすれずに 書けたね！" : "できた！") + (miss ? "" : " ✨");
+    $("next").hidden = false; $("next").textContent = qi + 1 < N ? "つぎの 問題へ ▶" : "もう一度 あそぶ 🔁";
   }
   $("ch").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-v]"); if (!b || !$("next").hidden) return;
     var v = b.getAttribute("data-v");
-    if (step === 1) {
+    if (phase === "round") {
       if (Number(v) !== P.R) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 一の位は「" + (P.d % 10) + "」。" + (P.d % 10 >= 5 ? "5 いじょう なので 切り上げ" : "4 いか なので 切り捨て") + " だよ。"; return; }
-      $("msg").innerHTML = "⭕ " + P.d + " → " + P.R; return askEst();
+      $("msg").innerHTML = "⭕ " + P.d + " → " + P.R + " と みる"; return askPlace();
     }
-    if (step === 2) {
-      if (Number(v) !== P.est) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + P.R + " × " + v + " ＝ " + P.R * v + "。" + (P.R * v > P.D ? P.D + " を こえて いるよ。" : "もう 1つ 大きく しても こえないよ。"); return; }
-      cur = P.est; $("msg").innerHTML = "⭕ 見当の 商は " + cur + "。かけて たしかめよう。"; return askCheck();
+    if (phase === "place") {
+      var fp = firstPos();
+      if (Number(v) !== fp) {
+        b.classList.add("ng"); miss = true;
+        $("msg").innerHTML = "🔁 " + (Number(v) < fp ? "上から " + fp + "けたの " + P.s.slice(0, fp) + " は " + P.d + " より 小さいので、" + placeName(fp - 1) + "には たたないよ。" : "上から " + (fp + 1) + "けたの " + P.s.slice(0, fp + 1) + " で もう われるよ。");
+        return;
+      }
+      p = fp; cur = Number(P.s.slice(0, fp + 1));
+      $("msg").innerHTML = "⭕ " + cur + " ÷ " + P.d + " から。商は " + placeName(fp) + "から たつ（" + (P.s.length - fp) + "けたの 商）";
+      return startDigit();
     }
-    var m = P.d * cur, left = P.D - m, need = m > P.D ? "down" : left >= P.d ? "up" : "ok";
-    if (v !== need) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + (need === "down" ? "かけた 答えが " + P.D + " より 大きいよ。" : need === "up" ? "のこりが わる数 " + P.d + " いじょう あるよ。" : "かけた 答えは こえて いないし、のこりも " + P.d + " より 小さいよ。"); return; }
-    if (need === "down") { cur--; $("msg").innerHTML = "⭕ 1 小さく して " + cur + "。"; return askCheck(); }
-    if (need === "up") { cur++; $("msg").innerHTML = "⭕ 1 大きく して " + cur + "。"; return askCheck(); }
-    if (!miss) clean++;
-    $("score").textContent = "まちがいなし：" + clean; $("ch").innerHTML = ""; setStep(4);
-    $("ask").innerHTML = "<b>" + P.D + " ÷ " + P.d + " ＝ " + P.q + (P.r ? " あまり " + P.r : "") + "</b>";
-    $("work").innerHTML = "たしかめ：" + P.d + " × " + P.q + (P.r ? " ＋ " + P.r : "") + " ＝ " + P.D + ' <span class="good">✔</span>';
-    $("msg").innerHTML = (P.est !== P.q ? "見当は " + P.est + " だったけど、" + Math.abs(P.est - P.q) + (P.est > P.q ? " 小さく" : " 大きく") + " 直して 正解！" : "見当が ぴったり！") + (miss ? "" : " ✨");
-    $("next").hidden = false; $("next").textContent = qi + 1 < N ? "つぎの 問題へ ▶" : "もう一度 あそぶ 🔁";
+    if (phase === "est") {
+      if (cur < P.d) {
+        if (v !== "0") { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + P.d + " × 1 ＝ " + P.d + " は " + cur + " より 大きいよ。"; return; }
+        qd = 0; $("msg").innerHTML = "⭕ " + cur + " は " + P.d + " より 小さいので <b>0</b> を たてる。0 を 書かないと 位が ずれるよ！";
+        return settle();
+      }
+      if (Number(v) !== P.est) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + P.R + " × " + v + " ＝ " + P.R * v + "。" + (P.R * v > cur ? cur + " を こえて いるよ。" : "もう 1つ 大きく しても こえないよ。"); return; }
+      tryQ = P.est; $("msg").innerHTML = "⭕ 見当は " + tryQ + "。かけて たしかめよう。"; return askCheck();
+    }
+    if (phase === "check") {
+      var m = P.d * tryQ, left = cur - m, need = m > cur ? "down" : left >= P.d ? "up" : "ok";
+      if (v !== need) { b.classList.add("ng"); miss = true; $("msg").innerHTML = "🔁 " + (need === "down" ? "かけた 答えが " + cur + " より 大きいよ。" : need === "up" ? "のこりが わる数 " + P.d + " いじょう あるよ。" : "かけた 答えは こえて いないし、のこりも " + P.d + " より 小さいよ。"); return; }
+      if (need === "down") { tryQ--; $("msg").innerHTML = "⭕ 1 小さく して " + tryQ + "。"; return askCheck(); }
+      if (need === "up") { tryQ++; $("msg").innerHTML = "⭕ 1 大きく して " + tryQ + "。"; return askCheck(); }
+      qd = tryQ; $("work").innerHTML = "";
+      $("msg").innerHTML = "⭕ " + placeName(p) + "の 商は <b>" + qd + "</b>" + (qd !== P.est ? "（見当 " + P.est + " から 直した）" : "");
+      return settle();
+    }
+    if (phase === "down") return bringDown();
   });
+  function setMode(m) {
+    mode = m; qi = 0; clean = 0;
+    [].forEach.call(document.querySelectorAll("#modes button"), function (x) { x.className = Number(x.getAttribute("data-m")) === m ? "on" : ""; });
+    start();
+  }
+  $("modes").addEventListener("click", function (e) { var b = e.target.closest("button[data-m]"); if (b) setMode(Number(b.getAttribute("data-m"))); });
   $("next").addEventListener("click", function () { if (qi + 1 < N) qi++; else { qi = 0; clean = 0; } start(); });
-  start();
+  setMode(mode);
 })();
 </script>
 </body>
