@@ -286,21 +286,27 @@
     w.innerHTML = '<div style="background:#fff;border-radius:22px;padding:14px 12px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 0 rgba(147,51,234,.22);">' + inner + '</div>';
     document.body.appendChild(w);
   }
+  // ★2026-10-16：学校で いま 習って いる 単元の ネタ（js/school-units.js の jigaku＝ネタの 題名）。0＝いま／1＝もうすぐ／2＝それ いがい
+  function srank(c) { return (window.schoolJigakuRank && c) ? window.schoolJigakuRank(c.title) : 2; }
   function pool(kind) {
     var list = CARDS.slice(), a = appCard(); if (a) list.unshift(a);
-    if (kind && kind !== "all") list = list.filter(function (c) { return c.kind === kind; });
+    if (kind === "now") list = list.filter(function (c) { return srank(c) <= 1; });
+    else if (kind && kind !== "all") list = list.filter(function (c) { return c.kind === kind; });
     var d = done();
-    // まだ 書いて いない もの → 今の 学習に 近い もの（hot）を 前に
-    return list.sort(function (x, y) { return (d.indexOf(x.id) >= 0) - (d.indexOf(y.id) >= 0) || (y.hot ? 1 : 0) - (x.hot ? 1 : 0); });
+    // まだ 書いて いない もの → 学校で いま 習って いる もの → 今の 学習に 近い もの（hot）を 前に
+    return list.sort(function (x, y) { return (d.indexOf(x.id) >= 0) - (d.indexOf(y.id) >= 0) || srank(x) - srank(y) || (y.hot ? 1 : 0) - (x.hot ? 1 : 0); });
   }
-  window._jigakuKind = "all";
+  window._jigakuKind = null; // ★2026-10-16：はじめて 開いた ときは「📌 いま 習っている」タブ（ネタが ない 時期は おまかせ）
   window.openJigakuNote = function (kind) {
     if (kind === "yokatta") { window.openYokatta(); return; }
     if (kind) window._jigakuKind = kind;
+    var nowN = pool("now").length;
+    if (!window._jigakuKind || (window._jigakuKind === "now" && !nowN)) window._jigakuKind = nowN ? "now" : "all";
     var k = window._jigakuKind, list = pool(k), d = done();
     // おまかせ：ちがう 種類から 3つ（クイズばかりに ならないように）
     var pick = list;
     if (k === "all") { list = list.filter(function (c) { return c.kind !== "yokatta"; }); var seen = {}; pick = []; list.forEach(function (c) { var g = c.kind === "app" ? "quiz" : c.kind === "exp" ? "cmp" : c.kind; if (!seen[g] && pick.length < 3) { seen[g] = 1; pick.push(c); } }); }
+    var nowChip = nowN ? '<button style="' + BTN + 'padding:7px 9px;font-size:12px;' + (k === "now" ? "background:#1d4ed8;color:#fff;" : "background:#dbeafe;color:#1e40af;") + '" onclick="window.openJigakuNote(\'now\')">📌 いま 習っている</button>' : "";
     var chips = Object.keys(KIND).filter(function (x) { return x !== "app" || appCard(); }).map(function (x) {
       return '<button style="' + BTN + 'padding:7px 9px;font-size:12px;' + (k === x ? "background:#7e22ce;color:#fff;" : "background:#f3e8ff;color:#7e22ce;") + '" onclick="window.openJigakuNote(\'' + x + '\')">' + KIND[x] + '</button>';
     }).join("");
@@ -308,11 +314,11 @@
       var ok = d.indexOf(c.id) >= 0;
       return '<button style="' + BTN + 'display:block;width:100%;text-align:left;padding:11px 12px;margin-top:8px;background:' + (ok ? "#f8fafc" : "#fdf4ff") + ';border:2px solid ' + (ok ? "#e2e8f0" : "#f5d0fe") + ';color:#4a3b52;" onclick="window.showJigakuCard(\'' + c.id + '\')">' +
         '<div style="font-size:11px;color:#a21caf;">' + KIND[c.kind] + '　<span style="color:#7a6985;">先生の メニュー：' + esc(c.menu) + '</span></div>' +
-        '<div style="font-size:15px;margin-top:2px;">' + (ok ? "✅ " : (c.hot ? "⭐ " : "")) + esc(c.title) + '</div></button>';
+        '<div style="font-size:15px;margin-top:2px;">' + (ok ? "✅ " : (srank(c) === 0 ? "📌 " : srank(c) === 1 ? "⏳ " : (c.hot ? "⭐ " : ""))) + esc(c.title) + '</div></button>';
     }).join("");
     shell('<div style="font-size:18px;font-weight:900;color:#6b21a8;text-align:center;">📓 今日の 自学ネタ</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 8px;line-height:1.6;">まよったら 上の 3つから 1つ えらぶだけ。<br>ノート 1ページ（横書き 1行 15マス）に 入る 形に して あるよ。⭐ ＝ 今の 勉強と つながる ネタ</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;"><button style="' + BTN + 'padding:7px 9px;font-size:12px;' + (k === "all" ? "background:#db2777;color:#fff;" : "background:#fce7f3;color:#9d174d;") + '" onclick="window.openJigakuNote(\'all\')">🎲 おまかせ 3つ</button>' + chips + '</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 8px;line-height:1.6;">まよったら 上の 3つから 1つ えらぶだけ。<br>ノート 1ページ（横書き 1行 15マス）に 入る 形に して あるよ。📌 ＝ いま 学校で 習って いる 単元　⏳ ＝ もうすぐ 習う 単元　⭐ ＝ 今の 勉強と つながる ネタ</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;">' + nowChip + '<button style="' + BTN + 'padding:7px 9px;font-size:12px;' + (k === "all" ? "background:#db2777;color:#fff;" : "background:#fce7f3;color:#9d174d;") + '" onclick="window.openJigakuNote(\'all\')">🎲 おまかせ 3つ</button>' + chips + '</div>' +
       cards +
       '<button style="' + BTN + 'width:100%;margin-top:10px;padding:11px;font-size:14px;color:#92400e;background:#fef3c7;" onclick="window.openYokatta()">🌼 今日の よかった を 書く（よかった帳）</button>' +
       '<button style="' + BTN + 'width:100%;margin-top:8px;padding:10px;font-size:13px;color:#7e22ce;background:#f3e8ff;" onclick="window.closeJigakuNote()">とじる</button>');
