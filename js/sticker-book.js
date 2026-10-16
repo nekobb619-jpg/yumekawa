@@ -18,7 +18,7 @@
   var K = "#1f1b2e", P = "#7c3aed", PL = "#a78bfa", PLL = "#c4b5fd", PK = "#f472b6", PKL = "#f9a8d4", G = "#fbbf24", GL = "#fde68a", W = "#fff";
   var FAMILY = ["りお", "りさ", "papa"], GIFT_PER_DAY = 3, PAGE_MAX = 24, OUT_MAX = 90, SEEN_MAX = 300;
   var RATES = [[1, 0.58], [2, 0.28], [3, 0.11], [4, 0.03]];
-  var KINDS = { plan: "まなびプラン", stage: "ステージ", lab: "探偵ラボ", jigaku: "自学ノート" };
+  var KINDS = { plan: "まなびプラン", stage: "ステージ", school: "いま 学校の 単元", lab: "探偵ラボ", jigaku: "自学ノート" }; // ★2026-10-16 school：学校で いま 習って いる 単元の ステージを クリア（ステージの ふくろとは 別に もう1つ）
 
   /* ---------------- 絵の 部品（viewBox 0 0 40 40） ---------------- */
   function n(v) { return (Math.round(v * 10) / 10); }
@@ -165,7 +165,7 @@
   }
 
   /* ---------------- ふくろを もらう・あける ---------------- */
-  // kind：plan／stage／lab／jigaku。同じ 日に 同じ 種類で 2ふくろ目は 出ない（周回で ふえない）
+  // kind：plan／stage／school（学校で いま 習って いる 単元の ステージ）／lab／jigaku。同じ 日に 同じ 種類で 2ふくろ目は 出ない（周回で ふえない）
   window.grantStickerPack = function (kind, why) {
     if (!window.saveData || !KINDS[kind]) return false;
     var d = ensure();
@@ -175,6 +175,8 @@
     toast("🎀 シールの ふくろを 1つ もらったよ（" + KINDS[kind] + "）");
     return true;
   };
+  // ★2026-10-16：今日 その 種類の ふくろを もう もらったか（ステージ一覧の「いま 学校」の 案内で 使う）
+  window.stickerKindDone = function (kind) { try { return !!(window.saveData && ensure().stickerDay.k[kind]); } catch (e) { return false; } };
   function roll() {
     var r = Math.random(), acc = 0, rar = 1;
     for (var i = 0; i < RATES.length; i++) { acc += RATES[i][1]; if (r < acc) { rar = RATES[i][0]; break; } }

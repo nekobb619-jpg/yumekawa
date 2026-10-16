@@ -152,6 +152,8 @@
   .stage-badge-soon { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
   .school-now-box { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 16px; padding: 10px; margin-bottom: 12px; display: grid; gap: 6px; }
   .school-now-title { font-size: 13px; font-weight: 900; color: #1e40af; }
+  .school-now-gift { justify-self: start; margin-top: 2px; font-size: 11.5px; font-weight: 900; color: #be185d; background: #fdf2f8; border: 1.5px dashed #f9a8d4; border-radius: 10px; padding: 3px 8px; display: inline-block; }
+  .school-now-gift.done { color: #6b21a8; background: #ede9fe; border-color: #c4b5fd; border-style: solid; }
   .school-now-card { background: #fff; border-radius: 12px; padding: 8px 10px; border: 1px solid #bfdbfe; display: grid; gap: 6px; }
   .school-now-card.soon { opacity: .8; border-style: dashed; }
   .school-now-head { display: flex; align-items: baseline; gap: 8px; }
@@ -5442,7 +5444,8 @@ window.renderSchoolNowStrip = function (panel) {
   }));
   if (!rows.length) return;
   const box = document.createElement("div"); box.className = "school-now-box";
-  box.innerHTML = `<div class="school-now-title">📌 いま 学校で ならって いる ところ</div>`;
+  box.innerHTML = `<div class="school-now-title">📌 いま 学校で ならって いる ところ</div>` + (s.now.length && window.grantStickerPack
+    ? (window.stickerKindDone && window.stickerKindDone("school") ? `<div class="school-now-gift done">🎀 今日の シールの ふくろ もらったよ ✓</div>` : `<div class="school-now-gift">🎀 ここを 1つ クリアで シールの ふくろ（1日1つ）</div>`) : "");
   rows.forEach(row => {
     const meta = window.subjectDictionary[row.u.subject] || { label: row.u.subject };
     const el = document.createElement("div"); el.className = "school-now-card" + (row.r === 1 ? " soon" : "");
@@ -6744,6 +6747,10 @@ window.exitToMainMenu = function() {
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
     // ★2026-10-04追加：🎀シール帳の ふくろ（ステージを 最後まで やった 日に 1つ。種類ごとに 1日 1つ＝周回で ふえない）
     if (window.grantStickerPack && !window.currentActiveStageIsReview) { try { window.grantStickerPack("stage"); } catch (e) {} }
+    // ★2026-10-16追加（保護者：いま 習って いる ところを 1つでも クリアしたら シール）：学校で いま 習って いる 単元の ステージなら もう1ふくろ（1日 1つ）
+    if (window.grantStickerPack && !window.currentActiveStageIsReview && window.schoolStageRank && window.schoolStageRank(targetStageId) === 0) {
+      try { const su = window.schoolUnitOfStage && window.schoolUnitOfStage(targetStageId); window.grantStickerPack("school", su ? su.name : ""); } catch (e) {}
+    }
     // ★2026-08-08追加：まる暗記対策。済単元の周回プレイ（isCleared）のときだけ、
     //   周回数（loopCounts）を見て問題内容の自動リフレッシュを検討する（js/adaptive-question-generator.js）。
     //   通信はバックグラウンドで行い、このクリア処理自体はブロックしない。
