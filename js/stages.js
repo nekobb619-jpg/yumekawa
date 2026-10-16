@@ -692,7 +692,7 @@
       grade: "4年生",
       id: "算数/がい数/gaisu01",
       name: "がい数と四捨五入（およそ数と概算）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_gaisu.html",
       created: "2026-08-11"
     },
     {

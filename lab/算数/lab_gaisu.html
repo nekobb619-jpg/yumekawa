@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>がい数ラボ 📏</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-10-16追加：4年「がい数とその計算」。数直線の 上に 数を おいて、どちらの がい数に なるかを えらぶ。
+     四捨五入（まん中より 右か 左か）・切り捨て・切り上げ・上から 1けた を まぜて 出す。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #f3ebf7; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; }
+  .ask { text-align: center; font-size: 15px; margin: 6px 0 2px; }
+  .num { text-align: center; font-size: 34px; font-weight: 900; letter-spacing: .06em; margin: 2px 0; }
+  .num .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+  .way { display: inline-block; background: #faf5ff; border: 2px solid var(--line); border-radius: 999px; padding: 0 10px; color: #6b21a8; font-weight: 900; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900; }
+  .ch { display: flex; gap: 10px; justify-content: center; margin: 8px 0; }
+  .ch button { font: inherit; font-weight: 900; font-size: 20px; min-width: 120px; padding: 10px 14px; border-radius: 14px; border: 3px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .ch button.ok { background: #dcfce7; border-color: #22c55e; color: #166534; }
+  .ch button.ng { background: #fee2e2; border-color: #f87171; color: #991b1b; }
+  #msg { text-align: center; min-height: 3.2em; font-size: 14px; }
+  #msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  .rule { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12.5px; }
+  .rule span { background: #faf5ff; border: 2px solid var(--line); border-radius: 999px; padding: 2px 10px; color: #6b21a8; font-weight: 900; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📏 がい数ラボ</h1>
+  <div class="lead">数直線の 上に 数が あるよ。どちらの がい数に なるかな？ まん中の 線（点線）より 右か 左か、と、やり方（四捨五入・切り捨て・切り上げ）に 気を つけよう。</div>
+  <div class="card"><div class="rule"><span>四捨五入：まん中 いじょう → 上へ</span><span>切り捨て：いつも 下へ</span><span>切り上げ：0で なければ 上へ</span></div></div>
+  <div class="card">
+    <div class="bar"><span id="count"></span><span id="score"></span></div>
+    <div class="ask" id="ask"></div>
+    <div class="num" id="num" aria-live="polite"></div>
+    <div id="line"></div>
+    <div class="ch" id="ch"></div>
+    <div id="msg"></div>
+    <div style="text-align:center"><button class="next" id="next" hidden>つぎの 数へ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>どうして がい数を 使うの？</b><br>町の 人口や 買い物の 合計を「だいたい」で つかむと、くらべたり 見当を つけたり しやすく なるよ。「〇〇の位までの がい数」は、その 1つ 下の 位の 数字を 見て 決める。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var PLACE = [{ p: 100, name: "百の位" }, { p: 1000, name: "千の位" }, { p: 10000, name: "一万の位" }];
+  var WAYS = ["四捨五入", "四捨五入", "四捨五入", "切り捨て", "切り上げ"];
+  var N = 8, qi = 0, clean = 0, q = null, tried = false;
+  var $ = function (id) { return document.getElementById(id); };
+  function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function fmt(n) { return String(n); }
+  function make() {
+    var top = Math.random() < 0.25, pl, n, label;
+    if (top) {                       // 上から 1けた（3〜5けたの 数）
+      var d = rnd(3, 5); n = rnd(Math.pow(10, d - 1) + 1, Math.pow(10, d) - 1);
+      pl = { p: Math.pow(10, d - 1) }; label = "上から 1けたの がい数";
+    } else {
+      pl = PLACE[rnd(0, PLACE.length - 1)]; n = rnd(pl.p * 2, pl.p * 99); label = pl.name + "までの がい数";
+    }
+    if (n % pl.p === 0) n += rnd(1, pl.p - 1);
+    var way = top ? "四捨五入" : WAYS[rnd(0, WAYS.length - 1)];
+    var lo = Math.floor(n / pl.p) * pl.p, hi = lo + pl.p, look = Math.floor((n % pl.p) / (pl.p / 10));
+    var ans = way === "切り捨て" ? lo : way === "切り上げ" ? hi : (n - lo >= pl.p / 2 ? hi : lo);
+    return { n: n, p: pl.p, lo: lo, hi: hi, look: look, way: way, label: label, ans: ans };
+  }
+  // 見る 位（1つ 下の 位）の 数字に しるし
+  function numHtml() {
+    var s = fmt(q.n), idx = s.length - String(q.p).length + 1; // 1つ 下の 位の 文字の 位置
+    return s.split("").map(function (c, i) { return i === idx ? '<span class="hl">' + c + "</span>" : c; }).join("");
+  }
+  function lineSvg(showMid) {
+    var W = 460, H = 96, L = 30, R = 30, x = function (v) { return L + (W - L - R) * (v - q.lo) / (q.hi - q.lo); };
+    var g = '<line x1="' + L + '" y1="50" x2="' + (W - R) + '" y2="50" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round"/>';
+    for (var k = 0; k <= 10; k++) { var v = q.lo + q.p / 10 * k, xx = x(v); g += '<line x1="' + xx + '" y1="' + (k % 5 ? 44 : 38) + '" x2="' + xx + '" y2="' + (k % 5 ? 56 : 62) + '" stroke="#a78bfa" stroke-width="2"/>'; }
+    var mid = x(q.lo + q.p / 2);
+    if (showMid) g += '<line x1="' + mid + '" y1="22" x2="' + mid + '" y2="72" stroke="#db2777" stroke-width="2" stroke-dasharray="4 4"/><text x="' + mid + '" y="16" text-anchor="middle" font-size="12" fill="#db2777">まん中 ' + (q.lo + q.p / 2) + '</text>';
+    g += '<text x="' + L + '" y="88" text-anchor="middle" font-size="14" fill="#4a3b52">' + q.lo + '</text><text x="' + (W - R) + '" y="88" text-anchor="middle" font-size="14" fill="#4a3b52">' + q.hi + '</text>';
+    var px = x(q.n);
+    g += '<circle cx="' + px + '" cy="50" r="8" fill="#ec4899" stroke="#fff" stroke-width="3"/><text x="' + px + '" y="' + (showMid ? 36 : 30) + '" text-anchor="middle" font-size="13" fill="#be185d">' + q.n + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + q.lo + ' から ' + q.hi + ' の 数直線に ' + q.n + '">' + g + '</svg>';
+  }
+  function why() {
+    var digit = '1つ 下の 位の 数字は「' + q.look + '」';
+    if (q.way === "切り捨て") return "切り捨ては、下の 位の 数字が 何でも 0に する。だから <b>" + q.lo + "</b>";
+    if (q.way === "切り上げ") return "切り上げは、下の 位に 0で ない 数字が あれば 1つ 上げる。だから <b>" + q.hi + "</b>";
+    return digit + "。" + (q.look >= 5 ? "5 いじょうなので 切り上げて <b>" + q.hi + "</b>" : "4 いかなので 切り捨てて <b>" + q.lo + "</b>") + "（数直線の まん中より " + (q.look >= 5 ? "右" : "左") + "）";
+  }
+  function start() {
+    q = make(); tried = false;
+    $("count").textContent = (qi + 1) + " / " + N;
+    $("score").textContent = "1回で 正解：" + clean;
+    $("ask").innerHTML = '<span class="way">' + q.way + "</span> で " + q.label + "に すると？";
+    $("num").innerHTML = q.way === "四捨五入" ? numHtml() : fmt(q.n);
+    $("line").innerHTML = lineSvg(q.way === "四捨五入");
+    $("ch").innerHTML = [q.lo, q.hi].map(function (v) { return '<button type="button" data-v="' + v + '">' + v + "</button>"; }).join("");
+    $("msg").innerHTML = q.way === "四捨五入" ? "しるしの ついた 数字（1つ 下の 位）を 見よう。" : "やり方に 気を つけて えらぼう。";
+    $("next").hidden = true;
+  }
+  $("ch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-v]"); if (!b || !$("next").hidden) return;
+    var v = Number(b.getAttribute("data-v"));
+    if (v !== q.ans) { b.classList.add("ng"); tried = true; $("msg").innerHTML = "🔁 もう一度。ヒント：" + (q.way === "四捨五入" ? "まん中の 点線より 右？ 左？" : q.way + "は どちらへ 動かす？"); return; }
+    b.classList.add("ok"); if (!tried) clean++;
+    $("msg").innerHTML = "⭕ " + why() + (tried ? "" : " ✨");
+    $("score").textContent = "1回で 正解：" + clean;
+    $("next").hidden = false; $("next").textContent = qi + 1 < N ? "つぎの 数へ ▶" : "もう一度 あそぶ 🔁";
+  });
+  $("next").addEventListener("click", function () { if (qi + 1 < N) qi++; else { qi = 0; clean = 0; } start(); });
+  start();
+})();
+</script>
+</body>
+</html>
