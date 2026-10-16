@@ -111,5 +111,68 @@
     return out;
   }
 
+  /* ---------------- ★2026-10-16追加：情報・総合の 図 ---------------- */
+  function head(x, y, ang, c) { var a = 7; return '<path d="M' + x + ' ' + y + ' L' + (x - a * Math.cos(ang - 0.45)) + ' ' + (y - a * Math.sin(ang - 0.45)) + ' L' + (x - a * Math.cos(ang + 0.45)) + ' ' + (y - a * Math.sin(ang + 0.45)) + ' Z" fill="' + (c || MARK) + '"/>'; }
+  function arw(x1, y1, x2, y2, c) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (c || MARK) + '" stroke-width="2.4"/>' + head(x2, y2, Math.atan2(y2 - y1, x2 - x1), c); }
+  function box(x, y, w, h, label, on, size) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="8" fill="' + (on ? "#fdf2f8" : "#f5f3ff") + '" stroke="' + (on ? MARK : "#c4b5fd") + '" stroke-width="' + (on ? 3 : 2) + '"/>' + t(x + w / 2, y + h / 2 + 4, label, size || 11, on ? MARK : INK); }
+  // prog：プログラムの 3つの しくみ。k = "seq"（順次）・"loop"（くりかえし）・"if"（条件分岐）。items で 中の 言葉を かえられる
+  function prog(s) {
+    var k = s.k || "seq", out = "", it = s.items || [];
+    if (k === "seq") {
+      var L = it.length ? it : ["命令 ①", "命令 ②", "命令 ③"];
+      L.forEach(function (lb, i) { var y = 8 + i * 44; out += box(110, y, 100, 30, lb, false, 12); if (i < L.length - 1) out += arw(160, y + 31, 160, y + 42); });
+      out += t(262, 76, "上から 順番に", 11, SUB) + t(262, 92, "1つずつ", 11, SUB);
+      return out;
+    }
+    if (k === "loop") {
+      var n = s.n || 5, lb2 = it[0] || "前へ 1歩";
+      out += '<rect x="70" y="14" width="180" height="104" rx="12" fill="#fff7ed" stroke="#fb923c" stroke-width="2.5"/>' + t(160, 34, "くりかえす（" + n + "回）", 12, "#c2410c");
+      out += box(105, 50, 110, 34, lb2, true, 13);
+      out += '<path d="M222 67 H238 V104 H82 V67 H100" fill="none" stroke="#fb923c" stroke-width="2.2" stroke-dasharray="5 4"/>' + head(100, 67, 0, "#fb923c");
+      out += t(160, 138, "同じ 命令を 何回も 書かずに すむ", 11, SUB);
+      return out;
+    }
+    // if
+    var cond = s.cond || "雨が ふって いる？", yes = it[0] || "かさを さす", no = it[1] || "そのまま 行く";
+    out += '<path d="M160 6 L232 40 L160 74 L88 40 Z" fill="#fefce8" stroke="#eab308" stroke-width="2.5"/>' + t(160, 44, cond, cond.length > 9 ? 10 : 11.5, "#854d0e");
+    out += arw(98, 45, 66, 92, "#16a34a") + t(66, 62, "はい", 11, "#16a34a") + box(14, 96, 104, 34, yes, false, 11.5);
+    out += arw(222, 45, 254, 92, "#dc2626") + t(254, 62, "いいえ", 11, "#dc2626") + box(202, 96, 104, 34, no, false, 11.5);
+    out += t(160, 146, "◇（ひし形）＝ 条件で 道が 分かれる", 10, SUB);
+    return out;
+  }
+  // grid：ロボットの マス目。c・r＝マスの 数、start／goal＝[列, 行]（左下が [0,0]）、path＝true で 道すじを 見せる
+  function grid(s) {
+    var c = s.c || 5, r = s.r || 4, cs = Math.min(34, 120 / r), x0 = 160 - c * cs / 2, y0 = 72 - r * cs / 2, out = "";
+    var X = function (i) { return x0 + i * cs + cs / 2; }, Y = function (j) { return y0 + (r - 1 - j) * cs + cs / 2; };
+    for (var i = 0; i < c; i++) for (var j = 0; j < r; j++) out += '<rect x="' + (x0 + i * cs) + '" y="' + (y0 + j * cs) + '" width="' + cs + '" height="' + cs + '" fill="#fff" stroke="#ddd6fe" stroke-width="1.5"/>';
+    var st = s.start || [0, 0], gl = s.goal || [3, 2];
+    if (s.path) { out += arw(X(st[0]), Y(st[1]), X(gl[0]), Y(st[1]), MARK) + arw(X(gl[0]), Y(st[1]), X(gl[0]), Y(gl[1]), MARK); }
+    out += '<circle cx="' + X(st[0]) + '" cy="' + Y(st[1]) + '" r="' + (cs * 0.32) + '" fill="#a78bfa"/>' + t(X(st[0]), Y(st[1]) + 4, "S", 11, "#fff");
+    out += '<rect x="' + (X(gl[0]) - cs * 0.32) + '" y="' + (Y(gl[1]) - cs * 0.32) + '" width="' + (cs * 0.64) + '" height="' + (cs * 0.64) + '" rx="4" fill="#f9a8d4"/>' + t(X(gl[0]), Y(gl[1]) + 4, "G", 11, "#fff");
+    return out;
+  }
+  // okng：2つの 列に わけた カード（左＝よい、右＝だめ など）
+  function hs(l) { return Math.min(12, 128 / (String(l).length + 1.5)); }
+  function okng(s) {
+    var L = s.ok || [], R = s.ng || [], out = "";
+    out += '<rect x="8" y="6" width="148" height="134" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>' + t(82, 26, "◯ " + (s.okLabel || "のせて よい"), hs(s.okLabel || "のせて よい"), "#15803d");
+    out += '<rect x="164" y="6" width="148" height="134" rx="12" fill="#fef2f2" stroke="#fca5a5" stroke-width="2"/>' + t(238, 26, "✕ " + (s.ngLabel || "のせない"), hs(s.ngLabel || "のせない"), "#b91c1c");
+    L.slice(0, 5).forEach(function (w, i) { out += t(82, 50 + i * 20, w, w.length > 10 ? 9.5 : 11, DARK); });
+    R.slice(0, 5).forEach(function (w, i) { out += t(238, 50 + i * 20, w, w.length > 10 ? 9.5 : 11, DARK); });
+    return out;
+  }
+  // mindmap：まん中の テーマから 枝を のばす
+  function mindmap(s) {
+    var it = (s.items || []).slice(0, 6), n = it.length || 1, out = "";
+    it.forEach(function (w, i) {
+      var a = -Math.PI / 2 + i * 2 * Math.PI / n, x = 160 + Math.cos(a) * 112, y = 72 + Math.sin(a) * 52;
+      out += '<line x1="160" y1="72" x2="' + x + '" y2="' + y + '" stroke="#c4b5fd" stroke-width="2.5"/>';
+      out += '<rect x="' + (x - 40) + '" y="' + (y - 13) + '" width="80" height="26" rx="13" fill="#fff" stroke="#a78bfa" stroke-width="2"/>' + t(x, y + 4, w, w.length > 6 ? 9.5 : 11, INK);
+    });
+    out += '<ellipse cx="160" cy="72" rx="46" ry="20" fill="#fdf2f8" stroke="' + MARK + '" stroke-width="3"/>' + t(160, 76, s.center || "テーマ", 12, MARK);
+    return out;
+  }
+
   T.steps = steps; T.distrib = distrib; T.kanjicard = kanjicard; T.kanjicmp = kanjicmp; T.circles = circles;
+  T.prog = prog; T.grid = grid; T.okng = okng; T.mindmap = mindmap;
 })();
