@@ -9,7 +9,7 @@
    - プレゼント：りお・りさ・papa の 間で 1日 3まいまで。おくる 人の セーブに「だれに・何を」を 書き、
        うけとる 人の アプリが GAS の LOGIN（読むだけ）で それを 読んで うけとる。相手の セーブには 書きこまない。GAS の 変更なし
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
-   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r}]／
+   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
    ===================================================================== */
@@ -216,7 +216,7 @@
     '.stk-note{font-size:11.5px;font-weight:700;color:#6b5a85;line-height:1.6}' +
     '.stk-page{position:relative;width:100%;aspect-ratio:4/5;border-radius:18px;overflow:hidden;border:3px solid #c4b5fd;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.stk-page.p0{background:radial-gradient(#ddd6fe 1.4px,transparent 1.6px) 0 0/18px 18px,#faf5ff}.stk-page.p1{background:radial-gradient(#fde68a 1px,transparent 1.3px) 6px 9px/34px 34px,radial-gradient(#fff 1px,transparent 1.2px) 20px 24px/46px 46px,linear-gradient(170deg,#1f1b2e,#4c1d95)}.stk-page.p2{background:repeating-linear-gradient(135deg,#fdf2f8 0 14px,#fff 14px 28px)}' +
-    '.stk-it{position:absolute;transform-origin:center;cursor:grab;touch-action:none;filter:drop-shadow(0 2px 2px rgba(31,27,46,.28))}.stk-it svg{width:100%;height:100%;display:block;pointer-events:none}.stk-it.sel{outline:2px dashed #db2777;outline-offset:2px;border-radius:10px}' +
+    '.stk-it{position:absolute;transform-origin:center;cursor:grab;touch-action:none;filter:drop-shadow(0 2px 2px rgba(31,27,46,.28))}.stk-it svg{width:100%;height:100%;display:block;pointer-events:none}.stk-it.sel{outline:2px dashed #db2777;outline-offset:2px;border-radius:10px}.stk-it.lk{cursor:default}.stk-it .pin{position:absolute;right:-4px;top:-6px;font-size:13px;line-height:1;filter:none}' +
     '.stk-tray{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 4px}.stk-tray button{flex:0 0 auto;position:relative;border:2px solid #ddd6fe;background:#fff;border-radius:14px;padding:4px;cursor:pointer;line-height:0}.stk-tray .cnt,.stk-grid .cnt{position:absolute;right:-4px;top:-6px;background:#1f1b2e;color:#fde68a;font:900 10px "Zen Maru Gothic";border-radius:999px;padding:2px 6px;line-height:1.2}' +
     '.stk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.stk-grid .c{position:relative;border:2px solid #ede9fe;background:#fff;border-radius:14px;padding:5px 3px 4px;text-align:center}.stk-grid .c.no svg{filter:brightness(0) opacity(.13)}.stk-grid .nm{font-size:9.5px;font-weight:800;color:#5b4b73;line-height:1.25;margin-top:2px;min-height:2.4em}' +
     '.stk-grid .c.r2{border-color:#bfdbfe}.stk-grid .c.r3{border-color:#fde68a}.stk-grid .c.r4{border-color:#f0abfc;background:linear-gradient(160deg,#fff,#fdf4ff)}.stk-grid .c.pick{border-color:#db2777;box-shadow:0 0 0 2px #fbcfe8}' +
@@ -258,14 +258,15 @@
     var d = ensure(), pg = d.stickerPages[ui.page] || [];
     var items = pg.map(function (x, i) {
       var sz = 20 * (x.z || 1);
-      return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + svg(x.s, 60) + '</div>';
+      return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + svg(x.s, 60) + (x.lk ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
     }).join("");
     var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("");
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
-      '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button></div>'
-      : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。</div>';
+      '<button type="button" class="stk-mini" data-a="lock" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 固定する") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
+      : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + ["ゆめ", "よぞら", "しましま"][i] + '（' + (d.stickerPages[i] || []).length + '）</button>'; }).join("") + '</div>' +
       '<div class="stk-page p' + ui.page + '" id="stk-page">' + items + '</div>' + tools +
+      (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>');
   }
   function bindPage() {
@@ -274,14 +275,25 @@
     page.onpointerdown = function (e) {
       var it = e.target.closest(".stk-it");
       if (!it) { if (ui.sel !== -1) { ui.sel = -1; render(); } return; }
-      var i = Number(it.getAttribute("data-i")), rc = page.getBoundingClientRect(), x = ensure().stickerPages[ui.page][i];
-      drag = { i: i, el: it, rc: rc, moved: false, dx: e.clientX - (rc.left + rc.width * x.x / 100), dy: e.clientY - (rc.top + rc.height * x.y / 100) };
+      var pgArr = ensure().stickerPages[ui.page];
+      // 重なって いる とき：えらんで いる シールが 指の 下に あれば それを 動かす。なければ いちばん 上の 固定して いない シール。
+      // 固定した シールは 動かさない（ほかの シールを 動かそうと して いっしょに ずれる のを ふせぐ）
+      if (document.elementsFromPoint) {
+        var hits = document.elementsFromPoint(e.clientX, e.clientY).filter(function (el) { return el.classList && el.classList.contains("stk-it"); });
+        var selHit = hits.filter(function (el) { return Number(el.getAttribute("data-i")) === ui.sel; })[0];
+        var free1 = hits.filter(function (el) { return !el.classList.contains("lk"); })[0];
+        it = selHit || free1 || it;
+      }
+      var i = Number(it.getAttribute("data-i")), rc = page.getBoundingClientRect(), x = pgArr[i];
+      drag = { i: i, el: it, rc: rc, moved: false, lk: !!x.lk, sx: e.clientX, sy: e.clientY, dx: e.clientX - (rc.left + rc.width * x.x / 100), dy: e.clientY - (rc.top + rc.height * x.y / 100) };
       try { page.setPointerCapture(e.pointerId); } catch (er) {}
       e.preventDefault();
     };
     page.onpointermove = function (e) {
       if (!drag) return;
-      var x = ensure().stickerPages[ui.page][drag.i]; if (!x) return;
+      var x = ensure().stickerPages[ui.page][drag.i]; if (!x || drag.lk || x.lk) return;
+      // 指が 少し ぶれた くらい（6px 未満）では 動かさない＝おして えらぶ だけで 位置が ずれない
+      if (!drag.moved && Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 6) return;
       var nx = Math.max(4, Math.min(96, (e.clientX - drag.dx - drag.rc.left) / drag.rc.width * 100)), ny = Math.max(4, Math.min(96, (e.clientY - drag.dy - drag.rc.top) / drag.rc.height * 100));
       if (Math.abs(nx - x.x) + Math.abs(ny - x.y) > 0.6) drag.moved = true;
       x.x = Math.round(nx * 10) / 10; x.y = Math.round(ny * 10) / 10; drag.el.style.left = x.x + "%"; drag.el.style.top = x.y + "%";
@@ -396,7 +408,10 @@
     if (a === "gpick") { ui.giftPick = ui.giftPick === v ? "" : v; return render(); }
     if (a === "send") return sendGift();
     if (a === "check") return checkInbox();
+    if (a === "lockall" || a === "unlockall") { pg.forEach(function (y) { if (a === "lockall") y.lk = 1; else delete y.lk; }); toast(a === "lockall" ? "この ページの シールを ぜんぶ 固定したよ 📌" : "固定を はずしたよ"); save(); return render(); }
     if (!x) return;
+    if (a === "lock") { if (x.lk) delete x.lk; else x.lk = 1; save(); return render(); }
+    if (x.lk && a !== "peel" && a !== "front") return;
     if (a === "big") x.z = Math.min(2.2, Math.round(((x.z || 1) + 0.2) * 10) / 10);
     if (a === "small") x.z = Math.max(0.5, Math.round(((x.z || 1) - 0.2) * 10) / 10);
     if (a === "rot") x.r = ((x.r || 0) + 15) % 360;
