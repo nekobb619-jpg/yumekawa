@@ -9,8 +9,9 @@
    - プレゼント：りお・りさ・papa の 間で 1日 3まいまで。おくる 人の セーブに「だれに・何を」を 書き、
        うけとる 人の アプリが GAS の LOGIN（読むだけ）で それを 読んで うけとる。相手の セーブには 書きこまない。GAS の 変更なし
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
-   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景）／
+   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
+   - ★2026-10-17：しゃしんの 背景（30Q、たんまつの 中だけ）、シルエットの ねこ 3ポーズ×3色、きせかえ 8種を 追加（68種類）
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
    ===================================================================== */
 (function () {
@@ -43,6 +44,29 @@
     return PA("M27 33 Q37 33 34 23", null, K, 3) + PA("M12 36 Q11 22 20 21 Q29 22 28 36z", K) + E(20, 14, 8, 7, K) + PA("M13 11 L13.5 3 L19 8z M27 11 L26.5 3 L21 8z", K) +
       E(16.8, 14, 1.5, 1.9, GL) + E(23.2, 14, 1.5, 1.9, GL) + PA("M14.5 20.5 Q20 23.5 25.5 20.5", null, PL, 2) + C(20, 23, 1.4, G);
   }
+
+  // ★2026-10-17：シルエットの ねこ 3ポーズ（つきを 見る／のびーる／すやすや）。色ちがい（くろ・しろ・きん）は 同じ 形で 色だけ かえる
+  //   f＝からだの 色、ln＝ふちどり（白い ねこ用）、ey＝目の 線の 色
+  function sk(d, f, ln, w) { return (ln ? PA(d, null, ln, w + 1.8) : "") + PA(d, null, f, w); }
+  function silCat(pose, f, ln, ey) {
+    var o = "";
+    if (pose === "back") {
+      o += sk("M26 36 Q36 37 35 30 Q34 26 31 27", f, ln, 2.8);
+      o += PA("M13 37 Q9 26 14 20 Q16 17 20 17 Q24 17 26 20 Q31 26 27 37z", f, ln) + E(20, 13, 6.5, 6, f, ln) + PA("M14.5 10 L14.8 3.5 L18.5 7.5z M25.5 10 L25.2 3.5 L21.5 7.5z", f, ln);
+      o += PA("M33 3 A6 6 0 1 0 38 11 A4.6 4.6 0 1 1 33 3z", GL, "#f59e0b", 1) + SP(6, 8, 2.6, GL) + SP(9, 26, 1.8, PLL);
+    } else if (pose === "stretch") {
+      o += sk("M33 21 Q37 12 32 6", f, ln, 2.6) + sk("M6 31 L1.5 33 M10 31 L5.5 34.5", f, ln, 2.6) + sk("M28 27 L29 36 M32 26 L33.5 36", f, ln, 2.8);
+      o += PA("M7 30 Q8 26 13 26 L24 22 Q31 18 34 22 Q35 27 30 28 L14 31z", f, ln) + E(9, 27, 5, 4.5, f, ln) + PA("M5 25 L4.5 19.5 L8.5 23z M11 23.5 L12 18.5 L14 23z", f, ln);
+      o += PA("M6.6 27 q1 .9 2 0 M10 27 q1 .9 2 0", null, ey, 1) + SP(22, 10, 2.4, G) + SP(15, 15, 1.6, PLL);
+    } else {
+      o += E(21, 26, 13, 8.5, f, ln) + C(10, 24, 6, f, ln) + PA("M6 20 L5 13.5 L10 18z M12 18.5 L14.5 13 L15.5 19z", f, ln);
+      o += sk("M33 28 Q34 35 22 35 Q13 35 11 31", f, ln, 3) + PA("M7.4 24.5 q1.2 1 2.4 0", null, ey, 1.1);
+      o += '<text x="26" y="14" font-size="7" font-weight="900" fill="' + PL + '">z</text><text x="31" y="9" font-size="5" font-weight="900" fill="' + PLL + '">z</text>';
+    }
+    return o;
+  }
+  var CATC = { kuro: [K, null, GL], shiro: [W, "#a8a2b8", "#7c3aed"], kin: [G, "#d97706", "#7c2d12"] };
+  function beret(c, d) { return E(20, 25, 15, 7.5, c, d) + PA("M6 25 Q20 31 34 25", null, d, 1.2) + PA("M20 17.5 v-4", null, d, 2.4) + shine(13, 22); }
 
   var ART = {
     h_purple: function () { return H(20, 20, 13, P) + shine(13, 14); },
@@ -95,6 +119,23 @@
     star_shades: function () { return S5(11, 20, 8.6, K) + S5(29, 20, 8.6, K) + PA("M17 19 q3 -2 6 0", null, K, 2.2) + PA("M8 17.5 l2 -1.5 M26 17.5 l2 -1.5", null, W, 1.3); },
     mona: function () { return PA("M26 9 L33 5 Q34 10 31 13z M26 9 L20 4 Q18 9 21 12z", PKL, "#db2777") + C(26, 9.5, 2.2, PK) + E(20, 23, 15, 12.5, W, "#d9d2e3") + C(14, 21.5, 2.6, K) + C(26, 21.5, 2.6, K) + C(15, 20.4, 1, W) + C(27, 20.4, 1, W) + E(20, 25.5, 1.9, 1.4, K) + PA("M17.6 28 q2.4 1.9 4.8 0", null, K, 1.2) + E(10.5, 26, 3.4, 2.2, "#fb7185").replace("/>", ' opacity=".8"/>') + E(29.5, 26, 3.4, 2.2, "#fb7185").replace("/>", ' opacity=".8"/>'); },
 
+    cat_back: function () { return silCat("back", CATC.kuro[0], CATC.kuro[1], CATC.kuro[2]); },
+    cat_stretch: function () { return silCat("stretch", CATC.kuro[0], CATC.kuro[1], CATC.kuro[2]); },
+    cat_sleep: function () { return silCat("sleep", CATC.kuro[0], CATC.kuro[1], CATC.kuro[2]); },
+    cat_back_w: function () { return silCat("back", CATC.shiro[0], CATC.shiro[1], CATC.shiro[2]); },
+    cat_stretch_w: function () { return silCat("stretch", CATC.shiro[0], CATC.shiro[1], CATC.shiro[2]); },
+    cat_sleep_w: function () { return silCat("sleep", CATC.shiro[0], CATC.shiro[1], CATC.shiro[2]); },
+    cat_back_g: function () { return silCat("back", CATC.kin[0], CATC.kin[1], CATC.kin[2]) + SP(9, 16, 2.4, W); },
+    cat_stretch_g: function () { return silCat("stretch", CATC.kin[0], CATC.kin[1], CATC.kin[2]) + SP(36, 30, 2.4, W); },
+    cat_sleep_g: function () { return silCat("sleep", CATC.kin[0], CATC.kin[1], CATC.kin[2]) + SP(5, 33, 2.4, W); },
+    majo_hat: function () { return E(20, 31, 17, 4.6, K, P) + PA("M10 31 Q16 21 18 7 Q19 3 24 5 Q22 17 30 31z", K, P, 1.2) + PA("M11.6 27.4 Q20 30.4 28.4 27.4 L29.4 30.2 Q20 33.2 10.6 30.2z", P) + S5(24, 15, 3.4, G) + SP(31, 8, 2.4, PLL); },
+    beret_pk: function () { return beret(PKL, "#db2777"); },
+    beret_bk: function () { return beret(K, P) + C(28, 24, 1.6, PLL); },
+    bell: function () { return PA("M4 14 Q20 25 36 14", null, "#f43f5e", 3.6) + C(20, 25.5, 5.4, G, "#d97706") + PA("M15 25 h10", null, "#b45309", 1.1) + C(20, 28, 1.1, "#b45309") + shine(17.5, 23); },
+    cape: function () { return PA("M7 11 Q20 19 33 11 L38 37 Q20 31 2 37z", P, "#4c1d95", 1.3) + PA("M7 11 Q20 19 33 11", null, PLL, 2.2) + C(20, 16.5, 2.6, G, "#d97706") + S5(11, 28, 2.8, G) + S5(29, 30, 2.2, GL) + SP(20, 27, 2, W); },
+    sailor: function () { return PA("M3 9 L20 23 L37 9 L37 21 L20 35 L3 21z", "#1e3a8a", "#172554", 1.2) + PA("M6 13.5 L20 25 L34 13.5", null, W, 1.4) + PA("M20 25 L13 36 L20 32 L27 36z", "#f43f5e", "#be123c", 1.1) + C(20, 26, 2.6, "#fb7185", "#be123c"); },
+    hoppe: function () { return H(9, 23, 3.6, PK) + H(31, 23, 3.6, PK) + SP(4, 16, 1.8, PLL) + SP(36, 16, 1.8, PLL); },
+    ashiato: function () { var o = ""; [[5, 8, -20], [11, 3.5, -20], [35, 30, 160], [29, 35, 160], [3, 30, 70], [37, 9, -110]].forEach(function (p) { o += '<g transform="translate(' + p[0] + ' ' + p[1] + ') rotate(' + p[2] + ') scale(.22) translate(-20 -22)" opacity=".8">' + E(20, 27, 9, 7, PL) + C(9, 17, 3.6, PL) + C(16, 11, 3.9, PL) + C(24, 11, 3.9, PL) + C(31, 17, 3.6, PL) + '</g>'; }); return o; },
     cat_moon: function () { return PA("M25 3 A17 17 0 1 0 37 29 A14 14 0 1 1 25 3z", GL, "#f59e0b", 1.5) + '<g transform="translate(5 9.5) scale(.6)">' + catSit() + '</g>' + SP(32, 9, 3.6, PL) + SP(35, 19, 2.2, W) + SP(28, 16, 1.8, PK); },
     tiara: function () { return PA("M5 29 Q20 17 35 29", null, PLL, 3.2) + PA("M10 24 L12 15 L16 21 M30 24 L28 15 L24 21", PLL, P, 1.2) + PA("M16 21 L20 6 L24 21z", "#ede9fe", P, 1.3) + H(20, 15, 3.6, PK) + C(12, 15, 1.6, G) + C(28, 15, 1.6, G) + SP(20, 4.5, 2.6, G) + SP(33, 12, 2.2, W) + SP(7, 12, 2.2, W); },
     wings: function () { var o = ""; [[0, 1], [40, -1]].forEach(function (s) { var x = s[0], d = s[1]; o += PA("M" + (x + d * 10) + " 24 Q" + (x + d * 1) + " 20 " + (x + d * 2) + " 9 Q" + (x + d * 8) + " 12 " + (x + d * 11) + " 18z", W, PLL, 1.3) + PA("M" + (x + d * 10) + " 27 Q" + (x + d * 2) + " 27 " + (x + d * 1) + " 19 Q" + (x + d * 7) + " 20 " + (x + d * 11) + " 23z", W, PLL, 1.3) + PA("M" + (x + d * 10) + " 30 Q" + (x + d * 4) + " 33 " + (x + d * 2) + " 27 Q" + (x + d * 7) + " 26 " + (x + d * 11) + " 27z", W, PLL, 1.3); }); return o + SP(20, 4, 2.4, G); },
@@ -108,6 +149,11 @@
     cat_face: ["くろねこの かお", 2], glasses: ["まるめがね", 2, "face"], bowtie: ["ちょうネクタイ", 2, "body"], halo: ["てんしの わっか", 2, "head"], pearls: ["パールの ネックレス", 2, "body"], puppy_face: ["しろい こいぬの かお", 2], orca_tail: ["シャチの しっぽ", 2], hearts_ar: ["ハートの まわり", 2, "around"],
     cat_sit: ["おすわり くろねこ", 3], cat_walk: ["おさんぽ くろねこ", 3], orca_jump: ["ジャンプする シャチ", 3], orca_face: ["シャチの かお", 3], puppy_sit: ["おすわり こいぬ", 3], crown: ["おうかん", 3, "head"], cat_ears: ["ねこみみ", 3, "head"],
     scarf: ["むらさきの マフラー", 3, "body"], spark_fr: ["キラキラの まわり", 3, "around"], gem: ["ほうせき", 3], shoot: ["ながれぼし", 3], star_shades: ["ほしの サングラス", 3, "face"], mona: ["モナちゃん", 3],
+    cat_back: ["つきを 見る くろねこ", 2], cat_stretch: ["のびーる くろねこ", 2], cat_sleep: ["すやすや くろねこ", 2],
+    beret_pk: ["ピンクの ベレーぼう", 2, "head"], beret_bk: ["くろい ベレーぼう", 2, "head"], bell: ["すずの くびわ", 2, "body"], hoppe: ["ほっぺの ハート", 2, "face"],
+    cat_back_w: ["つきを 見る しろねこ", 3], cat_stretch_w: ["のびーる しろねこ", 3], cat_sleep_w: ["すやすや しろねこ", 3],
+    majo_hat: ["まじょの ぼうし", 3, "head"], cape: ["まほうの ケープ", 3, "body"], sailor: ["セーラーの えり", 3, "body"], ashiato: ["あしあとの まわり", 3, "around"],
+    cat_back_g: ["つきを 見る きんいろ ねこ", 4], cat_stretch_g: ["のびーる きんいろ ねこ", 4], cat_sleep_g: ["すやすや きんいろ ねこ", 4],
     cat_moon: ["月と くろねこ", 4], tiara: ["ティアラ", 4, "head"], wings: ["てんしの はね", 4, "around"], rainbow_ar: ["にじの オーラ", 4, "around"]
   };
   var LIST = Object.keys(NAMES).map(function (id) { return { id: id, name: NAMES[id][0], r: NAMES[id][1], wear: NAMES[id][2] || null, art: ART[id] }; });
@@ -153,7 +199,50 @@
   function log(msg) { try { if (window.syncWithGoogleSpreadsheet && window.saveData) window.syncWithGoogleSpreadsheet("LOG", { stage: "🎀シール帳", msg: msg }); } catch (e) {} }
   function save() { if (window.saveGame) window.saveGame(); }
   function hasBg(id) { var b = BGBY[id]; return !!b && (b.free || ensure().stickerBgs.indexOf(id) >= 0); }
-  function pageBg(i) { var id = ensure().stickerPageBg[i]; return BGBY[id] && hasBg(id) ? BGBY[id] : BGS[i]; }
+  function pageBg(i) {
+    var id = ensure().stickerPageBg[i];
+    if (id === "photo") { var ph = photoGet(i); if (ph) return { id: "photo", n: "しゃしん", css: photoCss(ph) }; return BGS[i]; }
+    return BGBY[id] && hasBg(id) ? BGBY[id] : BGS[i];
+  }
+  // ★2026-10-17：じぶんで とった しゃしんを 背景に（30Q）。しゃしんは この たんまつの localStorage だけに おく
+  //   （セーブ＝GAS には 送らない：1行 50,000文字の 上限と、家の 中や 人が うつる かもしれない ため）。
+  //   セーブには「photo」と いう しるしだけ。ほかの たんまつでは しゃしんが ないので、その ページの 最初の 背景に もどって 見える
+  var PHOTO_COST = 30, PHOTO_W = 480, PHOTO_H = 600;
+  function photoKey(i) { return "kids_lab_stkphoto_" + (window.playerId || "") + "_" + i; }
+  function photoGet(i) { try { return localStorage.getItem(photoKey(i)) || ""; } catch (e) { return ""; } }
+  function photoCss(url) { return "url('" + url + "') center/cover no-repeat,#f5f3ff"; }
+  function takePhoto() {
+    var inp = document.getElementById("stk-photo-in");
+    if (!inp) {
+      inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.setAttribute("capture", "environment"); inp.id = "stk-photo-in"; inp.style.display = "none";
+      document.body.appendChild(inp);
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0]; inp.value = ""; if (!f) return;
+        var url = URL.createObjectURL(f), img = new Image();
+        img.onload = function () {
+          // ページと 同じ 4:5 に まん中を 切りぬいて 小さく する
+          var cv = document.createElement("canvas"); cv.width = PHOTO_W; cv.height = PHOTO_H;
+          var r = PHOTO_W / PHOTO_H, sw = img.width, sh = img.height;
+          if (sw / sh > r) sw = sh * r; else sh = sw / r;
+          cv.getContext("2d").drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, PHOTO_W, PHOTO_H);
+          URL.revokeObjectURL(url);
+          ui.photoPrev = cv.toDataURL("image/jpeg", 0.72); ui.bgOpen = true; render();
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); toast("しゃしんが 読みこめなかったよ。もう一度 とってね"); };
+        img.src = url;
+      };
+    }
+    inp.click();
+  }
+  function photoPanelHtml() {
+    var q = Number((window.saveData || {}).q || 0);
+    return '<div class="stk-note" style="text-align:center;margin-top:8px;background:#fdf4ff;border:2px solid #f0abfc;border-radius:14px;padding:8px">' +
+      'この しゃしんを ' + (ui.page + 1) + 'ページの 背景に する？（' + PHOTO_COST + 'Q）　いまの Q：' + q + '<br>' +
+      '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px">' +
+      '<button type="button" class="stk-mini" data-a="photook" style="background:#db2777;color:#fff;border-color:#db2777"' + (q < PHOTO_COST ? ' disabled' : '') + '>✅ これに する（' + PHOTO_COST + 'Q）</button>' +
+      '<button type="button" class="stk-mini" data-a="photo">📷 とりなおす</button><button type="button" class="stk-mini" data-a="photono">やめる</button></div>' +
+      (q < PHOTO_COST ? '<div style="margin-top:4px">あと ' + (PHOTO_COST - q) + 'Q たまったら 背景に できるよ</div>' : '') + '</div>';
+  }
   function owned(id) { return Number(ensure().stickers[id] || 0); }
   function placed(id) { var c = 0; ensure().stickerPages.forEach(function (p) { p.forEach(function (x) { if (x.s === id) c++; }); }); return c; }
   function free(id) { return Math.max(0, owned(id) - placed(id)); }
@@ -245,7 +334,7 @@
     '.stk-rv{background:linear-gradient(160deg,#fff,#f5f3ff);border-radius:26px;padding:20px 18px;max-width:320px;width:100%;text-align:center;border:4px solid #ddd6fe;animation:stkPop .45s ease-out}.stk-rv.r2{border-color:#93c5fd}.stk-rv.r3{border-color:#fbbf24;box-shadow:0 0 30px rgba(251,191,36,.5)}.stk-rv.r4{border-color:#e879f9;box-shadow:0 0 44px rgba(232,121,249,.7)}' +
     '.stk-rv-star{color:#f59e0b;font-weight:900;font-size:16px}.stk-rv-name{font-size:19px;font-weight:900;color:#5b21b6;margin:2px 0}.stk-rv-sub{font-size:12px;font-weight:800;color:#6b5a85;margin-bottom:12px;line-height:1.6}' +
     '@keyframes stkPop{0%{transform:scale(.4) rotate(-8deg);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}';
-  function close() { var m = document.getElementById("stk-modal"); if (m) m.remove(); if (window.renderTutorPlan) { try { window.renderTutorPlan(); } catch (e) {} } }
+  function close() { ui.photoPrev = null; var m = document.getElementById("stk-modal"); if (m) m.remove(); if (window.renderTutorPlan) { try { window.renderTutorPlan(); } catch (e) {} } }
   window.closeStickerBook = close;
   window.openStickerBook = function (tab) {
     if (!window.saveData) return;
@@ -286,7 +375,7 @@
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + (d.stickerPages[i] || []).length + '）</button>'; }).join("") + '</div>' +
-      '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>' + tools +
+      '<div class="stk-page" id="stk-page" style="background:' + (ui.photoPrev ? photoCss(ui.photoPrev) : pageBg(ui.page).css) + '">' + items + '</div>' + (ui.photoPrev ? photoPanelHtml() : tools) +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
       '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>');
@@ -297,7 +386,13 @@
       '<div class="stk-grid" style="margin-top:6px">' + BGS.map(function (b) {
         var own = hasBg(b.id), on = cur === b.id || (!BGBY[cur] && pageBg(ui.page).id === b.id);
         return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
-      }).join("") + '</div>';
+      }).join("") + photoCardsHtml() + '</div>' +
+      '<div class="stk-note" style="text-align:center;margin-top:4px">📷 しゃしんは この たんまつの 中だけに のこるよ。人の かおや 名前・住所が うつらない ように とろう。</div>';
+  }
+  function photoCardsHtml() {
+    var d = ensure(), ph = photoGet(ui.page), on = d.stickerPageBg[ui.page] === "photo" && ph;
+    return (ph ? '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bgphoto" style="cursor:pointer;padding:4px" aria-label="とった しゃしん"><div style="height:44px;border-radius:10px;background:' + photoCss(ph) + '"></div><div class="nm">しゃしん<br>' + (on ? "つかってる" : "えらぶ") + '</div></button>' : '') +
+      '<button type="button" class="c" data-a="photo" style="cursor:pointer;padding:4px" aria-label="しゃしんを とって 背景に する（' + PHOTO_COST + 'Q）"><div style="height:44px;border-radius:10px;background:#fdf4ff;display:flex;align-items:center;justify-content:center;font-size:24px">📷</div><div class="nm">' + (ph ? "とりなおす" : "しゃしんを とる") + '<br>' + PHOTO_COST + 'Q</div></button>';
   }
   function bindPage() {
     var page = document.getElementById("stk-page"); if (!page) return;
@@ -439,6 +534,19 @@
     if (a === "send") return sendGift();
     if (a === "check") return checkInbox();
     if (a === "bgopen") { ui.bgOpen = !ui.bgOpen; return render(); }
+    if (a === "photo") return takePhoto();
+    if (a === "photono") { ui.photoPrev = null; return render(); }
+    if (a === "bgphoto") { if (photoGet(ui.page)) { d.stickerPageBg[ui.page] = "photo"; save(); } return render(); }
+    if (a === "photook") {
+      var pq = Number((window.saveData || {}).q || 0);
+      if (!ui.photoPrev) return render();
+      if (pq < PHOTO_COST) { toast("あと " + (PHOTO_COST - pq) + "Q で しゃしんを 背景に できるよ"); return; }
+      try { localStorage.setItem(photoKey(ui.page), ui.photoPrev); } catch (e) { toast("この たんまつに しゃしんを 入れる 場所が たりないよ"); return; }
+      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo"; ui.photoPrev = null;
+      log((ui.page + 1) + "ページの 背景を しゃしんに した（" + PHOTO_COST + "Q）");
+      if (window.updateUI) { try { window.updateUI(); } catch (e) {} }
+      toast("📷 しゃしんを 背景に したよ"); save(); return render();
+    }
     if (a === "bg") {
       var b = BGBY[v]; if (!b) return;
       if (!hasBg(v)) {
