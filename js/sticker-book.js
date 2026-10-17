@@ -11,7 +11,7 @@
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
    - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerBoards{背景id（しゃしんは photo:<id>）:[{s,x,y,z,r,lk}]}＝背景ごとの はり方（★2026-10-17。前の stickerPages[3] は 最初に うつした あとは 使わない）（lk＝固定。📌 は えらんだ ときだけ 見せる＝ふだんの ページには 出さない）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
-   - ★2026-10-17：しゃしんの 背景（30Q、たんまつの 中だけ）、シルエットの ねこ 3ポーズ×3色、きせかえ 8種を 追加（68種類）
+   - ★2026-10-17：しゃしんの 背景（10Q、たんまつの 中だけ）、シルエットの ねこ 3ポーズ×3色、きせかえ 8種を 追加（68種類）
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
    ===================================================================== */
 (function () {
@@ -159,7 +159,7 @@
   var LIST = Object.keys(NAMES).map(function (id) { return { id: id, name: NAMES[id][0], r: NAMES[id][1], wear: NAMES[id][2] || null, art: ART[id] }; });
   var BY = {}; LIST.forEach(function (s) { BY[s.id] = s; });
   // ★2026-10-16：はる ページの 背景。はじめの 3つは 無料、ほかは Q で 買う（1回 買えば ずっと 使える）
-  var BG_COST = 30;
+  var BG_COST = 10; // ★2026-10-17：30Q → 10Q（保護者）
   var BGS = [
     { id: "yume", n: "ゆめ", free: 1, css: "radial-gradient(#ddd6fe 1.4px,transparent 1.6px) 0 0/18px 18px,#faf5ff" },
     { id: "yozora", n: "よぞら", free: 1, css: "radial-gradient(#fde68a 1px,transparent 1.3px) 6px 9px/34px 34px,radial-gradient(#fff 1px,transparent 1.2px) 20px 24px/46px 46px,linear-gradient(170deg,#1f1b2e,#4c1d95)" },
@@ -236,10 +236,10 @@
     if (isPhoto(id)) { var ph = photoGet(pid(id)); if (ph) return { id: id, n: "しゃしん", css: photoCss(ph) }; return BGS[i]; }
     return BGBY[id] && hasBg(id) ? BGBY[id] : BGS[i];
   }
-  // ★2026-10-17：じぶんで とった しゃしんを 背景に（30Q）。しゃしんは この たんまつの localStorage だけに おく
+  // ★2026-10-17：じぶんで とった しゃしんを 背景に（10Q）。しゃしんは この たんまつの localStorage だけに おく
   //   （セーブ＝GAS には 送らない：1行 50,000文字の 上限と、家の 中や 人が うつる かもしれない ため）。
   //   セーブには「photo」と いう しるしだけ。ほかの たんまつでは しゃしんが ないので、その ページの 最初の 背景に もどって 見える
-  var PHOTO_COST = 30, PHOTO_W = 480, PHOTO_H = 600;
+  var PHOTO_COST = 10, /* ★2026-10-17：30Q → 10Q（保護者） */ PHOTO_W = 480, PHOTO_H = 600;
   // ★2026-10-17：しゃしんは アルバムの ように いくつでも のこす（PHOTO_MAX まで）。背景 id は "photo:<しゃしんid>"、
   //   シールの 台紙も しゃしんごと。しゃしんの 一覧は localStorage kids_lab_stkphotos_<playerId>（[id…] 古い 順）。
   //   前の ページごとの しゃしん（id 0〜2）は キーが 同じ なので そのまま 使える
