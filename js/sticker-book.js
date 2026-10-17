@@ -9,7 +9,7 @@
    - プレゼント：りお・りさ・papa の 間で 1日 3まいまで。おくる 人の セーブに「だれに・何を」を 書き、
        うけとる 人の アプリが GAS の LOGIN（読むだけ）で それを 読んで うけとる。相手の セーブには 書きこまない。GAS の 変更なし
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
-   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定。📌 は えらんだ ときだけ 見せる＝ふだんの ページには 出さない）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
+   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerBoards{背景id（しゃしんは photo0〜2）:[{s,x,y,z,r,lk}]}＝背景ごとの はり方（★2026-10-17。前の stickerPages[3] は 最初に うつした あとは 使わない）（lk＝固定。📌 は えらんだ ときだけ 見せる＝ふだんの ページには 出さない）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
    - ★2026-10-17：しゃしんの 背景（30Q、たんまつの 中だけ）、シルエットの ねこ 3ポーズ×3色、きせかえ 8種を 追加（68種類）
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
@@ -184,6 +184,17 @@
     d.stickerPacks = Number(d.stickerPacks || 0);
     if (!Array.isArray(d.stickerPages)) d.stickerPages = [[], [], []];
     while (d.stickerPages.length < 3) d.stickerPages.push([]);
+    // ★2026-10-17：シールは「背景ごと」に はる（stickerBoards{背景id:[...]}）。背景を かえると その背景の はり方に かわる。
+    //   前の stickerPages（ページごと）は、はじめて 開いた ときに その ページの 背景の 台紙へ うつす（stickerPages は もう 書きかえない）
+    if (!d.stickerBoards || typeof d.stickerBoards !== "object") {
+      d.stickerBoards = {};
+      var bgs0 = Array.isArray(d.stickerPageBg) ? d.stickerPageBg : ["yume", "yozora", "shima"];
+      d.stickerPages.forEach(function (pg, i) {
+        if (!Array.isArray(pg) || !pg.length) return;
+        var id = bgs0[i] || ["yume", "yozora", "shima"][i], k = id === "photo" ? "photo" + i : id;
+        d.stickerBoards[k] = (d.stickerBoards[k] || []).concat(pg);
+      });
+    }
     if (!d.stickerWear || typeof d.stickerWear !== "object") d.stickerWear = {};
     if (!Array.isArray(d.stickerOut)) d.stickerOut = [];
     if (!Array.isArray(d.stickerSeen)) d.stickerSeen = [];
@@ -244,7 +255,12 @@
       (q < PHOTO_COST ? '<div style="margin-top:4px">あと ' + (PHOTO_COST - q) + 'Q たまったら 背景に できるよ</div>' : '') + '</div>';
   }
   function owned(id) { return Number(ensure().stickers[id] || 0); }
-  function placed(id) { var c = 0; ensure().stickerPages.forEach(function (p) { p.forEach(function (x) { if (x.s === id) c++; }); }); return c; }
+  // ページ i に 出て いる 背景の 台紙の かぎ（しゃしんは ページごとに べつ）
+  function boardKey(i) { var id = ensure().stickerPageBg[i]; return id === "photo" ? "photo" + i : pageBg(i).id; }
+  function board(i) { var d = ensure(), k = boardKey(i); if (!Array.isArray(d.stickerBoards[k])) d.stickerBoards[k] = []; return d.stickerBoards[k]; }
+  function boardLen(k) { var b = ensure().stickerBoards[k]; return Array.isArray(b) ? b.length : 0; }
+  // どの 背景に はって いても 1まいは 1まい（ほかの 背景に はるには、はがして から）
+  function placed(id) { var c = 0, bs = ensure().stickerBoards; Object.keys(bs).forEach(function (k) { (bs[k] || []).forEach(function (x) { if (x.s === id) c++; }); }); return c; }
   function free(id) { return Math.max(0, owned(id) - placed(id)); }
   function totalOwned() { var d = ensure(), c = 0; Object.keys(d.stickers).forEach(function (k) { if (BY[k] && d.stickers[k] > 0) c++; }); return c; }
   function toast(html) {
@@ -385,7 +401,7 @@
 
   /* ---- はる ---- */
   function bookHtml() {
-    var d = ensure(), pg = d.stickerPages[ui.page] || [];
+    var d = ensure(), pg = board(ui.page);
     var items = pg.map(function (x, i) {
       var sz = 20 * (x.z || 1);
       return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + svg(x.s, 60) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
@@ -394,7 +410,7 @@
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
-    return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + (d.stickerPages[i] || []).length + '）</button>'; }).join("") + '</div>' +
+    return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + boardLen(boardKey(i)) + '）</button>'; }).join("") + '</div>' +
       '<div class="stk-page" id="stk-page" style="background:' + (ui.photoPrev ? photoCss(ui.photoPrev) : pageBg(ui.page).css) + '">' + items + '</div>' + (ui.photoPrev ? photoPanelHtml() : tools) +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
@@ -405,7 +421,7 @@
     return '<div class="stk-note" style="text-align:center;margin-top:6px">この ページの 背景を えらぼう。🔒 は ' + BG_COST + 'Q で 買えるよ（1回 買えば どの ページでも ずっと 使える）。いまの Q：' + Number((window.saveData || {}).q || 0) + '</div>' +
       '<div class="stk-grid" style="margin-top:6px">' + BGS.map(function (b) {
         var own = hasBg(b.id), on = cur === b.id || (!BGBY[cur] && pageBg(ui.page).id === b.id);
-        return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
+        return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + (boardLen(b.id) ? ' 🎀' + boardLen(b.id) : '') + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
       }).join("") + photoCardsHtml() + '</div>' +
       '<div class="stk-note" style="text-align:center;margin-top:4px">📷 しゃしんは この たんまつの 中だけに のこるよ。人の かおや 名前・住所が うつらない ように とろう。</div>';
   }
@@ -420,7 +436,7 @@
     page.onpointerdown = function (e) {
       var it = e.target.closest(".stk-it");
       if (!it) { if (ui.sel !== -1) { ui.sel = -1; render(); } return; }
-      var pgArr = ensure().stickerPages[ui.page];
+      var pgArr = board(ui.page);
       // 重なって いる とき：えらんで いる シールが 指の 下に あれば それを 動かす。なければ いちばん 上の 固定して いない シール。
       // 固定した シールは 動かさない（ほかの シールを 動かそうと して いっしょに ずれる のを ふせぐ）
       if (document.elementsFromPoint) {
@@ -436,7 +452,7 @@
     };
     page.onpointermove = function (e) {
       if (!drag) return;
-      var x = ensure().stickerPages[ui.page][drag.i]; if (!x || drag.lk || x.lk) return;
+      var x = board(ui.page)[drag.i]; if (!x || drag.lk || x.lk) return;
       // 指が 少し ぶれた くらい（6px 未満）では 動かさない＝おして えらぶ だけで 位置が ずれない
       if (!drag.moved && Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 6) return;
       var nx = Math.max(4, Math.min(96, (e.clientX - drag.dx - drag.rc.left) / drag.rc.width * 100)), ny = Math.max(4, Math.min(96, (e.clientY - drag.dy - drag.rc.top) / drag.rc.height * 100));
@@ -548,7 +564,7 @@
   }
 
   function act(a, v) {
-    var d = ensure(), pg = d.stickerPages[ui.page], x = pg && pg[ui.sel];
+    var d = ensure(), pg = board(ui.page), x = pg && pg[ui.sel];
     if (a === "close") return close();
     if (a === "tab") { ui.tab = v; ui.sel = -1; if (v === "gift") ui.inbox = null; return render(); }
     if (a === "page") { ui.page = Number(v); ui.sel = -1; return render(); }
@@ -579,19 +595,21 @@
     if (a === "bgopen") { ui.bgOpen = !ui.bgOpen; return render(); }
     if (a === "photo") return takePhoto();
     if (a === "photono") { ui.photoPrev = null; return render(); }
-    if (a === "bgphoto") { if (photoGet(ui.page)) { d.stickerPageBg[ui.page] = "photo"; save(); } return render(); }
+    if (a === "bgphoto") { if (photoGet(ui.page)) { d.stickerPageBg[ui.page] = "photo"; ui.sel = -1; save(); } return render(); }
     if (a === "photook") {
       var pq = Number((window.saveData || {}).q || 0);
       if (!ui.photoPrev) return render();
       if (pq < PHOTO_COST) { toast("あと " + (PHOTO_COST - pq) + "Q で しゃしんを 背景に できるよ"); return; }
       try { localStorage.setItem(photoKey(ui.page), ui.photoPrev); } catch (e) { toast("この たんまつに しゃしんを 入れる 場所が たりないよ"); return; }
-      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo"; ui.photoPrev = null;
+      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo"; ui.photoPrev = null; ui.sel = -1;
       log((ui.page + 1) + "ページの 背景を しゃしんに した（" + PHOTO_COST + "Q）");
       if (window.updateUI) { try { window.updateUI(); } catch (e) {} }
       toast("📷 しゃしんを 背景に したよ"); save(); return render();
     }
     if (a === "bg") {
       var b = BGBY[v]; if (!b) return;
+      var usedAt = [0, 1, 2].filter(function (j) { return j !== ui.page && boardKey(j) === v; })[0];
+      if (usedAt !== undefined) { toast("「" + b.n + "」は " + (usedAt + 1) + "ページで つかって いるよ"); return; }
       if (!hasBg(v)) {
         var q = Number((window.saveData || {}).q || 0);
         if (q < BG_COST) { toast("あと " + (BG_COST - q) + "Q で「" + b.n + "」が 買えるよ"); return; }
@@ -600,7 +618,10 @@
         log("背景「" + b.n + "」を " + BG_COST + "Q で 買った");
         if (window.updateUI) { try { window.updateUI(); } catch (e) {} }
       }
-      d.stickerPageBg[ui.page] = v; save(); return render();
+      var had = boardLen(boardKey(ui.page));
+      d.stickerPageBg[ui.page] = v; ui.sel = -1; save();
+      if (had) toast("前の 背景の シールは その 背景に のこって いるよ。もどすと また 見られるよ");
+      return render();
     }
     if (a === "lockall" || a === "unlockall") { pg.forEach(function (y) { if (a === "lockall") y.lk = 1; else delete y.lk; }); toast(a === "lockall" ? "この ページの シールを ぜんぶ 固定したよ 📌" : "固定を はずしたよ"); save(); return render(); }
     if (!x) return;

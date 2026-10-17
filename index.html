@@ -1370,6 +1370,7 @@ window.normalizeSaveData = function(data) {
   normalized.stickers = (normalized.stickers && typeof normalized.stickers === "object") ? normalized.stickers : {};
   normalized.stickerPacks = Number(normalized.stickerPacks || 0);
   normalized.stickerPages = Array.isArray(normalized.stickerPages) ? normalized.stickerPages : [[], [], []];
+  normalized.stickerBoards = (normalized.stickerBoards && typeof normalized.stickerBoards === "object" && !Array.isArray(normalized.stickerBoards)) ? normalized.stickerBoards : null; // ★2026-10-17：背景ごとの シールの はり方（null の ときは js/sticker-book.js が stickerPages から うつす）
   normalized.stickerWear = (normalized.stickerWear && typeof normalized.stickerWear === "object") ? normalized.stickerWear : {};
   normalized.stickerOut = Array.isArray(normalized.stickerOut) ? normalized.stickerOut : [];
   normalized.stickerSeen = Array.isArray(normalized.stickerSeen) ? normalized.stickerSeen : [];
