@@ -9,7 +9,7 @@
    - プレゼント：りお・りさ・papa の 間で 1日 3まいまで。おくる 人の セーブに「だれに・何を」を 書き、
        うけとる 人の アプリが GAS の LOGIN（読むだけ）で それを 読んで うけとる。相手の セーブには 書きこまない。GAS の 変更なし
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
-   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
+   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerPages[3][{s,x,y,z,r,lk}]（lk＝固定。📌 は えらんだ ときだけ 見せる＝ふだんの ページには 出さない）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
    - ★2026-10-17：しゃしんの 背景（30Q、たんまつの 中だけ）、シルエットの ねこ 3ポーズ×3色、きせかえ 8種を 追加（68種類）
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
@@ -368,7 +368,7 @@
     var d = ensure(), pg = d.stickerPages[ui.page] || [];
     var items = pg.map(function (x, i) {
       var sz = 20 * (x.z || 1);
-      return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + svg(x.s, 60) + (x.lk ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
+      return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + svg(x.s, 60) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
     }).join("");
     var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("");
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
