@@ -1374,6 +1374,7 @@ window.normalizeSaveData = function(data) {
   normalized.stickerWear = (normalized.stickerWear && typeof normalized.stickerWear === "object") ? normalized.stickerWear : {};
   normalized.stickerOut = Array.isArray(normalized.stickerOut) ? normalized.stickerOut : [];
   normalized.stickerSeen = Array.isArray(normalized.stickerSeen) ? normalized.stickerSeen : [];
+  normalized.evolvedTreasures = (normalized.evolvedTreasures && typeof normalized.evolvedTreasures === "object") ? normalized.evolvedTreasures : {}; // ★2026-10-17：✨進化したお宝（js/evolved-treasure.js）
   normalized.stickerBgs = Array.isArray(normalized.stickerBgs) ? normalized.stickerBgs : []; // ★2026-10-16：Q で 買った シール帳の 背景
   normalized.stickerPageBg = Array.isArray(normalized.stickerPageBg) ? normalized.stickerPageBg : ["yume", "yozora", "shima"];
   normalized.nakamaEggWelcome = !!normalized.nakamaEggWelcome;
@@ -6961,6 +6962,7 @@ window.initQAMode();
 <script src="./js/detective-log.js"></script>
 <script src="./js/sticker-book.js"></script>
 <script src="./js/expedition-art.js"></script>
+<script src="./js/evolved-treasure.js"></script>
 <script src="./js/usage-log.js"></script>
 </body>
 </html>
