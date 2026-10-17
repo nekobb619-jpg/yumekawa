@@ -173,6 +173,23 @@
   ];
   var BGBY = {}; BGS.forEach(function (b) { BGBY[b.id] = b; });
   var SLOTS = [["head", "あたま"], ["face", "かお"], ["body", "からだ"], ["around", "まわり"]];
+  // ★2026-10-17：お宝図鑑の お宝を きせかえに（探検隊・探偵ラボで 見つけた もの）。身に つけても お宝は へらない（図鑑の 数は そのまま）。
+  //   id は "tr_" ＋ お宝の id。絵は きせかえ用に この ファイルで 描いた SVG（図鑑の 絵文字とは べつ）
+  var TREASURE_WEAR = {
+    tr_t09: { t: "t09", slot: "head", art: function () { return E(20, 30, 15, 4, K, P) + PA("M11 30 V12 Q11 9 14 9 H26 Q29 9 29 12 V30z", K, P, 1.2) + PA("M11 24 H29 V28 H11z", PL) + H(25, 26, 2.2, PK) + SP(31, 8, 2.4, PLL); } },
+    tr_t26: { t: "t26", slot: "head", art: function () { return PA("M20 22 L5 11 Q2 22 5 31z M20 22 L35 11 Q38 22 35 31z", W, G, 1.6) + PA("M20 22 L14 37 L19 33z M20 22 L26 37 L21 33z", GL, G, 1.2) + C(20, 22, 4.6, G, "#d97706") + SP(20, 22, 2.4, W) + SP(6, 8, 2.2, GL) + SP(34, 8, 2.2, GL); } },
+    tr_t14: { t: "t14", slot: "head", art: function () { return PA("M14 34 L20 4 L26 34z", "#fdf4ff", "#c084fc", 1.4) + PA("M15.5 28 L24 25 M16.8 21 L23 18.5 M18 14 L22 12.5", null, "#e879f9", 1.6) + SP(28, 9, 2.6, PKL) + SP(11, 14, 2, PLL); } },
+    tr_t27: { t: "t27", slot: "head", art: function () { return PA("M13 35 L20 2 L27 35z", G, "#b45309", 1.5) + PA("M14.5 29 L25 25.5 M15.8 22 L24 19 M17.2 15 L22.6 13", null, "#b45309", 1.4) + PA("M17 33 l3 -5 l3 5 l-3 3z", "#a78bfa", P, 1) + SP(29, 7, 3, W) + SP(9, 12, 2.4, GL) + SP(31, 22, 1.8, GL); } },
+    tr_t21: { t: "t21", slot: "face", art: function () { return '<rect x="3" y="14" width="14" height="11" rx="3" fill="rgba(224,231,255,.35)" stroke="#1e1b4b" stroke-width="2.6"/><rect x="23" y="14" width="14" height="11" rx="3" fill="rgba(224,231,255,.35)" stroke="#1e1b4b" stroke-width="2.6"/>' + PA("M17 18 q3 -2 6 0", null, "#1e1b4b", 2.4) + PA("M6 17 l3 -1.6 M26 17 l3 -1.6", null, W, 1.4) + SP(37, 11, 2, G); } },
+    tr_t15: { t: "t15", slot: "body", art: function () { return PA("M10 2 L18 20 L22 20 L30 2 L24 2 L20 12 L16 2z", "#ef4444", "#991b1b", 1) + PA("M17 2 L20 9 L23 2", "#2563eb") + C(20, 27, 9, G, "#b45309", 1.6) + C(20, 27, 6, GL, "#d97706", 1) + S5(20, 27.5, 4.4, G, "#b45309") + SP(29, 21, 2, W); } },
+    tr_t11: { t: "t11", slot: "body", art: function () { return PA("M12 3 Q20 10 28 3", null, "#f59e0b", 1.8) + PA("M14 12 Q14 8 20 8 Q26 8 26 12 V31 Q26 34 23 34 H17 Q14 34 14 31z", "#dc2626", "#7f1d1d", 1.3) + PA("M14 15 H26", null, GL, 1.6) + '<text x="20" y="27" font-size="8" font-weight="900" text-anchor="middle" fill="' + GL + '">ごう</text>' + PA("M18 8 L20 3 L22 8", null, "#f59e0b", 1.6); } },
+    tr_t04: { t: "t04", slot: "around", art: function () { return S5(5, 7, 3.6, G) + S5(35, 9, 3, GL) + S5(4, 30, 2.8, GL) + S5(36, 31, 3.6, G) + S5(20, 3, 2.2, G) + C(12, 36, 1, GL) + C(29, 4, 1, GL); } },
+    tr_t12: { t: "t12", slot: "around", art: function () { function cr(x, y, k, c) { return PA("M" + x + " " + (y - k) + " l" + (k * .6) + " " + k + " l" + (-k * .6) + " " + k + " l" + (-k * .6) + " " + (-k) + "z", c, "#0e7490", .8); } return cr(5, 9, 4, "#a5f3fc") + cr(35, 10, 3.4, "#c4b5fd") + cr(4, 30, 3, "#c4b5fd") + cr(36, 30, 4, "#a5f3fc") + SP(20, 3, 2.2, W) + SP(20, 37, 2, "#a5f3fc"); } },
+    tr_t23: { t: "t23", slot: "around", art: function () { return E(5, 8, 3.4, 2.6, "#f87171") + E(35, 8, 3, 2.4, "#60a5fa") + E(4, 31, 3, 2.4, "#4ade80") + E(36, 31, 3.4, 2.6, G) + E(20, 3, 2.4, 1.8, "#c084fc") + C(9, 12, 1, "#f87171") + C(31, 12, 1, "#60a5fa") + C(31, 35, 1, G); } }
+  };
+  function treasureOwned(tid) { var b = (sd().treasureBook || {})[tid]; return !!b && (b.count || 0) > 0; }
+  function treasureName(tid) { var l = window.TREASURE_LIST || []; for (var i = 0; i < l.length; i++) if (l[i].id === tid) return l[i].name; return "お宝"; }
+  function trSvg(id, px) { var t = TREASURE_WEAR[id]; return t ? '<svg viewBox="0 0 40 40" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + treasureName(t.t) + '">' + t.art() + '</svg>' : ""; }
   var TF = { head: "translate(19 -1) scale(.55)", face: "translate(15.6 21.5) scale(.72)", body: "translate(18 41) scale(.6)", around: "scale(1.6)" };
   function svg(id, px) { var s = BY[id]; return s ? '<svg viewBox="0 0 40 40" width="' + (px || 40) + '" height="' + (px || 40) + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + s.name + '">' + s.art() + '</svg>' : ""; }
 
@@ -313,7 +330,11 @@
   function wearSvg(key) {
     var w = (sd().stickerWear || {})[key]; if (!w) return "";
     var out = "";
-    ["around", "body", "face", "head"].forEach(function (slot) { var s = BY[w[slot]]; if (s && s.wear === slot && owned(s.id) > 0) out += '<g transform="' + TF[slot] + '">' + s.art() + '</g>'; });
+    ["around", "body", "face", "head"].forEach(function (slot) {
+      var s = BY[w[slot]], t = TREASURE_WEAR[w[slot]];
+      if (s && s.wear === slot && owned(s.id) > 0) out += '<g transform="' + TF[slot] + '">' + s.art() + '</g>';
+      else if (t && t.slot === slot && treasureOwned(t.t)) out += '<g transform="' + TF[slot] + '">' + t.art() + '</g>';
+    });
     return out;
   }
   function deco(str, key) { if (!str || typeof str !== "string") return str; var o = wearSvg(key); return o ? str.replace(/<\/svg>\s*$/, o + "</svg>") : str; }
@@ -486,14 +507,16 @@
     var prev = ui.target === "avatar" ? (typeof window.avatarSvg === "function" ? (window.avatarSvg(d.selectedAvatar, "happy") || "") : "") : (f ? f.svg("happy") : "");
     var slots = SLOTS.map(function (sl) {
       var opts = LIST.filter(function (s) { return s.wear === sl[0] && owned(s.id) > 0; });
+      var trs = Object.keys(TREASURE_WEAR).filter(function (id) { return TREASURE_WEAR[id].slot === sl[0] && treasureOwned(TREASURE_WEAR[id].t); });
       return '<div class="stk-h">' + sl[1] + '</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
         '<button type="button" class="stk-mini" data-a="wear" data-v="' + sl[0] + ':" aria-pressed="' + (!w[sl[0]]) + '">なし</button>' +
-        (opts.length ? opts.map(function (s) { return '<button type="button" class="stk-mini img" style="padding:3px 6px;line-height:0" data-a="wear" data-v="' + sl[0] + ':' + s.id + '" aria-pressed="' + (w[sl[0]] === s.id) + '" aria-label="' + s.name + '">' + svg(s.id, 38) + '</button>'; }).join("") : '<span class="stk-note">まだ もって いないよ</span>') + '</div>';
+        (opts.length ? opts.map(function (s) { return '<button type="button" class="stk-mini img" style="padding:3px 6px;line-height:0" data-a="wear" data-v="' + sl[0] + ':' + s.id + '" aria-pressed="' + (w[sl[0]] === s.id) + '" aria-label="' + s.name + '">' + svg(s.id, 38) + '</button>'; }).join("") : (trs.length ? '' : '<span class="stk-note">まだ もって いないよ</span>')) +
+        trs.map(function (id) { return '<button type="button" class="stk-mini img" style="padding:3px 6px;line-height:0;position:relative" data-a="wear" data-v="' + sl[0] + ':' + id + '" aria-pressed="' + (w[sl[0]] === id) + '" aria-label="お宝 ' + treasureName(TREASURE_WEAR[id].t) + '">' + trSvg(id, 38) + '<span style="position:absolute;right:-3px;top:-5px;font-size:11px;line-height:1">🗝️</span></button>'; }).join("") + '</div>';
     }).join("");
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px"><button type="button" class="stk-mini" data-a="target" data-v="friend" aria-pressed="' + (ui.target === "friend") + '">なかま（' + (f ? f.name : "") + '）</button><button type="button" class="stk-mini" data-a="target" data-v="avatar" aria-pressed="' + (ui.target === "avatar") + '">アバター</button></div>' +
       (prev ? '<div class="stk-prev">' + prev + '</div>' : '<div class="stk-note" style="text-align:center;padding:14px">この アバターは 絵が ないので かざれないよ。なかまを かざって みよう。</div>') +
       pickerHtml() +
-      '<div class="stk-note" style="text-align:center;margin-top:6px">かざりは 見た目だけ。なかまごとに おぼえるよ。ホームの 絵にも 出るよ。</div>' + slots;
+      '<div class="stk-note" style="text-align:center;margin-top:6px">かざりは 見た目だけ。なかまごとに おぼえるよ。ホームの 絵にも 出るよ。🗝️ は お宝図鑑の お宝（つけても へらないよ）。</div>' + slots;
   }
   function pickerHtml() {
     var d = ensure();
