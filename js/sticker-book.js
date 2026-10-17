@@ -266,19 +266,69 @@
         var f = inp.files && inp.files[0]; inp.value = ""; if (!f) return;
         var url = URL.createObjectURL(f), img = new Image();
         img.onload = function () {
-          // ページと 同じ 4:5 に まん中を 切りぬいて 小さく する
-          var cv = document.createElement("canvas"); cv.width = PHOTO_W; cv.height = PHOTO_H;
-          var r = PHOTO_W / PHOTO_H, sw = img.width, sh = img.height;
-          if (sw / sh > r) sw = sh * r; else sh = sw / r;
-          cv.getContext("2d").drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, PHOTO_W, PHOTO_H);
+          // ★2026-10-17：すぐに 切りぬかず、回転・ズーム・位置を きめる 画面へ（もとの 写真は 長い 辺 1400px に 小さく して メモリだけに おく）
+          var k = Math.min(1, 1400 / Math.max(img.width, img.height)), src = document.createElement("canvas");
+          src.width = Math.round(img.width * k); src.height = Math.round(img.height * k);
+          src.getContext("2d").drawImage(img, 0, 0, src.width, src.height);
           URL.revokeObjectURL(url);
-          ui.photoPrev = cv.toDataURL("image/jpeg", 0.72); ui.bgOpen = true; render();
+          ui.edit = { src: src, rot: 0, zoom: 1, cx: 0.5, cy: 0.5 }; buildRot();
+          ui.photoPrev = "edit"; ui.bgOpen = true; render();
         };
         img.onerror = function () { URL.revokeObjectURL(url); toast("しゃしんが 読みこめなかったよ。もう一度 とってね"); };
         img.src = url;
       };
     }
     inp.click();
+  }
+  /* ---- しゃしんの 回転・切りぬき（ページと 同じ 4:5 の わくに、ゆびで 動かして ズームで 大きさを きめる） ---- */
+  function buildRot() {
+    var e = ui.edit, s0 = e.src, odd = e.rot % 2 === 1, c = document.createElement("canvas");
+    c.width = odd ? s0.height : s0.width; c.height = odd ? s0.width : s0.height;
+    var g = c.getContext("2d"); g.translate(c.width / 2, c.height / 2); g.rotate(e.rot * Math.PI / 2); g.drawImage(s0, -s0.width / 2, -s0.height / 2);
+    e.rc = c;
+  }
+  function editScale() { var e = ui.edit; return Math.max(PHOTO_W / e.rc.width, PHOTO_H / e.rc.height) * e.zoom; }
+  function clampEdit() {
+    var e = ui.edit, sc = editScale(), vw = PHOTO_W / sc / e.rc.width, vh = PHOTO_H / sc / e.rc.height;
+    e.cx = Math.min(1 - vw / 2, Math.max(vw / 2, e.cx)); e.cy = Math.min(1 - vh / 2, Math.max(vh / 2, e.cy));
+  }
+  function drawEdit() {
+    var cv = document.getElementById("stk-edit"); if (!cv || !ui.edit) return;
+    clampEdit();
+    var e = ui.edit, sc = editScale(), vw = PHOTO_W / sc, vh = PHOTO_H / sc;
+    var g = cv.getContext("2d"); g.fillStyle = "#f5f3ff"; g.fillRect(0, 0, PHOTO_W, PHOTO_H);
+    g.drawImage(e.rc, e.cx * e.rc.width - vw / 2, e.cy * e.rc.height - vh / 2, vw, vh, 0, 0, PHOTO_W, PHOTO_H);
+  }
+  function editHtml() {
+    return '<canvas id="stk-edit" class="stk-page" width="' + PHOTO_W + '" height="' + PHOTO_H + '" style="display:block;cursor:grab;touch-action:none;height:auto" aria-label="しゃしんの いち"></canvas>' +
+      '<div class="stk-note" style="text-align:center;margin-top:6px">ゆびで 動かして、すきな ところを わくに 入れよう。</div>' +
+      '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;align-items:center;margin-top:6px">' +
+      '<button type="button" class="stk-mini" data-a="erotl" aria-label="左に 回す">⟲ 回す</button><button type="button" class="stk-mini" data-a="erotr" aria-label="右に 回す">回す ⟳</button>' +
+      '<button type="button" class="stk-mini" data-a="ezout" aria-label="小さく">－</button><input id="stk-ez" type="range" min="100" max="400" step="5" value="' + Math.round(ui.edit.zoom * 100) + '" aria-label="大きさ" style="width:110px"><button type="button" class="stk-mini" data-a="ezin" aria-label="大きく">＋</button></div>';
+  }
+  function bindEdit() {
+    var cv = document.getElementById("stk-edit"); if (!cv || !ui.edit) return;
+    var pts = {}, last = null;
+    function setZoom(z) { ui.edit.zoom = Math.max(1, Math.min(4, z)); var r = document.getElementById("stk-ez"); if (r) r.value = Math.round(ui.edit.zoom * 100); drawEdit(); }
+    cv.onpointerdown = function (ev) { pts[ev.pointerId] = { x: ev.clientX, y: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (er) {} ev.preventDefault(); };
+    cv.onpointermove = function (ev) {
+      if (!pts[ev.pointerId]) return;
+      var ids = Object.keys(pts), rect = cv.getBoundingClientRect(), k = PHOTO_W / rect.width;
+      if (ids.length >= 2) { // 2本の ゆびで ひろげる・ちぢめる
+        var a = pts[ids[0]], b = pts[ids[1]], d0 = Math.hypot(a.x - b.x, a.y - b.y);
+        pts[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+        a = pts[ids[0]]; b = pts[ids[1]]; var d1 = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d0 > 10) setZoom(ui.edit.zoom * d1 / d0);
+        return;
+      }
+      var p0 = pts[ev.pointerId], dx = (ev.clientX - p0.x) * k, dy = (ev.clientY - p0.y) * k, sc = editScale();
+      ui.edit.cx -= dx / sc / ui.edit.rc.width; ui.edit.cy -= dy / sc / ui.edit.rc.height;
+      pts[ev.pointerId] = { x: ev.clientX, y: ev.clientY }; drawEdit();
+    };
+    cv.onpointerup = cv.onpointercancel = function (ev) { delete pts[ev.pointerId]; };
+    cv.onwheel = function (ev) { ev.preventDefault(); setZoom(ui.edit.zoom * (ev.deltaY < 0 ? 1.08 : 1 / 1.08)); };
+    var r = document.getElementById("stk-ez"); if (r) r.oninput = function () { setZoom(Number(r.value) / 100); };
+    drawEdit();
   }
   function photoPanelHtml() {
     var q = Number((window.saveData || {}).q || 0);
@@ -409,7 +459,7 @@
     '.stk-rv{background:linear-gradient(160deg,#fff,#f5f3ff);border-radius:26px;padding:20px 18px;max-width:320px;width:100%;text-align:center;border:4px solid #ddd6fe;animation:stkPop .45s ease-out}.stk-rv.r2{border-color:#93c5fd}.stk-rv.r3{border-color:#fbbf24;box-shadow:0 0 30px rgba(251,191,36,.5)}.stk-rv.r4{border-color:#e879f9;box-shadow:0 0 44px rgba(232,121,249,.7)}' +
     '.stk-rv-star{color:#f59e0b;font-weight:900;font-size:16px}.stk-rv-name{font-size:19px;font-weight:900;color:#5b21b6;margin:2px 0}.stk-rv-sub{font-size:12px;font-weight:800;color:#6b5a85;margin-bottom:12px;line-height:1.6}' +
     '@keyframes stkPop{0%{transform:scale(.4) rotate(-8deg);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}';
-  function close() { ui.photoPrev = null; var m = document.getElementById("stk-modal"); if (m) m.remove(); if (window.renderTutorPlan) { try { window.renderTutorPlan(); } catch (e) {} } }
+  function close() { ui.photoPrev = null; ui.edit = null; var m = document.getElementById("stk-modal"); if (m) m.remove(); if (window.renderTutorPlan) { try { window.renderTutorPlan(); } catch (e) {} } }
   window.closeStickerBook = close;
   window.openStickerBook = function (tab) {
     if (!window.saveData) return;
@@ -435,7 +485,7 @@
     m.querySelector(".stk-tabs").innerHTML = tabsHtml();
     var body = document.getElementById("stk-body");
     body.innerHTML = ui.tab === "book" ? bookHtml() : ui.tab === "get" ? getHtml() : ui.tab === "wear" ? wearHtml() : giftHtml();
-    if (ui.tab === "book") bindPage();
+    if (ui.tab === "book") { bindPage(); bindEdit(); }
   }
 
   /* ---- はる ---- */
@@ -450,7 +500,7 @@
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + boardLen(boardKey(i)) + '）</button>'; }).join("") + '</div>' +
-      '<div class="stk-page" id="stk-page" style="background:' + (ui.photoPrev ? photoCss(ui.photoPrev) : pageBg(ui.page).css) + '">' + items + '</div>' + (ui.photoPrev ? photoPanelHtml() : tools) +
+      (ui.edit ? editHtml() : '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>') + (ui.edit ? photoPanelHtml() : tools) +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
       '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>');
@@ -648,7 +698,9 @@
       delete d.stickerBoards[cid]; d.stickerPageBg[ui.page] = BGS[ui.page].id; ui.sel = -1;
       log((ui.page + 1) + "ページの しゃしんを けした"); save(); return render();
     }
-    if (a === "photono") { ui.photoPrev = null; return render(); }
+    if (a === "photono") { ui.photoPrev = null; ui.edit = null; return render(); }
+    if (a === "erotl" || a === "erotr") { if (!ui.edit) return; ui.edit.rot = (ui.edit.rot + (a === "erotr" ? 1 : 3)) % 4; buildRot(); ui.edit.cx = ui.edit.cy = 0.5; ui.edit.zoom = 1; var rz = document.getElementById("stk-ez"); if (rz) rz.value = 100; return drawEdit(); }
+    if (a === "ezin" || a === "ezout") { if (!ui.edit) return; ui.edit.zoom = Math.max(1, Math.min(4, ui.edit.zoom * (a === "ezin" ? 1.2 : 1 / 1.2))); var rz2 = document.getElementById("stk-ez"); if (rz2) rz2.value = Math.round(ui.edit.zoom * 100); return drawEdit(); }
     if (a === "bgphoto") {
       var bid = "photo:" + v; if (!photoGet(v)) return render();
       var usedP = [0, 1, 2].filter(function (j) { return j !== ui.page && boardKey(j) === bid; })[0];
@@ -657,13 +709,15 @@
     }
     if (a === "photook") {
       var pq = Number((window.saveData || {}).q || 0);
-      if (!ui.photoPrev) return render();
+      if (!ui.edit) return render();
+      drawEdit(); var ecv = document.getElementById("stk-edit"); if (!ecv) return render();
+      ui.photoPrev = ecv.toDataURL("image/jpeg", 0.72);
       if (pq < PHOTO_COST) { toast("あと " + (PHOTO_COST - pq) + "Q で しゃしんを 背景に できるよ"); return; }
       var nid = Date.now().toString(36), plist = photoList();
       if (plist.length >= PHOTO_MAX) { toast("しゃしんは " + PHOTO_MAX + "まいまで。つかわない しゃしんを けしてから とろう"); return; }
       try { localStorage.setItem(photoKey(nid), ui.photoPrev); } catch (e) { toast("この たんまつに しゃしんを 入れる 場所が たりないよ。つかわない しゃしんを けしてね"); return; }
       plist.push(nid); photoListSave(plist);
-      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo:" + nid; ui.photoPrev = null; ui.sel = -1;
+      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo:" + nid; ui.photoPrev = null; ui.edit = null; ui.sel = -1;
       log((ui.page + 1) + "ページの 背景を しゃしんに した（" + PHOTO_COST + "Q）");
       if (window.updateUI) { try { window.updateUI(); } catch (e) {} }
       toast("📷 しゃしんを 背景に したよ"); save(); return render();
