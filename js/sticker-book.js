@@ -9,7 +9,7 @@
    - プレゼント：りお・りさ・papa の 間で 1日 3まいまで。おくる 人の セーブに「だれに・何を」を 書き、
        うけとる 人の アプリが GAS の LOGIN（読むだけ）で それを 読んで うけとる。相手の セーブには 書きこまない。GAS の 変更なし
    - Q・pt・お金には 変えられない。記録は log_db の「🎀シール帳」
-   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerBoards{背景id（しゃしんは photo0〜2）:[{s,x,y,z,r,lk}]}＝背景ごとの はり方（★2026-10-17。前の stickerPages[3] は 最初に うつした あとは 使わない）（lk＝固定。📌 は えらんだ ときだけ 見せる＝ふだんの ページには 出さない）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
+   - saveData：stickers{id:まい数}／stickerPacks／stickerDay{d,k{種類:1},g:おくった数}／stickerBoards{背景id（しゃしんは photo:<id>）:[{s,x,y,z,r,lk}]}＝背景ごとの はり方（★2026-10-17。前の stickerPages[3] は 最初に うつした あとは 使わない）（lk＝固定。📌 は えらんだ ときだけ 見せる＝ふだんの ページには 出さない）／stickerBgs[買った 背景id]／stickerPageBg[3]（ページごとの 背景。"photo"＝この たんまつに ある しゃしん。しゃしん 本体は localStorage kids_lab_stkphoto_<id>_<ページ>）／
                stickerWear{相棒id|"avatar":{head,face,body,around}}／stickerOut[{i,t,s,a}]／stickerSeen[id]
    - ★2026-10-17：しゃしんの 背景（30Q、たんまつの 中だけ）、シルエットの ねこ 3ポーズ×3色、きせかえ 8種を 追加（68種類）
    - js/mascots.js・js/avatar-art.js より あとに 読みこむ（なかまの 絵に かざりを 重ねる ため）
@@ -209,7 +209,7 @@
       var bgs0 = Array.isArray(d.stickerPageBg) ? d.stickerPageBg : ["yume", "yozora", "shima"];
       d.stickerPages.forEach(function (pg, i) {
         if (!Array.isArray(pg) || !pg.length) return;
-        var id = bgs0[i] || ["yume", "yozora", "shima"][i], k = id === "photo" ? "photo" + i : id;
+        var id = bgs0[i] || ["yume", "yozora", "shima"][i], k = id === "photo" ? "photo:" + i : id;
         d.stickerBoards[k] = (d.stickerBoards[k] || []).concat(pg);
       });
     }
@@ -217,6 +217,9 @@
     if (!Array.isArray(d.stickerOut)) d.stickerOut = [];
     if (!Array.isArray(d.stickerSeen)) d.stickerSeen = [];
     if (!Array.isArray(d.stickerBgs)) d.stickerBgs = [];
+    // ★2026-10-17：しゃしんは ページごとの 1まい → いくつでも のこす（"photo:<id>"）。前の "photo"（ページ i）は id＝i の しゃしんに なおす
+    if (Array.isArray(d.stickerPageBg)) d.stickerPageBg.forEach(function (id, i) { if (id === "photo") d.stickerPageBg[i] = "photo:" + i; });
+    if (d.stickerBoards) [0, 1, 2].forEach(function (i) { if (d.stickerBoards["photo" + i]) { d.stickerBoards["photo:" + i] = (d.stickerBoards["photo:" + i] || []).concat(d.stickerBoards["photo" + i]); delete d.stickerBoards["photo" + i]; } });
     if (!Array.isArray(d.stickerPageBg)) d.stickerPageBg = ["yume", "yozora", "shima"];
     while (d.stickerPageBg.length < 3) d.stickerPageBg.push(["yume", "yozora", "shima"][d.stickerPageBg.length]);
     var t = today();
@@ -230,15 +233,29 @@
   function hasBg(id) { var b = BGBY[id]; return !!b && (b.free || ensure().stickerBgs.indexOf(id) >= 0); }
   function pageBg(i) {
     var id = ensure().stickerPageBg[i];
-    if (id === "photo") { var ph = photoGet(i); if (ph) return { id: "photo", n: "しゃしん", css: photoCss(ph) }; return BGS[i]; }
+    if (isPhoto(id)) { var ph = photoGet(pid(id)); if (ph) return { id: id, n: "しゃしん", css: photoCss(ph) }; return BGS[i]; }
     return BGBY[id] && hasBg(id) ? BGBY[id] : BGS[i];
   }
   // ★2026-10-17：じぶんで とった しゃしんを 背景に（30Q）。しゃしんは この たんまつの localStorage だけに おく
   //   （セーブ＝GAS には 送らない：1行 50,000文字の 上限と、家の 中や 人が うつる かもしれない ため）。
   //   セーブには「photo」と いう しるしだけ。ほかの たんまつでは しゃしんが ないので、その ページの 最初の 背景に もどって 見える
   var PHOTO_COST = 30, PHOTO_W = 480, PHOTO_H = 600;
-  function photoKey(i) { return "kids_lab_stkphoto_" + (window.playerId || "") + "_" + i; }
-  function photoGet(i) { try { return localStorage.getItem(photoKey(i)) || ""; } catch (e) { return ""; } }
+  // ★2026-10-17：しゃしんは アルバムの ように いくつでも のこす（PHOTO_MAX まで）。背景 id は "photo:<しゃしんid>"、
+  //   シールの 台紙も しゃしんごと。しゃしんの 一覧は localStorage kids_lab_stkphotos_<playerId>（[id…] 古い 順）。
+  //   前の ページごとの しゃしん（id 0〜2）は キーが 同じ なので そのまま 使える
+  var PHOTO_MAX = 12;
+  function isPhoto(id) { return typeof id === "string" && id.indexOf("photo:") === 0; }
+  function pid(bgId) { return String(bgId).slice(6); }
+  function photoKey(id) { return "kids_lab_stkphoto_" + (window.playerId || "") + "_" + id; }
+  function photoGet(id) { try { return localStorage.getItem(photoKey(id)) || ""; } catch (e) { return ""; } }
+  function photoList() {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem("kids_lab_stkphotos_" + (window.playerId || "")) || "[]"); } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    ["0", "1", "2"].forEach(function (k) { if (list.indexOf(k) < 0 && photoGet(k)) list.unshift(k); }); // 前の しゃしん
+    return list.filter(function (k) { return !!photoGet(k); });
+  }
+  function photoListSave(list) { try { localStorage.setItem("kids_lab_stkphotos_" + (window.playerId || ""), JSON.stringify(list)); } catch (e) {} }
   function photoCss(url) { return "url('" + url + "') center/cover no-repeat,#f5f3ff"; }
   function takePhoto() {
     var inp = document.getElementById("stk-photo-in");
@@ -274,7 +291,7 @@
   }
   function owned(id) { return Number(ensure().stickers[id] || 0); }
   // ページ i に 出て いる 背景の 台紙の かぎ（しゃしんは ページごとに べつ）
-  function boardKey(i) { var id = ensure().stickerPageBg[i]; return id === "photo" ? "photo" + i : pageBg(i).id; }
+  function boardKey(i) { var id = ensure().stickerPageBg[i]; return isPhoto(id) ? id : pageBg(i).id; }
   function board(i) { var d = ensure(), k = boardKey(i); if (!Array.isArray(d.stickerBoards[k])) d.stickerBoards[k] = []; return d.stickerBoards[k]; }
   function boardLen(k) { var b = ensure().stickerBoards[k]; return Array.isArray(b) ? b.length : 0; }
   // どの 背景に はって いても 1まいは 1まい（ほかの 背景に はるには、はがして から）
@@ -445,12 +462,16 @@
         var own = hasBg(b.id), on = cur === b.id || (!BGBY[cur] && pageBg(ui.page).id === b.id);
         return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + (boardLen(b.id) ? ' 🎀' + boardLen(b.id) : '') + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
       }).join("") + photoCardsHtml() + '</div>' +
-      '<div class="stk-note" style="text-align:center;margin-top:4px">📷 しゃしんは この たんまつの 中だけに のこるよ。人の かおや 名前・住所が うつらない ように とろう。</div>';
+      (isPhoto(cur) && photoGet(pid(cur)) ? '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="photodel">🗑 この しゃしんを けす</button></div>' : '') +
+      '<div class="stk-note" style="text-align:center;margin-top:4px">📷 しゃしんは ' + PHOTO_MAX + 'まいまで のこせるよ（いま ' + photoList().length + 'まい）。この たんまつの 中だけに のこるよ。人の かおや 名前・住所が うつらない ように とろう。</div>';
   }
   function photoCardsHtml() {
-    var d = ensure(), ph = photoGet(ui.page), on = d.stickerPageBg[ui.page] === "photo" && ph;
-    return (ph ? '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bgphoto" style="cursor:pointer;padding:4px" aria-label="とった しゃしん"><div style="height:44px;border-radius:10px;background:' + photoCss(ph) + '"></div><div class="nm">しゃしん<br>' + (on ? "つかってる" : "えらぶ") + '</div></button>' : '') +
-      '<button type="button" class="c" data-a="photo" style="cursor:pointer;padding:4px" aria-label="しゃしんを とって 背景に する（' + PHOTO_COST + 'Q）"><div style="height:44px;border-radius:10px;background:#fdf4ff;display:flex;align-items:center;justify-content:center;font-size:24px">📷</div><div class="nm">' + (ph ? "とりなおす" : "しゃしんを とる") + '<br>' + PHOTO_COST + 'Q</div></button>';
+    var d = ensure(), cur = d.stickerPageBg[ui.page], list = photoList(), full = list.length >= PHOTO_MAX;
+    return list.map(function (k) {
+      var bid = "photo:" + k, on = cur === bid, n = boardLen(bid);
+      return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bgphoto" data-v="' + k + '" style="cursor:pointer;padding:4px" aria-label="とった しゃしん"><div style="height:44px;border-radius:10px;background:' + photoCss(photoGet(k)) + '"></div><div class="nm">しゃしん' + (n ? ' 🎀' + n : '') + '<br>' + (on ? "つかってる" : "つかう") + '</div></button>';
+    }).join("") +
+      '<button type="button" class="c" data-a="photo" style="cursor:pointer;padding:4px" aria-label="しゃしんを とって 背景に する（' + PHOTO_COST + 'Q）"' + (full ? ' disabled' : '') + '><div style="height:44px;border-radius:10px;background:#fdf4ff;display:flex;align-items:center;justify-content:center;font-size:24px">📷</div><div class="nm">' + (full ? "いっぱい" : "しゃしんを とる") + '<br>' + (full ? list.length + "/" + PHOTO_MAX : PHOTO_COST + "Q") + '</div></button>';
   }
   function bindPage() {
     var page = document.getElementById("stk-page"); if (!page) return;
@@ -617,15 +638,32 @@
     if (a === "send") return sendGift();
     if (a === "check") return checkInbox();
     if (a === "bgopen") { ui.bgOpen = !ui.bgOpen; return render(); }
-    if (a === "photo") return takePhoto();
+    if (a === "photo") { if (photoList().length >= PHOTO_MAX) { toast("しゃしんは " + PHOTO_MAX + "まいまで。つかわない しゃしんを けしてから とろう"); return; } return takePhoto(); }
+    if (a === "photodel") {
+      var cid = d.stickerPageBg[ui.page]; if (!isPhoto(cid)) return;
+      var nOn = boardLen(cid);
+      if (!window.confirm("この しゃしんを けす？" + (nOn ? "（はって ある シール " + nOn + "まいは 手もちに もどるよ）" : "") + "\nけした しゃしんは もどせないよ。")) return;
+      try { localStorage.removeItem(photoKey(pid(cid))); } catch (e) {}
+      photoListSave(photoList().filter(function (k) { return k !== pid(cid); }));
+      delete d.stickerBoards[cid]; d.stickerPageBg[ui.page] = BGS[ui.page].id; ui.sel = -1;
+      log((ui.page + 1) + "ページの しゃしんを けした"); save(); return render();
+    }
     if (a === "photono") { ui.photoPrev = null; return render(); }
-    if (a === "bgphoto") { if (photoGet(ui.page)) { d.stickerPageBg[ui.page] = "photo"; ui.sel = -1; save(); } return render(); }
+    if (a === "bgphoto") {
+      var bid = "photo:" + v; if (!photoGet(v)) return render();
+      var usedP = [0, 1, 2].filter(function (j) { return j !== ui.page && boardKey(j) === bid; })[0];
+      if (usedP !== undefined) { toast("その しゃしんは " + (usedP + 1) + "ページで つかって いるよ"); return; }
+      d.stickerPageBg[ui.page] = bid; ui.sel = -1; save(); return render();
+    }
     if (a === "photook") {
       var pq = Number((window.saveData || {}).q || 0);
       if (!ui.photoPrev) return render();
       if (pq < PHOTO_COST) { toast("あと " + (PHOTO_COST - pq) + "Q で しゃしんを 背景に できるよ"); return; }
-      try { localStorage.setItem(photoKey(ui.page), ui.photoPrev); } catch (e) { toast("この たんまつに しゃしんを 入れる 場所が たりないよ"); return; }
-      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo"; ui.photoPrev = null; ui.sel = -1;
+      var nid = Date.now().toString(36), plist = photoList();
+      if (plist.length >= PHOTO_MAX) { toast("しゃしんは " + PHOTO_MAX + "まいまで。つかわない しゃしんを けしてから とろう"); return; }
+      try { localStorage.setItem(photoKey(nid), ui.photoPrev); } catch (e) { toast("この たんまつに しゃしんを 入れる 場所が たりないよ。つかわない しゃしんを けしてね"); return; }
+      plist.push(nid); photoListSave(plist);
+      window.saveData.q = pq - PHOTO_COST; d.stickerPageBg[ui.page] = "photo:" + nid; ui.photoPrev = null; ui.sel = -1;
       log((ui.page + 1) + "ページの 背景を しゃしんに した（" + PHOTO_COST + "Q）");
       if (window.updateUI) { try { window.updateUI(); } catch (e) {} }
       toast("📷 しゃしんを 背景に したよ"); save(); return render();
