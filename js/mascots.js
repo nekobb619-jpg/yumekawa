@@ -149,7 +149,10 @@
     // 回数が ふえた ときに 新しく なかまに なった子（なければ null）
     newlyUnlockedAt: function (count) { return FRIENDS.filter(function (f) { return !f.gacha && !f.egg && f.need === count && f.need > 0; })[0] || null; },
     // ガチャのアバター表示（ほかの画面）でも もちくんを イラストで 出すため
-    mochikunSvg: function (mood) { return mochikun(mood || "normal"); }
+    mochikunSvg: function (mood) { return mochikun(mood || "normal"); },
+    // ★2026-10-17：シール帳の きせかえから なかまを えらぶ ため
+    isUnlocked: function (id) { var f = byId(id); return !!f && isUnlocked(f); },
+    currentId: function () { return current().id; }
   };
 
   window.selectFriend = function (id) {

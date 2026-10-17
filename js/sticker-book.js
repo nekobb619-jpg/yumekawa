@@ -307,8 +307,27 @@
       var orig = f.svg; f.svg = function (m) { return deco(orig(m), f.id); }; f._stkWrapped = true;
     });
     if (typeof window.avatarSvg === "function" && !window.avatarSvg._stkWrapped) {
-      var a = window.avatarSvg, w = function () { return deco(a.apply(this, arguments), "avatar"); }; w._stkWrapped = true; window.avatarSvg = w;
+      // ★2026-10-17：アバターの かざりは「いま えらんで いる アバター」だけに つける（アバター一覧で ぜんぶに つかない ように）
+      var a = window.avatarSvg, w = function (key) { var out = a.apply(this, arguments); return isSelAvatar(key) ? deco(out, "avatar") : out; }; w._stkWrapped = true; window.avatarSvg = w;
     }
+  }
+  function isSelAvatar(key) {
+    var sel = (window.saveData && window.saveData.selectedAvatar) || "🐣";
+    if (key === sel) return true;
+    if (key === "default") return sel === "🐣";
+    var hit = (window.GACHA_EGG_LIST || []).filter(function (e) { return e.id === key; })[0];
+    return !!hit && hit.icon === sel;
+  }
+  // ★2026-10-17：きせかえで えらべる なかま・アバター
+  function myFriends() { return friends().filter(function (f) { return window.MASCOTS && window.MASCOTS.isUnlocked ? window.MASCOTS.isUnlocked(f.id) : true; }); }
+  function myAvatars() {
+    var eggs = (window.saveData && window.saveData.gachaEggs) || {};
+    return [{ id: "default", icon: "🐣", name: "はじめての ニコ" }].concat((window.GACHA_EGG_LIST || []).filter(function (e) { return e.type === "char" && eggs[e.id]; }));
+  }
+  // ホーム・ナビの 絵を かき直す（かざりや えらんだ 子が 変わった とき）
+  function refreshMain() {
+    try { if (window.applyAvatar) window.applyAvatar(); } catch (e) {}
+    try { var c = document.getElementById("tplan-chara"); if (c) c.removeAttribute("data-mood"); var t = document.getElementById("friends-tile-art"); if (t) t.removeAttribute("data-f"); if (window.renderTutorPlan) window.renderTutorPlan(); } catch (e) {}
   }
   function friends() { return (window.MASCOTS && window.MASCOTS.list) || []; }
   function curFriend() { var nm = window.MASCOTS && window.MASCOTS.currentName ? window.MASCOTS.currentName() : ""; return friends().filter(function (f) { return f.name === nm; })[0] || friends()[0]; }
@@ -327,6 +346,7 @@
     '.stk-page{position:relative;width:100%;aspect-ratio:4/5;border-radius:18px;overflow:hidden;border:3px solid #c4b5fd;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.stk-page.p0{background:radial-gradient(#ddd6fe 1.4px,transparent 1.6px) 0 0/18px 18px,#faf5ff}.stk-page.p1{background:radial-gradient(#fde68a 1px,transparent 1.3px) 6px 9px/34px 34px,radial-gradient(#fff 1px,transparent 1.2px) 20px 24px/46px 46px,linear-gradient(170deg,#1f1b2e,#4c1d95)}.stk-page.p2{background:repeating-linear-gradient(135deg,#fdf2f8 0 14px,#fff 14px 28px)}' +
     '.stk-it{position:absolute;transform-origin:center;cursor:grab;touch-action:none;filter:drop-shadow(0 2px 2px rgba(31,27,46,.28))}.stk-it svg{width:100%;height:100%;display:block;pointer-events:none}.stk-it.sel{outline:2px dashed #db2777;outline-offset:2px;border-radius:10px}.stk-it.lk{cursor:default}.stk-it .pin{position:absolute;right:-4px;top:-6px;font-size:13px;line-height:1;filter:none}' +
+    '.stk-tray button div svg{width:100%;height:100%;display:block}' +
     '.stk-tray{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 4px}.stk-tray button{flex:0 0 auto;position:relative;border:2px solid #ddd6fe;background:#fff;border-radius:14px;padding:4px;cursor:pointer;line-height:0}.stk-tray .cnt,.stk-grid .cnt{position:absolute;right:-4px;top:-6px;background:#1f1b2e;color:#fde68a;font:900 10px "Zen Maru Gothic";border-radius:999px;padding:2px 6px;line-height:1.2}' +
     '.stk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.stk-grid .c{position:relative;border:2px solid #ede9fe;background:#fff;border-radius:14px;padding:5px 3px 4px;text-align:center}.stk-grid .c.no svg{filter:brightness(0) opacity(.13)}.stk-grid .nm{font-size:9.5px;font-weight:800;color:#5b4b73;line-height:1.25;margin-top:2px;min-height:2.4em}' +
     '.stk-grid .c.r2{border-color:#bfdbfe}.stk-grid .c.r3{border-color:#fde68a}.stk-grid .c.r4{border-color:#f0abfc;background:linear-gradient(160deg,#fff,#fdf4ff)}.stk-grid .c.pick{border-color:#db2777;box-shadow:0 0 0 2px #fbcfe8}' +
@@ -456,7 +476,22 @@
     }).join("");
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px"><button type="button" class="stk-mini" data-a="target" data-v="friend" aria-pressed="' + (ui.target === "friend") + '">なかま（' + (f ? f.name : "") + '）</button><button type="button" class="stk-mini" data-a="target" data-v="avatar" aria-pressed="' + (ui.target === "avatar") + '">アバター</button></div>' +
       (prev ? '<div class="stk-prev">' + prev + '</div>' : '<div class="stk-note" style="text-align:center;padding:14px">この アバターは 絵が ないので かざれないよ。なかまを かざって みよう。</div>') +
-      '<div class="stk-note" style="text-align:center;margin-top:6px">かざりは 見た目だけ。なかまごとに おぼえるよ。</div>' + slots;
+      pickerHtml() +
+      '<div class="stk-note" style="text-align:center;margin-top:6px">かざりは 見た目だけ。なかまごとに おぼえるよ。ホームの 絵にも 出るよ。</div>' + slots;
+  }
+  function pickerHtml() {
+    var d = ensure();
+    if (ui.target === "avatar") {
+      var sel = d.selectedAvatar || "🐣";
+      return '<div class="stk-h">アバターを かえる</div><div class="stk-tray">' + myAvatars().map(function (e) {
+        var art = window.avatarHtml ? window.avatarHtml(e.id, e.icon, "normal") : e.icon;
+        return '<button type="button" data-a="pickav" data-v="' + esc(e.icon) + '" aria-label="' + esc(e.name) + '" style="width:52px;height:52px;font-size:28px;line-height:1;' + (sel === e.icon ? 'border-color:#db2777;box-shadow:0 0 0 2px #fbcfe8' : '') + '"><div style="width:44px;height:44px;margin:auto;display:flex;align-items:center;justify-content:center">' + art + '</div></button>';
+      }).join("") + '</div>';
+    }
+    var cur = curFriend();
+    return '<div class="stk-h">なかまを かえる</div><div class="stk-tray">' + myFriends().map(function (f) {
+      return '<button type="button" data-a="pickfr" data-v="' + esc(f.id) + '" aria-label="' + esc(f.name) + '" style="width:52px;height:52px;' + (cur && cur.id === f.id ? 'border-color:#db2777;box-shadow:0 0 0 2px #fbcfe8' : '') + '"><div style="width:44px;height:44px;margin:auto">' + f.svg("normal") + '</div></button>';
+    }).join("") + '</div>';
   }
 
   /* ---- プレゼント ---- */
@@ -527,7 +562,15 @@
       var p = v.split(":"), key = wearKey(); if (!key) return;
       d.stickerWear[key] = d.stickerWear[key] || {};
       if (p[1]) d.stickerWear[key][p[0]] = p[1]; else delete d.stickerWear[key][p[0]];
-      save(); return render();
+      save(); refreshMain(); return render();
+    }
+    if (a === "pickfr") {
+      if (!(window.MASCOTS && window.MASCOTS.isUnlocked && window.MASCOTS.isUnlocked(v))) return;
+      d.selectedFriend = v; save(); refreshMain(); return render();
+    }
+    if (a === "pickav") {
+      if (!myAvatars().some(function (e) { return e.icon === v; })) return;
+      d.selectedAvatar = v; save(); refreshMain(); return render();
     }
     if (a === "gto") { ui.giftTo = v; return render(); }
     if (a === "gpick") { ui.giftPick = ui.giftPick === v ? "" : v; return render(); }
