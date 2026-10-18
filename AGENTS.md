@@ -31,6 +31,7 @@
   この順番が必須）。スプレッドシート側に行を足す必要はない。データ保存はlocalStorage＋GAS経由で
   スプレッドシートにも保存。
 - **台帳同期**：新ステージの追加・変更時は `問題管理台帳.html` の `LEDGER` 配列も**必ず同時更新**すること。
+- **Mochi Mona との 連携**（2026-10-18）：保護者用アプリ Mochi Mona（`nekobb619-jpg/mochi-mona`）が `js/school-units.js` の 単元 id をミラーし、yumekawa の 4択の 形で 類題下書きを 作る。単元の 期間・id を 変えたら mochi-mona 側も sync する。データの 形は mochi-mona の `docs/DATA_CONTRACT.md`。
 - 実装の詳しい仕様（データ書式、`js/stages.js`・`js/quizzes/*.js`・`js/patch.js`の各仕組み、
   既存機能の内部動作）は `.knowledge/architecture-content.js.md` を参照。
 
