@@ -64,7 +64,7 @@
     {"id": "u050", "name": "外国語活動（通年）", "subject": "英語", "from": "2026-04-08", "to": "2027-03-19", "term": "0", "stages": ["英語/あいさつ/english401", "英語/曜日と天気/english403", "英語/時刻/english404", "英語/文房具/english405", "英語/学校の場所/english406", "英語/一日の生活/english407", "英語/メニュー/english402"], "jigaku": []},
     {"id": "u051", "name": "総合（テーマ探究）【環境】未来の地球を守ろう", "subject": "探究", "from": "2026-04-08", "to": "2027-03-19", "term": "0", "stages": ["社会/ごみ/gomi01", "社会/水道/josuijo01", "探究/調べ方/shirabe01", "探究/データ/data01"], "jigaku": []},
     {"id": "u052", "name": "総合（情報教育）プログラミング・情報モラル", "subject": "探究", "from": "2026-04-08", "to": "2027-03-19", "term": "0", "stages": ["探究/プログラミング/prog01", "探究/プログラミング/prog02", "探究/情報/net_ethics01", "探究/情報/net_ethics02"], "jigaku": []},
-    {"id": "u053", "name": "総合（My探究）こまき「夢☆チャレンジ」科", "subject": "探究", "from": "2026-04-08", "to": "2027-03-19", "term": "0", "stages": ["探究/設計/engineering01", "探究/調べ方/shirabe01", "探究/分岐図解/bunki01"], "jigaku": []}
+    {"id": "u053", "name": "総合（My探究）こまき「夢☆チャレンジ」科", "subject": "探究", "from": "2026-04-08", "to": "2027-03-19", "term": "0", "stages": ["探究/設計/engineering01", "探究/調べ方/shirabe01", "探究/分岐図解/bunki01", "探究/分岐図解/bunki02"], "jigaku": []}
   ];
   var SOON_DAYS = 7;
   function ymd(ms) { var d = new Date(ms); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }

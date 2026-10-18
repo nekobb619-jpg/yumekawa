@@ -5877,7 +5877,9 @@ window.renderBranchDiagramQuestion = function(current, zone) {
     group.appendChild(label);
     const chipsRow = document.createElement("div");
     chipsRow.className = "blank-picker-chips";
-    blank.options.forEach((opt, i) => {
+    // ★2026-10-18修正：データでは 正解が 先頭（correct:0）の ことが 多く、そのまま ならべると「いつも 左が 正解」に なっていた。
+    //   表示の 順だけ まぜる（判定は もとの 番号 i で 行う）。
+    blank.options.map((opt, i) => ({ opt, i })).fairShuffle().forEach(({ opt, i }) => {
       const chip = document.createElement("button");
       chip.className = "blank-chip";
       chip.textContent = opt;

@@ -393,8 +393,18 @@
       grade: "4年生",
       id: "探究/分岐図解/bunki01",
       name: "分岐図解トレーニング①（もしなら図・マインドマップ）",
-      reward: 10, showCount: 4, video_url: "", lab_url: "",
+      reward: 10, showCount: 6, video_url: "", lab_url: "",  // ★2026-10-18 4→6（保護者：図解の 問題が 少ない）
       created: "2026-07-19"
+    },
+    {
+      // ★2026-10-18追加：学校の 単元を 図に する（面積・がい数・4けた÷2けた・防災・ごみ・ネット・天気・季節・物語）
+      subject: "探究",
+      category: "図解トレーニング",
+      grade: "4年生",
+      id: "探究/分岐図解/bunki02",
+      name: "分岐図解トレーニング②（学校の 単元を 図に しよう）",
+      reward: 10, showCount: 6, video_url: "", lab_url: "",
+      created: "2026-10-18"
     },
     {
       subject: "算数",

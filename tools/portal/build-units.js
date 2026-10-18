@@ -68,7 +68,7 @@ const U = [
   // 学校の 総合の 計画（4年：テーマ探究【環境】60時間・情報教育10時間・My探究35時間）
   ["探究", 0, "総合（テーマ探究）【環境】未来の地球を守ろう", "2026-04-08", "2027-03-19", ["社会/ごみ/gomi01", "社会/水道/josuijo01", "探究/調べ方/shirabe01", "探究/データ/data01"], ["q_kankyo", "c_kankyo_gomi", "c_kankyo_sakusen"]],
   ["探究", 0, "総合（情報教育）プログラミング・情報モラル", "2026-04-08", "2027-03-19", ["探究/プログラミング/prog01", "探究/プログラミング/prog02", "探究/情報/net_ethics01", "探究/情報/net_ethics02"], ["q_password", "c_program", "c_netrule"]],
-  ["探究", 0, "総合（My探究）こまき「夢☆チャレンジ」科", "2026-04-08", "2027-03-19", ["探究/設計/engineering01", "探究/調べ方/shirabe01", "探究/分岐図解/bunki01"], ["c_yume", "c_shigoto"]]
+  ["探究", 0, "総合（My探究）こまき「夢☆チャレンジ」科", "2026-04-08", "2027-03-19", ["探究/設計/engineering01", "探究/調べ方/shirabe01", "探究/分岐図解/bunki01", "探究/分岐図解/bunki02"], ["c_yume", "c_shigoto"]]
 ];
 const stageById = Object.fromEntries(STAGES.map((s) => [s.id, s]));
 const key = (s) => String(s || "").replace(/\s+/g, "");
