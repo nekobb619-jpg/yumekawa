@@ -1291,6 +1291,13 @@
   </div>
 </div>
 <script>
+// ★2026-10-18追加（保護者：古い 問題は 正解が 一番上に 出やすい）：sort(() => Math.random() - 0.5) は かたよる
+//   （4択で もとの 1番目が 一番上に 36%・上か下に 67%）。かわりに フィッシャー–イェーツで 公平に まぜる。
+//   sort と 同じく その 配列を 並べかえて、その 配列を 返す。
+if (!Array.prototype.fairShuffle) Object.defineProperty(Array.prototype, "fairShuffle", { configurable: true, writable: true, value: function () {
+  for (var i = this.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = this[i]; this[i] = this[j]; this[j] = t; }
+  return this;
+} });
 window.GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzO9Ju2xrzQuHpeYAnxIvRtBkY8sPGpyDe4Y1lSlf9QQJmtT6cYCvtI_hGzzcAAlIXS/exec";
 // ★ふだん自動ログインする子どものID（GASの ALLOWED_PLAYERS と同じ名前にしてね）
 window.CHILD_ID = "りお";
@@ -1775,7 +1782,7 @@ window.buildExpeditionQuizQuestions = function (count) {
   Object.keys(window.DETECTIVE_LAB_SUBJECT_PREFIX || {}).forEach(function (subject) {
     pool = pool.concat(window._buildDetectiveNormalPool(subject));
   });
-  const shuffledPool = pool.slice().sort(function () { return Math.random() - 0.5; });
+  const shuffledPool = pool.slice().fairShuffle();
   return shuffledPool.slice(0, count).map(function (q) {
     const regenApplied = q.regen ? window.regenerateQuestion(q) : q;
     return window._shuffleQuestionChoices(regenApplied);
@@ -2145,7 +2152,7 @@ window._buildChoices = function(correctText, distractors) {
     }
   }
   const withFlag = [{ text: correctText, correct: true }, ...uniq.slice(0, 3).map(d => ({ text: d, correct: false }))];
-  withFlag.sort(() => Math.random() - 0.5);
+  withFlag.fairShuffle();
   return { a: withFlag.map(o => o.text), c: withFlag.findIndex(o => o.correct) };
 };
 
@@ -2195,7 +2202,7 @@ window.genMathReverseMulti = function() {
 window.genKokugoAntonym = function() {
   const pairs = [["大きい", "小さい"], ["あかるい", "くらい"], ["はやい", "おそい"], ["あつい", "つめたい"], ["ながい", "みじかい"], ["たかい", "ひくい"]];
   const [word, correctText] = pairs[Math.floor(Math.random() * pairs.length)];
-  const distractors = pairs.filter(p => p[1] !== correctText).sort(() => Math.random() - 0.5).slice(0, 3).map(p => p[1]);
+  const distractors = pairs.filter(p => p[1] !== correctText).fairShuffle().slice(0, 3).map(p => p[1]);
   const { a, c } = window._buildChoices(correctText, distractors);
   return {
     q: `「${word}」の 反対の いみの言葉は どれでしょう？`,
@@ -2207,7 +2214,7 @@ window.genKokugoAntonym = function() {
 window.genKokugoKanjiReading = function() {
   const list = [["音楽", "おんがく"], ["世界", "せかい"], ["漢字", "かんじ"], ["風景", "ふうけい"], ["昨夜", "さくや"], ["両親", "りょうしん"]];
   const [kanji, correctText] = list[Math.floor(Math.random() * list.length)];
-  const distractors = list.filter(p => p[1] !== correctText).sort(() => Math.random() - 0.5).slice(0, 3).map(p => p[1]);
+  const distractors = list.filter(p => p[1] !== correctText).fairShuffle().slice(0, 3).map(p => p[1]);
   const { a, c } = window._buildChoices(correctText, distractors);
   return {
     q: `「${kanji}」の 正しい 読みかたは どれでしょう？`,
@@ -2287,7 +2294,7 @@ window.genScienceReverseResult = function() {
 window.genShakaiPrefecture = function() {
   const table = [["北海道", "じゃがいも"], ["青森県", "りんご"], ["静岡県", "お茶"], ["愛知県", "自動車工業"], ["沖縄県", "さとうきび"], ["新潟県", "お米"]];
   const [pref, correctText] = table[Math.floor(Math.random() * table.length)];
-  const distractors = table.filter(p => p[1] !== correctText).sort(() => Math.random() - 0.5).slice(0, 3).map(p => p[1]);
+  const distractors = table.filter(p => p[1] !== correctText).fairShuffle().slice(0, 3).map(p => p[1]);
   const { a, c } = window._buildChoices(correctText, distractors);
   return {
     q: `「${pref}」の 名産品として 特に有名なものは どれでしょう？`,
@@ -2346,16 +2353,16 @@ window.genMathThinkingCondition = function () {
 // 国語：条件整理（2つのヒントから3人の順位を推理する）
 window.genKokugoThinkingLogic = function () {
   const namesPool = ["りく", "さくら", "はると", "みお", "ゆうと", "あかり"];
-  const names = namesPool.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+  const names = namesPool.slice().fairShuffle().slice(0, 3);
   // ★正解の「せいくらべ」順位を先に決め、ヒントは必ず「隣どうし」を比較する形で作る。
   //   （ランダムな2人の組み合わせを比較すると、3人目の順位が決まらず答えが一意にならない
   //   ケースがあったため、A＞B・B＞Cの連鎖になる比較だけを使う）
-  const orderedNames = names.slice().sort(() => Math.random() - 0.5);
+  const orderedNames = names.slice().fairShuffle();
   const askTallest = Math.random() < 0.5;
   const target = askTallest ? orderedNames[0] : orderedNames[2];
   const clue1 = `${orderedNames[0]}は${orderedNames[1]}より せが たかい。`;
   const clue2 = `${orderedNames[1]}は${orderedNames[2]}より せが たかい。`;
-  const clues = [clue1, clue2].sort(() => Math.random() - 0.5); // 提示する順番だけシャッフル
+  const clues = [clue1, clue2].fairShuffle(); // 提示する順番だけシャッフル
   const distractors = names.filter(n => n !== target).concat(["3人とも同じ"]).slice(0, 3);
   const { a, c } = window._buildChoices(target, distractors);
   return {
@@ -2391,10 +2398,10 @@ window.genShakaiThinkingClues = function () {
     { name: "愛知県", clues: ["自動車工業が さかん", "中部地方に ある", "名古屋城で 有名"] },
     { name: "静岡県", clues: ["富士山の ふもとに ある", "うなぎの 養しょくが さかん（浜名湖）", "お茶の 生産が さかん"] }
   ];
-  const pool = items.slice().sort(() => Math.random() - 0.5);
+  const pool = items.slice().fairShuffle();
   const target = pool[0];
   const distractorNames = pool.slice(1, 4).map(p => p.name);
-  const usedClues = target.clues.slice().sort(() => Math.random() - 0.5).slice(0, 2);
+  const usedClues = target.clues.slice().fairShuffle().slice(0, 2);
   const { a, c } = window._buildChoices(target.name, distractorNames);
   return {
     q: `つぎの 2つの ヒントに 両方 当てはまる 都道府県は どこでしょう？\n・${usedClues[0]}\n・${usedClues[1]}`,
@@ -2439,7 +2446,7 @@ window._shuffleQuestionChoices = function (q) {
   if (!q.a || !Array.isArray(q.a) || q.a.length < 2) return q;
   const clone = Object.assign({}, q);
   const withFlag = q.a.map(function (txt, idx) { return { txt: txt, correct: idx === q.c }; });
-  withFlag.sort(function () { return Math.random() - 0.5; });
+  withFlag.fairShuffle();
   clone.a = withFlag.map(function (o) { return o.txt; });
   clone.c = withFlag.findIndex(function (o) { return o.correct; });
   return clone;
@@ -2453,13 +2460,13 @@ window.pickBalancedQuestions = function (bundle, count) {
   if (bundle.length <= count) return bundle.slice();
   const thinking = bundle.filter(function (q) { return q.thinking; });
   const others = bundle.filter(function (q) { return !q.thinking; });
-  const shuffledOthers = others.slice().sort(function () { return Math.random() - 0.5; });
-  const shuffledThinking = thinking.slice().sort(function () { return Math.random() - 0.5; });
+  const shuffledOthers = others.slice().fairShuffle();
+  const shuffledThinking = thinking.slice().fairShuffle();
   const picks = [];
   if (shuffledThinking.length) picks.push(shuffledThinking[0]);
   const fillPool = shuffledOthers.concat(shuffledThinking.slice(1));
   picks.push.apply(picks, fillPool.slice(0, count - picks.length));
-  return picks.sort(function () { return Math.random() - 0.5; });
+  return picks.fairShuffle();
 };
 
 window.DETECTIVE_LAB_DAILY_MAX = 8; // ★2026-09-14変更：5→8。3回目以降は厳しめルール（1問間違えたら即0）が効くので、
@@ -2552,12 +2559,12 @@ window.startDetectiveLab = function(subject) {
   const masteredSchoolDL = new Set(window.saveData.fastMasteredQids || []);
   const schoolPicksDL = (window.schoolStageRank ? window._buildDetectiveNormalPool(subject) : [])
     .filter(function (q) { return window.schoolStageRank(q._srcStageId) === 0 && q.qid && !masteredSchoolDL.has(q._srcStageId + "::" + q.qid); })
-    .sort(function () { return Math.random() - 0.5; }).slice(0, DL_SCHOOL_MAX)
+    .fairShuffle().slice(0, DL_SCHOOL_MAX)
     .map(function (q) { return Object.assign({}, q, { q: "📌 いま 学校で ならって いる ところ\n" + q.q }); });
   const bankDL = (window.DETECTIVE_LAB_BANK && window.DETECTIVE_LAB_BANK[subject]) || [];
   if (!Array.isArray(window.saveData.detectiveSeenIds)) window.saveData.detectiveSeenIds = [];
   const seenIdsDL = window.saveData.detectiveSeenIds;
-  const unseenBankDL = bankDL.filter(function (q) { return seenIdsDL.indexOf(q.id) === -1; }).sort(function () { return Math.random() - 0.5; });
+  const unseenBankDL = bankDL.filter(function (q) { return seenIdsDL.indexOf(q.id) === -1; }).fairShuffle();
   const seenBankDL = bankDL.filter(function (q) { return seenIdsDL.indexOf(q.id) !== -1; }).sort(function (x, y) { return seenIdsDL.indexOf(x.id) - seenIdsDL.indexOf(y.id); });
   const bankPicksDL = unseenBankDL.concat(seenBankDL).slice(0, 4 - schoolPicksDL.length);
   bankPicksDL.forEach(function (q) {
@@ -2573,7 +2580,7 @@ window.startDetectiveLab = function(subject) {
   const pickedSchoolDL = new Set(schoolPicksDL.map(function (q) { return q._srcStageId + "::" + q.qid; }));
   const freshPoolDL = rawPool.filter(function (q) { return !isMasteredDL(q) && !pickedSchoolDL.has(q._srcStageId + "::" + q.qid); });
   const stalePoolDL = rawPool.filter(isMasteredDL);
-  const shuffledPool = schoolPicksDL.concat(bankPicksDL, freshPoolDL.sort(function () { return Math.random() - 0.5; }), stalePoolDL.sort(function () { return Math.random() - 0.5; }));
+  const shuffledPool = schoolPicksDL.concat(bankPicksDL, freshPoolDL.fairShuffle(), stalePoolDL.fairShuffle());
   let normalQs = shuffledPool.slice(0, 4).map(function (q) {
     const regenApplied = q.regen ? window.regenerateQuestion(q) : q;
     return window._shuffleQuestionChoices(regenApplied);
@@ -2585,7 +2592,7 @@ window.startDetectiveLab = function(subject) {
   // ★思考力問題を1問、必ず追加する（教科ごとの専用ジェネレーターをその場で実行）
   const thinkingGen = window.DETECTIVE_LAB_THINKING_GENERATOR[subject];
   if (thinkingGen) normalQs.push(thinkingGen());
-  normalQs = normalQs.sort(function () { return Math.random() - 0.5; });
+  normalQs = normalQs.fairShuffle();
 
   // ★6・7問目＝ボスは、既存の逆推論テンプレ生成をそのまま流用（実データ非依存でその場生成）を2問連続で出題する。
   //   ボス中はアイテム使用不可（showQuestionStep側の分岐で制御）。
@@ -2821,7 +2828,7 @@ window.tornadoCorrectCount = 0;
 
 window.launchTornadoChallenge = function () {
   window.maybeShowFastTapNotice();
-  const pool = window.getSurvivalQuestionPool().slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
+  const pool = window.getSurvivalQuestionPool().slice().fairShuffle().slice(0, 3);
   window.currentQuestions = pool.map(function (q) { return window._shuffleQuestionChoices(Object.assign({}, q)); });
   window.tornadoQuizModeActive = true;
   window.tornadoCorrectCount = 0;
@@ -2896,7 +2903,7 @@ window.buildSurvivalQuestionPool = function () {
 window.launchSurvivalMode = function () {
   const pool = window.buildSurvivalQuestionPool();
   if (pool.length < 10) { alert("⚡ サバイバルクイズに出せる問題がまだ少ないみたい…また今度チャレンジしてね！"); return; }
-  window.currentQuestions = pool.sort(function () { return Math.random() - 0.5; }).map(function (q) { return window._shuffleQuestionChoices(q); });
+  window.currentQuestions = pool.fairShuffle().map(function (q) { return window._shuffleQuestionChoices(q); });
   window.survivalModeActive = true;
   window.survivalScore = 0;
   window.currentQIdx = 0; window.totalMistakes = 0;
@@ -4812,8 +4819,8 @@ window.openKuroponQuiz = function(food) {
   window._kqCurrentFood = food;
 
   // 苦手問題を最優先でプールに追加し、不足分を通常問題で補う
-  const shuffledWeak = [...weakPool].sort(() => Math.random() - 0.5);
-  const shuffledNormal = [...normalPool].sort(() => Math.random() - 0.5);
+  const shuffledWeak = [...weakPool].fairShuffle();
+  const shuffledNormal = [...normalPool].fairShuffle();
   window._kqPool = [...shuffledWeak, ...shuffledNormal].slice(0, qCount);
 
   // 説明テキスト更新
@@ -5652,7 +5659,7 @@ window.launchQuest = function() {
     const isMastered = function (q) { return q && q.qid && masteredKeys.has(window.currentStage.id + "::" + q.qid); };
     const freshPool = window.quizPool.filter(function (q) { return !isMastered(q); });
     const stalePool = window.quizPool.filter(isMastered);
-    const orderedPool = freshPool.sort(() => Math.random() - 0.5).concat(stalePool.sort(() => Math.random() - 0.5));
+    const orderedPool = freshPool.fairShuffle().concat(stalePool.fairShuffle());
     window.currentQuestions = orderedPool.slice(0, 10);
     document.getElementById("game-screen").style.display = "block";
     if(window.saveData.inventory && window.saveData.inventory.length >= 1) { document.getElementById("item-use-in-game-btn").style.display = "block"; } else { document.getElementById("item-use-in-game-btn").style.display = "none"; }
@@ -5707,7 +5714,7 @@ window.launchWeakAttackLab = function() {
 
     if (targetWeakList.length > 0 && targetWeakList.length < 3 && window.quizPool.length > targetWeakList.length) {
       let currentRealWeakObj = targetWeakList[0];
-      let shuffledDummys = [...window.quizPool].sort(() => Math.random() - 0.5);
+      let shuffledDummys = [...window.quizPool].fairShuffle();
       shuffledDummys = shuffledDummys.filter(q => q.q !== currentRealWeakObj.q).slice(0, 3 - targetWeakList.length);
       shuffledDummys.forEach((dq, idx) => {
         let fakeWeakObj = Object.assign({}, dq, { isRealWeak: false, rawWeakId: `dummy_fade_${idx}` });
@@ -5718,7 +5725,7 @@ window.launchWeakAttackLab = function() {
     if (targetWeakList.length === 0) {
        alert("🤖 対象の苦手データが見つからなかったよ！"); window.quitQuest(); return;
     }
-    window.currentQuestions = targetWeakList.sort(() => Math.random() - 0.5);
+    window.currentQuestions = targetWeakList.fairShuffle();
     window.currentQIdx = 0;
 
     if(window.saveData.inventory && window.saveData.inventory.length >= 1) {
@@ -6018,7 +6025,7 @@ window.renderKanjiBuildQuestion = function(current, zone) {
     chipsRow.className = "blank-picker-chips";
     // ★2026-08-11修正：データ側のoptions配列が正解を先頭に置いたまま作られていることが多く、
     //   シャッフルせずに描画すると「常に左が正解」になるバグがあった。表示直前にシャッフルする。
-    const shuffledOptions = [...blank.options].sort(() => Math.random() - 0.5);
+    const shuffledOptions = [...blank.options].fairShuffle();
     shuffledOptions.forEach((opt) => {
       const chip = document.createElement("button");
       chip.className = "blank-chip";
@@ -6107,7 +6114,7 @@ window.regenHissanDivide = function() {
   options = options.slice(0, 4);
 
   const withFlag = options.map(function (o) { return { text: o, correct: o === correctText }; });
-  withFlag.sort(function () { return Math.random() - 0.5; });
+  withFlag.fairShuffle();
   const correctIdx = withFlag.findIndex(function (o) { return o.correct; });
 
   const qText = hasRemainder
@@ -6296,7 +6303,7 @@ window.showQuestionStep = function() {
     };
     zone.appendChild(submitBtn); zone.appendChild(passBtn);
   } else if (current.a && current.a.length > 0) {
-    let opts = current.a.map((txt, idx) => ({ txt, originalIdx: idx })).sort(() => Math.random() - 0.5);
+    let opts = current.a.map((txt, idx) => ({ txt, originalIdx: idx })).fairShuffle();
     const choiceBtns = [];
     opts.forEach(o => {
       const b = document.createElement("button"); b.className = "choice-btn"; b.textContent = o.txt;

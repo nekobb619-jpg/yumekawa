@@ -244,11 +244,11 @@
         var real = targetWeakList[0];
         var srcBundle = resolvedStages[real._originStgId];
         if (srcBundle && srcBundle.length > 1) {
-          var dummies = srcBundle.slice().sort(function () { return Math.random() - 0.5; }).filter(function (q) { return q.q !== real.q; }).slice(0, 3 - targetWeakList.length);
+          var dummies = srcBundle.slice().fairShuffle().filter(function (q) { return q.q !== real.q; }).slice(0, 3 - targetWeakList.length);
           dummies.forEach(function (dq, idx) { targetWeakList.push(Object.assign({}, dq, { isRealWeak: false, rawWeakId: "dummy_fade_" + idx })); });
         }
       }
-      window.currentQuestions = targetWeakList.sort(function () { return Math.random() - 0.5; }); window.currentQIdx = 0;
+      window.currentQuestions = targetWeakList.fairShuffle(); window.currentQIdx = 0;
       var hint = document.getElementById("game-hint-text"); if (hint) hint.textContent = "🧬 苦手撃破ラボ：弱点を克服してトークンを両替しよう！";
       document.getElementById("game-screen").style.display = "block";
       var invBtn2 = document.getElementById("item-use-in-game-btn");
