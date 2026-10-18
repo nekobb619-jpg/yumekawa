@@ -19,7 +19,7 @@
   var K = "#1f1b2e", P = "#7c3aed", PL = "#a78bfa", PLL = "#c4b5fd", PK = "#f472b6", PKL = "#f9a8d4", G = "#fbbf24", GL = "#fde68a", W = "#fff";
   var FAMILY = ["りお", "りさ", "papa"], GIFT_PER_DAY = 3, PAGE_MAX = 24, OUT_MAX = 90, SEEN_MAX = 300;
   var RATES = [[1, 0.58], [2, 0.28], [3, 0.11], [4, 0.03]];
-  var KINDS = { plan: "まなびプラン", stage: "ステージ", school: "いま 学校の 単元", lab: "探偵ラボ", jigaku: "自学ノート" }; // ★2026-10-16 school：学校で いま 習って いる 単元の ステージを クリア（ステージの ふくろとは 別に もう1つ）
+  var KINDS = { plan: "まなびプラン", stage: "ステージ", school: "いま 学校の 単元", lab: "探偵ラボ", jigaku: "自学ノート", why: "なぜ？メモ" }; // ★2026-10-16 school：学校で いま 習って いる 単元の ステージを クリア（ステージの ふくろとは 別に もう1つ）
 
   /* ---------------- 絵の 部品（viewBox 0 0 40 40） ---------------- */
   function n(v) { return (Math.round(v * 10) / 10); }

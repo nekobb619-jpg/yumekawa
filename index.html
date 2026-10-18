@@ -1369,7 +1369,7 @@ window.normalizeSaveData = function(data) {
   normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
   normalized.jigakuDone = Array.isArray(normalized.jigakuDone) ? normalized.jigakuDone : []; // ★2026-10-03：自学ノートで 書いた ネタ（js/jigaku-note.js）
   normalized.jigakuLastDate = normalized.jigakuLastDate || "";
-  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; // ★2026-10-03：🌼よかった帳
+  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; normalized.whyLog = Array.isArray(normalized.whyLog) ? normalized.whyLog : []; // ★2026-10-18：❓なぜ？メモ（js/why-note.js） // ★2026-10-03：🌼よかった帳
   normalized.uiBonusTenths = Number(normalized.uiBonusTenths || 0); // ★2026-10-03：メインの ボタンを 1日1回 開くと 0.1pt（js/usage-log.js）
   normalized.friendEggs = (normalized.friendEggs && typeof normalized.friendEggs === "object") ? normalized.friendEggs : {}; // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）
   normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
@@ -3383,7 +3383,7 @@ window.loadGameLocal = function() {
 //   ext行を読み込めたことを確認できた（saveExtLoadedFor===playerId）ときだけ分割保存し、
 //   それまでは従来どおり1行にまとめて保存する（＝空/古いext行で履歴を上書きしない安全側）。
 window.SAVE_EXT_SUFFIX = "__ext";
-window.SAVE_EXT_FIELDS = ["answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
+window.SAVE_EXT_FIELDS = ["answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog", "whyLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
 window.SAVE_SAFE_LIMIT = 42000; // 1セル50,000文字制限に対して余白を持たせた、1行あたりの上限
 window.saveExtLoadedFor = null;
 // ★2026-09-23追加：「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」だけを優先度順に、
@@ -6837,6 +6837,9 @@ window.exitToMainMenu = function() {
     if (rewardResult.caseType) logDetailParts.push(rewardResult.caseType === "new_question" ? "新問題クリア" : "再コンプリート");
     const logDetailStr = logDetailParts.length > 0 ? ` [${logDetailParts.join("・")}]` : "";
     window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: window.currentActiveStageIsMaster ? 'MASTER周回完了' : `クリア! +${earnedQ}Q獲得${logDetailStr}` });
+    // ★2026-10-18：quitQuestで 復習/マスターの フラグが 消える 前に おぼえて おく（なぜ？メモ用）
+    const whyOk = !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster;
+    const whyName = (window.currentStage && window.currentStage.name) || "";
     window.quitQuest();
     if (window.rollTreasureDrop) {
       const treasureResult = window.rollTreasureDrop();
@@ -6846,6 +6849,8 @@ window.exitToMainMenu = function() {
         window.showTreasureReveal(treasureResult.treasure, treasureResult.isDupe);
       }
     }
+    // ★2026-10-18追加（作戦会議 10/18 採用③）：クリアの あと「なぜ？を 1つ 書く」（任意・1日 3回まで・復習/マスター周回は なし）。保存は 上で すんで いる
+    if (whyOk && window.askWhyAfterClear) { setTimeout(function () { window.askWhyAfterClear(targetStageId, whyName); }, 700); }
 };
 window.triggerForcedClear = function() { window.exitToMainMenu(); };
 // ★2026-08-03修正：探偵ラボ/救出クイズ中に「やめる」を押すとモードフラグが残り続けるバグを修正
@@ -6968,6 +6973,7 @@ window.initQAMode();
 <script src="./js/hissan-sheet.js?v=20261005"></script>
 <script src="./js/kanji-sheet.js"></script>
 <script src="./js/jigaku-note.js"></script>
+<script src="./js/why-note.js"></script>
 <script src="./js/detective-log.js"></script>
 <script src="./js/sticker-book.js"></script>
 <script src="./js/expedition-art.js"></script>

@@ -423,6 +423,14 @@
       return '<div style="font-size:11px;font-weight:900;color:#0f766e;margin:8px 0 3px;">📓 ノート ' + (pi + 1) + 'ページめ' + (pages.length > 1 ? "（全" + pages.length + "ページ）" : "") + '</div>' + html + '</div></div>';
     }).join("");
   }
+  // ★2026-10-18追加（作戦会議 10/18 採用③）：ステージの あとに 書いた「なぜ？」（js/why-note.js）を「今日の ぎ問」の ネタに 出す
+  function whyBox(id) {
+    if (id !== "a_toi" || !window.whyLogRecent) return "";
+    var ws = window.whyLogRecent(3); if (!ws.length) return "";
+    return '<div style="background:#faf5ff;border:2px dashed #e9d5ff;border-radius:12px;padding:8px 10px;margin-top:6px;">' +
+      '<div style="font-size:12px;font-weight:900;color:#a21caf;">❓ アプリで 書いた なぜ？（1つ えらんで「今日の ぎ問」に 書こう）</div>' +
+      ws.map(function (w) { return '<div style="font-size:13px;font-weight:800;color:#6b21a8;margin-top:4px;">・' + esc(w.t) + '<span style="font-size:10px;color:#9ca3af;">（' + esc(w.n || "") + '）</span></div>'; }).join("") + '</div>';
+  }
   window.showJigakuCard = function (id) {
     var c = findCard(id); if (!c) return;
     var ok = done().indexOf(id) >= 0;
@@ -430,6 +438,7 @@
       '<div style="font-size:17px;font-weight:900;color:#6b21a8;margin:2px 0 6px;">' + esc(c.title) + '</div>' +
       (c.note ? '<div style="background:#fefce8;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:800;color:#854d0e;line-height:1.6;">💡 ' + esc(c.note) + '</div>' : '') +
       '<div style="font-size:12px;font-weight:700;color:#7a6985;margin-top:6px;">（　）の ところと、<span style="background:#fef9c3;padding:0 3px;">うすい 黄色の 行</span>は 自分で 書こう。1ページ うめられるよ。線は じょうぎで。</div>' +
+      whyBox(id) +
       notebook(c) +
       '<div style="display:grid;gap:8px;margin-top:12px;">' +
         '<button style="' + BTN + 'padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#10b981,#059669);" onclick="window.jigakuDone(\'' + id + '\')">' + (ok ? "✅ 書けた（もう一度 記録）" : "✅ ノートに 書けた！") + '</button>' +
