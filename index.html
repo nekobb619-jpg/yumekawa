@@ -6824,6 +6824,8 @@ window.exitToMainMenu = function() {
     if(window.currentActiveStageIsMaster) msg += `🏆 殿堂入りマスターのご褒美スコアを獲得！\n`;
     if(isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster && baseReward === 0) msg += `⚠️ (本日の2Qボーナスは上限に達しました)\n`;
     if(masterCapHit) msg += `⚠️ (本日のマスター周回ボーナス上限 ${window.MASTER_DAILY_Q_CAP}Q に到達しました)\n`;
+    // ★2026-10-19追加：🧠 じっくり 考えて 正解した 問題を ほめる（js/think-bonus.js。うらの pt は 見せない）
+    if (window.thinkClearCount > 0) msg += `\n🧠 じっくり 考えて 正解：${window.thinkClearCount}問！ 考えた ぶんだけ 力に なるよ\n`;
     msg += `\n合計【 ${earnedQ}Q 】を金庫にチャージしました！${dropMsg}`;
     if (window.kcardMessage) msg += window.kcardMessage(kcardResult, (window.currentStage && window.currentStage.name) || "");
 

@@ -55,6 +55,7 @@
     var w = function () {
       var stage = window.currentActiveStageId, s = session;
       session = { n: 0, p: 0 };
+      window.thinkClearCount = s.n; // クリアの メッセージで「じっくり 考えて 正解：N問」と ほめる（pt は 見せない）
       if (s.n > 0 && window.syncWithGoogleSpreadsheet) {
         try { window.syncWithGoogleSpreadsheet("LOG", { stage: stage || "🧠じっくり", msg: "🧠じっくりボーナス（うら） +" + s.p + "pt（" + s.n + "問）" }); } catch (e) {}
       }

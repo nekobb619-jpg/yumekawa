@@ -175,7 +175,9 @@
     retry: ["まちがえたあと とけたね！ それが 力に なるよ", "あきらめなかったね！", "考えなおせたの、えらい！"],
     wrong: ["だいじょうぶ！ もういちど 考えよう", "まちがえたけど、いま 気づけて よかった！", "おしい！ ヒントを 見てみよう", "ここが のびる ところだよ"],
     skip: ["「わからない」って 言えるの えらい！", "解説を いっしょに 読もう", "つぎに 会ったら とけるよ"],
-    fast: ["はやい！ 問題も しっかり 読めたかな？👀"]
+    fast: ["はやい！ 問題も しっかり 読めたかな？👀"],
+    // ★2026-10-19追加（保護者：考えて 解いたら 声を かけて あげて）：1回目で 正解・3秒いじょう 考えた とき（js/think-bonus.js と 同じ 目安）
+    think: ["じっくり 考えて 正解！🧠", "よく 読んで 考えたね！", "考えた 時間が 力に なってるよ", "あわてず とけたね、かっこいい！", "ちゃんと 考えたの、つたわったよ✨", "その 考え方、ばっちり！"]
   };
   var gb = { streak: 0, timer: null };
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -236,6 +238,7 @@
       if (pre.firstTry && pre.elapsed !== null && pre.elapsed < FAST_MS && qLen >= LONG_Q_CHARS) text = pick(LINES.fast);
       else if (!pre.firstTry) text = pick(LINES.retry);
       else if (gb.streak >= 3 && gb.streak % 3 === 0) text = gb.streak + "もん れんぞく せいかい！🔥";
+      else if (pre.elapsed !== null && pre.elapsed >= 3000 && pre.elapsed <= 120000) text = pick(LINES.think);
       else text = pick(LINES.correct);
       react(gb.streak >= 3 ? "streak" : (pre.firstTry ? "correct" : "retry"), text);
     }, function () {
