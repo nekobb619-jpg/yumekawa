@@ -485,16 +485,61 @@
     m.querySelector(".stk-tabs").innerHTML = tabsHtml();
     var body = document.getElementById("stk-body");
     body.innerHTML = ui.tab === "book" ? bookHtml() : ui.tab === "get" ? getHtml() : ui.tab === "wear" ? wearHtml() : giftHtml();
-    if (ui.tab === "book") { bindPage(); bindEdit(); }
+    if (ui.tab === "book") { bindPage(); bindEdit(); bindTxt(); }
+  }
+
+  /* ---- ✏️ 文字シール（★2026-10-19 保護者：自由に 文字を 書ける シール） ----
+     台紙の 1まいと して { s:"txt", t:"文字", c:いろ番号, x, y, z, r } を のこす。ただ（Q なし）、1つの 背景に TXT_MAX まいまで。
+     手もちの シールの 数（placed/free）には 入らない。プレゼントには できない。 */
+  var TXT_MAX = 6, TXT_LEN = 10;
+  var TXT_STYLES = [
+    { n: "ゆめむらさき", bg: "#ede9fe", fg: "#6d28d9", ln: "#7c3aed" },
+    { n: "いちごピンク", bg: "#fce7f3", fg: "#db2777", ln: "#db2777" },
+    { n: "よぞら", bg: "#1f1b2e", fg: "#fde68a", ln: "#a78bfa" },
+    { n: "そらいろ", bg: "#e0f2fe", fg: "#0369a1", ln: "#0ea5e9" },
+    { n: "レモン", bg: "#fef9c3", fg: "#a16207", ln: "#eab308" },
+    { n: "ふちどり", bg: "none", fg: "#fff", ln: "#7c3aed" }
+  ];
+  function txtClean(t) { return Array.from(String(t || "").replace(/[<>&"'\n\r\t]/g, "").trim()).slice(0, TXT_LEN).join(""); }
+  function txtW(t) { var w = 0; Array.from(t).forEach(function (ch) { w += /[ -~]/.test(ch) ? 11 : 20; }); return Math.max(30, w + 18); }
+  function txtSvg(t, c) {
+    var st = TXT_STYLES[c] || TXT_STYLES[0], w = txtW(t), e = esc(t);
+    var font = 'font-family="\'Zen Maru Gothic\',sans-serif" font-weight="900" font-size="18" text-anchor="middle"';
+    var body = st.bg === "none"
+      ? '<text x="' + w / 2 + '" y="19" ' + font + ' fill="' + st.fg + '" stroke="' + st.ln + '" stroke-width="5" stroke-linejoin="round" paint-order="stroke">' + e + '</text>'
+      : '<rect x="1.5" y="1.5" width="' + (w - 3) + '" height="23" rx="11.5" fill="' + st.bg + '" stroke="' + st.ln + '" stroke-width="2"/><text x="' + w / 2 + '" y="19" ' + font + ' fill="' + st.fg + '">' + e + '</text>';
+    return '<svg viewBox="0 0 ' + w + ' 26" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + e + '">' + body + '</svg>';
+  }
+  function txtCount(pg) { return pg.filter(function (x) { return x.s === "txt"; }).length; }
+  function itemHtml(x, i) {
+    var isT = x.s === "txt", w = isT ? txtW(x.t || "") : 40;
+    var sz = isT ? Math.min(92, w * 0.28 * (x.z || 1)) : 20 * (x.z || 1);
+    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
+  }
+  function txtPanelHtml() {
+    var c = ui.txtC || 0, t = txtClean(ui.txt || ""), n = txtCount(board(ui.page));
+    return '<div class="stk-h">✏️ 文字シールを つくる</div>' +
+      '<div style="background:#fff;border:2px solid #ede9fe;border-radius:16px;padding:8px">' +
+      '<input id="stk-txt" type="text" maxlength="' + TXT_LEN + '" value="' + esc(ui.txt || "") + '" placeholder="すきな ことば（' + TXT_LEN + '文字まで）" style="width:100%;box-sizing:border-box;border:2px solid #ddd6fe;border-radius:12px;padding:8px 10px;font:800 15px \'Zen Maru Gothic\',sans-serif">' +
+      '<div style="display:flex;gap:5px;flex-wrap:wrap;margin:7px 0">' + TXT_STYLES.map(function (st, i) {
+        return '<button type="button" class="stk-mini img" data-a="txtc" data-v="' + i + '" aria-pressed="' + (c === i) + '" aria-label="' + st.n + '" style="padding:3px 6px;line-height:0;' + (st.bg === "none" ? 'background:#c4b5fd' : '') + '"><div style="width:46px">' + txtSvg("あ", i).replace("<svg ", '<svg style="height:20px;width:auto" ') + '</div></button>';
+      }).join("") + '</div>' +
+      '<div id="stk-txt-prev" style="display:flex;justify-content:center;min-height:30px;margin-bottom:6px">' + (t ? txtSvg(t, c).replace("<svg ", '<svg style="height:30px;width:auto;max-width:100%" ') : '') + '</div>' +
+      '<div style="text-align:center"><button type="button" class="stk-btn" data-a="txtplace"' + (n >= TXT_MAX ? ' disabled' : '') + '>この ページに はる</button></div>' +
+      '<div class="stk-note" style="text-align:center;margin-top:5px">文字シールは ただ。1つの 背景に ' + TXT_MAX + 'まいまで（いま ' + n + 'まい）。名前・住所・電話番号は 書かないでね。</div></div>';
+  }
+  function bindTxt() {
+    var inp = document.getElementById("stk-txt"); if (!inp) return;
+    inp.oninput = function () {
+      ui.txt = inp.value; var t = txtClean(inp.value), pv = document.getElementById("stk-txt-prev");
+      if (pv) pv.innerHTML = t ? txtSvg(t, ui.txtC || 0).replace("<svg ", '<svg style="height:30px;width:auto;max-width:100%" ') : "";
+    };
   }
 
   /* ---- はる ---- */
   function bookHtml() {
     var d = ensure(), pg = board(ui.page);
-    var items = pg.map(function (x, i) {
-      var sz = 20 * (x.z || 1);
-      return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + svg(x.s, 60) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
-    }).join("");
+    var items = pg.map(itemHtml).join("");
     var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("");
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
@@ -503,7 +548,8 @@
       (ui.edit ? editHtml() : '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>') + (ui.edit ? photoPanelHtml() : tools) +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
-      '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>');
+      '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>') +
+      (ui.edit ? '' : txtPanelHtml());
   }
   function bgPickHtml() {
     var d = ensure(), cur = d.stickerPageBg[ui.page];
@@ -667,6 +713,14 @@
     if (a === "place") {
       if (free(v) < 1) return; if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
       pg.push({ s: v, x: 30 + Math.round(Math.random() * 40), y: 30 + Math.round(Math.random() * 40), z: 1, r: 0 }); ui.sel = pg.length - 1; save(); return render();
+    }
+    if (a === "txtc") { ui.txtC = Number(v) || 0; return render(); }
+    if (a === "txtplace") {
+      var tt = txtClean(ui.txt); if (!tt) { toast("✏️ 文字を 書いてね"); return; }
+      if (txtCount(pg) >= TXT_MAX) { toast("文字シールは 1つの 背景に " + TXT_MAX + "まいまで"); return; }
+      if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
+      pg.push({ s: "txt", t: tt, c: ui.txtC || 0, x: 50, y: 20 + Math.round(Math.random() * 60), z: 1, r: 0 }); ui.sel = pg.length - 1; ui.txt = "";
+      log("文字シール「" + tt + "」"); save(); return render();
     }
     if (a === "target") { ui.target = v; return render(); }
     if (a === "wear") {
