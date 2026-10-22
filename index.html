@@ -1375,7 +1375,7 @@ window.normalizeSaveData = function(data) {
   normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
   // ★2026-10-04追加：🎀シール帳（js/sticker-book.js）。Q・pt とは べつ。プレゼントの 送り先に 見せる stickerOut は core 行に 置く
   normalized.stickers = (normalized.stickers && typeof normalized.stickers === "object") ? normalized.stickers : {};
-  normalized.stickerPacks = Number(normalized.stickerPacks || 0);
+  normalized.stickerPacks = Number(normalized.stickerPacks || 0); normalized.stickerShards = Number(normalized.stickerShards || 0); normalized.stickerTicketProg = Number(normalized.stickerTicketProg || 0); normalized.stickerTickets = Number(normalized.stickerTickets || 0); normalized.stickerPackTags = Array.isArray(normalized.stickerPackTags) ? normalized.stickerPackTags : []; // ★2026-10-22：🧩かけら・🎫券・ふくろの 教科
   normalized.stickerPages = Array.isArray(normalized.stickerPages) ? normalized.stickerPages : [[], [], []];
   normalized.stickerBoards = (normalized.stickerBoards && typeof normalized.stickerBoards === "object" && !Array.isArray(normalized.stickerBoards)) ? normalized.stickerBoards : null; // ★2026-10-17：背景ごとの シールの はり方（null の ときは js/sticker-book.js が stickerPages から うつす）
   normalized.stickerWear = (normalized.stickerWear && typeof normalized.stickerWear === "object") ? normalized.stickerWear : {};
@@ -6826,6 +6826,8 @@ window.exitToMainMenu = function() {
     if(masterCapHit) msg += `⚠️ (本日のマスター周回ボーナス上限 ${window.MASTER_DAILY_Q_CAP}Q に到達しました)\n`;
     // ★2026-10-19追加：🧠 じっくり 考えて 正解した 問題を ほめる（js/think-bonus.js。うらの pt は 見せない）
     if (window.thinkClearCount > 0) msg += `\n🧠 じっくり 考えて 正解：${window.thinkClearCount}問！ 考えた ぶんだけ 力に なるよ\n`;
+    // ★2026-10-22：🧩 シールの かけら（js/sticker-book.js）
+    if (window.stickerShardSummary) { const shs = window.stickerShardSummary(); if (shs.got > 0) msg += `🧩 シールの かけら +${shs.got}こ${shs.dayFull ? "（今日の ぶんは いっぱい！）" : `（あと ${shs.left}こで ふくろ）`}\n`; }
     msg += `\n合計【 ${earnedQ}Q 】を金庫にチャージしました！${dropMsg}`;
     if (window.kcardMessage) msg += window.kcardMessage(kcardResult, (window.currentStage && window.currentStage.name) || "");
 
@@ -6865,6 +6867,7 @@ window.quitQuest = function() { window.weakAttackModeActive = false; window.dyna
 //   正常にクリアしてexitToMainMenuの最後でquitQuestが呼ばれる経路はここを通らないため、
 //   まっとうにクリアした分のptsは没収されない。
 window.abortQuest = function() {
+  if (window.stickerShardReset) window.stickerShardReset(); // ★2026-10-22：やめた ステージの かけら数を つぎの クリア表示に まぜない
   const earned = window.sessionEarnedPts || 0;
   if (earned > 0 && window.saveData) {
     window.saveData.pts = Math.max(0, (window.saveData.pts || 0) - earned);
