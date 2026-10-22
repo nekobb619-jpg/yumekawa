@@ -155,6 +155,7 @@
     e_abc: function () { return '<rect x="3" y="20" width="14" height="14" rx="3" fill="#fca5a5" stroke="#b91c1c" stroke-width="1.3"/><rect x="18" y="20" width="14" height="14" rx="3" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.3"/><rect x="11" y="5" width="14" height="14" rx="3" fill="#86efac" stroke="#15803d" stroke-width="1.3"/>' + '<text x="10" y="31" font-size="10" font-weight="900" text-anchor="middle" fill="#7f1d1d" font-family="\'Zen Maru Gothic\',sans-serif">A</text><text x="25" y="31" font-size="10" font-weight="900" text-anchor="middle" fill="#1e3a8a" font-family="\'Zen Maru Gothic\',sans-serif">B</text><text x="18" y="16" font-size="10" font-weight="900" text-anchor="middle" fill="#14532d" font-family="\'Zen Maru Gothic\',sans-serif">C</text>'; },
     e_hi: function () { return PA("M6 8 H34 Q37 8 37 11 V25 Q37 28 34 28 H18 L11 35 L12 28 H6 Q3 28 3 25 V11 Q3 8 6 8z", W, P, 1.6) + '<text x="20" y="23" font-size="12" font-weight="900" text-anchor="middle" fill="' + P + '" font-family="\'Zen Maru Gothic\',sans-serif">Hi!</text>' + H(34, 6, 2.6, PK); },
     e_aplus: function () { return S5(20, 21, 16, G, "#d97706") + '<text x="20" y="25.5" font-size="10" font-weight="900" text-anchor="middle" fill="#7c2d12" font-family="\'Zen Maru Gothic\',sans-serif">A+</text>' + SP(34, 6, 2.4, W) + SP(5, 33, 2, GL); },
+    qs_hatena: function () { return '<rect x="5" y="5" width="30" height="30" rx="8" fill="#ede9fe" stroke="' + P + '" stroke-width="2"/><text x="20" y="29" font-size="22" font-weight="900" text-anchor="middle" fill="' + P + '" font-family="\'Zen Maru Gothic\',sans-serif">？</text>' + SP(33, 6, 2.4, PK); },
     rainbow_ar: function () { return PA("M2.5 24 A17.5 17.5 0 0 1 37.5 24", null, PK, 1.8) + PA("M4.3 24 A15.7 15.7 0 0 1 35.7 24", null, G, 1.8) + PA("M2.5 24 A17.5 17.5 0 0 0 37.5 24", null, PL, 1.8) + PA("M4.3 24 A15.7 15.7 0 0 0 35.7 24", null, "#7dd3fc", 1.8) + SP(20, 4, 3, W) + SP(4, 9, 2.6, G) + SP(36, 9, 2.6, G) + SP(5, 36, 2.4, PK) + SP(35, 36, 2.4, PL); }
   };
   var NAMES = {
@@ -175,8 +176,11 @@
     k_fude: ["ふで", 2], k_hon: ["ひらいた 本", 2], k_kanji: ["かんじ ふだ", 3],
     r_flask: ["フラスコ", 2], r_mushi: ["むしめがね", 2], r_saturn: ["わっかの ほし", 3],
     s_chikyu: ["ちきゅうぎ", 2], s_hoi: ["ほうい じしん", 2], s_takara: ["たからの ちず", 3],
-    e_abc: ["ABC ブロック", 2], e_hi: ["Hi! ふきだし", 2], e_aplus: ["A+ スター", 3]
+    e_abc: ["ABC ブロック", 2], e_hi: ["Hi! ふきだし", 2], e_aplus: ["A+ スター", 3],
+    qs_hatena: ["はてな シール（もんだい）", 1]
   };
+  // ★2026-10-22 問題シール：はてな シールを はって もんだいに 正解すると キラキラに かわる
+  function qsKiraSvg(px) { return '<svg viewBox="0 0 40 40" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="キラキラ はてな"><rect x="5" y="5" width="30" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/><text x="20" y="29" font-size="22" font-weight="900" text-anchor="middle" fill="#d97706" font-family="\'Zen Maru Gothic\',sans-serif">！</text>' + SP(6, 6, 3.4, G) + SP(34, 7, 2.6, PK) + SP(34, 34, 3, PL) + SP(5, 33, 2.2, G) + '</svg>'; }
   // ★2026-10-22（保護者：シール集めの 楽しさを 問題に）教科シリーズ：その 教科の ステージで もらった ふくろから 出やすい
   var SERIES = { m_jougi: "算数", m_tokei: "算数", m_kazuneko: "算数", k_fude: "国語", k_hon: "国語", k_kanji: "国語", r_flask: "理科", r_mushi: "理科", r_saturn: "理科", s_chikyu: "社会", s_hoi: "社会", s_takara: "社会", e_abc: "英語", e_hi: "英語", e_aplus: "英語" };
   var SERIES_ICON = { "算数": "📐", "国語": "📖", "理科": "🔬", "社会": "🗺", "英語": "🔤" };
@@ -384,6 +388,7 @@
   window.grantStickerPack = function (kind, why) {
     if (!window.saveData || !KINDS[kind]) return false;
     var d = ensure();
+    if (kind === "stage") { mEvent("stage"); mEvent("subj", subjOf(window.currentActiveStageId)); }
     if (d.stickerDay.k[kind]) return false;
     d.stickerDay.k[kind] = 1; d.stickerPacks += 1; addTag(kind === "stage" || kind === "school" ? subjOf(window.currentActiveStageId) : "");
     log("ふくろ +1（" + KINDS[kind] + (why ? "：" + why : "") + "） 所持" + d.stickerPacks);
@@ -426,7 +431,10 @@
       var r = orig.apply(this, arguments);
       try {
         var ms = typeof st === "number" ? Date.now() - st : null;
-        if (sdt && (sdt.totalAnswersCount || 0) > before && correct && first) addShards(ms !== null && ms >= 3000 && ms <= 120000 ? 2 : 1);
+        if (sdt && (sdt.totalAnswersCount || 0) > before && correct && first) {
+          var th = ms !== null && ms >= 3000 && ms <= 120000;
+          addShards(th ? 2 : 1); mEvent("first"); if (th) mEvent("think");
+        }
       } catch (e) {}
       return r;
     };
@@ -437,7 +445,7 @@
   // ステージ クリアの メッセージ用（index.html）。この ステージで あつめた かけらと、つぎの ふくろまでの のこり
   window.stickerShardSummary = function () {
     var got = shardSession; shardSession = 0;
-    try { var d = shardData(); return { got: got, left: SHARD_PACK - d.stickerShards, dayFull: d.stickerShardDay.n >= SHARD_DAY }; } catch (e) { return { got: got, left: 0, dayFull: false }; }
+    try { var d = shardData(), mo = mission(); return { got: got, left: SHARD_PACK - d.stickerShards, dayFull: d.stickerShardDay.n >= SHARD_DAY, m: { t: mo.def.t, p: mo.m.p, goal: mo.def.goal, done: !!mo.m.done, got: !!mo.m.got } }; } catch (e) { return { got: got, left: 0, dayFull: false }; }
   };
   window.stickerShardReset = function () { shardSession = 0; };
 
@@ -447,6 +455,10 @@
   function addTag(t) { var d = ensure(); if (!Array.isArray(d.stickerPackTags)) d.stickerPackTags = []; d.stickerPackTags.push(t || ""); d.stickerPackTags = d.stickerPackTags.slice(-Math.max(1, d.stickerPacks)); }
   function takeTag() { var d = ensure(); if (!Array.isArray(d.stickerPackTags) || !d.stickerPackTags.length) return ""; while (d.stickerPackTags.length > d.stickerPacks + 1) d.stickerPackTags.shift(); return d.stickerPackTags.pop() || ""; }
   function roll(tag) {
+    if (tag === "R3" || tag === "R4c") {
+      var r4 = tag === "R4c" ? 0.3 : 0.15, rx = Math.random() < r4 ? 4 : 3, px = LIST.filter(function (s) { return s.r === rx; });
+      return px[Math.floor(Math.random() * px.length)];
+    }
     // 教科の ふくろは 35% で その 教科シリーズ（★2 が 75%・★3 が 25%）
     if (tag && Math.random() < 0.35) {
       var rr = Math.random() < 0.75 ? 2 : 3, sp = LIST.filter(function (s) { return SERIES[s.id] === tag && s.r === rr; });
@@ -599,7 +611,7 @@
   function itemHtml(x, i) {
     var isT = x.s === "txt", w = isT ? txtW(x.t || "") : 40;
     var sz = isT ? Math.min(92, w * 0.28 * (x.z || 1)) : 20 * (x.z || 1);
-    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
+    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : x.s === "qs_hatena" && x.kira ? qsKiraSvg(60) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
   }
   function txtPanelHtml() {
     var c = ui.txtC || 0, t = txtClean(ui.txt || ""), n = txtCount(board(ui.page));
@@ -621,6 +633,71 @@
     };
   }
 
+  /* ---- ❓ 問題シール（★2026-10-22） ----
+     はった「はてな シール」を えらぶと もんだいが 出る（学校で いま 習って いる 単元を 先に）。1回目で 正解 → キラキラ（x.kira）＋ かけら +2。
+     まちがえたら その シールは 今日は おしまい（x.qd＝今日）。答えと 解説を 見せる。 */
+  function qsPick() {
+    var Q = (window.CONTENT && window.CONTENT.quizzes) || {}, ids = [];
+    try { var su = window.schoolUnitsNow ? window.schoolUnitsNow() : null; (su && su.now || []).forEach(function (u) { (u.stages || []).forEach(function (id) { if (Q[id]) ids.push(id); }); }); } catch (e) {}
+    if (!ids.length) ids = Object.keys(Q);
+    var ok = function (q) { return q && Array.isArray(q.a) && q.a.length >= 2 && typeof q.c === "number" && !q.type && !q.canvas_code && !q.diagram && !q.kanjiBuild && !q.scenario; };
+    for (var tries = 0; tries < 30; tries++) {
+      var sid = ids[Math.floor(Math.random() * ids.length)], list = (Q[sid] || []).filter(ok);
+      if (list.length) { var q = list[Math.floor(Math.random() * list.length)]; var ord = q.a.map(function (_, i) { return i; }); ord = ord.fairShuffle ? ord.fairShuffle() : ord; return { sid: sid, q: q, ord: ord }; }
+    }
+    return null;
+  }
+  function plain(t) { return esc(String(t || "").replace(/<[^>]+>/g, "")); }
+  function qsToolHtml(x) {
+    var cur = ui.qs && ui.qs.i === ui.sel && ui.qs.k === boardKey(ui.page) ? ui.qs : null;
+    if (cur && cur.res) return '<div style="background:' + (cur.res === "ok" ? "#fef3c7" : "#f1f5f9") + ';border-radius:14px;padding:10px;margin-top:8px;font-size:12.5px;font-weight:800;line-height:1.7;color:#3b2f52">' +
+      (cur.res === "ok" ? "🎉 せいかい！ シールが キラキラに なったよ（かけら +2）" : "おしい！ 答えは「" + plain(cur.q.a[cur.q.c]) + "」。また あした ちょうせんしよう") +
+      '<div style="font-weight:700;color:#6b5a85;margin-top:4px">' + plain(String(cur.q.job_desc || "").split("\n")[0]) + '</div><div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="qsclose">とじる</button></div></div>';
+    if (x.kira) return '<div class="stk-note" style="text-align:center;margin-top:8px">✨ もんだいに 正解して キラキラに なった シールだよ</div>';
+    if (x.qd === today()) return '<div class="stk-note" style="text-align:center;margin-top:8px">❓ この シールの もんだいは また あした ちょうせんしよう</div>';
+    if (!cur) return '<div style="text-align:center;margin-top:8px"><button type="button" class="stk-btn" data-a="qsq">❓ もんだいに ちょうせん（正解で キラキラ）</button></div>';
+    return '<div style="background:#fff;border:2px solid #ddd6fe;border-radius:14px;padding:10px;margin-top:8px">' +
+      '<div style="font-size:13.5px;font-weight:900;color:#3b2f52;line-height:1.7">' + plain(cur.q.q) + '</div>' +
+      (cur.q.hint ? '<div class="stk-note">💡 ' + plain(cur.q.hint) + '</div>' : '') +
+      '<div style="display:grid;gap:6px;margin-top:8px">' + cur.ord.map(function (i) { return '<button type="button" class="stk-mini" style="padding:9px;font-size:13px;text-align:left" data-a="qsa" data-v="' + i + '">' + plain(cur.q.a[i]) + '</button>'; }).join("") + '</div></div>';
+  }
+
+  /* ---- 🎯 シール帳ミッション（★2026-10-22） ----
+     1日 1つ（日付で きまる）。少し 背のびの 量。たっせいしたら「あつめる」で うけとる → とくべつな ふくろ（★3いじょう／★4チャンス）。 */
+  var MISSIONS = [
+    { id: "st3", t: "ステージを 3つ クリア", goal: 3, key: "stage", rw: "R3" },
+    { id: "sub2", t: "ちがう 教科の ステージを 2つ クリア", goal: 2, key: "subj", rw: "R3" },
+    { id: "think5", t: "じっくり 考えて 正解 5問", goal: 5, key: "think", rw: "R3" },
+    { id: "first15", t: "1回目で 正解 15問", goal: 15, key: "first", rw: "R3" },
+    { id: "labpf", t: "探偵ラボを 1回目 ぜんぶ 正解で クリア", goal: 1, key: "labpf", rw: "R4c" }
+  ];
+  var RW_NAME = { R3: "★3いじょうの とくべつ ふくろ", R4c: "★4チャンス ふくろ（★4 が 30%）" };
+  function mission() {
+    var d = ensure(), t = today();
+    if (!d.stickerMission || d.stickerMission.d !== t) {
+      var h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+      d.stickerMission = { d: t, id: MISSIONS[h % MISSIONS.length].id, p: 0, sub: [], done: 0, got: 0 };
+    }
+    var m = d.stickerMission, def = MISSIONS.filter(function (x) { return x.id === m.id; })[0] || MISSIONS[0];
+    return { m: m, def: def };
+  }
+  function mEvent(key, v) {
+    try {
+      var o = mission(), m = o.m, def = o.def; if (def.key !== key || m.done) return;
+      if (key === "subj") { if (!v || m.sub.indexOf(v) >= 0) return; m.sub.push(v); m.p = m.sub.length; } else m.p += (v || 1);
+      if (m.p >= def.goal) { m.p = def.goal; m.done = 1; log("🎯 ミッション たっせい：" + def.t); toast("🎯 ミッション たっせい！「あつめる」で ごほうびを うけとろう"); }
+    } catch (e) {}
+  }
+  function missionHtml() {
+    var o = mission(), m = o.m, def = o.def;
+    return '<div style="background:linear-gradient(135deg,#fdf4ff,#ede9fe);border:2px solid #f0abfc;border-radius:16px;padding:10px 12px;margin-top:10px">' +
+      '<div style="font-size:13px;font-weight:900;color:#a21caf">🎯 今日の シール帳ミッション</div>' +
+      '<div style="font-size:14px;font-weight:900;color:#3b2f52;margin:3px 0">' + def.t + '（' + m.p + '／' + def.goal + '）</div>' +
+      '<div style="height:10px;background:#fff;border-radius:999px;overflow:hidden"><div style="height:100%;width:' + Math.round(m.p / def.goal * 100) + '%;background:linear-gradient(90deg,#e879f9,#a855f7)"></div></div>' +
+      '<div class="stk-note" style="margin-top:4px">ごほうび：' + RW_NAME[def.rw] + '。ミッションは 毎日 かわるよ。</div>' +
+      (m.done && !m.got ? '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-btn" data-a="mclaim">🎁 ごほうびを うけとる</button></div>' : m.got ? '<div class="stk-note" style="text-align:center">✅ 今日の ごほうびは うけとったよ</div>' : '') + '</div>';
+  }
+
   /* ---- はる ---- */
   function bookHtml() {
     var d = ensure(), pg = board(ui.page);
@@ -629,6 +706,7 @@
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
+    if (ui.sel >= 0 && pg[ui.sel] && pg[ui.sel].s === "qs_hatena") tools = qsToolHtml(pg[ui.sel]) + tools;
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + boardLen(boardKey(i)) + '）</button>'; }).join("") + '</div>' +
       (ui.edit ? editHtml() : '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>') + (ui.edit ? photoPanelHtml() : tools) +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
@@ -707,7 +785,7 @@
       '<div style="font-size:15px;font-weight:900;color:#fde68a">🎁 シールの ふくろ：' + d.stickerPacks + 'つ</div>' +
       '<div style="margin:10px 0"><button type="button" class="stk-btn" data-a="open"' + (d.stickerPacks ? "" : " disabled") + '>ふくろを あける</button></div>' +
       '<div style="font-size:11px;font-weight:700;line-height:1.7;color:#ddd6fe">学習を 1つ 終えると 1ふくろ。同じ 種類は 1日 1ふくろまで。<br>今日 もらった もの：</div><div style="margin-top:6px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap">' + kinds + '</div></div>' +
-      shardBox +
+      missionHtml() + shardBox +
       '<div class="stk-h">シール ずかん（' + totalOwned() + '／' + LIST.length + '）</div><div class="stk-grid">' + grid + '</div>';
   }
   // えらべる シール券：まだ もって いない ★1〜★3 から 1まい えらぶ（★4 は ふくろだけ）
@@ -815,6 +893,19 @@
       if (free(v) < 1) return; if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
       pg.push({ s: v, x: 30 + Math.round(Math.random() * 40), y: 30 + Math.round(Math.random() * 40), z: 1, r: 0 }); ui.sel = pg.length - 1; save(); return render();
     }
+    if (a === "mclaim") {
+      var mo = mission(); if (!mo.m.done || mo.m.got) return;
+      mo.m.got = 1; d.stickerPacks += 1; addTag(mo.def.rw); save(); log("🎯 ミッションの ごほうび：" + RW_NAME[mo.def.rw]);
+      toast("🎁 " + RW_NAME[mo.def.rw] + " を 1つ もらったよ！"); return render();
+    }
+    if (a === "qsq") { if (!x || x.s !== "qs_hatena" || x.kira || x.qd === today()) return; var pk = qsPick(); if (!pk) { toast("もんだいが 見つからなかったよ"); return; } ui.qs = { i: ui.sel, k: boardKey(ui.page), q: pk.q, ord: pk.ord, sid: pk.sid }; return render(); }
+    if (a === "qsa") {
+      if (!ui.qs || ui.qs.res || ui.qs.i !== ui.sel || ui.qs.k !== boardKey(ui.page) || !x) return;
+      var okq = Number(v) === ui.qs.q.c; ui.qs.res = okq ? "ok" : "ng";
+      if (okq) { x.kira = 1; addShards(2); } else x.qd = today();
+      log("❓ 問題シール " + (okq ? "正解 → キラキラ" : "まちがい") + "（" + ui.qs.sid + "）"); save(); return render();
+    }
+    if (a === "qsclose") { ui.qs = null; return render(); }
     if (a === "ticket") { ui.ticket = !ui.ticket; return render(); }
     if (a === "ticketpick") {
       var dd = shardData(), tk = BY[v]; if (!tk || tk.r > 3 || dd.stickerTickets < 1) return;
@@ -916,7 +1007,12 @@
   function wrapLab() {
     var o = window.finishDynamicPractice;
     if (typeof o !== "function" || o._stkWrapped) return;
-    var w = function () { var r = o.apply(this, arguments); try { window.grantStickerPack("lab"); } catch (e) {} return r; };
+    var w = function () {
+      var tot = (window.currentQuestions || []).length, cr = Number(window.dynamicPracticeCreditSum || 0), wasLab = !!window.dynamicPracticeModeActive;
+      var r = o.apply(this, arguments);
+      try { window.grantStickerPack("lab"); if (wasLab && tot > 0 && cr >= tot) mEvent("labpf"); } catch (e) {}
+      return r;
+    };
     w._stkWrapped = true; window.finishDynamicPractice = w;
   }
   // ホームの なかまの 絵は 気分が 変わった ときしか かき直さないので、かざりが 変わったら かき直させる
