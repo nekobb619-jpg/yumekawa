@@ -569,8 +569,21 @@
     m.addEventListener("click", function (e) { if (e.target === m) { close(); return; } var b = e.target.closest("[data-a]"); if (b) act(b.getAttribute("data-a"), b.getAttribute("data-v"), b); });
     document.body.appendChild(m);
     ui.tab = tab || (sd().stickerPacks > 0 ? "get" : "book"); ui.sel = -1;
+    ui.snap0 = snapNow(); ui.hist = []; // ★2026-10-24：ひらいた ときの はり方（もどす 用）と、1つ もどす 用の りれき
     render();
   };
+  /* ---- ↶ もどす（★2026-10-24 保護者：アレンジを ひらいた ときに もどす・1つ もどす） ----
+     台紙（stickerBoards）ぜんたいを 文字に して おぼえる。もどした あと、手もちより 多く はって いる シールは うしろから はがす（プレゼントした あと など） */
+  function snapNow() { try { return JSON.stringify(ensure().stickerBoards || {}); } catch (e) { return "{}"; } }
+  function pushHist(str) { if (!ui.hist) ui.hist = []; if (ui.hist[ui.hist.length - 1] === str) return; ui.hist.push(str); if (ui.hist.length > 30) ui.hist.shift(); }
+  function restoreBoards(str) {
+    var d = ensure(); try { d.stickerBoards = JSON.parse(str) || {}; } catch (e) { return; }
+    Object.keys(d.stickerBoards).forEach(function (k) {
+      var b = d.stickerBoards[k]; if (!Array.isArray(b)) { delete d.stickerBoards[k]; return; }
+      for (var i = b.length - 1; i >= 0; i--) { var x = b[i]; if (x && x.s !== "txt" && placed(x.s) > owned(x.s)) b.splice(i, 1); }
+    });
+    ui.sel = -1; ui.qs = null; save();
+  }
   function tabsHtml() {
     var d = ensure();
     return [["book", "📖 はる"], ["get", "🎁 あつめる" + (d.stickerPacks ? "（" + d.stickerPacks + "）" : "")], ["wear", "👗 きせかえ"], ["gift", "💌 プレゼント"]].map(function (t) {
@@ -704,11 +717,12 @@
     var items = pg.map(itemHtml).join("");
     var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("");
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
-      '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="front">いちばん 上へ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
+      '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="up">⬆ 1つ 前へ</button><button type="button" class="stk-mini" data-a="down">⬇ 1つ 後ろへ</button><button type="button" class="stk-mini" data-a="front">いちばん 前へ</button><button type="button" class="stk-mini" data-a="back">いちばん 後ろへ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
     if (ui.sel >= 0 && pg[ui.sel] && pg[ui.sel].s === "qs_hatena") tools = qsToolHtml(pg[ui.sel]) + tools;
     return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + boardLen(boardKey(i)) + '）</button>'; }).join("") + '</div>' +
       (ui.edit ? editHtml() : '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>') + (ui.edit ? photoPanelHtml() : tools) +
+      (ui.edit ? '' : '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px"><button type="button" class="stk-mini" data-a="undo"' + ((ui.hist || []).length ? '' : ' disabled style="opacity:.45"') + '>↶ 1つ もどす</button><button type="button" class="stk-mini" data-a="reset0"' + (ui.snap0 && ui.snap0 !== snapNow() ? '' : ' disabled style="opacity:.45"') + '>⟲ ひらいた ときに もどす</button></div>') +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
       '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>') +
@@ -748,7 +762,7 @@
         it = selHit || free1 || it;
       }
       var i = Number(it.getAttribute("data-i")), rc = page.getBoundingClientRect(), x = pgArr[i];
-      drag = { i: i, el: it, rc: rc, moved: false, lk: !!x.lk, sx: e.clientX, sy: e.clientY, dx: e.clientX - (rc.left + rc.width * x.x / 100), dy: e.clientY - (rc.top + rc.height * x.y / 100) };
+      drag = { before: snapNow(), i: i, el: it, rc: rc, moved: false, lk: !!x.lk, sx: e.clientX, sy: e.clientY, dx: e.clientX - (rc.left + rc.width * x.x / 100), dy: e.clientY - (rc.top + rc.height * x.y / 100) };
       try { page.setPointerCapture(e.pointerId); } catch (er) {}
       e.preventDefault();
     };
@@ -763,9 +777,9 @@
     };
     page.onpointerup = page.onpointercancel = function () {
       if (!drag) return;
-      var i = drag.i, moved = drag.moved; drag = null;
-      if (moved) save();
-      if (ui.sel !== i) { ui.sel = i; render(); }
+      var i = drag.i, moved = drag.moved, before = drag.before; drag = null;
+      if (moved) { save(); pushHist(before); }
+      if (ui.sel !== i || moved) { ui.sel = i; render(); }
     };
   }
 
@@ -883,7 +897,16 @@
     });
   }
 
-  function act(a, v) {
+  var MUT = { place: 1, txtplace: 1, lockall: 1, unlockall: 1, lock: 1, big: 1, small: 1, rot: 1, front: 1, back: 1, up: 1, down: 1, peel: 1 };
+  function act(a, v, b) {
+    if (a === "undo") { if (!ui.hist || !ui.hist.length) return; restoreBoards(ui.hist.pop()); toast("↶ 1つ もどしたよ"); return render(); }
+    if (a === "reset0") { if (!ui.snap0) return; var cur0 = snapNow(); if (cur0 === ui.snap0) return; pushHist(cur0); restoreBoards(ui.snap0); toast("⟲ ひらいた ときの はり方に もどしたよ（「1つ もどす」で とりけせるよ）"); return render(); }
+    var before = MUT[a] ? snapNow() : null;
+    var r = act0(a, v, b);
+    if (before !== null && snapNow() !== before) { pushHist(before); if (ui.tab === "book") render(); }
+    return r;
+  }
+  function act0(a, v) {
     var d = ensure(), pg = board(ui.page), x = pg && pg[ui.sel];
     if (a === "close") return close();
     if (a === "tab") { ui.tab = v; ui.sel = -1; if (v === "gift") ui.inbox = null; return render(); }
@@ -994,7 +1017,10 @@
     if (a === "lockall" || a === "unlockall") { pg.forEach(function (y) { if (a === "lockall") y.lk = 1; else delete y.lk; }); toast(a === "lockall" ? "この ページの シールを ぜんぶ 固定したよ 📌" : "固定を はずしたよ"); save(); return render(); }
     if (!x) return;
     if (a === "lock") { if (x.lk) delete x.lk; else x.lk = 1; save(); return render(); }
-    if (x.lk && a !== "peel" && a !== "front") return;
+    if (x.lk && a !== "peel" && a !== "front" && a !== "back" && a !== "up" && a !== "down") return;
+    if (a === "up") { if (ui.sel >= pg.length - 1) { toast("もう いちばん 前だよ"); return; } pg[ui.sel] = pg[ui.sel + 1]; pg[ui.sel + 1] = x; ui.sel += 1; }
+    if (a === "down") { if (ui.sel <= 0) { toast("もう いちばん 後ろだよ"); return; } pg[ui.sel] = pg[ui.sel - 1]; pg[ui.sel - 1] = x; ui.sel -= 1; }
+    if (a === "back") { pg.splice(ui.sel, 1); pg.unshift(x); ui.sel = 0; }
     if (a === "big") x.z = Math.min(2.2, Math.round(((x.z || 1) + 0.2) * 10) / 10);
     if (a === "small") x.z = Math.max(0.5, Math.round(((x.z || 1) - 0.2) * 10) / 10);
     if (a === "rot") x.r = ((x.r || 0) + 15) % 360;
