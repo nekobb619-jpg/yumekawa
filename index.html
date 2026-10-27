@@ -1369,7 +1369,7 @@ window.normalizeSaveData = function(data) {
   normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
   normalized.jigakuDone = Array.isArray(normalized.jigakuDone) ? normalized.jigakuDone : []; // ★2026-10-03：自学ノートで 書いた ネタ（js/jigaku-note.js）
   normalized.jigakuLastDate = normalized.jigakuLastDate || "";
-  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; normalized.whyLog = Array.isArray(normalized.whyLog) ? normalized.whyLog : []; normalized.thinkBonusLog = Array.isArray(normalized.thinkBonusLog) ? normalized.thinkBonusLog : []; // ★2026-10-19：🧠じっくりボーナス（js/think-bonus.js） // ★2026-10-18：❓なぜ？メモ（js/why-note.js） // ★2026-10-03：🌼よかった帳
+  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; normalized.whyLog = Array.isArray(normalized.whyLog) ? normalized.whyLog : []; normalized.thinkBonusLog = Array.isArray(normalized.thinkBonusLog) ? normalized.thinkBonusLog : []; normalized.papaMission = (normalized.papaMission && typeof normalized.papaMission === "object" && !Array.isArray(normalized.papaMission)) ? normalized.papaMission : {}; // ★2026-10-28：👨お父さんミッション（js/papa-mission.js） // ★2026-10-19：🧠じっくりボーナス（js/think-bonus.js） // ★2026-10-18：❓なぜ？メモ（js/why-note.js） // ★2026-10-03：🌼よかった帳
   normalized.uiBonusTenths = Number(normalized.uiBonusTenths || 0); // ★2026-10-03：メインの ボタンを 1日1回 開くと 0.1pt（js/usage-log.js）
   normalized.friendEggs = (normalized.friendEggs && typeof normalized.friendEggs === "object") ? normalized.friendEggs : {}; // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）
   normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
@@ -6980,6 +6980,7 @@ window.initQAMode();
 <script src="./js/jigaku-note.js"></script>
 <script src="./js/why-note.js"></script>
 <script src="./js/think-bonus.js"></script>
+<script src="./js/papa-mission.js"></script>
 <script src="./js/detective-log.js"></script>
 <script src="./js/sticker-book.js"></script>
 <script src="./js/expedition-art.js"></script>
