@@ -407,12 +407,12 @@
     if (!d.stickerShardDay || d.stickerShardDay.d !== t) d.stickerShardDay = { d: t, n: 0 };
     return d;
   }
-  function addShards(n) {
+  function addShards(n, tag) {
     var d = shardData(), add = Math.max(0, Math.min(n, SHARD_DAY - d.stickerShardDay.n));
-    if (!add) return;
+    if (!add) return 0;
     d.stickerShardDay.n += add; d.stickerShards += add; d.stickerTicketProg += add; shardSession += add;
     while (d.stickerShards >= SHARD_PACK) {
-      d.stickerShards -= SHARD_PACK; d.stickerPacks += 1; addTag(subjOf(window.currentActiveStageId));
+      d.stickerShards -= SHARD_PACK; d.stickerPacks += 1; addTag(tag !== undefined ? tag : subjOf(window.currentActiveStageId));
       log("🧩 かけら " + SHARD_PACK + "こ → ふくろ +1 所持" + d.stickerPacks);
       toast("🧩 かけらが " + SHARD_PACK + "こ そろった！ シールの ふくろ +1");
     }
@@ -421,7 +421,11 @@
       log("🎫 えらべる シール券 +1 所持" + d.stickerTickets);
       toast("🎫 えらべる シール券を 1まい もらったよ！");
     }
+    return add;
   }
+  // ★2026-10-29：探偵ラボ（js/detective-boost.js）から よぶ。ステージの クリア表示用の かけら数には 入れない。返り値＝ふえた かけら
+  window.stickerAddShardsExternal = function (n, tag) { try { var keep = shardSession, a = addShards(n, tag || ""); shardSession = keep; return a; } catch (e) { return 0; } };
+  window.stickerMissionEvent = function (key, v) { try { mEvent(key, v); } catch (e) {} };
   function installShards() {
     var orig = window.recordAnswerLog;
     if (typeof orig !== "function" || orig._stkWrapped) return !!(orig && orig._stkWrapped);

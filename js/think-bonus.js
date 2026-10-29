@@ -31,6 +31,14 @@
     sd.thinkBonusLog = log.slice(-60);
   }
 
+  // ★2026-10-29：探偵ラボ（js/detective-boost.js）から よぶ。ステージの クリア表示用の session には 入れない。返り値＝ふえた pt
+  window.thinkBonusAwardExternal = function () {
+    var sd = window.saveData; if (!sd) return 0;
+    var before = Number(sd.pts) || 0, keep = { n: session.n, p: session.p };
+    award(); session = keep;
+    return (Number(sd.pts) || 0) - before;
+  };
+
   function install() {
     var orig = window.recordAnswerLog;
     if (typeof orig !== "function" || orig._thinkWrapped) return false;

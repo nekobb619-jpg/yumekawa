@@ -1369,7 +1369,7 @@ window.normalizeSaveData = function(data) {
   normalized.tutorPlanLastDoneDate = normalized.tutorPlanLastDoneDate || "";
   normalized.jigakuDone = Array.isArray(normalized.jigakuDone) ? normalized.jigakuDone : []; // ★2026-10-03：自学ノートで 書いた ネタ（js/jigaku-note.js）
   normalized.jigakuLastDate = normalized.jigakuLastDate || "";
-  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; normalized.whyLog = Array.isArray(normalized.whyLog) ? normalized.whyLog : []; normalized.thinkBonusLog = Array.isArray(normalized.thinkBonusLog) ? normalized.thinkBonusLog : []; normalized.papaMission = (normalized.papaMission && typeof normalized.papaMission === "object" && !Array.isArray(normalized.papaMission)) ? normalized.papaMission : {}; // ★2026-10-28：👨お父さんミッション（js/papa-mission.js） // ★2026-10-19：🧠じっくりボーナス（js/think-bonus.js） // ★2026-10-18：❓なぜ？メモ（js/why-note.js） // ★2026-10-03：🌼よかった帳
+  normalized.yokattaLog = Array.isArray(normalized.yokattaLog) ? normalized.yokattaLog : []; normalized.whyLog = Array.isArray(normalized.whyLog) ? normalized.whyLog : []; normalized.thinkBonusLog = Array.isArray(normalized.thinkBonusLog) ? normalized.thinkBonusLog : []; normalized.detectiveRank = (normalized.detectiveRank && typeof normalized.detectiveRank === "object") ? normalized.detectiveRank : { perfect: 0, runs: 0 }; normalized.papaMission = (normalized.papaMission && typeof normalized.papaMission === "object" && !Array.isArray(normalized.papaMission)) ? normalized.papaMission : {}; // ★2026-10-29：🕵️探偵ランク（js/detective-boost.js） // ★2026-10-28：👨お父さんミッション（js/papa-mission.js） // ★2026-10-19：🧠じっくりボーナス（js/think-bonus.js） // ★2026-10-18：❓なぜ？メモ（js/why-note.js） // ★2026-10-03：🌼よかった帳
   normalized.uiBonusTenths = Number(normalized.uiBonusTenths || 0); // ★2026-10-03：メインの ボタンを 1日1回 開くと 0.1pt（js/usage-log.js）
   normalized.friendEggs = (normalized.friendEggs && typeof normalized.friendEggs === "object") ? normalized.friendEggs : {}; // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）
   normalized.nakamaEggs = Number(normalized.nakamaEggs || 0);
@@ -2555,7 +2555,7 @@ window.startDetectiveLab = function(subject) {
   //   （通常ステージの問題はすでに何周もしていて、覚えた答えを3秒でタップできてしまうため）。
   // ★2026-10-16追加：学校で いま 習って いる 単元（js/school-units.js）の 問題を 4問中 2問まで 先に 出す。
   //   覚えて しまった 問題（fastMasteredQids）は 出さない。のこりは これまでどおり 探偵ラボ専用バンクから。
-  const DL_SCHOOL_MAX = 2;
+  const DL_SCHOOL_MAX = 3; // ★2026-10-29：2→3（保護者：探偵ラボの 入口を やさしく。ひっかけ問題は 専用バンクから 1問）
   const masteredSchoolDL = new Set(window.saveData.fastMasteredQids || []);
   const schoolPicksDL = (window.schoolStageRank ? window._buildDetectiveNormalPool(subject) : [])
     .filter(function (q) { return window.schoolStageRank(q._srcStageId) === 0 && q.qid && !masteredSchoolDL.has(q._srcStageId + "::" + q.qid); })
@@ -6981,6 +6981,7 @@ window.initQAMode();
 <script src="./js/why-note.js"></script>
 <script src="./js/think-bonus.js"></script>
 <script src="./js/papa-mission.js"></script>
+<script src="./js/detective-boost.js"></script>
 <script src="./js/detective-log.js"></script>
 <script src="./js/sticker-book.js"></script>
 <script src="./js/expedition-art.js"></script>
