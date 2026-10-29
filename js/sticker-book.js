@@ -155,6 +155,11 @@
     e_abc: function () { return '<rect x="3" y="20" width="14" height="14" rx="3" fill="#fca5a5" stroke="#b91c1c" stroke-width="1.3"/><rect x="18" y="20" width="14" height="14" rx="3" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.3"/><rect x="11" y="5" width="14" height="14" rx="3" fill="#86efac" stroke="#15803d" stroke-width="1.3"/>' + '<text x="10" y="31" font-size="10" font-weight="900" text-anchor="middle" fill="#7f1d1d" font-family="\'Zen Maru Gothic\',sans-serif">A</text><text x="25" y="31" font-size="10" font-weight="900" text-anchor="middle" fill="#1e3a8a" font-family="\'Zen Maru Gothic\',sans-serif">B</text><text x="18" y="16" font-size="10" font-weight="900" text-anchor="middle" fill="#14532d" font-family="\'Zen Maru Gothic\',sans-serif">C</text>'; },
     e_hi: function () { return PA("M6 8 H34 Q37 8 37 11 V25 Q37 28 34 28 H18 L11 35 L12 28 H6 Q3 28 3 25 V11 Q3 8 6 8z", W, P, 1.6) + '<text x="20" y="23" font-size="12" font-weight="900" text-anchor="middle" fill="' + P + '" font-family="\'Zen Maru Gothic\',sans-serif">Hi!</text>' + H(34, 6, 2.6, PK); },
     e_aplus: function () { return S5(20, 21, 16, G, "#d97706") + '<text x="20" y="25.5" font-size="10" font-weight="900" text-anchor="middle" fill="#7c2d12" font-family="\'Zen Maru Gothic\',sans-serif">A+</text>' + SP(34, 6, 2.4, W) + SP(5, 33, 2, GL); },
+    // ★2026-10-30 クロぽんの へんしん シール（げんてい。ふくろ・券からは 出ない。js/kuropon-forms.js が なかよし度で わたす）
+    kp_moon: function () { return '<g transform="translate(-1 1)">' + catSit() + '</g>' + PA("M10 23 Q20 29 30 23 L29 27 Q20 32 11 27z", "#1e3a8a", "#172554", 1) + '<g transform="translate(19 -2) scale(.5)">' + ART.moon() + '</g>' + SP(5, 10, 2.6, GL) + SP(8, 30, 1.8, W) + SP(34, 30, 2.2, PLL); },
+    kp_majo: function () { return '<g transform="translate(0 3)">' + catSit() + '</g>' + '<g transform="translate(7 -9) scale(.66)">' + ART.majo_hat() + '</g>' + PA("M30 36 L36 22", null, "#92400e", 1.8) + S5(36.4, 20.6, 3.6, G, "#d97706") + SP(31, 15, 1.8, W) + SP(5, 22, 2.2, PLL); },
+    kp_angel: function () { return '<g transform="translate(0 3) scale(1 .92)">' + ART.wings() + '</g>' + '<g transform="translate(0 3)">' + catSit() + '</g>' + '<g transform="translate(8 -6.5) scale(.6)">' + ART.halo() + '</g>'; },
+    kp_king: function () { return C(20, 22, 18, "rgba(253,230,138,.55)") + PA("M9 20 Q20 26 31 20 L36 39 Q20 35 4 39z", "#dc2626", "#7f1d1d", 1.2) + PA("M9 20 Q20 26 31 20", null, W, 2.4) + '<g transform="translate(0 3)">' + catSit() + '</g>' + '<g transform="translate(11.5 -4.5) scale(.43)">' + ART.crown() + '</g>' + SP(4, 8, 2.6, G) + SP(36, 9, 2.2, GL) + SP(36, 31, 2, W); },
     qs_hatena: function () { return '<rect x="5" y="5" width="30" height="30" rx="8" fill="#ede9fe" stroke="' + P + '" stroke-width="2"/><text x="20" y="29" font-size="22" font-weight="900" text-anchor="middle" fill="' + P + '" font-family="\'Zen Maru Gothic\',sans-serif">？</text>' + SP(33, 6, 2.4, PK); },
     rainbow_ar: function () { return PA("M2.5 24 A17.5 17.5 0 0 1 37.5 24", null, PK, 1.8) + PA("M4.3 24 A15.7 15.7 0 0 1 35.7 24", null, G, 1.8) + PA("M2.5 24 A17.5 17.5 0 0 0 37.5 24", null, PL, 1.8) + PA("M4.3 24 A15.7 15.7 0 0 0 35.7 24", null, "#7dd3fc", 1.8) + SP(20, 4, 3, W) + SP(4, 9, 2.6, G) + SP(36, 9, 2.6, G) + SP(5, 36, 2.4, PK) + SP(35, 36, 2.4, PL); }
   };
@@ -177,8 +182,11 @@
     r_flask: ["フラスコ", 2], r_mushi: ["むしめがね", 2], r_saturn: ["わっかの ほし", 3],
     s_chikyu: ["ちきゅうぎ", 2], s_hoi: ["ほうい じしん", 2], s_takara: ["たからの ちず", 3],
     e_abc: ["ABC ブロック", 2], e_hi: ["Hi! ふきだし", 2], e_aplus: ["A+ スター", 3],
-    qs_hatena: ["はてな シール（もんだい）", 1]
+    qs_hatena: ["はてな シール（もんだい）", 1],
+    kp_moon: ["つきよの クロぽん", 4], kp_majo: ["まほうつかい クロぽん", 4], kp_angel: ["てんしの クロぽん", 4], kp_king: ["おうさまの クロぽん", 4]
   };
+  // げんてい シール（ふくろ・券・ミッションからは 出ない）
+  var LIMITED = { kp_moon: "🐱 なかよし度 25", kp_majo: "🐱 なかよし度 50", kp_angel: "🐱 なかよし度 75", kp_king: "🐱 なかよし度 100" };
   // ★2026-10-22 問題シール：はてな シールを はって もんだいに 正解すると キラキラに かわる
   function qsKiraSvg(px) { return '<svg viewBox="0 0 40 40" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="キラキラ はてな"><rect x="5" y="5" width="30" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/><text x="20" y="29" font-size="22" font-weight="900" text-anchor="middle" fill="#d97706" font-family="\'Zen Maru Gothic\',sans-serif">！</text>' + SP(6, 6, 3.4, G) + SP(34, 7, 2.6, PK) + SP(34, 34, 3, PL) + SP(5, 33, 2.2, G) + '</svg>'; }
   // ★2026-10-22（保護者：シール集めの 楽しさを 問題に）教科シリーズ：その 教科の ステージで もらった ふくろから 出やすい
@@ -374,7 +382,13 @@
   function board(i) { var d = ensure(), k = boardKey(i); if (!Array.isArray(d.stickerBoards[k])) d.stickerBoards[k] = []; return d.stickerBoards[k]; }
   function boardLen(k) { var b = ensure().stickerBoards[k]; return Array.isArray(b) ? b.length : 0; }
   // どの 背景に はって いても 1まいは 1まい（ほかの 背景に はるには、はがして から）
-  function placed(id) { var c = 0, bs = ensure().stickerBoards; Object.keys(bs).forEach(function (k) { (bs[k] || []).forEach(function (x) { if (x.s === id) c++; }); }); return c; }
+  // ★2026-10-30：キラ シール（x.kira・はてな いがい）は 手もちの「キラ」から はる ので、ふつうの まい数には 入れない
+  function isK(x) { return !!(x && x.kira && x.s !== "qs_hatena"); }
+  function placed(id) { var c = 0, bs = ensure().stickerBoards; Object.keys(bs).forEach(function (k) { (bs[k] || []).forEach(function (x) { if (x.s === id && !isK(x)) c++; }); }); return c; }
+  function kOwned(id) { var d = ensure(); if (!d.stickerKira || typeof d.stickerKira !== "object") d.stickerKira = {}; return Number(d.stickerKira[id] || 0); }
+  function kPlaced(id) { var c = 0, bs = ensure().stickerBoards; Object.keys(bs).forEach(function (k) { (bs[k] || []).forEach(function (x) { if (x.s === id && isK(x)) c++; }); }); return c; }
+  function kFree(id) { return Math.max(0, kOwned(id) - kPlaced(id)); }
+  function kiraNeed(s) { return s.r >= 4 ? 2 : 3; }
   function free(id) { return Math.max(0, owned(id) - placed(id)); }
   function totalOwned() { var d = ensure(), c = 0; Object.keys(d.stickers).forEach(function (k) { if (BY[k] && d.stickers[k] > 0) c++; }); return c; }
   function toast(html) {
@@ -460,7 +474,7 @@
   function takeTag() { var d = ensure(); if (!Array.isArray(d.stickerPackTags) || !d.stickerPackTags.length) return ""; while (d.stickerPackTags.length > d.stickerPacks + 1) d.stickerPackTags.shift(); return d.stickerPackTags.pop() || ""; }
   function roll(tag) {
     if (tag === "R3" || tag === "R4c") {
-      var r4 = tag === "R4c" ? 0.3 : 0.15, rx = Math.random() < r4 ? 4 : 3, px = LIST.filter(function (s) { return s.r === rx; });
+      var r4 = tag === "R4c" ? 0.3 : 0.15, rx = Math.random() < r4 ? 4 : 3, px = LIST.filter(function (s) { return s.r === rx && !LIMITED[s.id]; });
       return px[Math.floor(Math.random() * px.length)];
     }
     // 教科の ふくろは 35% で その 教科シリーズ（★2 が 75%・★3 が 25%）
@@ -470,7 +484,7 @@
     }
     var r = Math.random(), acc = 0, rar = 1;
     for (var i = 0; i < RATES.length; i++) { acc += RATES[i][1]; if (r < acc) { rar = RATES[i][0]; break; } }
-    var pool = LIST.filter(function (s) { return s.r === rar; });
+    var pool = LIST.filter(function (s) { return s.r === rar && !LIMITED[s.id]; });
     return pool[Math.floor(Math.random() * pool.length)];
   }
   window.openStickerPack = function () {
@@ -484,6 +498,7 @@
     reveal(s, isNew);
   };
   function reveal(s, isNew) {
+    ensureCss();
     var old = document.getElementById("stk-reveal"); if (old) old.remove();
     var w = document.createElement("div"); w.id = "stk-reveal";
     w.style.cssText = "position:fixed;inset:0;z-index:10002;background:rgba(31,27,46,.72);display:flex;align-items:center;justify-content:center;padding:16px;";
@@ -501,7 +516,7 @@
     var out = "";
     ["around", "body", "face", "head"].forEach(function (slot) {
       var s = BY[w[slot]], t = TREASURE_WEAR[w[slot]];
-      if (s && s.wear === slot && owned(s.id) > 0) out += '<g transform="' + TF[slot] + '">' + s.art() + '</g>';
+      if (s && s.wear === slot && (owned(s.id) > 0 || kOwned(s.id) > 0)) out += '<g transform="' + TF[slot] + '">' + s.art() + '</g>';
       else if (t && t.slot === slot && treasureOwned(t.t)) out += '<g transform="' + TF[slot] + '">' + t.art() + '</g>';
     });
     return out;
@@ -538,6 +553,46 @@
   function friends() { return (window.MASCOTS && window.MASCOTS.list) || []; }
   function curFriend() { var nm = window.MASCOTS && window.MASCOTS.currentName ? window.MASCOTS.currentName() : ""; return friends().filter(function (f) { return f.name === nm; })[0] || friends()[0]; }
 
+  /* ---------------- ✨ キラ シール（★2026-10-30 保護者：シールが ふえたので ダブりの 使い道と キラキラの UX） ----------------
+     おなじ シールが free（はって いない 分）で 3まい（★4 は 2まい）あると「キラに する」→ キラ版 1まい（saveData.stickerKira{id:まい数}）。
+     キラ版は ホログラムの ひかりが シールの 形の 中だけを ながれる（CSS mask に その シールの SVG を つかう）。台紙では { s, kira:1 }。
+     はてな シール（もんだいで キラ）と げんてい シールは 対象外。プレゼントには しない。 */
+  var maskCache = {};
+  function maskUrl(id) {
+    if (!maskCache[id]) maskCache[id] = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg(id, 40).replace("<svg ", '<svg style="color:#000" ')) + '")';
+    return maskCache[id];
+  }
+  function kiraWrap(id, inner, px) {
+    var m = maskUrl(id), sz = px ? "width:" + px + "px;height:" + px + "px;" : "";
+    return '<span class="stk-kira" style="' + sz + '">' + inner + '<span class="sh" style="-webkit-mask-image:' + m + ';mask-image:' + m + '"></span><i class="tw a">✦</i><i class="tw b">✦</i><i class="tw c">✧</i></span>';
+  }
+  window.stickerKiraWrap = function (id, px) { return BY[id] ? kiraWrap(id, svg(id, px || 40), px || 40) : ""; };
+  function ensureCss() { if (!document.getElementById("stk-css")) { var st = document.createElement("style"); st.id = "stk-css"; st.textContent = CSS; document.head.appendChild(st); } }
+  function kiraCraft(id) {
+    var s = BY[id], d = ensure(); if (!s || s.id === "qs_hatena" || LIMITED[id]) return;
+    var need = kiraNeed(s); if (free(id) < need) { toast("はって いない シールが " + need + "まい いるよ"); return; }
+    d.stickers[id] -= need; if (!d.stickerKira || typeof d.stickerKira !== "object") d.stickerKira = {};
+    d.stickerKira[id] = (d.stickerKira[id] || 0) + 1; save();
+    log("✨ キラに した：" + s.name + "（" + need + "まい → キラ 1まい） キラ" + d.stickerKira[id] + "まい");
+    kiraReveal(s, need);
+  }
+  function kiraReveal(s, need) {
+    ensureCss();
+    var old = document.getElementById("stk-reveal"); if (old) old.remove();
+    var w = document.createElement("div"); w.id = "stk-reveal"; w.className = "stk-kfx";
+    w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", s.name + "が キラキラに なった");
+    var trio = ""; for (var i = 0; i < need; i++) trio += '<span class="kf-c kf-c' + i + '" style="--i:' + i + ';--n:' + need + '">' + svg(s.id, 70) + '</span>';
+    w.innerHTML = '<div class="kf-stage">' + trio + '<span class="kf-flash"></span><span class="kf-ring"></span>' +
+      '<div class="kf-final">' + kiraWrap(s.id, svg(s.id, 160), 160) + '</div></div>' +
+      '<div class="kf-txt"><div class="stk-rv-star">✨ キラキラ ' + "★★★★".slice(0, s.r) + '</div><div class="stk-rv-name" style="color:#fff">' + s.name + '</div>' +
+      '<div class="stk-rv-sub" style="color:#f5d0fe">' + need + 'まいが あわさって キラキラに へんしん！<br>「はる」の 手もちに ✨で 出るよ</div>' +
+      '<button type="button" class="stk-btn" id="stk-rv-ok">やったね</button></div>';
+    w.style.cssText = "position:fixed;inset:0;z-index:10002;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;";
+    document.body.appendChild(w);
+    var ok = document.getElementById("stk-rv-ok"); ok.onclick = function () { w.remove(); render(); }; setTimeout(function () { try { ok.focus(); } catch (e) {} }, 1700);
+    if (window.speakText) { try { window.speakText("キラキラに へんしん！", "ja-JP"); } catch (e) {} }
+  }
+
   /* ---------------- 画面 ---------------- */
   var ui = { tab: "book", page: 0, sel: -1, target: "friend", giftTo: "", giftPick: "", inbox: null, busy: false };
   var CSS = '#stk-modal{position:fixed;inset:0;z-index:9998;background:rgba(31,27,46,.55);display:flex;align-items:center;justify-content:center;padding:10px;font-family:"Zen Maru Gothic",sans-serif}' +
@@ -559,13 +614,26 @@
     '.stk-h{font-size:13px;font-weight:900;color:#5b21b6;margin:12px 2px 6px}.stk-prev{display:flex;justify-content:center;background:linear-gradient(160deg,#ede9fe,#fce7f3);border-radius:18px;padding:8px}.stk-prev svg{width:150px;height:150px}' +
     '.stk-rv{background:linear-gradient(160deg,#fff,#f5f3ff);border-radius:26px;padding:20px 18px;max-width:320px;width:100%;text-align:center;border:4px solid #ddd6fe;animation:stkPop .45s ease-out}.stk-rv.r2{border-color:#93c5fd}.stk-rv.r3{border-color:#fbbf24;box-shadow:0 0 30px rgba(251,191,36,.5)}.stk-rv.r4{border-color:#e879f9;box-shadow:0 0 44px rgba(232,121,249,.7)}' +
     '.stk-rv-star{color:#f59e0b;font-weight:900;font-size:16px}.stk-rv-name{font-size:19px;font-weight:900;color:#5b21b6;margin:2px 0}.stk-rv-sub{font-size:12px;font-weight:800;color:#6b5a85;margin-bottom:12px;line-height:1.6}' +
+    '.stk-kira{position:relative;display:inline-block;line-height:0;vertical-align:middle}.stk-it .stk-kira{display:block;width:100%;height:100%}.stk-kira>svg{width:100%;height:100%;filter:drop-shadow(0 0 3px rgba(240,171,252,.95)) saturate(1.15)}' +
+    '.stk-kira .sh{position:absolute;inset:0;pointer-events:none;-webkit-mask-size:100% 100%;mask-size:100% 100%;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.9) 38%,rgba(244,114,182,.75) 46%,rgba(250,204,21,.7) 52%,rgba(125,211,252,.75) 58%,rgba(167,139,250,.7) 64%,transparent 80%);background-size:300% 100%;mix-blend-mode:screen;animation:stkHolo 2.6s linear infinite}' +
+    '.stk-kira .tw{position:absolute;font-style:normal;font-size:11px;line-height:1;color:#fff;text-shadow:0 0 4px #f0abfc,0 0 8px #facc15;pointer-events:none;animation:stkTw 1.8s ease-in-out infinite}.stk-kira .tw.a{right:-4%;top:-4%}.stk-kira .tw.b{left:-2%;bottom:6%;animation-delay:.6s;font-size:9px}.stk-kira .tw.c{right:10%;bottom:-6%;animation-delay:1.2s;font-size:10px}' +
+    '@keyframes stkHolo{0%{background-position:100% 0}100%{background-position:-100% 0}}@keyframes stkTw{0%,100%{transform:scale(.3) rotate(0);opacity:0}50%{transform:scale(1.15) rotate(45deg);opacity:1}}' +
+    '.stk-grid .c.hk{border-color:#f0abfc;background:linear-gradient(160deg,#fff,#fdf4ff 60%,#fef9c3)}.stk-grid .kcnt{position:absolute;left:-4px;top:-6px;background:#db2777;color:#fff;font:900 10px "Zen Maru Gothic";border-radius:999px;padding:1px 5px}' +
+    '.stk-kbtn{display:block;width:100%;margin-top:4px;border:none;border-radius:10px;padding:5px 2px;font:900 10.5px "Zen Maru Gothic";color:#fff;background:linear-gradient(135deg,#a855f7,#ec4899,#f59e0b);background-size:200% 100%;animation:stkHolo 3s linear infinite;cursor:pointer;line-height:1.25;min-height:36px}.stk-kbtn small{font-size:9px;font-weight:800;opacity:.95}' +
+    '.stk-kfx{background:radial-gradient(circle at 50% 42%,#4c1d95 0%,#1f1b2e 62%,#0b0814 100%)}.kf-stage{position:relative;width:220px;height:220px}.kf-c{position:absolute;left:50%;top:50%;line-height:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*360deg/var(--n))) translateY(-78px) rotate(calc(var(--i)*-360deg/var(--n)));animation:kfIn 1.1s cubic-bezier(.55,0,.75,.3) .25s forwards}' +
+    '@keyframes kfIn{60%{transform:translate(-50%,-50%) rotate(calc(var(--i)*360deg/var(--n) + 300deg)) translateY(-30px) rotate(calc(var(--i)*-360deg/var(--n) - 300deg)) scale(.8);opacity:1}100%{transform:translate(-50%,-50%) rotate(calc(var(--i)*360deg/var(--n) + 540deg)) translateY(0) scale(.2);opacity:0}}' +
+    '.kf-flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;animation:kfFlash .7s ease-out 1.25s forwards}@keyframes kfFlash{0%{opacity:0}25%{opacity:.95}100%{opacity:0}}' +
+    '.kf-ring{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px;border-radius:50%;border:4px solid #fde68a;box-shadow:0 0 24px #f0abfc,inset 0 0 18px #f0abfc;opacity:0;animation:kfRing .9s ease-out 1.35s forwards}@keyframes kfRing{0%{transform:scale(.2);opacity:1}100%{transform:scale(6);opacity:0}}' +
+    '.kf-final{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);animation:kfPop .6s cubic-bezier(.2,1.6,.4,1) 1.4s forwards}@keyframes kfPop{to{transform:translate(-50%,-50%) scale(1)}}.kf-final .tw{font-size:22px}' +
+    '.kf-txt{text-align:center;opacity:0;animation:kfFade .4s ease-out 1.8s forwards;max-width:320px}@keyframes kfFade{to{opacity:1}}' +
+    '@media (prefers-reduced-motion:reduce){.stk-kira .sh,.stk-kira .tw,.stk-kbtn{animation:none}.kf-c{display:none}.kf-flash,.kf-ring{display:none}.kf-final{animation:none;transform:translate(-50%,-50%)}.kf-txt{animation:none;opacity:1}}' +
     '@keyframes stkPop{0%{transform:scale(.4) rotate(-8deg);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}';
   function close() { ui.photoPrev = null; ui.edit = null; var m = document.getElementById("stk-modal"); if (m) m.remove(); if (window.renderTutorPlan) { try { window.renderTutorPlan(); } catch (e) {} } }
   window.closeStickerBook = close;
   window.openStickerBook = function (tab) {
     if (!window.saveData) return;
     ensure(); installWear();
-    if (!document.getElementById("stk-css")) { var st = document.createElement("style"); st.id = "stk-css"; st.textContent = CSS; document.head.appendChild(st); }
+    ensureCss();
     close();
     var m = document.createElement("div"); m.id = "stk-modal";
     m.innerHTML = '<div class="stk-box"><div class="stk-head"><h2>🎀 シール帳</h2><button type="button" class="stk-x" data-a="close">とじる</button></div>' +
@@ -584,7 +652,7 @@
     var d = ensure(); try { d.stickerBoards = JSON.parse(str) || {}; } catch (e) { return; }
     Object.keys(d.stickerBoards).forEach(function (k) {
       var b = d.stickerBoards[k]; if (!Array.isArray(b)) { delete d.stickerBoards[k]; return; }
-      for (var i = b.length - 1; i >= 0; i--) { var x = b[i]; if (x && x.s !== "txt" && placed(x.s) > owned(x.s)) b.splice(i, 1); }
+      for (var i = b.length - 1; i >= 0; i--) { var x = b[i]; if (x && x.s !== "txt" && (isK(x) ? kPlaced(x.s) > kOwned(x.s) : placed(x.s) > owned(x.s))) b.splice(i, 1); }
     });
     ui.sel = -1; ui.qs = null; save();
   }
@@ -628,7 +696,7 @@
   function itemHtml(x, i) {
     var isT = x.s === "txt", w = isT ? txtW(x.t || "") : 40;
     var sz = isT ? Math.min(92, w * 0.28 * (x.z || 1)) : 20 * (x.z || 1);
-    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : x.s === "qs_hatena" && x.kira ? qsKiraSvg(60) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
+    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : x.s === "qs_hatena" && x.kira ? qsKiraSvg(60) : isK(x) ? kiraWrap(x.s, svg(x.s, 60)) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
   }
   function txtPanelHtml() {
     var c = ui.txtC || 0, t = txtClean(ui.txt || ""), n = txtCount(board(ui.page));
@@ -719,7 +787,8 @@
   function bookHtml() {
     var d = ensure(), pg = board(ui.page);
     var items = pg.map(itemHtml).join("");
-    var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("");
+    var tray = LIST.filter(function (s) { return free(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="' + s.id + '" aria-label="' + s.name + 'を はる">' + svg(s.id, 44) + '<span class="cnt">' + free(s.id) + '</span></button>'; }).join("") +
+      LIST.filter(function (s) { return kFree(s.id) > 0; }).map(function (s) { return '<button type="button" data-a="place" data-v="k:' + s.id + '" aria-label="キラキラの ' + s.name + 'を はる" style="border-color:#f0abfc;background:linear-gradient(160deg,#fff,#fdf4ff)">' + kiraWrap(s.id, svg(s.id, 44), 44) + '<span class="cnt" style="background:#db2777;color:#fff">✨' + kFree(s.id) + '</span></button>'; }).join("");
     var tools = ui.sel >= 0 && pg[ui.sel] ? '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="up">⬆ 1つ 前へ</button><button type="button" class="stk-mini" data-a="down">⬇ 1つ 後ろへ</button><button type="button" class="stk-mini" data-a="front">いちばん 前へ</button><button type="button" class="stk-mini" data-a="back">いちばん 後ろへ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
@@ -791,7 +860,10 @@
   function getHtml() {
     var d = ensure(), k = d.stickerDay.k;
     var kinds = Object.keys(KINDS).map(function (id) { return '<span class="stk-mini" style="cursor:default;' + (k[id] ? "background:#ede9fe;" : "") + '">' + (k[id] ? "✓ " : "") + KINDS[id] + '</span>'; }).join(" ");
-    var grid = LIST.map(function (s) { var c = owned(s.id), se = SERIES[s.id]; return '<div class="c r' + s.r + (c ? "" : " no") + '">' + svg(s.id, 46) + (c ? '<span class="cnt">' + c + '</span>' : '') + '<div class="nm">' + (c ? s.name : "？？？") + '<br>' + "★★★★".slice(0, s.r) + (se ? '<br><span style="color:#0369a1">' + SERIES_ICON[se] + se + 'で 出やすい</span>' : '') + '</div></div>'; }).join("");
+    var grid = LIST.map(function (s) { var c = owned(s.id), se = SERIES[s.id], kc = kOwned(s.id), need = kiraNeed(s), canK = s.id !== "qs_hatena" && !LIMITED[s.id] && free(s.id) >= need;
+      return '<div class="c r' + s.r + (c || kc ? "" : " no") + (kc ? " hk" : "") + '">' + (kc ? kiraWrap(s.id, svg(s.id, 46), 46) : svg(s.id, 46)) + (c ? '<span class="cnt">' + c + '</span>' : '') + (kc ? '<span class="kcnt">✨' + kc + '</span>' : '') +
+        '<div class="nm">' + (c || kc ? s.name : "？？？") + '<br>' + "★★★★".slice(0, s.r) + (se ? '<br><span style="color:#0369a1">' + SERIES_ICON[se] + se + 'で 出やすい</span>' : '') + (LIMITED[s.id] ? '<br><span style="color:#be185d">' + LIMITED[s.id] + 'で へんしん</span>' : '') + '</div>' +
+        (canK ? '<button type="button" class="stk-kbtn" data-a="kira" data-v="' + s.id + '" aria-label="' + s.name + 'を ' + need + 'まい つかって キラキラに する">✨キラに する<br><small>' + need + 'まい → 1まい</small></button>' : '') + '</div>'; }).join("");
     var sh = shardData(), bar = function (v, max, c) { return '<div style="height:10px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden;margin:4px 0"><div style="height:100%;width:' + Math.round(v / max * 100) + '%;background:' + c + ';border-radius:999px"></div></div>'; };
     var shardBox = '<div style="background:#fff;border:2px solid #ddd6fe;border-radius:16px;padding:10px 12px;margin-top:10px">' +
       '<div style="font-size:13px;font-weight:900;color:#5b21b6">🧩 シールの かけら：' + sh.stickerShards + '／' + SHARD_PACK + '</div>' + bar(sh.stickerShards, SHARD_PACK, "linear-gradient(90deg,#a78bfa,#f472b6)").replace("rgba(255,255,255,.25)", "#ede9fe") +
@@ -821,7 +893,7 @@
     var d = ensure(), f = curFriend(), key = wearKey(), w = d.stickerWear[key] || {};
     var prev = ui.target === "avatar" ? (typeof window.avatarSvg === "function" ? (window.avatarSvg(d.selectedAvatar, "happy") || "") : "") : (f ? f.svg("happy") : "");
     var slots = SLOTS.map(function (sl) {
-      var opts = LIST.filter(function (s) { return s.wear === sl[0] && owned(s.id) > 0; });
+      var opts = LIST.filter(function (s) { return s.wear === sl[0] && (owned(s.id) > 0 || kOwned(s.id) > 0); });
       var trs = Object.keys(TREASURE_WEAR).filter(function (id) { return TREASURE_WEAR[id].slot === sl[0] && treasureOwned(TREASURE_WEAR[id].t); });
       return '<div class="stk-h">' + sl[1] + '</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
         '<button type="button" class="stk-mini" data-a="wear" data-v="' + sl[0] + ':" aria-pressed="' + (!w[sl[0]]) + '">なし</button>' +
@@ -916,6 +988,11 @@
     if (a === "tab") { ui.tab = v; ui.sel = -1; if (v === "gift") ui.inbox = null; return render(); }
     if (a === "page") { ui.page = Number(v); ui.sel = -1; return render(); }
     if (a === "open") return window.openStickerPack();
+    if (a === "place" && String(v).indexOf("k:") === 0) {
+      var kid = String(v).slice(2); if (kFree(kid) < 1) return; if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
+      pg.push({ s: kid, kira: 1, x: 30 + Math.round(Math.random() * 40), y: 30 + Math.round(Math.random() * 40), z: 1, r: 0 }); ui.sel = pg.length - 1; save(); return render();
+    }
+    if (a === "kira") return kiraCraft(v);
     if (a === "place") {
       if (free(v) < 1) return; if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
       pg.push({ s: v, x: 30 + Math.round(Math.random() * 40), y: 30 + Math.round(Math.random() * 40), z: 1, r: 0 }); ui.sel = pg.length - 1; save(); return render();
@@ -1060,5 +1137,11 @@
     w._stkWrapped = true; window.renderTutorPlan = w;
   }
   installWear(); wrapLab(); wrapHome();
+  // ★2026-10-30：げんてい シール（クロぽんの へんしん）を わたす。もう もって いれば 何も しない。返り値＝あたらしく もらえたか
+  window.stickerGrantLimited = function (id) {
+    if (!LIMITED[id] || !window.saveData) return false; var d = ensure();
+    if (d.stickers[id] > 0) return false; d.stickers[id] = 1; save(); log("🐱 げんてい シール：" + BY[id].name); return true;
+  };
+  window.stickerSvg = svg;
   window.STICKERS = { list: LIST, svg: svg, installWear: installWear, evoSvg: function (xid, px) { return trSvg("ev_" + xid, px || 40); } };
 })();
