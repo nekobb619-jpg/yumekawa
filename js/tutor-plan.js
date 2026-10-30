@@ -233,10 +233,13 @@
     third.push({ kind: "detective", key: DETECTIVE_KEY[mainSub] || "math", name: subjectLabel(mainSub && DETECTIVE_KEY[mainSub] ? mainSub : "算数") + "の 探偵ラボ",
                  why: "しっかり 考えないと とけない 問題に ちょうせん" });
     while (steps.length < 3 && third.length > 0) steps.push(third.shift());
+    // ★2026-10-30（保護者：そうぞう工房を 今日やる ことの 1つの 枠に）できたら やる 4つめ（ごほうびの 条件には 入れない）
+    if (window.openSozo) steps.push(sozoStep());
 
     return { date: todayKey(), steps: steps, marks: {}, rewarded: false, createdAt: nowMs() };
   }
 
+  function sozoStep() { return { kind: "sozo", optional: true, name: "そうぞう工房で 1つ つくろう", why: "まぜる・かえる で 新しい ゲームや クイズを 生み出そう" }; }
   function stepDone(step, plan) {
     var data = sd();
     if (!step) return false;
@@ -248,6 +251,7 @@
     if (step.kind === "book") return data.bookLastReadDate === plan.date;
     if (step.kind === "mystery") { var m = window.getTodayMysteryInfo ? window.getTodayMysteryInfo() : null; return !!(m && m.cleared); }
     if (step.kind === "detective") return !!(plan.marks && plan.marks.detective);
+    if (step.kind === "sozo") return !!(plan.marks && plan.marks.sozo);
     return false;
   }
 
@@ -260,6 +264,7 @@
       data.tutorPlan = p;
     }
     if (!p.marks) p.marks = {};
+    if (window.openSozo && !p.steps.some(function (x) { return x.kind === "sozo"; })) p.steps.push(sozoStep());
     return p;
   }
 
@@ -271,6 +276,7 @@
     if (step.kind === "book") return window.openBookModal && window.openBookModal();
     if (step.kind === "mystery") return window.launchBossQuest && window.launchBossQuest();
     if (step.kind === "detective") return window.startDetectiveLab && window.startDetectiveLab(step.key || "math");
+    if (step.kind === "sozo") return window.openSozo && window.openSozo("home");
     if (step.kind === "stage") {
       var e = findStage(step.id);
       if (!e) { alert("このステージは いま 見つからないみたい。教科の ぼうけんから えらんでね！"); return; }
@@ -297,7 +303,7 @@
     var logs = data.answerLogs || [];
     var name = (document.getElementById("display-player-name") || {}).textContent || "";
     name = (name && name !== "---") ? name + "、" : "";
-    if (doneN >= p.steps.length) return "きょうの プラン ぜんぶ できたね！ コツコツ つづける 力、ほんとうに すごいよ 🌸";
+    if (doneN >= p.steps.filter(function (x) { return !x.optional; }).length) return "きょうの プラン ぜんぶ できたね！ コツコツ つづける 力、ほんとうに すごいよ 🌸";
     var tk = todayKey(), yk = yesterdayKey();
     var todayN = 0, yN = 0;
     logs.forEach(function (l) { if (!l || !l.ts) return; var k = keyOf(l.ts); if (k === tk) todayN++; else if (k === yk) yN++; });
@@ -334,10 +340,10 @@
       return;
     }
     var doneFlags = p.steps.map(function (s) { return stepDone(s, p); });
-    var doneN = doneFlags.filter(Boolean).length;
-    var allDone = doneN >= p.steps.length;
+    var doneN = doneFlags.filter(function (d, i) { return d && !p.steps[i].optional; }).length;
+    var allDone = doneN >= p.steps.filter(function (x) { return !x.optional; }).length;
     var nextIdx = doneFlags.indexOf(false);
-    var KIND = { review: "🔁 ふくしゅう", review2: "🔁 ふくしゅう", learn: "🎯 あたらしく まなぶ", weak: "🔁 ふくしゅう", book: "📖 よむ", mystery: "🧩 ちょうせん", detective: "🔍 ちょうせん" };
+    var KIND = { review: "🔁 ふくしゅう", review2: "🔁 ふくしゅう", learn: "🎯 あたらしく まなぶ", weak: "🔁 ふくしゅう", book: "📖 よむ", mystery: "🧩 ちょうせん", detective: "🔍 ちょうせん", sozo: "🎨 つくる（できたら）" };
     var NUM = ["①", "②", "③", "④"];
     stepsEl.innerHTML = p.steps.map(function (s, i) {
       var done = doneFlags[i];

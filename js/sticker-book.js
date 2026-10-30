@@ -160,6 +160,21 @@
     kp_majo: function () { return '<g transform="translate(0 3)">' + catSit() + '</g>' + '<g transform="translate(7 -9) scale(.66)">' + ART.majo_hat() + '</g>' + PA("M30 36 L36 22", null, "#92400e", 1.8) + S5(36.4, 20.6, 3.6, G, "#d97706") + SP(31, 15, 1.8, W) + SP(5, 22, 2.2, PLL); },
     kp_angel: function () { return '<g transform="translate(0 3) scale(1 .92)">' + ART.wings() + '</g>' + '<g transform="translate(0 3)">' + catSit() + '</g>' + '<g transform="translate(8 -6.5) scale(.6)">' + ART.halo() + '</g>'; },
     kp_king: function () { return C(20, 22, 18, "rgba(253,230,138,.55)") + PA("M9 20 Q20 26 31 20 L36 39 Q20 35 4 39z", "#dc2626", "#7f1d1d", 1.2) + PA("M9 20 Q20 26 31 20", null, W, 2.4) + '<g transform="translate(0 3)">' + catSit() + '</g>' + '<g transform="translate(11.5 -4.5) scale(.43)">' + ART.crown() + '</g>' + SP(4, 8, 2.6, G) + SP(36, 9, 2.2, GL) + SP(36, 31, 2, W); },
+    // ★2026-10-30 季節の シール（SEASONS の 期間だけ ふくろから 出る）
+    hw_kabocha: function () { return PA("M20 9 Q21 4 25 4", null, "#15803d", 2.4) + E(13, 23, 8, 12, "#fb923c", "#c2410c") + E(27, 23, 8, 12, "#fb923c", "#c2410c") + E(20, 23, 8.5, 12.5, "#f97316", "#c2410c") + PA("M13 19 l4 -3 l1 5z M27 19 l-4 -3 l-1 5z", "#422006") + PA("M12 27 Q20 34 28 27 L25 28 L23 26 L20 29 L17 26 L15 28z", "#422006") + shine(11, 17); },
+    hw_obake: function () { return PA("M9 34 V18 Q9 6 20 6 Q31 6 31 18 V34 L27 30 L23.5 34 L20 30 L16.5 34 L13 30z", W, "#a8a2b8", 1.6) + E(15.5, 18, 2, 2.8, K) + E(24.5, 18, 2, 2.8, K) + E(20, 25, 2.4, 2, K) + blush(12.5, 27.5, 22) + SP(34, 8, 2.4, PLL); },
+    hw_koumori: function () { return PA("M20 18 Q14 10 3 13 Q7 16 6 21 Q10 18 13 22 Q15 18 20 24 Q25 18 27 22 Q30 18 34 21 Q33 16 37 13 Q26 10 20 18z", K, P, 1) + C(20, 19, 5, K) + PA("M16.5 15 L17 11 L19 14z M23.5 15 L23 11 L21 14z", K) + C(18.2, 19, 1, G) + C(21.8, 19, 1, G) + C(32, 31, 4.5, GL) ; },
+    hw_ame: function () { return PA("M6 20 L1 14 L2 26z M34 20 L39 14 L38 26z", PK, "#db2777", 1.2) + C(20, 20, 11, "#fb923c", "#c2410c", 1.6) + PA("M12 14 Q20 20 12 27 M20 9 Q26 20 20 31 M28 14 Q20 20 28 27", null, W, 2.2) + shine(15, 14); },
+    hw_majoneko: function () { return '<g transform="translate(0 4)">' + catSit() + '</g>' + '<g transform="translate(9 -8) scale(.55)">' + ART.majo_hat() + '</g>' + '<g transform="translate(25 22) scale(.35)">' + ART.hw_kabocha() + '</g>'; },
+    hw_yoru: function () { return C(20, 20, 18, "#312e81") + C(25, 14, 8, GL, "#f59e0b", 1) + '<g transform="translate(2 18) scale(.45)">' + ART.hw_koumori() + '</g>' + '<g transform="translate(18 22) scale(.42)">' + ART.hw_kabocha() + '</g>' + SP(8, 9, 2.2, W) + SP(33, 31, 2, PLL); },
+    wt_yukidaruma: function () { return C(20, 27, 10, W, "#93c5fd", 1.6) + C(20, 13, 7, W, "#93c5fd", 1.6) + C(17.6, 12, 1.1, K) + C(22.4, 12, 1.1, K) + PA("M20 14 L25 15.5 L20 16z", "#f97316") + PA("M13 19 Q20 22 27 19 L27 21.5 Q20 24.5 13 21.5z", "#ef4444") + C(20, 25, 1.2, K) + C(20, 29, 1.2, K) + PA("M14 7 h12 l-2 -4 h-8z", K); },
+    wt_tree: function () { return PA("M20 3 L31 17 H25 L33 27 H7 L15 17 H9z", "#16a34a", "#14532d", 1.2) + PA("M17 27 h6 v7 h-6z", "#92400e") + S5(20, 5, 4, G, "#d97706") + C(15, 21, 1.6, "#ef4444") + C(24, 23, 1.6, GL) + C(20, 15, 1.6, PK) + C(26, 18, 1.4, "#60a5fa"); },
+    wt_present: function () { return PA("M7 17 h26 v17 h-26z", "#ef4444", "#991b1b", 1.4) + PA("M5 12 h30 v6 h-30z", "#f87171", "#991b1b", 1.4) + PA("M18 12 h4 v22 h-4z", GL) + PA("M20 12 Q12 3 9 8 Q10 12 20 12 Q28 3 31 8 Q30 12 20 12", GL, "#d97706", 1.2) + SP(34, 6, 2.4, W); },
+    wt_tebukuro: function () { return PA("M9 34 V18 Q9 10 16 10 Q22 10 22 16 V20 L26 17 Q29 16 29 19 L24 26 V34z", "#a78bfa", P, 1.5) + PA("M9 30 h15 v4 h-15z", W, P, 1) + C(15, 18, 1.4, W) + C(19, 23, 1.4, W) + SP(32, 8, 3, "#bae6fd") + SP(6, 8, 2, "#bae6fd"); },
+    ny_kagami: function () { return E(20, 31, 14, 4, "#d97706", "#92400e") + E(20, 25, 12, 6, W, "#d6d3d1", 1.4) + E(20, 17, 9, 5, W, "#d6d3d1", 1.4) + C(20, 10, 4.5, "#f97316", "#c2410c", 1.2) + PA("M20 6 q2 -3 4 -2", null, "#15803d", 1.8); },
+    ny_tako: function () { return PA("M20 3 L34 15 L20 30 L6 15z", "#fef3c7", "#b45309", 1.6) + PA("M20 3 V30 M6 15 H34", null, "#b45309", 1) + C(20, 15, 4, "#ef4444") + PA("M20 30 Q16 33 20 35 Q24 37 20 39", null, "#ef4444", 1.6); },
+    ny_daruma: function () { return E(20, 22, 14, 15, "#ef4444", "#991b1b", 0) + E(20, 18, 8, 7, "#fef3c7") + C(16.8, 17.5, 1.8, W, K, 1) + C(23.2, 17.5, 1.8, W, K, 1) + C(16.8, 17.5, .8, K) + PA("M17 21.5 Q20 23 23 21.5", null, K, 1.2) + PA("M13 30 Q20 34 27 30", null, G, 2); },
+    ny_hinode: function () { return PA("M0 30 Q10 22 20 26 Q30 30 40 22 V40 H0z", "#60a5fa") + C(20, 24, 9, "#f97316") + PA("M20 9 v-5 M9 13 l-3 -3 M31 13 l3 -3 M5 22 h-4 M35 22 h4", null, "#f59e0b", 2) + PA("M0 30 Q10 22 20 26 Q30 30 40 22 V40 H0z", "rgba(59,130,246,.85)"); },
     qs_hatena: function () { return '<rect x="5" y="5" width="30" height="30" rx="8" fill="#ede9fe" stroke="' + P + '" stroke-width="2"/><text x="20" y="29" font-size="22" font-weight="900" text-anchor="middle" fill="' + P + '" font-family="\'Zen Maru Gothic\',sans-serif">？</text>' + SP(33, 6, 2.4, PK); },
     rainbow_ar: function () { return PA("M2.5 24 A17.5 17.5 0 0 1 37.5 24", null, PK, 1.8) + PA("M4.3 24 A15.7 15.7 0 0 1 35.7 24", null, G, 1.8) + PA("M2.5 24 A17.5 17.5 0 0 0 37.5 24", null, PL, 1.8) + PA("M4.3 24 A15.7 15.7 0 0 0 35.7 24", null, "#7dd3fc", 1.8) + SP(20, 4, 3, W) + SP(4, 9, 2.6, G) + SP(36, 9, 2.6, G) + SP(5, 36, 2.4, PK) + SP(35, 36, 2.4, PL); }
   };
@@ -183,9 +198,25 @@
     s_chikyu: ["ちきゅうぎ", 2], s_hoi: ["ほうい じしん", 2], s_takara: ["たからの ちず", 3],
     e_abc: ["ABC ブロック", 2], e_hi: ["Hi! ふきだし", 2], e_aplus: ["A+ スター", 3],
     qs_hatena: ["はてな シール（もんだい）", 1],
+    hw_kabocha: ["かぼちゃ ランタン", 1], hw_obake: ["おばけちゃん", 1], hw_koumori: ["こうもり", 2], hw_ame: ["ハロウィンの あめ", 1], hw_majoneko: ["まじょの くろねこ", 3], hw_yoru: ["ハロウィンの 夜", 4],
+    wt_yukidaruma: ["ゆきだるま", 1], wt_tree: ["キラキラの 木", 2], wt_present: ["プレゼント", 1], wt_tebukuro: ["てぶくろ", 1],
+    ny_kagami: ["かがみもち", 1], ny_tako: ["たこあげ", 2], ny_daruma: ["だるま", 2], ny_hinode: ["はつひので", 3],
     kp_moon: ["つきよの クロぽん", 4], kp_majo: ["まほうつかい クロぽん", 4], kp_angel: ["てんしの クロぽん", 4], kp_king: ["おうさまの クロぽん", 4]
   };
   // げんてい シール（ふくろ・券・ミッションからは 出ない）
+  // ★2026-10-30（保護者：季節の イベント）季節の シール。期間（MM-DD）の 間だけ ふくろから 出る（SEASON_RATE の かくりつ）。期間の 外は 出ない（券でも えらべない）
+  var SEASONS = [
+    { id: "halloween", n: "ハロウィン", icon: "🎃", from: "10-15", to: "11-03", ids: ["hw_kabocha", "hw_obake", "hw_koumori", "hw_ame", "hw_majoneko", "hw_yoru"] },
+    { id: "winter", n: "クリスマス・冬", icon: "🎄", from: "12-01", to: "12-26", ids: ["wt_yukidaruma", "wt_tree", "wt_present", "wt_tebukuro"] },
+    { id: "newyear", n: "お正月", icon: "🎍", from: "12-27", to: "01-15", ids: ["ny_kagami", "ny_tako", "ny_daruma", "ny_hinode"] }
+  ];
+  var SEASON_RATE = 0.35, SEASON_OF = {};
+  SEASONS.forEach(function (z) { z.ids.forEach(function (id) { SEASON_OF[id] = z; }); });
+  function mmdd() { var x = new Date(window.currentServerTime || Date.now()); return ("0" + (x.getMonth() + 1)).slice(-2) + "-" + ("0" + x.getDate()).slice(-2); }
+  function inSeason(z) { var t = mmdd(); return z.from <= z.to ? (z.from <= t && t <= z.to) : (t >= z.from || t <= z.to); }
+  function seasonNow() { return SEASONS.filter(inSeason)[0] || null; }
+  function offSeason(id) { var z = SEASON_OF[id]; return !!z && !inSeason(z); }
+  window.stickerSeasonNow = function () { var z = seasonNow(); return z ? { id: z.id, n: z.n, icon: z.icon, to: z.to } : null; };
   var LIMITED = { kp_moon: "🐱 なかよし度 25", kp_majo: "🐱 なかよし度 50", kp_angel: "🐱 なかよし度 75", kp_king: "🐱 なかよし度 100" };
   // ★2026-10-22 問題シール：はてな シールを はって もんだいに 正解すると キラキラに かわる
   function qsKiraSvg(px) { return '<svg viewBox="0 0 40 40" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="キラキラ はてな"><rect x="5" y="5" width="30" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/><text x="20" y="29" font-size="22" font-weight="900" text-anchor="middle" fill="#d97706" font-family="\'Zen Maru Gothic\',sans-serif">！</text>' + SP(6, 6, 3.4, G) + SP(34, 7, 2.6, PK) + SP(34, 34, 3, PL) + SP(5, 33, 2.2, G) + '</svg>'; }
@@ -474,7 +505,7 @@
   function takeTag() { var d = ensure(); if (!Array.isArray(d.stickerPackTags) || !d.stickerPackTags.length) return ""; while (d.stickerPackTags.length > d.stickerPacks + 1) d.stickerPackTags.shift(); return d.stickerPackTags.pop() || ""; }
   function roll(tag) {
     if (tag === "R3" || tag === "R4c") {
-      var r4 = tag === "R4c" ? 0.3 : 0.15, rx = Math.random() < r4 ? 4 : 3, px = LIST.filter(function (s) { return s.r === rx && !LIMITED[s.id]; });
+      var r4 = tag === "R4c" ? 0.3 : 0.15, rx = Math.random() < r4 ? 4 : 3, px = LIST.filter(function (s) { return s.r === rx && !LIMITED[s.id] && !offSeason(s.id); });
       return px[Math.floor(Math.random() * px.length)];
     }
     // 教科の ふくろは 35% で その 教科シリーズ（★2 が 75%・★3 が 25%）
@@ -484,7 +515,9 @@
     }
     var r = Math.random(), acc = 0, rar = 1;
     for (var i = 0; i < RATES.length; i++) { acc += RATES[i][1]; if (r < acc) { rar = RATES[i][0]; break; } }
-    var pool = LIST.filter(function (s) { return s.r === rar && !LIMITED[s.id]; });
+    var zs = seasonNow();
+    if (zs && Math.random() < SEASON_RATE) { var zp = LIST.filter(function (s) { return zs.ids.indexOf(s.id) >= 0 && (s.r === rar || (rar >= 3 && s.r >= 3) || (rar <= 2 && s.r <= 2)); }); if (zp.length) return zp[Math.floor(Math.random() * zp.length)]; }
+    var pool = LIST.filter(function (s) { return s.r === rar && !LIMITED[s.id] && !offSeason(s.id); });
     return pool[Math.floor(Math.random() * pool.length)];
   }
   window.openStickerPack = function () {
@@ -862,7 +895,7 @@
     var kinds = Object.keys(KINDS).map(function (id) { return '<span class="stk-mini" style="cursor:default;' + (k[id] ? "background:#ede9fe;" : "") + '">' + (k[id] ? "✓ " : "") + KINDS[id] + '</span>'; }).join(" ");
     var grid = LIST.map(function (s) { var c = owned(s.id), se = SERIES[s.id], kc = kOwned(s.id), need = kiraNeed(s), canK = s.id !== "qs_hatena" && !LIMITED[s.id] && free(s.id) >= need;
       return '<div class="c r' + s.r + (c || kc ? "" : " no") + (kc ? " hk" : "") + '">' + (kc ? kiraWrap(s.id, svg(s.id, 46), 46) : svg(s.id, 46)) + (c ? '<span class="cnt">' + c + '</span>' : '') + (kc ? '<span class="kcnt">✨' + kc + '</span>' : '') +
-        '<div class="nm">' + (c || kc ? s.name : "？？？") + '<br>' + "★★★★".slice(0, s.r) + (se ? '<br><span style="color:#0369a1">' + SERIES_ICON[se] + se + 'で 出やすい</span>' : '') + (LIMITED[s.id] ? '<br><span style="color:#be185d">' + LIMITED[s.id] + 'で へんしん</span>' : '') + '</div>' +
+        '<div class="nm">' + (c || kc ? s.name : "？？？") + '<br>' + "★★★★".slice(0, s.r) + (se ? '<br><span style="color:#0369a1">' + SERIES_ICON[se] + se + 'で 出やすい</span>' : '') + (LIMITED[s.id] ? '<br><span style="color:#be185d">' + LIMITED[s.id] + 'で へんしん</span>' : '') + (SEASON_OF[s.id] ? '<br><span style="color:#c2410c">' + SEASON_OF[s.id].icon + ' きせつ げんてい（' + SEASON_OF[s.id].from.replace("-", "/") + '〜' + SEASON_OF[s.id].to.replace("-", "/") + '）</span>' : '') + '</div>' +
         (canK ? '<button type="button" class="stk-kbtn" data-a="kira" data-v="' + s.id + '" aria-label="' + s.name + 'を ' + need + 'まい つかって キラキラに する">✨キラに する<br><small>' + need + 'まい → 1まい</small></button>' : '') + '</div>'; }).join("");
     var sh = shardData(), bar = function (v, max, c) { return '<div style="height:10px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden;margin:4px 0"><div style="height:100%;width:' + Math.round(v / max * 100) + '%;background:' + c + ';border-radius:999px"></div></div>'; };
     var shardBox = '<div style="background:#fff;border:2px solid #ddd6fe;border-radius:16px;padding:10px 12px;margin-top:10px">' +
@@ -875,13 +908,14 @@
       '<div style="font-size:15px;font-weight:900;color:#fde68a">🎁 シールの ふくろ：' + d.stickerPacks + 'つ</div>' +
       '<div style="margin:10px 0"><button type="button" class="stk-btn" data-a="open"' + (d.stickerPacks ? "" : " disabled") + '>ふくろを あける</button></div>' +
       '<div style="font-size:11px;font-weight:700;line-height:1.7;color:#ddd6fe">学習を 1つ 終えると 1ふくろ。同じ 種類は 1日 1ふくろまで。<br>今日 もらった もの：</div><div style="margin-top:6px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap">' + kinds + '</div></div>' +
+      (seasonNow() ? '<div style="margin-top:10px;background:linear-gradient(135deg,#431407,#7c2d12);color:#fed7aa;border-radius:16px;padding:10px 12px;text-align:center;font-weight:900;font-size:13px">' + seasonNow().icon + ' いまは「' + seasonNow().n + '」の きせつ！ ' + seasonNow().to.replace("-", "/") + ' まで、ふくろから きせつ げんていの シールが 出るよ<div style="margin-top:6px">' + seasonNow().ids.map(function (id) { return '<span style="display:inline-block;line-height:0;margin:2px;' + (owned(id) ? '' : 'filter:brightness(0) invert(.75)') + '">' + svg(id, 34) + '</span>'; }).join("") + '</div></div>' : '') +
       missionHtml() + shardBox +
       '<div class="stk-h">シール ずかん（' + totalOwned() + '／' + LIST.length + '）</div><div class="stk-grid">' + grid + '</div>';
   }
   // えらべる シール券：まだ もって いない ★1〜★3 から 1まい えらぶ（★4 は ふくろだけ）
   function ticketHtml() {
-    var pool = LIST.filter(function (s) { return s.r <= 3 && !owned(s.id); });
-    if (!pool.length) pool = LIST.filter(function (s) { return s.r <= 3; });
+    var pool = LIST.filter(function (s) { return s.r <= 3 && !owned(s.id) && !offSeason(s.id) && !LIMITED[s.id] && s.id !== "qs_hatena"; });
+    if (!pool.length) pool = LIST.filter(function (s) { return s.r <= 3 && !offSeason(s.id) && !LIMITED[s.id]; });
     return '<div class="stk-note" style="text-align:center;margin:8px 0 4px">ほしい シールを おしてね（★4 は ふくろだけ）</div><div class="stk-grid">' + pool.map(function (s) {
       return '<button type="button" class="c r' + s.r + '" data-a="ticketpick" data-v="' + s.id + '" style="cursor:pointer">' + svg(s.id, 42) + '<div class="nm">' + s.name + '<br>' + "★★★★".slice(0, s.r) + '</div></button>';
     }).join("") + '</div>';
