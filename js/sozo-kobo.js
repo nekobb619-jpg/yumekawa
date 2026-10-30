@@ -6,6 +6,11 @@
    ・書き方の レベル（だんだん 手助けを へらす）：Lv1 らんを うめる → Lv2 ヒントの ことばだけ → Lv3 白紙。
      作った 数 LV2_AT・LV3_AT で ひらく（ひらいた レベルの 中から えらべる）
    ・カードの 引き直しは 1回の 作品で REROLL_MAX 回まで（しばりの 中で 考える 練習）
+   ★2026-10-30 夜（保護者：むずかしい。なれるまで かんたんな サポートを。少しでも さわったら OK・シールも Q も）：
+     ・Lv0「かんたん（えらぶだけ）」を いちばん はじめに。カードから まぜかた・ルール・人数・勝ち方の 候補を 出し、タップで えらぶだけで かんせい。
+       作品 3こ までは Lv0 が 最初に 出る（Lv1〜 は いつでも えらべる）。
+     ・さわった だけで OK：カードを 引いたら（その日 はじめて）プランの「🎨 つくる」✓・かけら ＋2・＋3Q。かんせいしたら（その日 はじめて）かけら ＋3・＋5Q。
+     ・かんせいの 条件は ゆるく：何か 1つ 書くか えらべば OK（クイズは もんだい ＋ 答え 1つ いじょう）。
    ・家族に 見せる：作品の「to」に あて先（りお・りさ・papa）を 書いて 自分の セーブに のこす。
      相手の アプリが GAS の LOGIN（読むだけ）で 読んで「とどいた 作品」に 出す。あそんだら 相手の セーブに sozoPlays を のこし、
      作った 人は それを 読んで「あそんで もらった」を 知る。だれも ほかの 人の セーブには 書きこまない（シール帳の プレゼントと 同じ）。
@@ -45,6 +50,12 @@
     ["win", "どう なったら 勝ち？", "例：10回 たおして 点が いちばん 多い 人", "勝ち方"],
     ["fun", "ここが おもしろい！", "例：だれが わるものか 考えながら ころがす", "おもしろさ"]
   ];
+  var TOUCH_Q = 3, TOUCH_SHARD = 2, DONE_Q = 5, DONE_SHARD = 3;
+  // Lv0 の 候補（{A}{B}＝カード、{R}＝ルールカード）
+  var HOW_MIX = ["{A}の うごきで {B}を する", "{A}を しながら {B}を する", "{A}で 勝った 人が {B}の 番", "{B}の ルールで {A}を する", "{A}と {B}を 1回ずつ こうたいで"];
+  var HOW_TOOL = ["{A}を ころがして {B}を たおす", "{A}を {B}に 入れたら 1点", "{A}を かくして みんなで さがす", "{A}と {B}で まとあて", "{A}を {B}の 上に つみあげる"];
+  var WHO = ["2人", "3〜4人", "5人 いじょう", "何人でも", "チームで"];
+  var WIN = ["さいごまで のこった 人が 勝ち", "点数が いちばん 多い 人が 勝ち", "いちばん はやく できた 人が 勝ち", "みんなで 協力して クリア", "まけた 人が 次の おに"];
   var HINTS = ["だれと", "どこで", "なにを 使って", "どう うごく", "いつ おわる", "どう なれば 勝ち", "ずるを ふせぐ ルール", "ここが おもしろい"];
 
   function today() { var x = new Date(window.currentServerTime || Date.now()); return x.getFullYear() + "-" + ("0" + (x.getMonth() + 1)).slice(-2) + "-" + ("0" + x.getDate()).slice(-2); }
@@ -142,7 +153,7 @@
       '<button type="button" data-z="new" data-v="free"><span class="ic" aria-hidden="true">📄</span>白紙から<small>自分で ぜんぶ 考える</small></button>' +
       '<button type="button" data-z="view" data-v="mine"><span class="ic" aria-hidden="true">📚</span>つくった 作品<small>' + s.works.length + 'こ</small></button>' +
       '<button type="button" data-z="view" data-v="inbox"><span class="ic" aria-hidden="true">📬</span>とどいた 作品<small>' + (ui.inbox === undefined || ui.inbox === null ? "たしかめ中…" : inb ? inb + "こ あるよ！" : "家族の 作品で あそぶ") + '</small></button>' +
-      '</div><div class="sub" style="margin-top:8px;text-align:center">書き方 Lv' + L + (L < 3 ? '（作品 ' + (L === 1 ? LV2_AT : LV3_AT) + 'こで 次の レベル）' : '：白紙で 書ける！') + '</div>';
+      '</div><div class="sub" style="margin-top:8px;text-align:center;font-weight:900;color:#c2410c">はじめは「えらぶ だけ」で OK！ カードを 引いたら それだけで +' + TOUCH_Q + 'Q・かけら +' + TOUCH_SHARD + '（1日 1回）</div><div class="sub" style="margin-top:2px;text-align:center">書き方 Lv' + L + (L < 3 ? '（作品 ' + (L === 1 ? LV2_AT : LV3_AT) + 'こで 次の レベル）' : '：白紙で 書ける！') + '</div>';
   }
 
   /* ---- つくる ---- */
@@ -151,7 +162,7 @@
     if (mode === "tool") { var d1 = pick(CARDS.dogu.list), d2 = pick(CARDS.dogu.list, [d1]), out = [{ k: "dogu", t: d1 }, { k: "dogu", t: d2 }]; if (Math.random() < .5) out.push({ k: "dogu", t: pick(CARDS.dogu.list, [d1, d2]) }); out.push({ k: "basho", t: pick(CARDS.basho.list) }); return out; }
     return [];
   }
-  function startMake(mode) { ui.view = "make"; ui.mode = mode; ui.cards = deal(mode); ui.rr = 0; ui.f = {}; ui.lv = mode === "free" ? 3 : Math.min(lvMax(), 3); ui.quiz = { q: "", a: ["", "", ""], c: 0, exp: "" }; ui.to = []; ui.err = ""; }
+  function startMake(mode) { ui.view = "make"; ui.mode = mode; ui.cards = deal(mode); ui.rr = 0; ui.f = {}; ui.lv = mode === "free" ? 3 : mode === "quiz" ? 1 : ((S().cnt || 0) < LV2_AT ? 0 : Math.min(lvMax(), 3)); ui.e = {}; ui.quiz = { q: "", a: ["", "", ""], c: 0, exp: "" }; ui.to = []; ui.err = ""; }
   function cardsHtml() {
     if (!ui.cards.length) return "";
     return '<div class="cards">' + ui.cards.map(function (c, i) { var K = CARDS[c.k]; return (i ? '<span class="plus" aria-hidden="true">＋</span>' : '') + '<div class="cd' + (c.k === "rule" ? " r" : "") + '" style="animation-delay:' + (i * .12) + 's"><div class="k">' + K.icon + ' ' + K.n + '</div><div class="t">' + esc(c.t) + '</div></div>'; }).join("") + '</div>' +
@@ -166,6 +177,8 @@
       h += '<label class="f"><span>もんだい</span><textarea data-q="q" rows="2" maxlength="80" placeholder="例：1円玉を 100まい つみ上げると、高さは だいたい どれくらい？">' + esc(Q.q) + '</textarea></label>' +
         [0, 1, 2].map(function (i) { return '<label class="f"><span>えらぶ 答え ' + "アイウ"[i] + (Q.c === i ? '（正解）' : '') + '</span><div style="display:flex;gap:6px"><input type="text" data-qa="' + i + '" maxlength="30" value="' + esc(Q.a[i]) + '" style="flex:1"><button type="button" class="mini" data-z="qc" data-v="' + i + '" aria-pressed="' + (Q.c === i) + '" aria-label="' + "アイウ"[i] + 'を 正解に する">正解</button></div></label>'; }).join("") +
         '<label class="f"><span>答えの わけ</span><textarea data-q="exp" rows="2" maxlength="100" placeholder="例：1円玉 1まいは 約 1.5mm。100まいで 約 15cm">' + esc(Q.exp) + '</textarea></label>';
+    } else if (ui.lv === 0) {
+      h += easyHtml();
     } else if (ui.lv === 1) {
       h += FIELDS.map(function (f) { return '<label class="f"><span>' + f[1] + '</span><input type="text" data-f="' + f[0] + '" maxlength="60" placeholder="' + esc(f[2]) + '" value="' + esc(ui.f[f[0]] || "") + '"></label>'; }).join("");
     } else if (ui.lv === 2) {
@@ -175,11 +188,39 @@
     } else {
       h += '<label class="f"><span>名前</span><input type="text" data-f="name" maxlength="30" value="' + esc(ui.f.name || "") + '"></label><label class="f"><span>白紙</span><textarea data-f="text" rows="9" maxlength="400" placeholder="ここに ぜんぶ 自分で 書こう">' + esc(ui.f.text || "") + '</textarea></label>';
     }
-    if (m !== "quiz" && m !== "free" && lvMax() > 1) h += '<div class="sub" style="margin-top:4px">書き方：' + [1, 2, 3].filter(function (l) { return l <= lvMax(); }).map(function (l) { return '<button type="button" class="mini" data-z="lv" data-v="' + l + '" aria-pressed="' + (ui.lv === l) + '">Lv' + l + ' ' + ["", "らんを うめる", "ヒントだけ", "白紙"][l] + '</button>'; }).join("") + '</div>';
+    if (m !== "quiz" && m !== "free") h += '<div class="sub" style="margin-top:4px">書き方：' + [0, 1, 2, 3].filter(function (l) { return l <= lvMax(); }).map(function (l) { return '<button type="button" class="mini" data-z="lv" data-v="' + l + '" aria-pressed="' + (ui.lv === l) + '">' + ["かんたん（えらぶ）", "Lv1 らんを うめる", "Lv2 ヒントだけ", "Lv3 白紙"][l] + '</button>'; }).join("") + '</div>';
     h += '<div class="q">だれに 見せる？（あそんで もらおう）</div><div>' + others().map(function (o) { return '<button type="button" class="mini" data-z="to" data-v="' + esc(o) + '" aria-pressed="' + (ui.to.indexOf(o) >= 0) + '">' + esc(o === "papa" ? "パパ" : o) + '</button>'; }).join("") + '</div>' +
       '<div class="sub">名前・住所・学校名は 書かないでね。</div>' + (ui.err ? '<div class="sub" style="color:#dc2626;font-weight:900">' + esc(ui.err) + '</div>' : '') +
       '<button type="button" class="go" data-z="finish">✨ かんせい！</button>';
     return h;
+  }
+  function fill(t) { var c = ui.cards, a = (c[0] || {}).t || "", b = (c[1] || {}).t || ""; return t.replace("{A}", a.replace(/（.*?）/, "")).replace("{B}", b.replace(/（.*?）/, "")); }
+  function easyNames() { var c = ui.cards, a = ((c[0] || {}).t || "").replace(/（.*?）/, "").replace(/\s/g, ""), b = ((c[1] || {}).t || "").replace(/（.*?）/, "").replace(/\s/g, ""); var cut = function (x) { x = x.replace(/ゲーム$|ボール$/, ""); return Array.from(x).slice(0, 4).join(""); }, sa = cut(a), sb = cut(b); return [sa + sb, sb + sa, "スーパー" + a, a + "＆" + b].filter(function (x, i, arr) { return x && arr.indexOf(x) === i; }); }
+  function chips(key, list) { return '<div style="display:flex;flex-wrap:wrap;gap:2px">' + list.map(function (x, i) { return '<button type="button" class="mini" data-z="ez" data-v="' + key + ':' + i + '" aria-pressed="' + (ui.e[key] === i) + '">' + esc(x) + '</button>'; }).join("") + '</div>'; }
+  function easyLists() {
+    var rules = ui.cards.filter(function (c) { return c.k === "rule"; }).map(function (c) { return c.t; });
+    var more = CARDS.rule.list.filter(function (x) { return rules.indexOf(x) < 0; }).slice(0, 12);
+    if (!ui.e.rp) ui.e.rp = more.sort(function () { return Math.random() - .5; }).slice(0, 4 - Math.min(1, rules.length));
+    return { name: easyNames(), how: (ui.mode === "tool" ? HOW_TOOL : HOW_MIX).map(fill), rule: rules.concat(ui.e.rp), who: WHO, win: WIN };
+  }
+  function easyHtml() {
+    var L = easyLists();
+    return '<div class="sub" style="background:#fff7ed;border-radius:12px;padding:6px 10px;margin:6px 0">👆 えらぶ だけで OK！ 1つでも えらべば かんせい できるよ。じぶんで 書きたい ところは 書いてね。</div>' +
+      '<div class="q">① 名前</div>' + chips("name", L.name) + '<input type="text" data-f="name" maxlength="30" placeholder="じぶんで つけても いいよ" value="' + esc(ui.f.name || "") + '" style="margin-top:4px">' +
+      '<div class="q">② どう まぜる？</div>' + chips("how", L.how) +
+      '<div class="q">③ とくべつ ルールを 1つ</div>' + chips("rule", L.rule) +
+      '<div class="q">④ 何人で？</div>' + chips("who", L.who) +
+      '<div class="q">⑤ どう なったら 勝ち？</div>' + chips("win", L.win);
+  }
+  function rewardTouch() {
+    var s = S(); if (!s || s.td === today()) return;
+    s.td = today();
+    var sh = window.stickerAddShardsExternal ? window.stickerAddShardsExternal(TOUCH_SHARD, "") : 0;
+    window.saveData.q = (Number(window.saveData.q) || 0) + TOUCH_Q;
+    try { if (window.tutorPlanMark) window.tutorPlanMark("sozo"); } catch (e) {}
+    try { if (window.updateUI) window.updateUI(); } catch (e) {}
+    log("工房に ちょうせん（カードを 引いた）→ +" + TOUCH_Q + "Q" + (sh ? "・かけら +" + sh : ""));
+    save(); toast("🎨 ちょうせん ありがとう！ +" + TOUCH_Q + "Q" + (sh ? "・かけら +" + sh : ""));
   }
   function readForm() {
     var b = document.getElementById("szk-b"); if (!b) return;
@@ -192,22 +233,31 @@
     var m = ui.mode, w = { id: me() + "-" + Date.now().toString(36), m: m, d: today(), lv: ui.lv, cards: ui.cards.map(function (c) { return c.t; }), to: ui.to.slice(), at: Date.now() };
     if (m === "quiz") {
       var Q = ui.quiz, q = clean(Q.q, 80), a = Q.a.map(function (x) { return clean(x, 30); });
-      if (Array.from(q).length < 5 || a.some(function (x) { return !x; })) { ui.err = "もんだいと 3つの 答えを ぜんぶ 書いてね"; return render(); }
+      if (Array.from(q).length < 2 || !a[Q.c]) { ui.err = "もんだいと、正解の 答えを 書いてね"; return render(); }
+      a = a.map(function (x, i) { return x || ["？", "？？", "？？？"][i]; });
       w.quiz = { q: q, a: a, c: Q.c, exp: clean(Q.exp, 100) }; w.f = { name: "クイズ：" + Array.from(q).slice(0, 14).join("") + (Array.from(q).length > 14 ? "…" : "") };
+    } else if (ui.lv === 0) {
+      var L = easyLists(), e = ui.e, pickE = function (k) { return e[k] !== undefined ? L[k][e[k]] : ""; };
+      w.f = { name: clean(ui.f.name, 30) || pickE("name"), who: pickE("who"), use: ui.mode === "tool" ? ui.cards.map(function (c) { return c.t; }).join("・") : "", r1: pickE("how"), r2: pickE("rule"), win: pickE("win") };
+      if (!w.f.name && !w.f.r1 && !w.f.r2 && !w.f.who && !w.f.win) { ui.err = "どれか 1つ えらんでね"; return render(); }
+      if (!w.f.name) w.f.name = L.name[0] || "なまえの ない ゲーム";
     } else if (ui.lv === 1) {
       w.f = {}; FIELDS.forEach(function (f) { w.f[f[0]] = clean(ui.f[f[0]], 60); });
-      if (!w.f.name || !w.f.r1 || !w.f.win) { ui.err = "「名前」「ルール①」「勝ち方」は 書いてね"; return render(); }
+      if (!FIELDS.some(function (f) { return w.f[f[0]]; })) { ui.err = "どこか 1つ 書いてね"; return render(); }
+      if (!w.f.name) w.f.name = "なまえの ない ゲーム";
     } else {
       w.f = { name: clean(ui.f.name, 30) }; w.text = clean(ui.f.text, 400);
-      if (!w.f.name || Array.from(w.text).length < 15) { ui.err = "名前と、ルール（15文字 いじょう）を 書いてね"; return render(); }
+      if (!w.f.name && !w.text) { ui.err = "名前か ルールを 書いてね"; return render(); }
+      if (!w.f.name) w.f.name = "なまえの ない 作品";
     }
     var s = S(); s.works.push(w); s.works = s.works.slice(-WORK_MAX); s.cnt += 1;
     var shards = 0;
-    if (s.fd !== today()) { s.fd = today(); shards = window.stickerAddShardsExternal ? window.stickerAddShardsExternal(3, "") : 0; }
+    var qGot = 0;
+    if (s.fd !== today()) { s.fd = today(); shards = window.stickerAddShardsExternal ? window.stickerAddShardsExternal(DONE_SHARD, "") : 0; window.saveData.q = (Number(window.saveData.q) || 0) + DONE_Q; qGot = DONE_Q; try { if (window.updateUI) window.updateUI(); } catch (e) {} }
     s = S();
     try { if (window.tutorPlanMark) window.tutorPlanMark("sozo"); } catch (e) {}
-    log("つくった（" + ({ mix: "まぜる", tool: "どうぐ", quiz: "クイズ", free: "白紙" })[m] + "・Lv" + ui.lv + "）「" + w.f.name + "」" + (w.cards.length ? " カード：" + w.cards.join("＋") : "") + (w.to.length ? " → " + w.to.join("・") : "") + (shards ? "・かけら +" + shards : ""));
-    save(); ui.last = w; ui.shards = shards; ui.view = "done"; render(); focusFirst();
+    log("つくった（" + ({ mix: "まぜる", tool: "どうぐ", quiz: "クイズ", free: "白紙" })[m] + "・Lv" + ui.lv + "）「" + w.f.name + "」" + (w.cards.length ? " カード：" + w.cards.join("＋") : "") + (w.to.length ? " → " + w.to.join("・") : "") + (shards ? "・かけら +" + shards : "") + (qGot ? "・+" + qGot + "Q" : ""));
+    save(); ui.last = w; ui.shards = shards; ui.qGot = qGot; ui.view = "done"; render(); focusFirst();
   }
   function workHtml(w, opts) {
     opts = opts || {};
@@ -220,7 +270,7 @@
   function doneHtml() {
     var w = ui.last;
     return '<div class="fx"><div class="big" aria-hidden="true">🎨✨</div><div class="q" style="text-align:center">かんせい！ あたらしい ' + (w.m === "quiz" ? "クイズ" : "ゲーム") + 'が 生まれたよ</div></div>' + workHtml(w) +
-      (ui.shards ? '<div class="q" style="text-align:center">🧩 シールの かけら +' + ui.shards + 'こ</div>' : '') +
+      (ui.shards || ui.qGot ? '<div class="q" style="text-align:center">' + (ui.shards ? '🧩 シールの かけら +' + ui.shards + 'こ　' : '') + (ui.qGot ? '🪙 +' + ui.qGot + 'Q' : '') + '</div>' : '') +
       '<div class="sub" style="text-align:center">' + (w.to.length ? "🎮 " + w.to.map(function (x) { return x === "papa" ? "パパ" : x; }).join("・") + " の アプリに とどくよ。あそんで もらえたら ランクが 上がる！" : "だれかに 見せると、あそんで もらえるよ") + '</div>' +
       '<div class="sub" style="text-align:center;margin-top:6px">📓 自学ノートに「自分で 考えた ゲーム」として 書いても いいね</div>' +
       '<button type="button" class="go" data-z="view" data-v="home">工房に もどる</button>';
@@ -285,8 +335,9 @@
     if (a === "close") return close();
     if (a === "back") { if (ui.view === "make") readForm(); ui.view = ui.view === "play" ? "inbox" : "home"; render(); return focusFirst(); }
     if (a === "view") { ui.view = v; render(); if (v === "home" || v === "inbox") checkFamily(); return focusFirst(); }
-    if (a === "new") { startMake(v); render(); return focusFirst(); }
-    if (a === "reroll") { readForm(); if (ui.rr >= REROLL_MAX) return; ui.rr += 1; ui.cards = deal(ui.mode); return render(); }
+    if (a === "new") { startMake(v); render(); rewardTouch(); return focusFirst(); }
+    if (a === "ez") { readForm(); var kv = v.split(":"), k = kv[0], n = Number(kv[1]); ui.e[k] = ui.e[k] === n ? undefined : n; if (k === "name" && ui.e.name !== undefined) ui.f.name = easyLists().name[n]; return render(); }
+    if (a === "reroll") { readForm(); if (ui.rr >= REROLL_MAX) return; ui.rr += 1; ui.cards = deal(ui.mode); ui.e = {}; return render(); }
     if (a === "lv") { readForm(); ui.lv = Number(v); return render(); }
     if (a === "to") { readForm(); var i = ui.to.indexOf(v); if (i >= 0) ui.to.splice(i, 1); else ui.to.push(v); return render(); }
     if (a === "qc") { readForm(); ui.quiz.c = Number(v); return render(); }
