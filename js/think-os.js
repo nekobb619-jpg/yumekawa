@@ -53,7 +53,7 @@
     { id: "v1", date: "2026-10-30", from: null, why: "はじめての 考えかたOS", changes: [] }
   ];
   window.THINK_OS = THINK_OS; window.THINK_OS_HISTORY = OS_HISTORY;
-  var REWARD_DAY = 3, LV2_AT = 3, LV3_AT = 6;
+  var REWARD_DAY = 3, LV2_AT = 3, LV3_AT = 6, OS_DAY_Q = 5;
 
   /* ================= 💡 なんのため？（単元 id ごと。オリジナルの 場面） ================= */
   var PURPOSE = {
@@ -271,8 +271,13 @@
   function stepOf(role) { for (var i = 0; i < THINK_OS.steps.length; i++) if (THINK_OS.steps[i].role === role) return THINK_OS.steps[i]; return null; }
   function stepNo(role) { for (var i = 0; i < THINK_OS.steps.length; i++) if (THINK_OS.steps[i].role === role) return i; return -1; }
   function tacticOf(id) { for (var i = 0; i < THINK_OS.tactics.length; i++) if (THINK_OS.tactics[i].id === id) return THINK_OS.tactics[i]; return null; }
-  function reward(n, why) {
+  // cnt＝週の 皆勤ボーナス（js/weekly-bonus.js）に 数える 問題数。ごほうびの 上限とは べつに いつも 数える
+  function reward(n, why, cnt) {
     var s = S(); if (!s) return 0;
+    if (cnt && window.weeklyBonusCount) window.weeklyBonusCount(cnt);
+    s = S();
+    // ★2026-10-30（保護者：Q の 稼ぎ）考えかたOS で 1日 1回だけ +OS_DAY_Q（考える 方が 得、を Q でも）
+    if (s.qDay !== today()) { s.qDay = today(); window.saveData.q = (Number(window.saveData.q) || 0) + OS_DAY_Q; ui && (ui.q = OS_DAY_Q); try { if (window.updateUI) window.updateUI(); } catch (e) {} } else if (ui) ui.q = 0;
     if (s.day.n >= REWARD_DAY) return 0;
     s.day.n += 1;
     var got = window.stickerAddShardsExternal ? window.stickerAddShardsExternal(n, "算数") : 0;
@@ -445,7 +450,7 @@
       (p.blank && ui.L >= 2 ? '<div class="sub">✍️ ' + esc(p.blank.t.replace("{A}", p.blank.A[0]).replace("{B}", p.blank.B[0])) + '</div>' : '') +
       (res.note ? '<div class="sub">💬 ' + esc(res.note) + '</div>' : '') + '</div>' +
       '<div class="card" style="text-align:center"><div class="sub">' + (res.miss ? "まちがえた ところも 自分で 直せたね。" : "ぜんぶ 1回目で 正解！") + (res.purpose ? "<br>💡「〜の ため」から 説明できた！ これが いちばん すごい" : "") + '</div>' +
-      '<div class="q" style="text-align:center">' + (res.got ? "🧩 シールの かけら +" + res.got + "こ" : (S().day.n >= REWARD_DAY && !res.got ? "（今日の ごほうびは おしまい。れんしゅうは いつでも OK）" : "")) + '</div>' +
+      '<div class="q" style="text-align:center">' + (res.got ? "🧩 シールの かけら +" + res.got + "こ" : (S().day.n >= REWARD_DAY && !res.got ? "（今日の ごほうびは おしまい。れんしゅうは いつでも OK）" : "")) + (ui.q ? "<br>🪙 今日の 考えかたOS ボーナス +" + ui.q + "Q" : "") + '</div>' +
       (res.lvup ? '<div class="q" style="text-align:center;color:#db2777">🎉 Lv' + res.lvup + ' に レベルアップ！ ' + (res.lvup === 2 ? "つぎから 説明の 文を 作るよ" : "つぎから 自分の ことばで 教えるよ") + '</div>' : '') + '</div>' +
       '<button type="button" class="go" data-t="pick" data-v="teach">つぎの 問題</button>';
   }
@@ -476,7 +481,7 @@
     s.done[p.id] = today(); s.cnt += 1;
     if (note) { s.notes.push({ d: today(), p: p.id, t: note, v: THINK_OS.id }); s.notes = s.notes.slice(-40); }
     var n = (ui.miss ? 2 : 3) + (purpose ? 1 : 0);
-    var got = reward(n, "🦄 ニコに 教えた「" + p.title + "」" + (ui.miss ? "（なおし " + ui.miss + "）" : "（ぜんぶ 1回目）") + (note ? "・ひとこと：" + note : "") + (purpose ? "・目的から 説明" : ""));
+    var got = reward(n, "🦄 ニコに 教えた「" + p.title + "」" + (ui.miss ? "（なおし " + ui.miss + "）" : "（ぜんぶ 1回目）") + (note ? "・ひとこと：" + note : "") + (purpose ? "・目的から 説明" : ""), ui.roles.length + (ui.L >= 2 ? 1 : 0));
     var after = lv();
     ui.res = { got: got, miss: ui.miss, note: note, purpose: purpose, lvup: after > before ? after : 0, first: firstDone };
     ui.phase = "end"; save();
@@ -595,15 +600,15 @@
     if (a === "rans") return routeAnswer(v);
     if (a === "pref") {
       var s = S(); s.route[v] = (s.route[v] || 0) + 1; var first = !s.done["r:" + ui.p.id]; s.done["r:" + ui.p.id] = today();
-      ui.got = reward(2, "🛤 2つの 道「" + ui.p.title + "」楽だった：" + ({ top: "ゴールから", bottom: "わかる ことから", same: "同じ" })[v]);
+      ui.got = reward(2, "🛤 2つの 道「" + ui.p.title + "」楽だった：" + ({ top: "ゴールから", bottom: "わかる ことから", same: "同じ" })[v], 6);
       ui.phase = "end"; save(); render(); return focusFirst();
     }
     if (a === "tac") { ui.tac = v; ui.phase = "solve"; ui.ord = null; render(); return focusFirst(); }
     if (a === "fans") {
       if (Number(v) !== 0) { ui.tries += 1; flashNg(v); return; }
       var s2 = S(), wkk = wk(), firstWeek = !s2.fw[wkk]; s2.fw[wkk] = ui.p.id; s2.done["f:" + ui.p.id] = today();
-      ui.got = firstWeek ? reward(ui.tac === ui.p.best ? 3 : 2, "🃏 ふしぎな 問題「" + ui.p.title + "」作戦：" + tacticOf(ui.tac).name + (ui.tries ? "（なおし " + ui.tries + "）" : "")) : 0;
-      if (!firstWeek) log("🃏 ふしぎな 問題「" + ui.p.title + "」（今週 2問目・ごほうび なし）");
+      ui.got = firstWeek ? reward(ui.tac === ui.p.best ? 3 : 2, "🃏 ふしぎな 問題「" + ui.p.title + "」作戦：" + tacticOf(ui.tac).name + (ui.tries ? "（なおし " + ui.tries + "）" : ""), 2) : 0;
+      if (!firstWeek) { log("🃏 ふしぎな 問題「" + ui.p.title + "」（今週 2問目・ごほうび なし）"); if (window.weeklyBonusCount) window.weeklyBonusCount(2); }
       ui.phase = "end"; save(); render(); return focusFirst();
     }
     if (a === "whyu") { ui.uid = v; markWhy(v); render(); return focusFirst(); }
