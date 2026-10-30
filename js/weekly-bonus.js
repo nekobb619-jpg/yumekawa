@@ -5,17 +5,24 @@
    ・数える 問題：ステージ・探偵ラボ など（triggerCorrectAnswer／triggerWrongAnswer）で、1問に つき 1回。
      その 問題が 出てから 3秒 未満で 押した 答えは 数えない（連打で ふやせない）。
      考えかたOS（js/think-os.js）は window.weeklyBonusCount(n) で 足す。
-   ・やった日：その 日に 数えた 問題が DAY_MIN（10）問 いじょう。
-   ・週（月〜日）の ボーナス：やった日が WEEK_MIN_DAYS（5）日 いじょうの 週だけ。
-     やった日の 1日平均で 10〜19問 +50Q／20〜29問 +80Q／30問〜 +100Q。7日 ぜんぶ やった 週は さらに +20Q。上限 WEEK_CAP（120Q）。
+   ・やった日：その 日に 数えた 問題が R().dayMin（10）問 いじょう。
+   ・週（月〜日）の ボーナス：やった日が R().weekMinDays（5）日 いじょうの 週だけ。
+     やった日の 1日平均で 10〜19問 +50Q／20〜29問 +80Q／30問〜 +100Q。7日 ぜんぶ やった 週は さらに +20Q。上限 120Q。
+     りさ（母）は きびしめ：20問で やった日・6日 いじょう・平均 20/30/40問 → 30/45/60Q・7日で ＋10Q・上限 70Q（RULES）。
    ・わたす 時：次の 週に はじめて ホームを ひらいた とき（さいご 2週間ぶんまで さかのぼる）。おしらせ＋LOG「🗓️週の皆勤ボーナス」。
    ・saveData.weekBonus = { days:{ "2026-10-30": 数 }, paid:{ "2026-10-26": Q（週の 月曜） } }。days は 35日ぶん のこす。
    ・ホームの「きょうの まなびプラン」の 下に カード：今週の やった日（✓）・今日の 問題数・ロバックス交換まで あと◯Q。
    ===================================================================== */
 (function () {
-  var DAY_MIN = 10, WEEK_MIN_DAYS = 5, WEEK_CAP = 120, MIN_MS = 3000, EXCHANGE_Q = 1400;
-  var TIERS = [[30, 100], [20, 80], [10, 50]], ALL7 = 20;
-  window.WEEK_BONUS_RULE = { dayMin: DAY_MIN, weekMinDays: WEEK_MIN_DAYS, tiers: TIERS, all7: ALL7, cap: WEEK_CAP };
+  var MIN_MS = 3000, EXCHANGE_Q = 1400;
+  // ★2026-10-30：人ごとの きまり（保護者：りさ（母）は 少なめ・きびしめ）。ここに ない 人は "default"
+  var RULES = {
+    "default": { dayMin: 10, weekMinDays: 5, tiers: [[30, 100], [20, 80], [10, 50]], all7: 20, cap: 120 },
+    "りさ": { dayMin: 20, weekMinDays: 6, tiers: [[40, 60], [30, 45], [20, 30]], all7: 10, cap: 70 }
+  };
+  function R() { return RULES[window.playerId] || RULES["default"]; }
+  window.WEEK_BONUS_RULES = RULES; window.weekBonusRule = R;
+  function tierText() { var r = R(); return r.tiers.slice().reverse().map(function (t) { return t[0] + "問 → " + t[1] + "Q"; }).join("／") + "、7日 ぜんぶで ＋" + r.all7 + "Q"; }
 
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
@@ -37,9 +44,9 @@
   // 週の まとめ（月曜の Date）
   function weekSummary(mon) {
     var w = st() || { days: {} }, days = [], done = 0, sum = 0;
-    for (var i = 0; i < 7; i++) { var k = iso(addDays(mon, i)), n = Number(w.days[k] || 0); days.push({ k: k, n: n, ok: n >= DAY_MIN }); if (n >= DAY_MIN) { done++; sum += n; } }
+    for (var i = 0; i < 7; i++) { var k = iso(addDays(mon, i)), n = Number(w.days[k] || 0); days.push({ k: k, n: n, ok: n >= R().dayMin }); if (n >= R().dayMin) { done++; sum += n; } }
     var avg = done ? Math.round(sum / done) : 0, q = 0;
-    if (done >= WEEK_MIN_DAYS) { for (var t = 0; t < TIERS.length; t++) if (avg >= TIERS[t][0]) { q = TIERS[t][1]; break; } if (done === 7) q += ALL7; q = Math.min(WEEK_CAP, q); }
+    if (done >= R().weekMinDays) { for (var t = 0; t < R().tiers.length; t++) if (avg >= R().tiers[t][0]) { q = R().tiers[t][1]; break; } if (done === 7) q += R().all7; q = Math.min(R().cap, q); }
     return { mon: iso(mon), days: days, done: done, avg: avg, q: q };
   }
   window.weekBonusSummary = function () { return weekSummary(monday(now())); };
@@ -59,7 +66,7 @@
     var w = st(); if (!w) return;
     var k = iso(now()), before = Number(w.days[k] || 0);
     w.days[k] = before + n;
-    if (before < DAY_MIN && w.days[k] >= DAY_MIN) { toast("🗓️ 今日は「やった日」に なったよ！（" + DAY_MIN + "問 たっせい）"); log("やった日：" + k + "（" + w.days[k] + "問）"); }
+    if (before < R().dayMin && w.days[k] >= R().dayMin) { toast("🗓️ 今日は「やった日」に なったよ！（" + R().dayMin + "問 たっせい）"); log("やった日：" + k + "（" + w.days[k] + "問）"); }
     // 古い 日を けす
     var lim = iso(addDays(now(), -35)); Object.keys(w.days).forEach(function (d) { if (d < lim) delete w.days[d]; });
     render();
@@ -84,7 +91,7 @@
       w.paid[key] = s.q;
       if (s.q > 0) window.saveData.q = (Number(window.saveData.q) || 0) + s.q;
       out.push(s);
-      log(key + "の 週：やった日 " + s.done + "日・平均 " + s.avg + "問 → " + (s.q ? "+" + s.q + "Q" : "ボーナス なし（" + WEEK_MIN_DAYS + "日 いじょうで 出るよ）"));
+      log(key + "の 週：やった日 " + s.done + "日・平均 " + s.avg + "問 → " + (s.q ? "+" + s.q + "Q" : "ボーナス なし（" + R().weekMinDays + "日 いじょうで 出るよ）"));
     }
     var ks = Object.keys(w.paid).sort(); while (ks.length > 12) delete w.paid[ks.shift()];
     if (out.length) { save(); show(out); }
@@ -103,9 +110,9 @@
           '<div style="display:flex;gap:4px;justify-content:center;margin:6px 0">' + s.days.map(function (d, i) { return '<span title="' + d.k + ' ' + d.n + '問" style="display:inline-flex;flex-direction:column;align-items:center;width:36px;border-radius:10px;padding:3px 0;font-size:10px;font-weight:900;' + (d.ok ? "background:#22c55e;color:#fff" : "background:#f3f4f6;color:#9ca3af") + '">' + dow[i] + '<b style="font-size:13px">' + (d.ok ? "✓" : d.n || "・") + '</b></span>'; }).join("") + '</div>' +
           '<div style="font-size:13px;font-weight:900;color:#422006">やった日 ' + s.done + '日・1日平均 ' + s.avg + '問</div>' +
           '<div style="font-size:20px;font-weight:900;color:' + (s.q ? "#16a34a" : "#9ca3af") + ';margin-top:2px">' + (s.q ? "+" + s.q + "Q" : "ボーナスは なし") + '</div>' +
-          (s.q ? '' : '<div style="font-size:11.5px;font-weight:800;color:#92400e">1日 ' + DAY_MIN + '問 いじょうの 日が ' + WEEK_MIN_DAYS + '日 あると 出るよ。今週 ちょうせん！</div>') + '</div>';
+          (s.q ? '' : '<div style="font-size:11.5px;font-weight:800;color:#92400e">1日 ' + R().dayMin + '問 いじょうの 日が ' + R().weekMinDays + '日 あると 出るよ。今週 ちょうせん！</div>') + '</div>';
       }).join("") +
-      '<div style="font-size:11.5px;font-weight:700;color:#78350f;line-height:1.6;text-align:left">1日 ' + DAY_MIN + '問 いじょう 解いた 日が「やった日」。' + WEEK_MIN_DAYS + '日 いじょうで、平均 10問 → 50Q／20問 → 80Q／30問 → 100Q、7日 ぜんぶで ＋20Q。</div>' +
+      '<div style="font-size:11.5px;font-weight:700;color:#78350f;line-height:1.6;text-align:left">1日 ' + R().dayMin + '問 いじょう 解いた 日が「やった日」。' + R().weekMinDays + '日 いじょうで、平均 ' + tierText() + '。</div>' +
       '<button type="button" id="wb-ok" style="margin-top:12px;border:none;border-radius:999px;min-height:48px;padding:10px 28px;font:900 15px \'Zen Maru Gothic\';color:#fff;background:linear-gradient(135deg,#f59e0b,#db2777);box-shadow:0 4px 0 #92400e;cursor:pointer">' + (tot ? "やったね！" : "わかった") + '</button></div>';
     document.body.appendChild(m);
     var ok = document.getElementById("wb-ok"), done = function () { m.remove(); render(); try { if (window.updateUI) window.updateUI(); } catch (e) {} };
@@ -122,11 +129,11 @@
       if (!box) { box = document.createElement("section"); box.id = "wb-card"; box.setAttribute("aria-label", "今週の やった日と ボーナス"); host.parentNode.insertBefore(box, host.nextSibling); }
       var s = weekSummary(monday(now())), t = iso(now()), today = s.days.filter(function (d) { return d.k === t; })[0] || { n: 0 };
       var q = Number(window.saveData.q) || 0, left = Math.max(0, EXCHANGE_Q - q), dow = ["月", "火", "水", "木", "金", "土", "日"];
-      var need = Math.max(0, WEEK_MIN_DAYS - s.done), remainDays = s.days.filter(function (d) { return d.k >= t; }).length;
-      var tip = s.done >= WEEK_MIN_DAYS ? "今週の ボーナス 確定！ いまの 見こみ +" + s.q + "Q（平均 " + s.avg + "問）" : need > remainDays ? "今週は 5日に とどかないけど、1日 " + DAY_MIN + "問の 練習に しよう。来週 ボーナスを ねらおう！" : "あと " + need + "日 で ボーナス！";
+      var need = Math.max(0, R().weekMinDays - s.done), remainDays = s.days.filter(function (d) { return d.k >= t; }).length;
+      var tip = s.done >= R().weekMinDays ? "今週の ボーナス 確定！ いまの 見こみ +" + s.q + "Q（平均 " + s.avg + "問）" : need > remainDays ? "今週は " + R().weekMinDays + "日に とどかないけど、1日 " + R().dayMin + "問の 練習に しよう。来週 ボーナスを ねらおう！" : "あと " + need + "日 で ボーナス！";
       box.style.cssText = "margin:10px 0;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #fbbf24;border-radius:18px;padding:10px 12px;font-family:'Zen Maru Gothic',sans-serif";
-      box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap"><div style="font-size:13px;font-weight:900;color:#92400e">🗓️ 今週の やった日（' + s.done + '／' + WEEK_MIN_DAYS + '日で ボーナス）</div>' +
-        '<div style="font-size:11.5px;font-weight:900;color:' + (today.n >= DAY_MIN ? "#16a34a" : "#b45309") + '">今日 ' + today.n + '／' + DAY_MIN + '問' + (today.n >= DAY_MIN ? ' ✓' : '') + '</div></div>' +
+      box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap"><div style="font-size:13px;font-weight:900;color:#92400e">🗓️ 今週の やった日（' + s.done + '／' + R().weekMinDays + '日で ボーナス）</div>' +
+        '<div style="font-size:11.5px;font-weight:900;color:' + (today.n >= R().dayMin ? "#16a34a" : "#b45309") + '">今日 ' + today.n + '／' + R().dayMin + '問' + (today.n >= R().dayMin ? ' ✓' : '') + '</div></div>' +
         '<div style="display:flex;gap:4px;margin:6px 0" role="list">' + s.days.map(function (d, i) {
           var isT = d.k === t;
           return '<span role="listitem" aria-label="' + dow[i] + '曜日 ' + (d.ok ? "やった日" : d.n + "問") + '" style="flex:1;display:flex;flex-direction:column;align-items:center;border-radius:10px;padding:3px 0;font-size:10px;font-weight:900;' + (d.ok ? "background:#22c55e;color:#fff;" : isT ? "border:2px dashed #f59e0b;color:#b45309;background:#fff;" : "background:#fff;color:#9ca3af;") + '">' + dow[i] + '<b style="font-size:12px">' + (d.ok ? "✓" : d.k > t ? "" : (d.n || "・")) + '</b></span>';

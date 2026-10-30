@@ -261,3 +261,4 @@
   ★OS の 乗りかえ：OS の 中身は THINK_OS の 1か所だけ。問題データは 番号でなく 役わり（why/goal/known/route/do/check）で 結ぶ。かえる ときは THINK_OS.id を 上げ、OS_HISTORY の 先頭に {id,date,from,why,changes} を 足し、ポータルに 新しい 作戦会議（前の 版は 消さない）。子どもには 1回だけ「新しい 道具に なったよ」。notes[].v に 版が のこる。
 - 2026-10-30 いちばん上の 方針「判断OSを 育てる」（ポータル policy/top・ホームの いちばん上）。自学ノートに「生活の 判断ふりかえり」（a_handan：0〜5 の じゅん）。考えかたOS の ハブから 📓 で ひらける。方針と OS は 版で 管理（ポータル policy/top の history と think-os.js の OS_HISTORY を いっしょに 更新）。
 - 2026-10-30 🗓️ 週の 皆勤ボーナス js/weekly-bonus.js（保護者：Q の 稼ぎが 悪い → 1問の Q は 上げず、毎日 つづけた ことに Q）：triggerCorrect/WrongAnswer を つつみ、1問 1回・3秒 未満は 数えない。1日 10問で「やった日」、週に 5日 いじょうで 平均 10/20/30問 → 50/80/100Q、7日で ＋20Q、上限 120Q。次の 週に ホームで わたす（saveData.weekBonus{days,paid}）。ホームに 今週の ✓ と「ロバックス交換（1400Q）まで あと◯Q」。考えかたOS は weeklyBonusCount(n) で 足し、1日 1回 +5Q（thinkOs.qDay）。11/6・11/13 に Q の 上がり方を 見る 予定。
+  ★りさ（母）は きびしめ（RULES）：20問で やった日・週6日 いじょう・平均 20/30/40問 → 30/45/60Q・7日で ＋10Q・上限 70Q。
