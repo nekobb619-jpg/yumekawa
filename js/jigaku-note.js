@@ -294,6 +294,13 @@
     { id: "a_handan", kind: "a", title: "生活の 判断ふりかえり", menu: "A：なるほど日記・テーマ日記", hot: true,
       note: "今日 自分で きめた ことを 1つ えらぼう（何を して あそぶか・宿題を いつ やるか・何を 買うか・友だちに どう 言うか など）。🧭 考えかたOS の じゅんばんで ふり返るよ。うまく いかなくても OK。次に 生かせたら それで 大成功。",
       page: ["生活の 判断ふりかえり", "0 なんのため？　（何の ために きめた？ 何を 大事に したかった？）", "1 きめた こと　（何を きめれば よかった？）", "2 わかって いた こと　（えらべた こと・時間・お金・人の 気持ち）", "3 どう きめた？　（目標から 考えた／できる ことから 考えた）", "4 やって みた こと", "5 やって みて どうだった？　（よかった ％・のこりの ％）", "次は どうする？"] },
+    // ★2026-10-30追加（保護者：かぜで 休んだ 日に クラスの みんなから メッセージを もらった／学校で 物を 交換する パーティー）
+    { id: "a_message", kind: "a", title: "もらった メッセージへの おへんじ", menu: "A：なるほど日記・テーマ日記", hot: true,
+      note: "休んだ 日に もらった メッセージを 読んで、思った ことを 書こう。うれしかった ことばは そのまま 書きうつして いいよ。さいごに みんなへの「ありがとう」を 自分の ことばで。",
+      page: ["もらった メッセージへの おへんじ", "いつ・どうして 休んだか", "もらった メッセージ　（いちばん うれしかった ことば）", "読んだ ときの 気持ち", "どうして うれしかったと 思う？", "わたしが 友だちに できる こと　（休んだ 人が いたら？）", "みんなへの おへんじ　（ありがとうの 気持ち）"] },
+    { id: "a_party", kind: "a", title: "クラスの パーティー ふり返り", menu: "A：なるほど日記・テーマ日記", hot: true,
+      note: "パーティーで いちばん 楽しかった ことと、交換した 物の ことを 書こう。おうちで 作った 折り紙を 出したなら、みんなの 反応も。「よかった ％・のこりの ％」で ふり返ると、次の パーティーに 生かせるよ。",
+      page: ["クラスの パーティー ふり返り", "どんな パーティー？　（いつ・何を した）", "交換した 物　（わたした 物・もらった 物）", "えらんだ わけ・もらった ときの 気持ち", "いちばん 楽しかった こと", "みんなの ようす　（うれしそう だった こと）", "よかった ％・のこりの ％", "次に パーティーを するなら"] },
     { id: "a_naruhodo", kind: "a", title: "なるほど日記", menu: "A：なるほど日記・テーマ日記",
       page: ["なるほど日記", "今日 「なるほど」と 思った こと", "どこで 知ったか　（本・テレビ・人・アプリ）", "どうして なるほどと 思ったか", "人に 教えるなら こう 言う"] }
   ];
@@ -375,6 +382,12 @@
     document.body.appendChild(w);
   }
   // ★2026-10-16：学校で いま 習って いる 単元の ネタ（js/school-units.js の jigaku＝ネタの 題名）。0＝いま／1＝もうすぐ／2＝それ いがい
+  // ★2026-10-30：期間つきの おすすめ（行事・できごと）。{ id: [から, まで] }（YYYY-MM-DD）
+  var FEATURED = { a_message: ["2026-10-30", "2026-11-08"], a_party: ["2026-10-30", "2026-11-08"] };
+  function featured() {
+    var x = new Date(window.currentServerTime || Date.now()), t = x.getFullYear() + "-" + ("0" + (x.getMonth() + 1)).slice(-2) + "-" + ("0" + x.getDate()).slice(-2);
+    return CARDS.filter(function (c) { var r = FEATURED[c.id]; return r && r[0] <= t && t <= r[1]; });
+  }
   function srank(c) { return (window.schoolJigakuRank && c) ? window.schoolJigakuRank(c.title) : 2; }
   function pool(kind) {
     var list = CARDS.slice(), a = appCard(); if (a) list.unshift(a);
@@ -398,11 +411,14 @@
     var chips = Object.keys(KIND).filter(function (x) { return x !== "app" || appCard(); }).map(function (x) {
       return '<button style="' + BTN + 'padding:7px 9px;font-size:12px;' + (k === x ? "background:#7e22ce;color:#fff;" : "background:#f3e8ff;color:#7e22ce;") + '" onclick="window.openJigakuNote(\'' + x + '\')">' + KIND[x] + '</button>';
     }).join("");
+    // ★2026-10-30：期間つきの おすすめ（FEATURED）は どの タブでも いちばん上に（まだ 書いて いない ものだけ）
+    var feat = featured().filter(function (c) { return d.indexOf(c.id) < 0; });
+    if (feat.length) pick = feat.concat(pick.filter(function (c) { return feat.indexOf(c) < 0; }));
     var cards = pick.map(function (c) {
       var ok = d.indexOf(c.id) >= 0;
       return '<button style="' + BTN + 'display:block;width:100%;text-align:left;padding:11px 12px;margin-top:8px;background:' + (ok ? "#f8fafc" : "#fdf4ff") + ';border:2px solid ' + (ok ? "#e2e8f0" : "#f5d0fe") + ';color:#4a3b52;" onclick="window.showJigakuCard(\'' + c.id + '\')">' +
         '<div style="font-size:11px;color:#a21caf;">' + KIND[c.kind] + '　<span style="color:#7a6985;">先生の メニュー：' + esc(c.menu) + '</span></div>' +
-        '<div style="font-size:15px;margin-top:2px;">' + (ok ? "✅ " : (srank(c) === 0 ? "📌 " : srank(c) === 1 ? "⏳ " : (c.hot ? "⭐ " : ""))) + esc(c.title) + '</div></button>';
+        '<div style="font-size:15px;margin-top:2px;">' + (ok ? "✅ " : feat.indexOf(c) >= 0 ? "🎉 " : (srank(c) === 0 ? "📌 " : srank(c) === 1 ? "⏳ " : (c.hot ? "⭐ " : ""))) + esc(c.title) + '</div></button>';
     }).join("");
     shell('<div style="font-size:18px;font-weight:900;color:#6b21a8;text-align:center;">📓 今日の 自学ネタ</div>' +
       '<div style="font-size:12px;font-weight:700;color:#7a6985;text-align:center;margin:4px 0 8px;line-height:1.6;">まよったら 上の 3つから 1つ えらぶだけ。<br>ノート 1ページ（横書き 1行 15マス）に 入る 形に して あるよ。📌 ＝ いま 学校で 習って いる 単元　⏳ ＝ もうすぐ 習う 単元　⭐ ＝ 今の 勉強と つながる ネタ</div>' +
