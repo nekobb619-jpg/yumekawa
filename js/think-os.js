@@ -375,7 +375,8 @@
       '<button type="button" data-t="pick" data-v="routes"><span class="ic" aria-hidden="true">🛤</span>2つの 道<small>ゴールから／わかる ことから</small></button>' +
       '<button type="button" data-t="pick" data-v="fushigi"><span class="ic" aria-hidden="true">🃏</span>ふしぎな 問題<small>' + (fw ? "今週は ちょうせん ずみ ✓" : "今週の 1問に ちょうせん") + '</small></button>' +
       '<button type="button" data-t="view" data-v="why"' + (cur ? ' data-u="' + cur + '"' : '') + '><span class="ic" aria-hidden="true">💡</span>なんのため？<small>' + esc(cur ? unitName(cur) : "単元の 入り口") + '</small></button>' +
-      '<button type="button" data-t="print"><span class="ic" aria-hidden="true">🖨</span>カードを 印刷<small>A4・宿題の よこに</small></button>' +
+      '<button type="button" data-t="life"><span class="ic" aria-hidden="true">📓</span>生活の 判断<small>自学ノートで ふり返る</small></button>' +
+      '<button type="button" data-t="print" style="grid-column:1/-1;min-height:56px"><span class="ic" aria-hidden="true">🖨</span>カードを 印刷<small>A4・宿題の よこに</small></button>' +
       '</div>' +
       '<div class="card"><div class="sub">🧩 今日 ごほうびが 出るのは あと <b>' + left + '問</b>（1日 ' + REWARD_DAY + '問まで）。ニコに 教えると かけら +2、ぜんぶ 1回目で 正解なら +3。</div>' +
       '<div class="sub">🛤 えらんだ 道：ゴールから ' + s.route.top + '回・わかる ことから ' + s.route.bottom + '回</div></div>' +
@@ -607,6 +608,7 @@
     }
     if (a === "whyu") { ui.uid = v; markWhy(v); render(); return focusFirst(); }
     if (a === "print") return printCard();
+    if (a === "life") { close(); if (window.showJigakuCard) { try { window.showJigakuCard("a_handan"); } catch (e) {} } else if (window.openJigakuNote) window.openJigakuNote(); log("📓 生活の 判断ふりかえりへ"); return; }
   }
   function markWhy(uid) { var s = S(); if (s && uid && !s.why[uid]) { s.why[uid] = today(); save(); log("💡 なんのため？（" + unitName(uid) + "）を 見た"); } }
 
