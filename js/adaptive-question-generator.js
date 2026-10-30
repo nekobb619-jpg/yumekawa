@@ -254,6 +254,18 @@
     if (window.saveData.answerLogs.length > window.MAX_ANSWER_LOGS) {
       window.saveData.answerLogs = window.saveData.answerLogs.slice(-window.MAX_ANSWER_LOGS);
     }
+    // ★2026-10-30：answerLogs は 直近 150件で 消えて しまい、ダッシュボードで 前の 日の 正答率・速さが 見られない。
+    //   日ごと・単元ごとの まとめ（answerDaily）を 別に のこす（ext行・さいご 35日。ext行は 42,000字の 上限が あるので 長く しすぎない）。
+    //   answerDaily["2026-10-30"].c[単元] = [問題数, 正解, 3秒未満, 3秒未満の正解, 時間ms合計, 〜2秒, 2〜3秒, 3〜10秒, 10秒〜, それぞれの 正解 4つ]
+    try {
+      var d0 = new Date(Date.now()), dk = d0.getFullYear() + "-" + ("0" + (d0.getMonth() + 1)).slice(-2) + "-" + ("0" + d0.getDate()).slice(-2);
+      var ad = window.saveData.answerDaily; if (!ad || typeof ad !== "object" || Array.isArray(ad)) ad = window.saveData.answerDaily = {};
+      var dd = ad[dk] || (ad[dk] = { c: {} }), v = dd.c[category] || (dd.c[category] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      var ms = answerTimeMs == null ? 0 : answerTimeMs, band = ms < 2000 ? 0 : ms < 3000 ? 1 : ms < 10000 ? 2 : 3;
+      v[0]++; if (correct) v[1]++; if (answerTimeMs != null && ms < 3000) { v[2]++; if (correct) v[3]++; } v[4] += Math.min(ms, 600000);
+      if (answerTimeMs != null) { v[5 + band]++; if (correct) v[9 + band]++; }
+      var keys = Object.keys(ad).sort(); while (keys.length > (window.ANSWER_DAILY_DAYS || 35)) delete ad[keys.shift()];
+    } catch (e) {}
   };
 
   // index.htmlのexitToMainMenu内、苦手撃破ラボ（weakAttackModeActive）終了時に呼ぶこと。

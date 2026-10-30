@@ -3383,7 +3383,7 @@ window.loadGameLocal = function() {
 //   ext行を読み込めたことを確認できた（saveExtLoadedFor===playerId）ときだけ分割保存し、
 //   それまでは従来どおり1行にまとめて保存する（＝空/古いext行で履歴を上書きしない安全側）。
 window.SAVE_EXT_SUFFIX = "__ext";
-window.SAVE_EXT_FIELDS = ["answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog", "whyLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
+window.SAVE_EXT_FIELDS = ["answerDaily", "answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog", "whyLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
 window.SAVE_SAFE_LIMIT = 42000; // 1セル50,000文字制限に対して余白を持たせた、1行あたりの上限
 window.saveExtLoadedFor = null;
 // ★2026-09-23追加：「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」だけを優先度順に、
