@@ -165,7 +165,7 @@
   function startMake(mode) { ui.view = "make"; ui.mode = mode; ui.cards = deal(mode); ui.rr = 0; ui.f = {}; ui.lv = mode === "free" ? 3 : mode === "quiz" ? 1 : ((S().cnt || 0) < LV2_AT ? 0 : Math.min(lvMax(), 3)); ui.e = {}; ui.quiz = { q: "", a: ["", "", ""], c: 0, exp: "" }; ui.to = []; ui.err = ""; }
   function cardsHtml() {
     if (!ui.cards.length) return "";
-    return '<div class="cards">' + ui.cards.map(function (c, i) { var K = CARDS[c.k]; return (i ? '<span class="plus" aria-hidden="true">＋</span>' : '') + '<div class="cd' + (c.k === "rule" ? " r" : "") + '" style="animation-delay:' + (i * .12) + 's"><div class="k">' + K.icon + ' ' + K.n + '</div><div class="t">' + esc(c.t) + '</div></div>'; }).join("") + '</div>' +
+    return '<div class="cards">' + ui.cards.map(function (c, i) { var K = CARDS[c.k]; return (i ? '<span class="plus" aria-hidden="true">＋</span>' : '') + '<div class="cd' + (c.k === "rule" ? " r" : "") + '" style="animation-delay:' + (i * .12) + 's"><div class="k">' + K.icon + ' ' + K.n + '</div>' + (window.sozoArt ? '<div aria-hidden="true" style="line-height:0;margin:4px 0">' + window.sozoArt(c.t, 64) + '</div>' : '') + '<div class="t">' + esc(c.t) + '</div></div>'; }).join("") + '</div>' +
       '<div style="text-align:center">' + (ui.rr < REROLL_MAX ? '<button type="button" class="mini" data-z="reroll">🔄 引き直す（あと ' + (REROLL_MAX - ui.rr) + '回）</button>' : '<span class="sub">引き直しは おしまい。この カードで 考えて みよう！</span>') + '</div>';
   }
   function makeHtml() {
@@ -262,7 +262,7 @@
   function workHtml(w, opts) {
     opts = opts || {};
     var f = w.f || {};
-    return '<div class="work"><h3>' + (w.m === "quiz" ? "❓ " : "🎮 ") + esc(f.name || "") + '</h3>' + (w.cards && w.cards.length ? '<div class="sub">カード：' + w.cards.map(esc).join(" ＋ ") + '</div>' : '') +
+    return '<div class="work"><h3>' + (w.m === "quiz" ? "❓ " : "🎮 ") + esc(f.name || "") + '</h3>' + (w.cards && w.cards.length ? '<div class="sub" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">' + w.cards.map(function (t) { return (window.sozoArt ? '<span aria-hidden="true" style="line-height:0">' + window.sozoArt(t, 26) + '</span>' : '') + esc(t); }).join(" ＋ ") + '</div>' : '') +
       (w.quiz ? (opts.hideAns ? '<div>' + esc(w.quiz.q) + '</div>' : '<div>' + esc(w.quiz.q) + '</div><div class="sub">' + w.quiz.a.map(function (x, i) { return (i === w.quiz.c ? "⭕ " : "・") + esc(x); }).join("　") + '</div>' + (w.quiz.exp ? '<div class="sub">わけ：' + esc(w.quiz.exp) + '</div>' : '')) :
         (w.text ? '<div style="white-space:pre-wrap;font-size:13.5px;font-weight:700;line-height:1.7">' + esc(w.text) + '</div>' : FIELDS.slice(1).filter(function (x) { return f[x[0]]; }).map(function (x) { return '<div style="font-size:13px;font-weight:700"><b style="color:#9a3412">' + x[1] + '：</b>' + esc(f[x[0]]) + '</div>'; }).join(""))) +
       '<div class="sub">' + esc(w.d) + (w.to && w.to.length ? '　→ ' + w.to.map(function (x) { return x === "papa" ? "パパ" : x; }).map(esc).join("・") : '') + (opts.from ? '　つくった 人：' + esc(opts.from === "papa" ? "パパ" : opts.from) : '') + '</div></div>';
