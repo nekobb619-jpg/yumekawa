@@ -70,8 +70,11 @@ const U = [
   ["探究", 0, "総合（情報教育）プログラミング・情報モラル", "2026-04-08", "2027-03-19", ["探究/プログラミング/prog01", "探究/プログラミング/prog02", "探究/情報/net_ethics01", "探究/情報/net_ethics02"], ["q_password", "c_program", "c_netrule"]],
   ["探究", 0, "総合（My探究）こまき「夢☆チャレンジ」科", "2026-04-08", "2027-03-19", ["探究/設計/engineering01", "探究/調べ方/shirabe01", "探究/分岐図解/bunki01", "探究/分岐図解/bunki02"], ["c_yume", "c_shigoto"]]
 ];
-const stageById = Object.fromEntries(STAGES.map((s) => [s.id, s]));
 const key = (s) => String(s || "").replace(/\s+/g, "");
+// ★2026-11-02：アプリの 単元表（js/school-units.js）に 足した ステージも 数える（ここの 一覧と ずれて 問題数が へる 事故を ふせぐ）
+eval(fs.readFileSync(path.join(root, "js/school-units.js"), "utf8"));
+for (const u of U) { const su = (window.SCHOOL_UNITS || []).find((x) => key(x.name) === key(u[2])); if (su) for (const id of su.stages) if (!u[5].includes(id)) u[5].push(id); }
+const stageById = Object.fromEntries(STAGES.map((s) => [s.id, s]));
 const figKeys = new Set(Object.keys(FIG).map((k) => key(k.split("‖")[0])));
 let warn = 0;
 const units = U.map(([subject, term, name, from, to, ids, jg], i) => {

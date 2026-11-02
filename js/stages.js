@@ -307,6 +307,16 @@
       created: "2026-10-02"
     },
     {
+      subject: "算数",
+      category: "小数のかけ算・わり算（4年）",
+      grade: "4年生",
+      id: "算数/小数/shosu_kakewari01",
+      name: "小数のかけ算・わり算の入口（0.1が いくつ分）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      // ★2026-11-02追加（ポータルの 週の 報告：11/2〜 の 単元の 準備）
+      created: "2026-11-02"
+    },
+    {
       subject: "理科",
       category: "星と月（4年）",
       grade: "4年生",
@@ -345,6 +355,16 @@
       // ★空気でっぽう じっけんラボ（注射器のピストンをおして空気/水のちがいを発見）
       lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_kuki_teppou.html",
       created: "2026-07-25"
+    },
+    {
+      subject: "理科",
+      category: "ものの温度と体積（4年）",
+      grade: "4年生",
+      id: "理科/温度と体積/ondo_taiseki01",
+      name: "ものの温度と体積（空気・水・金ぞく）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      // ★2026-11-02追加（ポータルの 週の 報告：11/2〜 の 単元の 準備）
+      created: "2026-11-02"
     },
     {
       subject: "理科",
@@ -748,6 +768,16 @@
       name: "がい数と四捨五入（およそ数と概算）",
       reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_gaisu.html",
       created: "2026-08-11"
+    },
+    {
+      subject: "算数",
+      category: "がい数（4年）",
+      grade: "4年生",
+      id: "算数/がい数/gaisu_mitsumori01",
+      name: "がい数で 見積もろう（買い物・人数・はんい）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      // ★2026-11-02追加（ポータルの 週の 報告：11/2〜 の 単元の 準備）
+      created: "2026-11-02"
     },
     {
       subject: "算数",
