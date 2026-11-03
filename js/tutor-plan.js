@@ -240,11 +240,13 @@
     steps.push(labStep);
     if (third.length > 0) { var ex = third.shift(); ex.optional = true; steps.push(ex); }
     // ★2026-10-30（保護者：そうぞう工房を 今日やる ことの 1つの 枠に）できたら やる 4つめ（ごほうびの 条件には 入れない）
+    if (window.openSpeedReview) steps.splice(steps.filter(function (x) { return !x.optional; }).length, 0, speedStep());
     if (window.openSozo) steps.push(sozoStep());
 
     return { date: todayKey(), steps: steps, marks: {}, rewarded: false, createdAt: nowMs() };
   }
 
+  function speedStep() { return { kind: "speed", optional: true, name: "⚡ すらすら ふくしゅう 10まい", why: "前に やった ところを すばやく まわす。じっくり 1回より、すらすら 何回もの 方が わすれないよ" }; }
   function sozoStep() { return { kind: "sozo", optional: true, name: "そうぞう工房で 1つ つくろう", why: "まぜる・かえる で 新しい ゲームや クイズを 生み出そう" }; }
   function stepDone(step, plan) {
     var data = sd();
@@ -258,6 +260,7 @@
     if (step.kind === "mystery") { var m = window.getTodayMysteryInfo ? window.getTodayMysteryInfo() : null; return !!(m && m.cleared); }
     if (step.kind === "detective") return !!(plan.marks && plan.marks.detective);
     if (step.kind === "sozo") return !!(plan.marks && plan.marks.sozo);
+    if (step.kind === "speed") return !!(plan.marks && plan.marks.speed);
     return false;
   }
 
@@ -276,6 +279,7 @@
       var at = 0; p.steps.forEach(function (x, i) { if (!x.optional) at = i + 1; });
       p.steps.splice(at, 0, { kind: "detective", key: DETECTIVE_KEY[ls], name: subjectLabel(ls) + "の 探偵ラボ", why: "ふくしゅうした ことを、考える 問題で もう一度。くりかえすと 記憶が 強く なるよ" });
     }
+    if (window.openSpeedReview && !p.steps.some(function (x) { return x.kind === "speed"; })) p.steps.splice(p.steps.filter(function (x) { return !x.optional; }).length, 0, speedStep());
     if (window.openSozo && !p.steps.some(function (x) { return x.kind === "sozo"; })) p.steps.push(sozoStep());
     return p;
   }
@@ -289,6 +293,7 @@
     if (step.kind === "mystery") return window.launchBossQuest && window.launchBossQuest();
     if (step.kind === "detective") return window.startDetectiveLab && window.startDetectiveLab(step.key || "math");
     if (step.kind === "sozo") return window.openSozo && window.openSozo("home");
+    if (step.kind === "speed") return window.openSpeedReview && window.openSpeedReview();
     if (step.kind === "stage") {
       var e = findStage(step.id);
       if (!e) { alert("このステージは いま 見つからないみたい。教科の ぼうけんから えらんでね！"); return; }
@@ -355,11 +360,11 @@
     var doneN = doneFlags.filter(function (d, i) { return d && !p.steps[i].optional; }).length;
     var allDone = doneN >= p.steps.filter(function (x) { return !x.optional; }).length;
     var nextIdx = doneFlags.indexOf(false);
-    var KIND = { review: "🔁 ふくしゅう", review2: "🔁 ふくしゅう", learn: "🎯 あたらしく まなぶ", weak: "🔁 ふくしゅう", book: "📖 よむ", mystery: "🧩 ちょうせん", detective: "🔍 ちょうせん", sozo: "🎨 つくる（できたら）" };
+    var KIND = { review: "🔁 ふくしゅう", review2: "🔁 ふくしゅう", learn: "🎯 あたらしく まなぶ", weak: "🔁 ふくしゅう", book: "📖 よむ", mystery: "🧩 ちょうせん", detective: "🔍 ちょうせん", sozo: "🎨 つくる（できたら）", speed: "⚡ くりかえす（できたら）" };
     var NUM = ["①", "②", "③", "④", "⑤", "⑥"];
     stepsEl.innerHTML = p.steps.map(function (s, i) {
       var done = doneFlags[i];
-      var kind = (KIND[s.role] || KIND[s.kind] || "") + (s.optional && s.kind !== "sozo" ? "（できたら）" : "");
+      var kind = (KIND[s.role] || KIND[s.kind] || "") + (s.optional && s.kind !== "sozo" && s.kind !== "speed" ? "（できたら）" : "");
       var sub = s.sub ? " ・ " + esc(subjectLabel(s.sub)) : "";
       var btn = done ? '<span class="go" style="background:#dcfce7;color:#15803d;cursor:default;">できた！</span>'
                      : '<button class="go" onclick="window.tutorPlanStart(' + i + ')">' + (i === nextIdx ? "▶ はじめる" : "やる") + '</button>';
