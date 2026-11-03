@@ -6714,6 +6714,7 @@ window.nextQuestStep = function() {
 };
 window.exitToMainMenu = function() {
     if (window.weakAttackModeActive) {
+      if (window.grantStickerPack) { try { window.grantStickerPack("review", "にがて問題"); } catch (e) {} } // ★2026-11-04：にがて問題の ふくしゅうも ふくろ（「ふくしゅう」で 1日 1つ）
       if (window.tutorPlanMark) window.tutorPlanMark("weak"); // ★2026-10-02追加：きょうのまなびプラン「ふくしゅう」達成（js/tutor-plan.js）。下のsaveGameで一緒に保存される
       window.saveGame();
       alert(`🎉 苦手特訓ラボ終了！\nクリアした苦手はリストから消滅し、通常ステージに同期されたよ！\nナイスファイト！🏠`);
@@ -6758,6 +6759,8 @@ window.exitToMainMenu = function() {
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
     // ★2026-10-04追加：🎀シール帳の ふくろ（ステージを 最後まで やった 日に 1つ。種類ごとに 1日 1つ＝周回で ふえない）
     if (window.grantStickerPack && !window.currentActiveStageIsReview) { try { window.grantStickerPack("stage"); } catch (e) {} }
+    // ★2026-11-04追加（保護者：復習の 反復が 大事）ふくしゅう（1日 いじょう あけた クリアずみ ステージ）を 最後まで やったら「ふくしゅう」の ふくろ（1日 1つ）
+    if (window.grantStickerPack && window.currentActiveStageIsReview) { try { window.grantStickerPack("review", "ふくしゅう"); } catch (e) {} }
     // ★2026-10-16追加（保護者：いま 習って いる ところを 1つでも クリアしたら シール）：学校で いま 習って いる 単元の ステージなら もう1ふくろ（1日 1つ）
     if (window.grantStickerPack && !window.currentActiveStageIsReview && window.schoolStageRank && window.schoolStageRank(targetStageId) === 0) {
       try { const su = window.schoolUnitOfStage && window.schoolUnitOfStage(targetStageId); window.grantStickerPack("school", su ? su.name : ""); } catch (e) {}

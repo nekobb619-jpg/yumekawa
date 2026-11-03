@@ -230,9 +230,15 @@
     if (!bookDone) third.push({ kind: "book", name: "今日のおはなしを 読もう", why: "毎日 すこしずつ 読むと、読む 力が 育つよ" });
     if (myst && !myst.cleared) third.push({ kind: "mystery", name: myst.title, why: "「なぜ？」を じゅんばんに 考える 練習だよ" });
     var mainSub = (steps.filter(function (s) { return s.role === "learn"; })[0] || {}).sub;
-    third.push({ kind: "detective", key: DETECTIVE_KEY[mainSub] || "math", name: subjectLabel(mainSub && DETECTIVE_KEY[mainSub] ? mainSub : "算数") + "の 探偵ラボ",
-                 why: "しっかり 考えないと とけない 問題に ちょうせん" });
-    while (steps.length < 3 && third.length > 0) steps.push(third.shift());
+    // ★2026-11-04（保護者：プランに 探偵ラボを 1つ 入れる・復習の 反復）探偵ラボは いつも 3つめに 入れる。
+    //   教科は「ふくしゅう」の 教科を 先に（前に やった ことを 考える 問題で もう一度）。おはなし・なぞときは できたら やる（ごほうびの 条件には 入れない）
+    var revSub = (steps.filter(function (s) { return s.role === "review"; })[0] || {}).sub;
+    var labSub = (revSub && DETECTIVE_KEY[revSub]) ? revSub : (mainSub && DETECTIVE_KEY[mainSub]) ? mainSub : "算数";
+    var labStep = { kind: "detective", key: DETECTIVE_KEY[labSub], name: subjectLabel(labSub) + "の 探偵ラボ",
+                    why: (labSub === revSub ? "ふくしゅうした " + subjectLabel(labSub) + "を、こんどは 考える 問題で もう一度。くりかえすと 記憶が 強く なるよ" : "しっかり 考えないと とけない 問題に ちょうせん") };
+    while (steps.length < 2 && third.length > 0) steps.push(third.shift());
+    steps.push(labStep);
+    if (third.length > 0) { var ex = third.shift(); ex.optional = true; steps.push(ex); }
     // ★2026-10-30（保護者：そうぞう工房を 今日やる ことの 1つの 枠に）できたら やる 4つめ（ごほうびの 条件には 入れない）
     if (window.openSozo) steps.push(sozoStep());
 
@@ -264,6 +270,12 @@
       data.tutorPlan = p;
     }
     if (!p.marks) p.marks = {};
+    // ★2026-11-04：きょう もう 作って ある プランに 探偵ラボが なければ、ごほうびの 前なら 3つめの あとに 入れる
+    if (!p.rewarded && !p.steps.some(function (x) { return x.kind === "detective"; })) {
+      var rv = p.steps.filter(function (x) { return x.role === "review"; })[0], ls = rv && DETECTIVE_KEY[rv.sub] ? rv.sub : "算数";
+      var at = 0; p.steps.forEach(function (x, i) { if (!x.optional) at = i + 1; });
+      p.steps.splice(at, 0, { kind: "detective", key: DETECTIVE_KEY[ls], name: subjectLabel(ls) + "の 探偵ラボ", why: "ふくしゅうした ことを、考える 問題で もう一度。くりかえすと 記憶が 強く なるよ" });
+    }
     if (window.openSozo && !p.steps.some(function (x) { return x.kind === "sozo"; })) p.steps.push(sozoStep());
     return p;
   }
@@ -344,10 +356,10 @@
     var allDone = doneN >= p.steps.filter(function (x) { return !x.optional; }).length;
     var nextIdx = doneFlags.indexOf(false);
     var KIND = { review: "🔁 ふくしゅう", review2: "🔁 ふくしゅう", learn: "🎯 あたらしく まなぶ", weak: "🔁 ふくしゅう", book: "📖 よむ", mystery: "🧩 ちょうせん", detective: "🔍 ちょうせん", sozo: "🎨 つくる（できたら）" };
-    var NUM = ["①", "②", "③", "④"];
+    var NUM = ["①", "②", "③", "④", "⑤", "⑥"];
     stepsEl.innerHTML = p.steps.map(function (s, i) {
       var done = doneFlags[i];
-      var kind = KIND[s.role] || KIND[s.kind] || "";
+      var kind = (KIND[s.role] || KIND[s.kind] || "") + (s.optional && s.kind !== "sozo" ? "（できたら）" : "");
       var sub = s.sub ? " ・ " + esc(subjectLabel(s.sub)) : "";
       var btn = done ? '<span class="go" style="background:#dcfce7;color:#15803d;cursor:default;">できた！</span>'
                      : '<button class="go" onclick="window.tutorPlanStart(' + i + ')">' + (i === nextIdx ? "▶ はじめる" : "やる") + '</button>';
@@ -362,7 +374,7 @@
     if (footEl) {
       footEl.innerHTML = allDone
         ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく"
-        : "3つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
+        : p.steps.filter(function (x) { return !x.optional; }).length + "つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
     }
     card.classList.toggle("all-done", allDone);
     if (chara) {
