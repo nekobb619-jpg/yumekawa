@@ -423,6 +423,28 @@
   // どの 背景に はって いても 1まいは 1まい（ほかの 背景に はるには、はがして から）
   // ★2026-10-30：キラ シール（x.kira・はてな いがい）は 手もちの「キラ」から はる ので、ふつうの まい数には 入れない
   function isK(x) { return !!(x && x.kira && x.s !== "qs_hatena"); }
+  // ★2026-11-03（保護者）なかまシール：もって いる アバター（ガチャの ニコたち）と まなびの なかまを シールと して はれる。
+  //   台紙には { s:"av:<ガチャの id>" } / { s:"fr:<なかまの id>" }。手もちは へらない（1つの 背景に 1ぴき 1まいずつ）
+  function isNk(x) { return !!(x && /^(av|fr):/.test(String(x.s))); }
+  function nkList() {
+    var out = [], d = window.saveData || {}, eggs = d.gachaEggs || {};
+    (window.GACHA_EGG_LIST || []).forEach(function (e) { if (e.type === "char" && eggs[e.id] && e.id !== "e_ex_mochi") out.push({ k: "av:" + e.id, n: e.name, icon: e.icon }); });
+    var ml = (window.MASCOTS && window.MASCOTS.list) || [];
+    ml.forEach(function (f) { if (window.MASCOTS.isUnlocked(f.id)) out.push({ k: "fr:" + f.id, n: f.name }); });
+    return out;
+  }
+  function nkName(k) { var l = nkList(); for (var i = 0; i < l.length; i++) if (l[i].k === k) return l[i].n; return "なかま"; }
+  function nkOk(k) { return nkList().some(function (x) { return x.k === k; }); }
+  function nkSvg(k, px) {
+    var t = String(k).slice(3), raw = "";
+    try {
+      if (k.indexOf("av:") === 0) raw = window.avatarSvg ? window.avatarSvg(t, "happy") || "" : "";
+      else { var ml = (window.MASCOTS && window.MASCOTS.list) || []; for (var i = 0; i < ml.length; i++) if (ml[i].id === t) { raw = typeof ml[i].svg === "function" ? ml[i].svg("happy") : ""; break; } }
+    } catch (e) { raw = ""; }
+    if (!raw && k.indexOf("av:") === 0) { var eg = (window.GACHA_EGG_LIST || []).filter(function (e) { return e.id === t; })[0]; if (eg) raw = '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><text x="20" y="30" font-size="28" text-anchor="middle">' + eg.icon + '</text></svg>'; }
+    if (!raw) return "";
+    return raw.replace(/<svg\b/, '<svg width="' + px + '" height="' + px + '"').replace(/class="c-buddy[^"]*"/, 'class="stk-nk"');
+  }
   function placed(id) { var c = 0, bs = ensure().stickerBoards; Object.keys(bs).forEach(function (k) { (bs[k] || []).forEach(function (x) { if (x.s === id && !isK(x)) c++; }); }); return c; }
   function kOwned(id) { var d = ensure(); if (!d.stickerKira || typeof d.stickerKira !== "object") d.stickerKira = {}; return Number(d.stickerKira[id] || 0); }
   function kPlaced(id) { var c = 0, bs = ensure().stickerBoards; Object.keys(bs).forEach(function (k) { (bs[k] || []).forEach(function (x) { if (x.s === id && isK(x)) c++; }); }); return c; }
@@ -693,7 +715,7 @@
     var d = ensure(); try { d.stickerBoards = JSON.parse(str) || {}; } catch (e) { return; }
     Object.keys(d.stickerBoards).forEach(function (k) {
       var b = d.stickerBoards[k]; if (!Array.isArray(b)) { delete d.stickerBoards[k]; return; }
-      for (var i = b.length - 1; i >= 0; i--) { var x = b[i]; if (x && x.s !== "txt" && (isK(x) ? kPlaced(x.s) > kOwned(x.s) : placed(x.s) > owned(x.s))) b.splice(i, 1); }
+      for (var i = b.length - 1; i >= 0; i--) { var x = b[i]; if (isNk(x)) { if (!nkOk(x.s)) b.splice(i, 1); continue; } if (x && x.s !== "txt" && (isK(x) ? kPlaced(x.s) > kOwned(x.s) : placed(x.s) > owned(x.s))) b.splice(i, 1); }
     });
     ui.sel = -1; ui.qs = null; save();
   }
@@ -737,7 +759,7 @@
   function itemHtml(x, i) {
     var isT = x.s === "txt", w = isT ? txtW(x.t || "") : 40;
     var sz = isT ? Math.min(92, w * 0.28 * (x.z || 1)) : 20 * (x.z || 1);
-    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : x.s === "qs_hatena" && x.kira ? qsKiraSvg(60) : isK(x) ? kiraWrap(x.s, svg(x.s, 60)) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
+    return '<div class="stk-it' + (i === ui.sel ? " sel" : "") + (x.lk ? " lk" : "") + '" data-i="' + i + '" style="left:' + x.x + '%;top:' + x.y + '%;width:' + sz + '%;aspect-ratio:' + (isT ? w + "/26" : "1") + ';transform:translate(-50%,-50%) rotate(' + (x.r || 0) + 'deg)">' + (isT ? txtSvg(x.t || "", x.c) : x.s === "qs_hatena" && x.kira ? qsKiraSvg(60) : isNk(x) ? nkSvg(x.s, 60) : isK(x) ? kiraWrap(x.s, svg(x.s, 60)) : svg(x.s, 60)) + (x.lk && i === ui.sel ? '<span class="pin" aria-label="固定">📌</span>' : '') + '</div>';
   }
   function txtPanelHtml() {
     var c = ui.txtC || 0, t = txtClean(ui.txt || ""), n = txtCount(board(ui.page));
@@ -840,7 +862,14 @@
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
       '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="bgopen" aria-pressed="' + !!ui.bgOpen + '">🖼 背景を かえる</button></div>' + (ui.bgOpen ? bgPickHtml() : '') +
       '<div class="stk-h">手もちの シール</div>' + (tray ? '<div class="stk-tray">' + tray + '</div>' : '<div class="stk-note">はれる シールが ないよ。「あつめる」で ふくろを あけよう。</div>') +
+      nkTrayHtml(pg) +
       (ui.edit ? '' : txtPanelHtml());
+  }
+  function nkTrayHtml(pg) {
+    var l = nkList(); if (!l.length) return "";
+    var on = {}; pg.forEach(function (x) { if (isNk(x)) on[x.s] = 1; });
+    return '<div class="stk-h">🐣 なかま・アバターの シール <span style="font-size:10.5px;color:#7c3aed">（へらないよ。1つの 背景に 1ぴき 1まい）</span></div><div class="stk-tray">' +
+      l.map(function (x) { var used = !!on[x.k]; return '<button type="button" data-a="nkplace" data-v="' + x.k + '" aria-label="' + x.n + (used ? '（この ページに はって ある）' : 'を はる') + '"' + (used ? ' style="opacity:.4"' : ' style="border-color:#fcd34d;background:linear-gradient(160deg,#fff,#fffbeb)"') + '>' + nkSvg(x.k, 44) + '</button>'; }).join("") + '</div>';
   }
   function bgPickHtml() {
     var d = ensure(), cur = d.stickerPageBg[ui.page];
@@ -1015,7 +1044,7 @@
     });
   }
 
-  var MUT = { place: 1, txtplace: 1, lockall: 1, unlockall: 1, lock: 1, big: 1, small: 1, rot: 1, front: 1, back: 1, up: 1, down: 1, peel: 1 };
+  var MUT = { place: 1, nkplace: 1, txtplace: 1, lockall: 1, unlockall: 1, lock: 1, big: 1, small: 1, rot: 1, front: 1, back: 1, up: 1, down: 1, peel: 1 };
   function act(a, v, b) {
     if (a === "undo") { if (!ui.hist || !ui.hist.length) return; restoreBoards(ui.hist.pop()); toast("↶ 1つ もどしたよ"); return render(); }
     if (a === "reset0") { if (!ui.snap0) return; var cur0 = snapNow(); if (cur0 === ui.snap0) return; pushHist(cur0); restoreBoards(ui.snap0); toast("⟲ ひらいた ときの はり方に もどしたよ（「1つ もどす」で とりけせるよ）"); return render(); }
@@ -1033,6 +1062,11 @@
     if (a === "place" && String(v).indexOf("k:") === 0) {
       var kid = String(v).slice(2); if (kFree(kid) < 1) return; if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
       pg.push({ s: kid, kira: 1, x: 30 + Math.round(Math.random() * 40), y: 30 + Math.round(Math.random() * 40), z: 1, r: 0 }); ui.sel = pg.length - 1; save(); return render();
+    }
+    if (a === "nkplace") {
+      if (!nkOk(v)) return; if (pg.some(function (y) { return y.s === v; })) { toast(nkName(v) + "は この ページに もう いるよ"); return; }
+      if (pg.length >= PAGE_MAX) { toast("この ページは いっぱい（" + PAGE_MAX + "まいまで）"); return; }
+      pg.push({ s: v, x: 30 + Math.round(Math.random() * 40), y: 30 + Math.round(Math.random() * 40), z: 1, r: 0 }); ui.sel = pg.length - 1; save(); return render();
     }
     if (a === "kira") return kiraCraft(v);
     if (a === "place") {
