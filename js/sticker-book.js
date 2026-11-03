@@ -206,7 +206,7 @@
   // げんてい シール（ふくろ・券・ミッションからは 出ない）
   // ★2026-10-30（保護者：季節の イベント）季節の シール。期間（MM-DD）の 間だけ ふくろから 出る（SEASON_RATE の かくりつ）。期間の 外は 出ない（券でも えらべない）
   var SEASONS = [
-    { id: "halloween", n: "ハロウィン", icon: "🎃", from: "10-15", to: "11-03", ids: ["hw_kabocha", "hw_obake", "hw_koumori", "hw_ame", "hw_majoneko", "hw_yoru"] },
+    { id: "halloween", n: "ハロウィン", icon: "🎃", from: "10-15", to: "11-10", ids: ["hw_kabocha", "hw_obake", "hw_koumori", "hw_ame", "hw_majoneko", "hw_yoru"] },
     { id: "winter", n: "クリスマス・冬", icon: "🎄", from: "12-01", to: "12-26", ids: ["wt_yukidaruma", "wt_tree", "wt_present", "wt_tebukuro"] },
     { id: "newyear", n: "お正月", icon: "🎍", from: "12-27", to: "01-15", ids: ["ny_kagami", "ny_tako", "ny_daruma", "ny_hinode"] }
   ];
@@ -237,9 +237,13 @@
     { id: "mori", n: "もり", css: "radial-gradient(#bbf7d0 6px,transparent 7px) 0 0/36px 36px,linear-gradient(180deg,#dcfce7,#86efac)" },
     { id: "niji", n: "にじ", css: "linear-gradient(180deg,#fecaca,#fed7aa,#fef08a,#bbf7d0,#bfdbfe,#ddd6fe)" },
     { id: "yuki", n: "ゆきの よる", css: "radial-gradient(#fff 1.6px,transparent 2px) 0 0/22px 22px,radial-gradient(#e0f2fe 1px,transparent 1.4px) 11px 11px/22px 22px,linear-gradient(180deg,#1e3a8a,#312e81)" },
+    // ★2026-11-03（保護者）季節の 背景：その 季節の 期間だけ ただで もらえる（もらったら ずっと 使える）。期間の 外は もらえない
+    { id: "halloween", n: "ハロウィン", season: "halloween", css: "url('data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2796%27 height=%2796%27 viewBox=%270 0 96 96%27%3E%3Ccircle cx=%2778%27 cy=%2716%27 r=%279%27 fill=%27%23fef3c7%27/%3E%3Ccircle cx=%2782%27 cy=%2713%27 r=%278%27 fill=%27%233b0764%27/%3E%3Cellipse cx=%2724%27 cy=%2770%27 rx=%2713%27 ry=%2710%27 fill=%27%23f97316%27 stroke=%27%239a3412%27 stroke-width=%271.5%27/%3E%3Cpath d=%27M16 64 q-2 6 0 12 M32 64 q2 6 0 12 M24 60 v20%27 stroke=%27%23c2410c%27 stroke-width=%271.2%27 fill=%27none%27/%3E%3Crect x=%2722%27 y=%2756%27 width=%274%27 height=%275%27 rx=%271%27 fill=%27%2365a30d%27/%3E%3Cpath d=%27M18 68 l3 -3 l3 3z M27 68 l3 -3 l3 3z%27 fill=%27%231f1b2e%27/%3E%3Cpath d=%27M18 73 q6 4 12 0%27 stroke=%27%231f1b2e%27 stroke-width=%271.6%27 fill=%27none%27/%3E%3Cpath d=%27M50 36 q6 -6 10 0 q4 -6 10 0 q-3 -1 -5 3 q-5 -4 -10 0 q-2 -4 -5 -3z%27 fill=%27%231f1b2e%27/%3E%3Ccircle cx=%2710%27 cy=%2720%27 r=%271.3%27 fill=%27%23fde68a%27/%3E%3Ccircle cx=%2760%27 cy=%2786%27 r=%271.1%27 fill=%27%23fde68a%27/%3E%3Ccircle cx=%2788%27 cy=%2760%27 r=%271.3%27 fill=%27%23fde68a%27/%3E%3Cpath d=%27M66 64 q0 -10 8 -10 q8 0 8 10 v10 l-3 -2 l-3 3 l-2 -3 l-3 3 l-2 -3 l-3 2z%27 fill=%27%23f5f3ff%27 opacity=%27.9%27/%3E%3Ccircle cx=%2771%27 cy=%2762%27 r=%271.3%27 fill=%27%231f1b2e%27/%3E%3Ccircle cx=%2777%27 cy=%2762%27 r=%271.3%27 fill=%27%231f1b2e%27/%3E%3C/svg%3E') 0 0/96px 96px,linear-gradient(180deg,#1e1b4b 0%,#4c1d95 55%,#9a3412 100%)" },
+    { id: "xmas", n: "クリスマス", season: "winter", css: "url('data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2796%27 height=%2796%27 viewBox=%270 0 96 96%27%3E%3Cpath d=%27M22 20 l12 18 h-6 l10 14 h-7 l11 15 h-40 l11 -15 h-7 l10 -14 h-6z%27 fill=%27%2315803d%27 stroke=%27%2314532d%27 stroke-width=%271.2%27/%3E%3Crect x=%2719%27 y=%2767%27 width=%276%27 height=%277%27 fill=%27%2392400e%27/%3E%3Cpath d=%27M22 14 l1.6 3.4 l3.6 .4 l-2.7 2.4 l.8 3.6 l-3.3 -1.9 l-3.3 1.9 l.8 -3.6 l-2.7 -2.4 l3.6 -.4z%27 fill=%27%23facc15%27/%3E%3Ccircle cx=%2717%27 cy=%2745%27 r=%272%27 fill=%27%23ef4444%27/%3E%3Ccircle cx=%2729%27 cy=%2755%27 r=%272%27 fill=%27%23facc15%27/%3E%3Ccircle cx=%2714%27 cy=%2760%27 r=%272%27 fill=%27%2360a5fa%27/%3E%3Crect x=%2762%27 y=%2760%27 width=%2718%27 height=%2716%27 rx=%272%27 fill=%27%23ef4444%27/%3E%3Crect x=%2769%27 y=%2760%27 width=%274%27 height=%2716%27 fill=%27%23facc15%27/%3E%3Cpath d=%27M71 60 q-6 -7 -8 -1 q2 3 8 1 q6 2 8 -1 q-2 -6 -8 1z%27 fill=%27%23facc15%27/%3E%3Cg stroke=%27%23fff%27 stroke-width=%271.4%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M72 18 v14 M65 25 h14 M67 20 l10 10 M77 20 l-10 10%27/%3E%3C/g%3E%3Ccircle cx=%2750%27 cy=%2740%27 r=%271.6%27 fill=%27%23fff%27/%3E%3Ccircle cx=%2788%27 cy=%2748%27 r=%271.4%27 fill=%27%23fff%27/%3E%3Ccircle cx=%2744%27 cy=%2786%27 r=%271.6%27 fill=%27%23fff%27/%3E%3Ccircle cx=%278%27 cy=%2788%27 r=%271.2%27 fill=%27%23fff%27/%3E%3C/svg%3E') 0 0/96px 96px,radial-gradient(#fff 1.4px,transparent 1.8px) 12px 30px/32px 32px,linear-gradient(180deg,#1e3a8a 0%,#164e63 60%,#14532d 100%)" },
     { id: "ichigo", n: "いちごチェック", css: "repeating-linear-gradient(0deg,rgba(244,114,182,.35) 0 16px,transparent 16px 32px),repeating-linear-gradient(90deg,rgba(244,114,182,.35) 0 16px,#fff 16px 32px)" }
   ];
   var BGBY = {}; BGS.forEach(function (b) { BGBY[b.id] = b; });
+  function bgSeason(b) { for (var i = 0; i < SEASONS.length; i++) if (SEASONS[i].id === b.season) return SEASONS[i]; return null; }
   var SLOTS = [["head", "あたま"], ["face", "かお"], ["body", "からだ"], ["around", "まわり"]];
   // ★2026-10-17：✨ 進化したお宝（★5、js/evolved-treasure.js）だけ きせかえに 使える。身に つけても へらない。
   //   id は "ev_" ＋ 進化したお宝の id（x01〜x10）。絵は ここで 描いた SVG に、進化の 光（evoGlow）を かさねる
@@ -838,8 +842,8 @@
     var d = ensure(), cur = d.stickerPageBg[ui.page];
     return '<div class="stk-note" style="text-align:center;margin-top:6px">この ページの 背景を えらぼう。🔒 は ' + BG_COST + 'Q で 買えるよ（1回 買えば どの ページでも ずっと 使える）。いまの Q：' + Number((window.saveData || {}).q || 0) + '</div>' +
       '<div class="stk-grid" style="margin-top:6px">' + BGS.map(function (b) {
-        var own = hasBg(b.id), on = cur === b.id || (!BGBY[cur] && pageBg(ui.page).id === b.id);
-        return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + (boardLen(b.id) ? ' 🎀' + boardLen(b.id) : '') + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
+        var own = hasBg(b.id), on = cur === b.id || (!BGBY[cur] && pageBg(ui.page).id === b.id), zs = b.season ? bgSeason(b) : null;
+        return '<button type="button" class="c' + (on ? " pick" : "") + '" data-a="bg" data-v="' + b.id + '" style="cursor:pointer;padding:4px" aria-label="' + b.n + (own ? '' : zs ? (inSeason(zs) ? '（いまだけ ただ）' : '（' + zs.from + 'から）') : '（' + BG_COST + 'Q）') + '"><div style="height:44px;border-radius:10px;background:' + b.css + '"></div><div class="nm">' + b.n + (boardLen(b.id) ? ' 🎀' + boardLen(b.id) : '') + '<br>' + (own ? (on ? '✓ つかってる' : 'つかう') : zs ? (inSeason(zs) ? zs.icon + ' いまだけ ただ！' : '🔒 ' + zs.from.replace('-', '/').replace(/^0/, '') + 'から') : '🔒 ' + BG_COST + 'Q') + '</div></button>';
       }).join("") + photoCardsHtml() + '</div>' +
       (isPhoto(cur) && photoGet(pid(cur)) ? '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-mini" data-a="photodel">🗑 この しゃしんを けす</button></div>' : '') +
       '<div class="stk-note" style="text-align:center;margin-top:4px">📷 しゃしんは ' + PHOTO_MAX + 'まいまで のこせるよ（いま ' + photoList().length + 'まい）。この たんまつの 中だけに のこるよ。人の かおや 名前・住所が うつらない ように とろう。</div>';
@@ -1116,6 +1120,11 @@
       var b = BGBY[v]; if (!b) return;
       var usedAt = [0, 1, 2].filter(function (j) { return j !== ui.page && boardKey(j) === v; })[0];
       if (usedAt !== undefined) { toast("「" + b.n + "」は " + (usedAt + 1) + "ページで つかって いるよ"); return; }
+      if (!hasBg(v) && b.season) {
+        var zb = bgSeason(b);
+        if (!zb || !inSeason(zb)) { toast((zb ? zb.icon + " " + zb.from.replace("-", "/").replace(/^0/, "") + "から" : "季節に なったら") + " ただで もらえるよ"); return; }
+        d.stickerBgs.push(v); log(zb.icon + " 季節の 背景「" + b.n + "」を もらった"); toast(zb.icon + " 季節の 背景「" + b.n + "」を もらったよ！ ずっと 使えるよ");
+      }
       if (!hasBg(v)) {
         var q = Number((window.saveData || {}).q || 0);
         if (q < BG_COST) { toast("あと " + (BG_COST - q) + "Q で「" + b.n + "」が 買えるよ"); return; }
