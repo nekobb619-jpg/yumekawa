@@ -227,11 +227,14 @@
   var LIST = Object.keys(NAMES).map(function (id) { return { id: id, name: NAMES[id][0], r: NAMES[id][1], wear: NAMES[id][2] || null, art: ART[id] }; });
   var BY = {}; LIST.forEach(function (s) { BY[s.id] = s; });
   // ★2026-10-16：はる ページの 背景。はじめの 3つは 無料、ほかは Q で 買う（1回 買えば ずっと 使える）
+  var PAGE_N = 5, PAGE_IDX = [0, 1, 2, 3, 4];
   var BG_COST = 10; // ★2026-10-17：30Q → 10Q（保護者）
   var BGS = [
     { id: "yume", n: "ゆめ", free: 1, css: "radial-gradient(#ddd6fe 1.4px,transparent 1.6px) 0 0/18px 18px,#faf5ff" },
     { id: "yozora", n: "よぞら", free: 1, css: "radial-gradient(#fde68a 1px,transparent 1.3px) 6px 9px/34px 34px,radial-gradient(#fff 1px,transparent 1.2px) 20px 24px/46px 46px,linear-gradient(170deg,#1f1b2e,#4c1d95)" },
     { id: "shima", n: "しましま", free: 1, css: "repeating-linear-gradient(135deg,#fdf2f8 0 14px,#fff 14px 28px)" },
+    { id: "cream", n: "クリーム", free: 1, css: "radial-gradient(#fcd34d 1.6px,transparent 2px) 0 0/22px 22px,radial-gradient(#fdba74 1.2px,transparent 1.6px) 11px 11px/22px 22px,#fffbeb" },
+    { id: "mint", n: "ミント", free: 1, css: "repeating-linear-gradient(0deg,rgba(45,212,191,.18) 0 2px,transparent 2px 24px),repeating-linear-gradient(90deg,rgba(45,212,191,.18) 0 2px,transparent 2px 24px),#f0fdfa" },
     { id: "umi", n: "うみ", css: "radial-gradient(circle at 20% 110%,rgba(255,255,255,.55) 0 7px,transparent 8px) 0 0/58px 38px,linear-gradient(180deg,#bae6fd 0%,#38bdf8 55%,#0369a1 100%)" },
     { id: "sakura", n: "さくら", css: "radial-gradient(#fbcfe8 3px,transparent 3.5px) 0 0/30px 30px,radial-gradient(#f9a8d4 2px,transparent 2.5px) 15px 15px/30px 30px,#fff1f2" },
     { id: "mori", n: "もり", css: "radial-gradient(#bbf7d0 6px,transparent 7px) 0 0/36px 36px,linear-gradient(180deg,#dcfce7,#86efac)" },
@@ -293,7 +296,8 @@
     if (Array.isArray(d.stickerPageBg)) d.stickerPageBg.forEach(function (id, i) { if (id === "photo") d.stickerPageBg[i] = "photo:" + i; });
     if (d.stickerBoards) [0, 1, 2].forEach(function (i) { if (d.stickerBoards["photo" + i]) { d.stickerBoards["photo:" + i] = (d.stickerBoards["photo:" + i] || []).concat(d.stickerBoards["photo" + i]); delete d.stickerBoards["photo" + i]; } });
     if (!Array.isArray(d.stickerPageBg)) d.stickerPageBg = ["yume", "yozora", "shima"];
-    while (d.stickerPageBg.length < 3) d.stickerPageBg.push(["yume", "yozora", "shima"][d.stickerPageBg.length]);
+    // ★2026-11-03（保護者）ページを 3 → 5 に。4・5ページの はじめの 背景は 新しい ただの 背景（クリーム・ミント）
+    while (d.stickerPageBg.length < PAGE_N) d.stickerPageBg.push(["yume", "yozora", "shima", "cream", "mint"][d.stickerPageBg.length]);
     var t = today();
     if (!d.stickerDay || d.stickerDay.d !== t) d.stickerDay = { d: t, k: {}, g: 0 };
     if (!d.stickerDay.k) d.stickerDay.k = {};
@@ -830,7 +834,7 @@
       '<button type="button" class="stk-mini" data-a="lock" style="' + (pg[ui.sel].lk ? '' : 'background:#db2777;color:#fff;border-color:#db2777') + '" aria-pressed="' + !!pg[ui.sel].lk + '">' + (pg[ui.sel].lk ? "📌 固定を はずす" : "📌 この 位置で 固定") + '</button>' + (pg[ui.sel].lk ? '' : '<button type="button" class="stk-mini" data-a="big">大きく</button><button type="button" class="stk-mini" data-a="small">小さく</button><button type="button" class="stk-mini" data-a="rot">まわす</button><button type="button" class="stk-mini" data-a="up">⬆ 1つ 前へ</button><button type="button" class="stk-mini" data-a="down">⬇ 1つ 後ろへ</button><button type="button" class="stk-mini" data-a="front">いちばん 前へ</button><button type="button" class="stk-mini" data-a="back">いちばん 後ろへ</button><button type="button" class="stk-mini" data-a="peel">はがす</button>') + '</div>'
       : '<div class="stk-note" style="text-align:center;margin-top:8px">下の シールを おすと ページに 出るよ。ゆびで 動かして、おすと えらべる。📌 固定した シールは 動かないよ。</div>';
     if (ui.sel >= 0 && pg[ui.sel] && pg[ui.sel].s === "qs_hatena") tools = qsToolHtml(pg[ui.sel]) + tools;
-    return '<div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">' + [0, 1, 2].map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + boardLen(boardKey(i)) + '）</button>'; }).join("") + '</div>' +
+    return '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:8px">' + PAGE_IDX.map(function (i) { return '<button type="button" class="stk-mini" data-a="page" data-v="' + i + '" aria-pressed="' + (ui.page === i) + '">' + (i + 1) + ' ' + pageBg(i).n + '（' + boardLen(boardKey(i)) + '）</button>'; }).join("") + '</div>' +
       (ui.edit ? editHtml() : '<div class="stk-page" id="stk-page" style="background:' + pageBg(ui.page).css + '">' + items + '</div>') + (ui.edit ? photoPanelHtml() : tools) +
       (ui.edit ? '' : '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px"><button type="button" class="stk-mini" data-a="undo"' + ((ui.hist || []).length ? '' : ' disabled style="opacity:.45"') + '>↶ 1つ もどす</button><button type="button" class="stk-mini" data-a="reset0"' + (ui.snap0 && ui.snap0 !== snapNow() ? '' : ' disabled style="opacity:.45"') + '>⟲ ひらいた ときに もどす</button></div>') +
       (pg.length ? '<div style="display:flex;gap:6px;justify-content:center;margin-top:6px"><button type="button" class="stk-mini" data-a="lockall">📌 ぜんぶ 固定</button><button type="button" class="stk-mini" data-a="unlockall">ぜんぶ 固定を はずす</button></div>' : '') +
@@ -1097,7 +1101,7 @@
     if (a === "ezin" || a === "ezout") { if (!ui.edit) return; ui.edit.zoom = Math.max(1, Math.min(4, ui.edit.zoom * (a === "ezin" ? 1.2 : 1 / 1.2))); var rz2 = document.getElementById("stk-ez"); if (rz2) rz2.value = Math.round(ui.edit.zoom * 100); return drawEdit(); }
     if (a === "bgphoto") {
       var bid = "photo:" + v; if (!photoGet(v)) return render();
-      var usedP = [0, 1, 2].filter(function (j) { return j !== ui.page && boardKey(j) === bid; })[0];
+      var usedP = PAGE_IDX.filter(function (j) { return j !== ui.page && boardKey(j) === bid; })[0];
       if (usedP !== undefined) { toast("その しゃしんは " + (usedP + 1) + "ページで つかって いるよ"); return; }
       d.stickerPageBg[ui.page] = bid; ui.sel = -1; save(); return render();
     }
@@ -1118,7 +1122,7 @@
     }
     if (a === "bg") {
       var b = BGBY[v]; if (!b) return;
-      var usedAt = [0, 1, 2].filter(function (j) { return j !== ui.page && boardKey(j) === v; })[0];
+      var usedAt = PAGE_IDX.filter(function (j) { return j !== ui.page && boardKey(j) === v; })[0];
       if (usedAt !== undefined) { toast("「" + b.n + "」は " + (usedAt + 1) + "ページで つかって いるよ"); return; }
       if (!hasBg(v) && b.season) {
         var zb = bgSeason(b);
