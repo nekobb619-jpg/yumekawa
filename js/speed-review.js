@@ -168,6 +168,7 @@
       setCard(c.k, b, addDays(ok && !slow ? BOX_DAYS[b] : 1));
     } else if (ok && !slow) ui.fast++;
     if (!ok && !ui.retry[c.k] && !ui.again) { ui.retry[c.k] = 1; ui.deck.push(c); }
+    if (ok && window.weeklyBonusCount) { try { window.weeklyBonusCount(1); } catch (e) {} } // ★2026-11-04：反復も 週の ひみつボーナスに 数える（正解だけ）
     ui.res = { ok: ok, slow: slow, ms: ms }; render();
   }
   function next() {
