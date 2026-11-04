@@ -379,7 +379,7 @@
     if (footEl) {
       footEl.innerHTML = allDone
         ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく"
-        : p.steps.filter(function (x) { return !x.optional; }).length + "つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
+        : p.steps.filter(function (x) { return !x.optional; }).length + "つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚 ＆ 🎀×2</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
     }
     card.classList.toggle("all-done", allDone);
     if (chara) {
@@ -410,7 +410,7 @@
     // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）を 1こ、3日れんぞくごとに もう1こ
     var eggGift = (data.tutorPlanStreak % 3 === 0) ? 2 : 1;
     if (window.grantNakamaEgg) window.grantNakamaEgg(eggGift, "まなびプラン達成" + (eggGift === 2 ? "＋3日れんぞく" : ""));
-    if (window.grantStickerPack) window.grantStickerPack("plan"); // ★2026-10-04：🎀シール帳の ふくろ
+    if (window.grantStickerPack) { window.grantStickerPack("plan"); window.grantStickerPack("plan2"); } // ★2026-11-04（保護者：プランの 量が ふえたので ふくろを 2つに） // ★2026-10-04：🎀シール帳の ふくろ
     if (window.saveGame) window.saveGame();
     if (window.syncWithGoogleSpreadsheet) {
       window.syncWithGoogleSpreadsheet("LOG", {
