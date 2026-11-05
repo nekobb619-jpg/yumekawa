@@ -959,7 +959,7 @@
   function spareList() {
     var out = [];
     LIST.forEach(function (s) {
-      if (s.r > 3 || LIMITED[s.id] || s.id === "qs_hatena") return;
+      if (s.r > 3 || LIMITED[s.id] || s.id === "qs_hatena" || (ui.t4ng && ui.t4ng[s.id])) return;
       var n = Math.min(free(s.id), owned(s.id) - 1);
       for (var k = 0; k < n; k++) out.push(s);
     });
@@ -981,13 +981,21 @@
     p4.sort(function (a, b) { return (owned(a.id) ? 1 : 0) - (owned(b.id) ? 1 : 0); });
     var spN = spareList().length, pick = t4Pick();
     var t4 = '';
-    if (ui.t4 && BY[ui.t4] && pick) {
+    var ngIds = Object.keys(ui.t4ng || {}).filter(function (k) { return ui.t4ng[k] && BY[k]; });
+    var ngRow = ngIds.length ? '<div style="font-size:11.5px;font-weight:800;color:#6b5a85;margin-top:6px">🚫 ささげない シール（おすと もどす）：</div><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:4px">' +
+      ngIds.map(function (k) { return '<button type="button" class="stk-mini img" data-a="t4ok1" data-v="' + k + '" aria-label="' + BY[k].name + ' を もどす" style="padding:3px 6px;line-height:0;opacity:.6">' + svg(k, 30) + '</button>'; }).join("") + '</div>' : '';
+    if (ui.t4 && BY[ui.t4]) {
+      // ★2026-11-06（保護者）自動で えらぶ だけに しない：「この シールを ささげます」と 見せて、ダメな シールは はずせる。はい を おすまで へらない
       t4 = '<div style="margin:8px 0;background:#fdf4ff;border:2px solid #f0abfc;border-radius:16px;padding:10px;text-align:center">' +
-        '<div style="font-size:13px;font-weight:900;color:#86198f">★4「' + BY[ui.t4].name + '」と こうかん する？</div>' +
+        '<div style="font-size:13px;font-weight:900;color:#86198f">★4「' + BY[ui.t4].name + '」と こうかん</div>' +
         '<div style="margin:6px 0;line-height:0">' + svg(ui.t4, 56) + '</div>' +
-        '<div style="font-size:12px;font-weight:800;color:#6b5a85">ささげる シール（ダブり）：</div><div style="display:flex;gap:6px;justify-content:center;margin:4px 0 8px">' +
-        pick.map(function (s) { return '<span style="line-height:0" title="' + s.name + '">' + svg(s.id, 38) + '</span>'; }).join("") + '</div>' +
-        '<button type="button" class="stk-btn" data-a="ticket4ok" data-v="' + ui.t4 + '">🎫＋ダブり3まいで こうかん！</button> <button type="button" class="stk-mini" data-a="ticket4no">やめる</button></div>';
+        (pick ? '<div style="font-size:12.5px;font-weight:900;color:#4c1d95">この シールを ささげます。いい？</div>' +
+          '<div style="font-size:11px;font-weight:700;color:#6b5a85">ダメな シールは「🚫 ダメ」を おしてね（ほかの ダブりに かわるよ）</div>' +
+          '<div style="display:flex;gap:8px;justify-content:center;margin:6px 0 4px;flex-wrap:wrap">' +
+          pick.map(function (s) { return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:#fff;border:2px solid #e9d5ff;border-radius:12px;padding:5px 6px"><span style="line-height:0">' + svg(s.id, 40) + '</span><span style="font-size:10.5px;font-weight:800;max-width:64px">' + s.name + '</span><button type="button" class="stk-mini" data-a="t4ng" data-v="' + s.id + '" style="padding:2px 8px;font-size:11px">🚫 ダメ</button></div>'; }).join("") + '</div>' + ngRow +
+          '<div style="margin-top:8px"><button type="button" class="stk-btn" data-a="ticket4ok" data-v="' + ui.t4 + '">はい、ささげて こうかん！</button> <button type="button" class="stk-mini" data-a="ticket4no">やめる</button></div>'
+          : '<div style="font-size:12px;font-weight:800;color:#9a3412;margin:6px 0">ささげて いい ダブりが 3まい たりないよ</div>' + ngRow + '<div style="margin-top:6px"><button type="button" class="stk-mini" data-a="ticket4no">やめる</button></div>') +
+        '</div>';
     }
     return '<div class="stk-note" style="text-align:center;margin:8px 0 4px">ほしい シールを おしてね</div><div class="stk-grid">' + pool.map(function (s) {
       return '<button type="button" class="c r' + s.r + '" data-a="ticketpick" data-v="' + s.id + '" style="cursor:pointer">' + svg(s.id, 42) + '<div class="nm">' + s.name + '<br>' + "★★★★".slice(0, s.r) + '</div></button>';
@@ -1128,12 +1136,14 @@
     }
     if (a === "qsclose") { ui.qs = null; return render(); }
     if (a === "ticket") { ui.ticket = !ui.ticket; return render(); }
-    if (a === "ticket4") { if (!t4Pick()) return; ui.t4 = ui.t4 === v ? "" : v; return render(); }
-    if (a === "ticket4no") { ui.t4 = ""; return render(); }
+    if (a === "ticket4") { if (!t4Pick() && !ui.t4) return; ui.t4 = ui.t4 === v ? "" : v; return render(); }
+    if (a === "t4ng") { ui.t4ng = ui.t4ng || {}; ui.t4ng[v] = 1; return render(); }
+    if (a === "t4ok1") { if (ui.t4ng) delete ui.t4ng[v]; return render(); }
+    if (a === "ticket4no") { ui.t4 = ""; ui.t4ng = {}; return render(); }
     if (a === "ticket4ok") {
       var d4 = shardData(), s4 = BY[v], pk = t4Pick(); if (!s4 || s4.r !== 4 || LIMITED[v] || offSeason(v) || d4.stickerTickets < 1 || !pk) return;
       pk.forEach(function (x) { d4.stickers[x.id] = Math.max(1, (d4.stickers[x.id] || 0) - 1); });
-      d4.stickerTickets -= 1; var nw4 = !d4.stickers[v]; d4.stickers[v] = (d4.stickers[v] || 0) + 1; ui.ticket = false; ui.t4 = "";
+      d4.stickerTickets -= 1; var nw4 = !d4.stickers[v]; d4.stickers[v] = (d4.stickers[v] || 0) + 1; ui.ticket = false; ui.t4 = ""; ui.t4ng = {};
       save(); log("🎫 券＋ダブり3まい（" + pk.map(function (x) { return x.name; }).join("・") + "）で ★4 " + s4.name + (nw4 ? " NEW" : "")); reveal(s4, nw4); return;
     }
     if (a === "ticketpick") {
