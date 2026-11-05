@@ -476,6 +476,7 @@
      判定は recordAnswerLog（js/adaptive-question-generator.js）が 記録した 解答だけ（特訓・SOS・遠征などは 対象外）。 */
   var SHARD_PACK = 10, SHARD_DAY = 30, TICKET_AT = 30;
   var shardSession = 0;
+  function dayCap() { try { return SHARD_DAY + ((window.luckToday && window.luckToday().capPlus) || 0); } catch (e) { return SHARD_DAY; } }
   function shardData() {
     var d = ensure(), t = today();
     d.stickerShards = Number(d.stickerShards || 0); d.stickerTicketProg = Number(d.stickerTicketProg || 0); d.stickerTickets = Number(d.stickerTickets || 0);
@@ -483,7 +484,8 @@
     return d;
   }
   function addShards(n, tag) {
-    var d = shardData(), add = Math.max(0, Math.min(n, SHARD_DAY - d.stickerShardDay.n));
+    var lk = window.luckToday ? window.luckToday() : { capPlus: 0 }; // ★2026-11-05：きょうの ラッキー（js/luck-day.js）で 1日の 上限が ふえる
+    var d = shardData(), add = Math.max(0, Math.min(n, SHARD_DAY + (lk.capPlus || 0) - d.stickerShardDay.n));
     if (!add) return 0;
     d.stickerShardDay.n += add; d.stickerShards += add; d.stickerTicketProg += add; shardSession += add;
     while (d.stickerShards >= SHARD_PACK) {
@@ -513,6 +515,7 @@
         if (sdt && (sdt.totalAnswersCount || 0) > before && correct && first) {
           var th = ms !== null && ms >= 3000 && ms <= 120000;
           addShards(th ? 2 : 1); mEvent("first"); if (th) mEvent("think");
+          try { var lk2 = window.luckToday ? window.luckToday() : null; if (lk2 && lk2.shard && Math.random() < lk2.shard && addShards(1)) toast("🍀 ラッキー！ シールの かけら ＋1"); } catch (e2) {} // ★2026-11-05：きょうの ラッキー
         }
       } catch (e) {}
       return r;
@@ -524,7 +527,7 @@
   // ステージ クリアの メッセージ用（index.html）。この ステージで あつめた かけらと、つぎの ふくろまでの のこり
   window.stickerShardSummary = function () {
     var got = shardSession; shardSession = 0;
-    try { var d = shardData(), mo = mission(); return { got: got, left: SHARD_PACK - d.stickerShards, dayFull: d.stickerShardDay.n >= SHARD_DAY, m: { t: mo.def.t, p: mo.m.p, goal: mo.def.goal, done: !!mo.m.done, got: !!mo.m.got } }; } catch (e) { return { got: got, left: 0, dayFull: false }; }
+    try { var d = shardData(), mo = mission(); return { got: got, left: SHARD_PACK - d.stickerShards, dayFull: d.stickerShardDay.n >= dayCap(), m: { t: mo.def.t, p: mo.m.p, goal: mo.def.goal, done: !!mo.m.done, got: !!mo.m.got } }; } catch (e) { return { got: got, left: 0, dayFull: false }; }
   };
   window.stickerShardReset = function () { shardSession = 0; };
 
@@ -938,7 +941,7 @@
     var shardBox = '<div style="background:#fff;border:2px solid #ddd6fe;border-radius:16px;padding:10px 12px;margin-top:10px">' +
       '<div style="font-size:13px;font-weight:900;color:#5b21b6">🧩 シールの かけら：' + sh.stickerShards + '／' + SHARD_PACK + '</div>' + bar(sh.stickerShards, SHARD_PACK, "linear-gradient(90deg,#a78bfa,#f472b6)").replace("rgba(255,255,255,.25)", "#ede9fe") +
       '<div style="font-size:12px;font-weight:800;color:#6b5a85">🎫 えらべる シール券まで：' + sh.stickerTicketProg + '／' + TICKET_AT + '（もって いる 券：' + sh.stickerTickets + 'まい）</div>' + bar(sh.stickerTicketProg, TICKET_AT, "#fbbf24").replace("rgba(255,255,255,.25)", "#fef3c7") +
-      '<div class="stk-note">ステージで 1回目に 正解すると かけら +1。よく 考えて 正解すると +2。10こで ふくろ 1つ（今日 あと ' + Math.max(0, SHARD_DAY - sh.stickerShardDay.n) + 'こ あつめられるよ）。その 教科の シリーズが 出やすい！</div>' +
+      '<div class="stk-note">ステージで 1回目に 正解すると かけら +1。よく 考えて 正解すると +2。10こで ふくろ 1つ（今日 あと ' + Math.max(0, dayCap() - sh.stickerShardDay.n) + 'こ あつめられるよ）。その 教科の シリーズが 出やすい！</div>' +
       (sh.stickerTickets > 0 ? '<div style="text-align:center;margin-top:6px"><button type="button" class="stk-btn" data-a="ticket">🎫 券で すきな シールを えらぶ</button></div>' : '') +
       (ui.ticket && sh.stickerTickets > 0 ? ticketHtml() : '') + '</div>';
     return '<div style="text-align:center;background:linear-gradient(135deg,#1f1b2e,#4c1d95);border-radius:18px;padding:14px;color:#fff">' +

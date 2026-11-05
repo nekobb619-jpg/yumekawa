@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   "use strict";
-  var N = 10, SLOW_MS = 6000, BOX_DAYS = [0, 1, 2, 4, 7, 14], MAX_CARDS = 600, EPOCH = Date.UTC(2026, 0, 1);
+  var N = 10, SLOW_MS = 6000, SLOW_CH_MS = 25000, BOX_DAYS = [0, 1, 2, 4, 7, 14], MAX_CARDS = 600, EPOCH = Date.UTC(2026, 0, 1);
 
   function sd() { return window.saveData || {}; }
   function st() {
@@ -85,7 +85,32 @@
     var bySid = {}; fresh.forEach(function (c) { (bySid[c.sid] = bySid[c.sid] || []).push(c); });
     var sids = shuffle(Object.keys(bySid)), i = 0;
     while (deck.length < N && sids.length) { var sid = sids[i % sids.length], l = bySid[sid]; if (l.length) deck.push(l.shift()); else sids.splice(i % sids.length, 1); i++; }
-    return deck.slice(0, N);
+    deck = deck.slice(0, N);
+    // ★2026-11-05（保護者）：ふくしゅう・正答率が 上がって きたら「ちょっと ながい 問題」（js/challenge-pool.js）を こっそり 1〜2まい まぜる
+    var nc = challengeN();
+    if (nc) { var chs = challengeCards(nc); deck = deck.slice(0, N - chs.length); chs.forEach(function (c) { deck.splice(1 + Math.floor(Math.random() * deck.length), 0, c); }); }
+    return deck;
+  }
+  function acc7() {
+    var ad = sd().answerDaily || {}, n = 0, ok = 0, lim = dayKey(now() - 7 * 86400000);
+    Object.keys(ad).forEach(function (k) { if (k < lim) return; var c = (ad[k] || {}).c || {}; Object.keys(c).forEach(function (cat) { n += c[cat][0] || 0; ok += c[cat][1] || 0; }); });
+    return n >= 20 ? ok / n : null;
+  }
+  function challengeN() {
+    if (!(window.CHALLENGE_POOL || []).length) return 0;
+    var lv = window.luckToday ? window.luckToday().lv : 0, a = acc7(), top = stats().top;
+    if (lv >= 2 || (a !== null && a >= 0.65)) return 2;
+    if (lv >= 1 || (a !== null && a >= 0.55) || top >= 10) return 1;
+    return 0;
+  }
+  function challengeCards(n) {
+    var t = dnum(today()), due = [], fresh = [];
+    window.CHALLENGE_POOL.forEach(function (x) {
+      var c = { k: "ch::" + x.id, sid: "challenge", ch: true, tag: x.tag, q: { q: x.q, a: x.a, c: x.c, job_desc: x.d } };
+      var b = getBox(c.k); if (b == null) fresh.push(c); else if (getDue(c.k) <= t) due.push(c);
+    });
+    shuffle(fresh); due.sort(function (a, b) { return (getBox(a.k) || 0) - (getBox(b.k) || 0); });
+    return due.concat(fresh).slice(0, n);
   }
   function stats() {
     var all = pool(), t = dnum(today()), due = 0, done = 0, top = 0;
@@ -128,7 +153,7 @@
   }
   function cardHtml() {
     var c = ui.deck[ui.i], q = c.q, ord = ui.ord;
-    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
+    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
       '<div style="height:8px;background:#fef3c7;border-radius:999px;overflow:hidden;margin:4px 0 8px"><div style="height:100%;width:' + Math.round(ui.i / ui.deck.length * 100) + '%;background:linear-gradient(90deg,#f59e0b,#ea580c)"></div></div>';
     var qs = '<div style="background:#fff;border:2px solid #fde68a;border-radius:16px;padding:12px;font-size:15.5px;font-weight:900;line-height:1.6">' + esc(plain(q.q)) + '</div>';
     if (ui.res) {
@@ -159,7 +184,7 @@
   }
   function answer(j) {
     if (!ui || ui.res) return;
-    var c = ui.deck[ui.i], ms = Date.now() - (ui.t0 || Date.now()), ok = Number(j) === c.q.c, slow = ms > SLOW_MS;
+    var c = ui.deck[ui.i], ms = Date.now() - (ui.t0 || Date.now()), ok = Number(j) === c.q.c, slow = ms > (c.ch ? SLOW_CH_MS : SLOW_MS);
     var b = getBox(c.k) || 0;
     if (!ui.again) {
       if (ok && !slow) { b = Math.min(5, b + 1); ui.fast++; }

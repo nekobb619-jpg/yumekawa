@@ -6564,7 +6564,7 @@ window.triggerCorrectAnswer = function(current) {
     //   （「センサー作動」演出が特別感を持てる頻度に調整。dailyLoopCounts等の既存の周回上限ロジックは変更なし）
     // ★2026-08-11追加：宝島レベルボーナス（getIslandLevelBonus）を加算し、宝島を育てるほど
     //   欠片も見つけやすくなるようにする（探検隊のプレミアム宝ボーナスと同じ思想）。
-    if(window.currentFirstTry && Math.random() < 0.15 + window.getIslandLevelBonus() && !window.weakAttackModeActive && !kakeraCapped) {
+    if(window.currentFirstTry && Math.random() < 0.15 + window.getIslandLevelBonus() + (window.luckKakeraBonus ? window.luckKakeraBonus() : 0) && !window.weakAttackModeActive && !kakeraCapped) { // ★2026-11-05：きょうの ラッキー（js/luck-day.js）
       if(!window.saveData.kakera) window.saveData.kakera = 0; window.saveData.kakera += 1; window.speakText("欠片発見", "ja-JP"); document.getElementById("job-title").textContent = "🧩 【欠片センサー作動！】 " + (current.job_title || "クリア！");
     }
     let thinkingBonusMsg = "";
@@ -6993,7 +6993,9 @@ window.initQAMode();
 <script src="./js/weekly-bonus.js"></script>
 <script src="./js/sozo-art.js"></script>
 <script src="./js/sozo-kobo.js"></script>
+<script src="./js/challenge-pool.js"></script>
 <script src="./js/speed-review.js"></script>
+<script src="./js/luck-day.js"></script>
 <script src="./js/expedition-art.js"></script>
 <script src="./js/evolved-treasure.js"></script>
 <script src="./js/usage-log.js"></script>
