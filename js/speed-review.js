@@ -197,6 +197,7 @@
 
   function start() {
     var deck = pickDeck(); if (!deck.length) return;
+    if (window.swiftComboReset) window.swiftComboReset();
     ui.deck = deck; ui.base = deck.length; ui.i = 0; ui.fast = 0; ui.miss = 0; ui.slowN = 0; ui.res = null; ui.again = false; ui.retry = {};
     ui.phase = "card"; ui.ord = shuffle(deck[0].q.a.map(function (_, j) { return j; })); render();
   }
@@ -211,6 +212,7 @@
       setCard(c.k, b, addDays(ok && !slow ? BOX_DAYS[b] : 1));
     } else if (ok && !slow) ui.fast++;
     if (!ok && !ui.retry[c.k] && !ui.again) { ui.retry[c.k] = 1; ui.deck.push(c); }
+    if (window.swiftComboHit) { try { window.swiftComboHit({ ok: ok, first: !ui.again, ms: ms, q: c.ch && !c.kid ? { ch: true } : c.q, stageId: c.sid, review: true }); } catch (e) {} } // ★2026-11-05：⚡すらすらコンボ
     if (c.kid && window.kotobaSeen) { try { window.kotobaSeen(c.kid, ok && !slow); } catch (e) {} }
     if (ok && window.weeklyBonusCount) { try { window.weeklyBonusCount(1); } catch (e) {} } // ★2026-11-04：反復も 週の ひみつボーナスに 数える（正解だけ）
     ui.res = { ok: ok, slow: slow, ms: ms }; render();
