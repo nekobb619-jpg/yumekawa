@@ -104,13 +104,17 @@
     return 0;
   }
   function challengeCards(n) {
-    var t = dnum(today()), due = [], fresh = [];
+    // ★2026-11-05：地頭（tag "地頭"）と ほかの 問題を 交互に。n＝2 なら 1まいずつ、n＝1 なら 日に よって 入れかわる
+    var t = dnum(today()), g = { ji: { due: [], fresh: [] }, ot: { due: [], fresh: [] } };
     window.CHALLENGE_POOL.forEach(function (x) {
       var c = { k: "ch::" + x.id, sid: "challenge", ch: true, tag: x.tag, q: { q: x.q, a: x.a, c: x.c, job_desc: x.d } };
-      var b = getBox(c.k); if (b == null) fresh.push(c); else if (getDue(c.k) <= t) due.push(c);
+      var o = g[x.tag === "地頭" ? "ji" : "ot"], b = getBox(c.k); if (b == null) o.fresh.push(c); else if (getDue(c.k) <= t) o.due.push(c);
     });
-    shuffle(fresh); due.sort(function (a, b) { return (getBox(a.k) || 0) - (getBox(b.k) || 0); });
-    return due.concat(fresh).slice(0, n);
+    function take(o) { shuffle(o.fresh); o.due.sort(function (a, b) { return (getBox(a.k) || 0) - (getBox(b.k) || 0); }); return o.due.concat(o.fresh); }
+    var ji = take(g.ji), ot = take(g.ot), out = [], first = t % 2 ? ji : ot, second = t % 2 ? ot : ji;
+    if (first.length) out.push(first[0]); if (out.length < n && second.length) out.push(second[0]);
+    if (out.length < n) out = out.concat(first.slice(1, 1 + n - out.length));
+    return out.slice(0, n);
   }
   function stats() {
     var all = pool(), t = dnum(today()), due = 0, done = 0, top = 0;
