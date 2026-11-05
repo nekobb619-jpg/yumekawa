@@ -952,13 +952,51 @@
       missionHtml() + shardBox +
       '<div class="stk-h">シール ずかん（' + totalOwned() + '／' + LIST.length + '）</div><div class="stk-grid">' + grid + '</div>';
   }
-  // えらべる シール券：まだ もって いない ★1〜★3 から 1まい えらぶ（★4 は ふくろだけ）
+  // えらべる シール券：まだ もって いない ★1〜★3 から 1まい えらぶ
+  // ★2026-11-06（保護者）★4 も えらべる：券 1まい ＋ ダブった シール 3まい（★1〜★3・ちがう シールでも OK）を ささげる。
+  //   ささげる のは「はって いない」「1まいは のこる」分だけ（はった シール・さいごの 1まいは へらない）。げんてい・問題シールは つかわない。
+  var T4_GIVE = 3;
+  function spareList() {
+    var out = [];
+    LIST.forEach(function (s) {
+      if (s.r > 3 || LIMITED[s.id] || s.id === "qs_hatena") return;
+      var n = Math.min(free(s.id), owned(s.id) - 1);
+      for (var k = 0; k < n; k++) out.push(s);
+    });
+    // ★の 小さい ものから、たくさん ダブって いる ものから つかう
+    out.sort(function (a, b) { return a.r - b.r || (owned(b.id) - owned(a.id)); });
+    return out;
+  }
+  function t4Pick() {
+    // ちがう シールから 1まいずつ じゅんばんに（★の 小さい・ダブりの 多い もの から）。たりなければ 同じ シールから もう1まい
+    var sp = spareList(), left = {}, ids = [], pick = [];
+    sp.forEach(function (s) { if (!left[s.id]) { left[s.id] = 0; ids.push(s); } left[s.id]++; });
+    while (pick.length < T4_GIVE) { var any = false; ids.forEach(function (s) { if (pick.length < T4_GIVE && left[s.id] > 0) { left[s.id]--; pick.push(s); any = true; } }); if (!any) break; }
+    return pick.length >= T4_GIVE ? pick : null;
+  }
   function ticketHtml() {
     var pool = LIST.filter(function (s) { return s.r <= 3 && !owned(s.id) && !offSeason(s.id) && !LIMITED[s.id] && s.id !== "qs_hatena"; });
     if (!pool.length) pool = LIST.filter(function (s) { return s.r <= 3 && !offSeason(s.id) && !LIMITED[s.id]; });
-    return '<div class="stk-note" style="text-align:center;margin:8px 0 4px">ほしい シールを おしてね（★4 は ふくろだけ）</div><div class="stk-grid">' + pool.map(function (s) {
+    var p4 = LIST.filter(function (s) { return s.r === 4 && !offSeason(s.id) && !LIMITED[s.id]; });
+    p4.sort(function (a, b) { return (owned(a.id) ? 1 : 0) - (owned(b.id) ? 1 : 0); });
+    var spN = spareList().length, pick = t4Pick();
+    var t4 = '';
+    if (ui.t4 && BY[ui.t4] && pick) {
+      t4 = '<div style="margin:8px 0;background:#fdf4ff;border:2px solid #f0abfc;border-radius:16px;padding:10px;text-align:center">' +
+        '<div style="font-size:13px;font-weight:900;color:#86198f">★4「' + BY[ui.t4].name + '」と こうかん する？</div>' +
+        '<div style="margin:6px 0;line-height:0">' + svg(ui.t4, 56) + '</div>' +
+        '<div style="font-size:12px;font-weight:800;color:#6b5a85">ささげる シール（ダブり）：</div><div style="display:flex;gap:6px;justify-content:center;margin:4px 0 8px">' +
+        pick.map(function (s) { return '<span style="line-height:0" title="' + s.name + '">' + svg(s.id, 38) + '</span>'; }).join("") + '</div>' +
+        '<button type="button" class="stk-btn" data-a="ticket4ok" data-v="' + ui.t4 + '">🎫＋ダブり3まいで こうかん！</button> <button type="button" class="stk-mini" data-a="ticket4no">やめる</button></div>';
+    }
+    return '<div class="stk-note" style="text-align:center;margin:8px 0 4px">ほしい シールを おしてね</div><div class="stk-grid">' + pool.map(function (s) {
       return '<button type="button" class="c r' + s.r + '" data-a="ticketpick" data-v="' + s.id + '" style="cursor:pointer">' + svg(s.id, 42) + '<div class="nm">' + s.name + '<br>' + "★★★★".slice(0, s.r) + '</div></button>';
-    }).join("") + '</div>';
+    }).join("") + '</div>' +
+      '<div class="stk-h">★4 は 券 ＋ ダブった シール 3まい（ちがう シールでも OK）</div>' +
+      (pick ? '' : '<div class="stk-note" style="text-align:center">はって いない ダブりが あと ' + (T4_GIVE - spN) + 'まい で えらべるよ</div>') + t4 +
+      '<div class="stk-grid">' + p4.map(function (s) {
+        return '<button type="button" class="c r4' + (ui.t4 === s.id ? ' pick' : '') + '" data-a="ticket4" data-v="' + s.id + '" style="cursor:pointer' + (pick ? '' : ';opacity:.45') + '"' + (pick ? '' : ' disabled') + '>' + svg(s.id, 42) + '<div class="nm">' + s.name + (owned(s.id) ? '' : ' 🆕') + '<br>★★★★</div></button>';
+      }).join("") + '</div>';
   }
 
   /* ---- きせかえ ---- */
@@ -1090,6 +1128,14 @@
     }
     if (a === "qsclose") { ui.qs = null; return render(); }
     if (a === "ticket") { ui.ticket = !ui.ticket; return render(); }
+    if (a === "ticket4") { if (!t4Pick()) return; ui.t4 = ui.t4 === v ? "" : v; return render(); }
+    if (a === "ticket4no") { ui.t4 = ""; return render(); }
+    if (a === "ticket4ok") {
+      var d4 = shardData(), s4 = BY[v], pk = t4Pick(); if (!s4 || s4.r !== 4 || LIMITED[v] || offSeason(v) || d4.stickerTickets < 1 || !pk) return;
+      pk.forEach(function (x) { d4.stickers[x.id] = Math.max(1, (d4.stickers[x.id] || 0) - 1); });
+      d4.stickerTickets -= 1; var nw4 = !d4.stickers[v]; d4.stickers[v] = (d4.stickers[v] || 0) + 1; ui.ticket = false; ui.t4 = "";
+      save(); log("🎫 券＋ダブり3まい（" + pk.map(function (x) { return x.name; }).join("・") + "）で ★4 " + s4.name + (nw4 ? " NEW" : "")); reveal(s4, nw4); return;
+    }
     if (a === "ticketpick") {
       var dd = shardData(), tk = BY[v]; if (!tk || tk.r > 3 || dd.stickerTickets < 1) return;
       dd.stickerTickets -= 1; var nw = !dd.stickers[v]; dd.stickers[v] = (dd.stickers[v] || 0) + 1; ui.ticket = false;
