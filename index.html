@@ -4584,10 +4584,18 @@ window.updateKuroPonModal = function() {
   // 時間経過でおなかが減る・仲良し度も下がる
   const now = window.currentServerTime ? new Date(window.currentServerTime) : new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-  if (sd.kuroPonLastFedDate && sd.kuroPonLastFedDate !== todayStr) {
-    // 最後に給餌した日から何日経過したか計算
-    const lastFed = new Date(sd.kuroPonLastFedDate);
-    const daysPassed = Math.max(1, Math.floor((now - lastFed) / 86400000));
+  // ★2026-11-06修正（保護者：りさ の クロぽんが ごはんを あげる 前から 満腹で あげられない）
+  //   ① 一度も ごはんを あげて いない（kuroPonLastFedDate が 空）と、おなかが 減る 計算が 一度も 動かず、
+  //      はじめの 100（満腹）の まま ずっと あげられなかった → 空なら「きのう あげた」あつかいで 減りはじめる。
+  //   ② 減る 計算が「ひらく たびに」動いて いた（同じ日に 何回 ひらいても なかよし度が へった）→ 1日 1回（kuroPonDecayDate）。
+  if (!sd.kuroPonLastFedDate) { const y = new Date(now.getTime() - 86400000); sd.kuroPonLastFedDate = `${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`; }
+  const _kpDay = (str) => { const m = String(str || "").split("-").map(Number); return m.length === 3 ? new Date(m[0], m[1] - 1, m[2]).getTime() : NaN; };
+  const _kpToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const _kpBase = Math.max(_kpDay(sd.kuroPonLastFedDate) || 0, _kpDay(sd.kuroPonDecayDate) || 0);
+  if (sd.kuroPonLastFedDate !== todayStr && sd.kuroPonDecayDate !== todayStr && _kpBase > 0 && _kpBase < _kpToday) {
+    // 最後に給餌した日（または 最後に 減らした 日）から何日経過したか計算
+    const daysPassed = Math.max(1, Math.round((_kpToday - _kpBase) / 86400000));
+    sd.kuroPonDecayDate = todayStr;
     // おなか減少（1日40%、最大100%まで）
     // ★2026-08-08修正：`|| 100`だと、既に0（ぺこぺこ）の時にここで100扱いされてしまい、
     //   給餌せず日数が経つほど逆に満腹度が回復して見えるバグがあった（0 - 40 → ではなく 100 - 40 になる）。
