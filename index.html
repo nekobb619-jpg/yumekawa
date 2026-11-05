@@ -3383,7 +3383,7 @@ window.loadGameLocal = function() {
 //   ext行を読み込めたことを確認できた（saveExtLoadedFor===playerId）ときだけ分割保存し、
 //   それまでは従来どおり1行にまとめて保存する（＝空/古いext行で履歴を上書きしない安全側）。
 window.SAVE_EXT_SUFFIX = "__ext";
-window.SAVE_EXT_FIELDS = ["speedRev", "answerDaily", "answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog", "whyLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
+window.SAVE_EXT_FIELDS = ["kotoba", "kotobaStar", "speedRev", "answerDaily", "answerLogs", "aiGeneratedQuizzes", "fastMasteredQids", "detectiveSeenIds", "clearedQuestionQids", "yokattaLog", "whyLog"]; // ★2026-10-03：yokattaLog（よかった帳）は ext行へ。子どもが 書いた 文なので trim の 対象には 入れない
 window.SAVE_SAFE_LIMIT = 42000; // 1セル50,000文字制限に対して余白を持たせた、1行あたりの上限
 window.saveExtLoadedFor = null;
 // ★2026-09-23追加：「削っても実害が小さい＝履歴・分析用・再生成可能なデータ」だけを優先度順に、
@@ -6626,11 +6626,13 @@ window.renderReviewChatStep = function() {
       </div>
       <div class="chat-msg left">
         <div class="chat-icon">🦄</div>
-        <div class="chat-bubble"><div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">ニコ</div>${ansText ? `<span class="review-chat-answer-chip">こたえ：${ansText}</span><br>` : ""}${descHtml}</div>
+        <div class="chat-bubble" id="review-nh-host"><div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">ニコ</div>${ansText ? `<span class="review-chat-answer-chip">こたえ：${ansText}</span><br>` : ""}${descHtml}</div>
       </div>
     </div>
   `;
   document.getElementById("review-chat-next-btn").textContent = (idx >= total - 1) ? "わかった！とじる 🎀" : "わかった！つぎへ 🎀";
+  // ★2026-11-05（保護者：まちがえた 問題の 確認は 読まずに 飛ばされて いる）→ 解説を 読ませる かわりに「🤔 どうして かな？」で 理由を えらぶ（js/kotoba-cards.js）
+  try { const host = document.getElementById("review-nh-host"); if (host && window.renderNaruhodo && window.naruhodoChoices(item, window.currentActiveStageId)) window.renderNaruhodo(host, item, window.currentActiveStageId); } catch (e) { console.error("naruhodo", e); }
 };
 window.reviewChatNext = function() {
   const total = (window.sessionMissedQuestions || []).length;
@@ -6993,6 +6995,7 @@ window.initQAMode();
 <script src="./js/weekly-bonus.js"></script>
 <script src="./js/sozo-art.js"></script>
 <script src="./js/sozo-kobo.js"></script>
+<script src="./js/kotoba-cards.js"></script>
 <script src="./js/challenge-pool.js"></script>
 <script src="./js/speed-review.js"></script>
 <script src="./js/luck-day.js"></script>

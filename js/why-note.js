@@ -46,7 +46,40 @@
     } catch (e) {}
   };
 
+  // ★2026-11-05（保護者：書かずに スキップされて いる → 書かせず「なぜかな？ こういう ことかな？」と えらばせる）
+  //   クリアの あとは 🤔 なるほど？（js/kotoba-cards.js）を 出す。書くのは「できたら」（下の openWrite）。
+  function pickItem(stageId) {
+    var Q = null; Object.keys(window).some(function (k) { if (k.indexOf("CONTENT_QUIZZES") === 0 && window[k] && window[k][stageId]) { Q = window[k][stageId]; return true; } return false; });
+    var l = (Q || []).filter(function (q) { return q && q.job_desc && String(q.job_desc).replace(/<[^>]+>/g, "").length >= 12 && ((q.a && typeof q.c === "number") || q.correct_answers); });
+    return l.length ? l[Math.floor(Math.random() * l.length)] : null;
+  }
   function open(stageId, stageName) {
+    var item = window.renderNaruhodo ? pickItem(stageId) : null;
+    if (!item || !window.naruhodoChoices(item, stageId)) return openWrite(stageId, stageName);
+    var old = document.getElementById("why-note"); if (old) old.remove();
+    var w = document.createElement("div"); w.id = "why-note"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "なるほど？");
+    w.style.cssText = "position:fixed;inset:0;z-index:10003;background:rgba(31,27,46,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px;";
+    w.innerHTML = '<div style="width:100%;max-width:440px;max-height:90vh;overflow-y:auto;background:#fff;border:3px solid #c4b5fd;border-radius:20px;padding:14px 14px 12px;font-family:\'Zen Maru Gothic\',sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25);">' +
+      '<div style="font-size:12px;font-weight:800;color:#7a6985">「' + esc(stageName || "") + '」から 1問</div>' +
+      '<div style="font-size:14px;font-weight:900;color:#1f2937;background:#f5f3ff;border-radius:12px;padding:8px 10px;margin:4px 0 8px;line-height:1.5">' + esc(String(item.q || "").replace(/<[^>]+>/g, "").replace(/【Q\.\d+】/g, "").slice(0, 120)) + '</div>' +
+      '<div id="why-nh"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">' +
+        '<button type="button" id="why-write" style="min-height:44px;border:2px dashed #e9d5ff;border-radius:12px;padding:8px;font:800 12px \'Zen Maru Gothic\',sans-serif;background:#faf5ff;color:#7e22ce;cursor:pointer;">✏️ ぎ問を 書く（できたら）</button>' +
+        '<button type="button" id="why-skip" style="min-height:44px;border:none;border-radius:12px;padding:8px;font:900 14px \'Zen Maru Gothic\',sans-serif;background:#f3f4f6;color:#6b7280;cursor:pointer;">とじる</button>' +
+      '</div></div>';
+    document.body.appendChild(w);
+    window.renderNaruhodo(document.getElementById("why-nh"), item, stageId, function (ok) {
+      var sd = window.saveData; if (!sd || ok === null) return;
+      var t = today(); sd.naruhodoDay = sd.naruhodoDay || {};
+      if (!sd.naruhodoDay[t] && window.grantStickerPack) { try { window.grantStickerPack("why", "なるほど？"); } catch (e) {} }
+      sd.naruhodoDay = {}; sd.naruhodoDay[t] = 1;
+      if (window.saveGame) { try { window.saveGame(); } catch (e) {} }
+      if (window.syncWithGoogleSpreadsheet) { try { window.syncWithGoogleSpreadsheet("LOG", { stage: stageId, msg: "🤔なるほど？：" + (ok ? "正解" : "ちがった") }); } catch (e) {} }
+    });
+    document.getElementById("why-skip").onclick = function () { w.remove(); };
+    document.getElementById("why-write").onclick = function () { w.remove(); openWrite(stageId, stageName); };
+  }
+  function openWrite(stageId, stageName) {
     var old = document.getElementById("why-note"); if (old) old.remove();
     var ex = examples(stageId);
     var w = document.createElement("div"); w.id = "why-note";

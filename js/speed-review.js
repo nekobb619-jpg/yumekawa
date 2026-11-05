@@ -89,6 +89,8 @@
     // ★2026-11-05（保護者）：ふくしゅう・正答率が 上がって きたら「ちょっと ながい 問題」（js/challenge-pool.js）を こっそり 1〜2まい まぜる
     var nc = challengeN();
     if (nc) { var chs = challengeCards(nc); deck = deck.slice(0, N - chs.length); chs.forEach(function (c) { deck.splice(1 + Math.floor(Math.random() * deck.length), 0, c); }); }
+    // ★2026-11-05：📇 ことばカード（js/kotoba-cards.js）を 1まい「この ことばの いみは？」で まぜる（書かずに えらぶ）
+    var kc = kotobaCard(); if (kc && deck.length) { deck[deck.length - 1] = kc; shuffle(deck); }
     return deck;
   }
   function acc7() {
@@ -115,6 +117,18 @@
     if (first.length) out.push(first[0]); if (out.length < n && second.length) out.push(second[0]);
     if (out.length < n) out = out.concat(first.slice(1, 1 + n - out.length));
     return out.slice(0, n);
+  }
+  function kotobaCard() {
+    var K = window.KOTOBA || [], cl = sd().clearedStages || {}, keys = {};
+    Object.keys(cl).forEach(function (sid) { if (cl[sid]) keys[sid.split("/").slice(0, 2).join("/")] = 1; });
+    var l = K.filter(function (c) { return keys[c.key]; }); if (l.length < 2) return null;
+    var t = dnum(today()), due = [], fresh = [];
+    l.forEach(function (c) { var k = "kb::" + c.id, b = getBox(k); if (b == null) fresh.push(c); else if (getDue(k) <= t) due.push(c); });
+    var c = shuffle(due)[0] || shuffle(fresh)[0]; if (!c) return null;
+    var others = shuffle(K.filter(function (x) { return x.id !== c.id && x.d !== c.d; }).sort(function (a, b) { return (b.key === c.key) - (a.key === c.key); }).slice(0, 6)).slice(0, 3);
+    if (others.length < 3) return null;
+    var a = [c.d].concat(others.map(function (x) { return x.d; }));
+    return { k: "kb::" + c.id, sid: "kotoba", ch: true, kid: c.id, q: { q: "📇「" + c.t + "」の いみは どれ？", a: a, c: 0, job_desc: c.t + "：" + c.d } };
   }
   function stats() {
     var all = pool(), t = dnum(today()), due = 0, done = 0, top = 0;
@@ -157,7 +171,7 @@
   }
   function cardHtml() {
     var c = ui.deck[ui.i], q = c.q, ord = ui.ord;
-    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
+    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.kid ? '　📇 ことばカード' : c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
       '<div style="height:8px;background:#fef3c7;border-radius:999px;overflow:hidden;margin:4px 0 8px"><div style="height:100%;width:' + Math.round(ui.i / ui.deck.length * 100) + '%;background:linear-gradient(90deg,#f59e0b,#ea580c)"></div></div>';
     var qs = '<div style="background:#fff;border:2px solid #fde68a;border-radius:16px;padding:12px;font-size:15.5px;font-weight:900;line-height:1.6">' + esc(plain(q.q)) + '</div>';
     if (ui.res) {
@@ -197,6 +211,7 @@
       setCard(c.k, b, addDays(ok && !slow ? BOX_DAYS[b] : 1));
     } else if (ok && !slow) ui.fast++;
     if (!ok && !ui.retry[c.k] && !ui.again) { ui.retry[c.k] = 1; ui.deck.push(c); }
+    if (c.kid && window.kotobaSeen) { try { window.kotobaSeen(c.kid, ok && !slow); } catch (e) {} }
     if (ok && window.weeklyBonusCount) { try { window.weeklyBonusCount(1); } catch (e) {} } // ★2026-11-04：反復も 週の ひみつボーナスに 数える（正解だけ）
     ui.res = { ok: ok, slow: slow, ms: ms }; render();
   }
