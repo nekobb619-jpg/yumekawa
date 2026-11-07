@@ -14,6 +14,7 @@
   "use strict";
 
   var PLAN_REWARD_Q = 5;          // 3ステップ全部できたときのおまけ（1日1回）
+  var MASTER_CHECK_EVERY = 3;  // ★2026-11-07 マスターチェックを まなびプランに 出す 間（日）。はく奪の 危機の ステージが あれば 毎日
   var REVIEW_GAP_DAYS = 3;        // この日数以上あいたクリア済みステージを「ふくしゅう」候補にする
   var WEAK_FIRST_THRESHOLD = 3;   // にがて問題がこの数以上たまっていたら、復習は苦手撃破ラボを優先
   var DETECTIVE_KEY = { "算数": "math", "国語": "kokugo", "理科": "science", "社会": "shakai" };
@@ -176,7 +177,7 @@
     var reviewCands = entries.filter(function (e) {
       var f = window.computeStageBadgeFlags ? window.computeStageBadgeFlags(e.stg) : { isCleared: !!(data.clearedStages || {})[e.stg.id] };
       var rd = (data.reviewDates || {})[e.stg.id];
-      return f.isCleared && !isMasterStage(e.stg.id) && rd && (nowMs() - rd) >= REVIEW_GAP_DAYS * 86400000;
+      return f.isCleared && !isMasterStage(e.stg.id) && rd && (nowMs() - rd) >= Math.max(REVIEW_GAP_DAYS, window.reviewGapDays ? window.reviewGapDays(e.stg.id) : 0) * 86400000;
     }).sort(function (a, b) { return (data.reviewDates[a.stg.id] || 0) - (data.reviewDates[b.stg.id] || 0); });
     var used = {};
     function reviewStep(e) {
@@ -191,6 +192,20 @@
       steps.push(reviewStep(reviewCands[0]));
     } else if (weakN > 0) {
       steps.push({ kind: "weak", name: "にがて問題 " + weakN + "問を やっつけよう", why: "まちがえた問題こそ のびるチャンス。もういちど 考えよう" });
+    }
+
+    // ★2026-11-07（保護者：マスターも ときどき チェック）3日に 1回、いちばん 長く チェックして いない MASTER ステージを 1つ
+    var masters = entries.filter(function (e) { return isMasterStage(e.stg.id) && (data.clearedStages || {})[e.stg.id]; });
+    var mcData = data.masterCheck || {};
+    var riskOne = masters.filter(function (e) { return (mcData[e.stg.id] || {}).risk; })[0];
+    if (masters.length && (riskOne || dayIndex() % MASTER_CHECK_EVERY === 0)) {
+      var mpick = riskOne || masters.slice().sort(function (a, b) {
+        var la = (mcData[a.stg.id] || {}).last || (data.reviewDates || {})[a.stg.id] || 0, lb = (mcData[b.stg.id] || {}).last || (data.reviewDates || {})[b.stg.id] || 0;
+        return la - lb;
+      })[0];
+      used[mpick.e ? mpick.e.stg.id : mpick.stg.id] = true;
+      steps.push({ kind: "stage", role: "mastercheck", id: mpick.stg.id, name: "🏆 マスターチェック：" + mpick.stg.name, sub: mpick.sub,
+                   why: (mcData[mpick.stg.id] || {}).risk ? "⚠️ はく奪の 危機！ 1回目で しっかり 正解して マスターを まもろう" : "MASTER の ステージも ときどき たしかめ。1回目で しっかり 正解できたら キープ！" });
     }
 
     // ② あたらしく まなぶ：今週の問題数が少ない教科から、まだのステージを1つ
@@ -303,8 +318,9 @@
       var master = isMasterStage(stg.id);
       var review = false;
       var rd = (sd().reviewDates || {})[stg.id];
-      if (cleared && !master && rd && (nowMs() - rd) / 86400000 >= 1.0) review = true;
+      if (cleared && !master && rd && (nowMs() - rd) / 86400000 >= (window.reviewGapDays ? window.reviewGapDays(stg.id) : 1)) review = true;
       stg.isReview = review; stg.isMaster = master;
+      window.currentMasterCheckId = (step.role === "mastercheck" && master) ? stg.id : null; // ★2026-11-07 マスターチェック
       window.openBriefing(stg);
     }
   };

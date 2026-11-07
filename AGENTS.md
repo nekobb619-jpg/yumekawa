@@ -305,3 +305,4 @@
 - 2026-11-06 ★4 交換は「この シールを ささげます。いい？」で 見せて、「🚫 ダメ」で はずせる（ui.t4ng。ほかの ダブりに 入れかわる）。「はい」を おすまで へらない。
 - 2026-11-07 ログ：クリアの メッセージに「 ／ MASTER昇格 +30Q」、MASTER周回に「 +NQ」を 足した（勉強ノート v2 の Q の 内訳 用）。
 - 2026-11-07 危険探検隊：出発は きょうの まなびプラン たっせい後（window.tutorPlanDoneToday／expeditionPlanGateOk。startExpeditionQuiz と dispatchExpeditionTeam で チェック）。1回の Q は さいだい 30（EXPEDITION_MAX_Q、前は 35）。
+- 2026-11-07 ふくしゅう ごうかく制：1回目（ヒントなし）正解が REVIEW_PASS_RATE（0.8）いじょうの ふくしゅうだけ reviewCounts を ふやす（window.sessionFirstTryOk。リセットは launchQuest と js/patch.js の launchQuest）。ざんねんは REVIEW_FAIL_Q（2Q）。次の ふくしゅうまで REVIEW_GAP_STEPS [1,2,4,7,7]日（window.reviewGapDays／isReviewDue、まなびプランは max(3, それ)）。マスターチェック：まなびプランに 3日に1回（はく奪の 危機の ステージは 毎日）role "mastercheck"、currentMasterCheckId。ざんねん1回目＝risk 1、2回 つづけて＝はく奪（reviewCounts＝4、revokedAt で 2日後に ふくしゅう、masterPromotedStages は true の まま＝返り咲きで +30Q なし）。saveData.masterCheck。

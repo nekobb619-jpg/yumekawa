@@ -182,7 +182,7 @@
       var stg = window.currentStage;
       var bundle = (window.CONTENT && window.CONTENT.quizzes && stg) ? window.CONTENT.quizzes[stg.id] : null;
       if (!bundle) { return _origLaunch(); }
-      window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
+      window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = []; window.sessionFirstTryOk = 0; // ★2026-11-07 ふくしゅう ごうかく 判定
       window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
       window.currentActiveStageId = stg.id;
       window.currentActiveStageReward = (stg.reward !== undefined && stg.reward !== "") ? Number(stg.reward) : 10;

@@ -1534,6 +1534,32 @@ window.MASTER_CLEAR_THRESHOLD = 5;
 window.MASTER_PROMOTION_BONUS_Q = 30;
 window.MASTER_LOOP_REWARD_Q = 2;
 window.MASTER_DAILY_Q_CAP = 20;
+// ★2026-11-07（保護者：正答率が 上がれば マスター／ときどき マスター チェック）
+//   ・ふくしゅうは「ごうかく」した 回だけ MASTER へ 数える。ごうかく＝ 1回目で（ヒントなし）正解が REVIEW_PASS_RATE いじょう。
+//   ・次の ふくしゅうまでの 日数は ごうかくの 回数で のびる（REVIEW_GAP_STEPS：0回→1日、1回→2日、2回→4日、3回いじょう→7日）。
+//   ・ふくしゅうの Q：ごうかく＝これまで どおり（ほうしゅうの 半分）、ざんねん＝ REVIEW_FAIL_Q。
+//   ・まなびプランに ときどき「🏆 マスターチェック」。ざんねん 1回目＝はく奪の 危機、2回 つづけて ざんねん＝はく奪（ごうかく 4回に もどる）。
+//     ふくしゅうで ごうかく すれば 返り咲き（+30Q は 1つの ステージで 1回だけ なので 出ない）。
+window.REVIEW_PASS_RATE = 0.8;
+window.REVIEW_GAP_STEPS = [1, 2, 4, 7, 7];
+window.REVIEW_FAIL_Q = 2;
+window.reviewGapDays = function (id) {
+  const sd = window.saveData || {}, mc = (sd.masterCheck || {})[id];
+  if (mc && mc.revokedAt) return 2; // はく奪 された ステージは 2日 あけて 返り咲きチャンス
+  const n = (sd.reviewCounts || {})[id] || 0;
+  return window.REVIEW_GAP_STEPS[Math.min(n, window.REVIEW_GAP_STEPS.length - 1)];
+};
+window.isReviewDue = function (id) {
+  const rd = ((window.saveData || {}).reviewDates || {})[id];
+  return !!rd && ((window.currentServerTime || Date.now()) - rd) / 86400000 >= window.reviewGapDays(id);
+};
+window.v2Toast = function (html, ms) {
+  try {
+    const t = document.createElement("div"); t.setAttribute("role", "status");
+    t.style.cssText = "position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:10020;background:#fff;color:#4c1d95;border:3px solid #c4b5fd;border-radius:18px;padding:12px 18px;font:900 16px 'Zen Maru Gothic',sans-serif;box-shadow:0 10px 30px rgba(76,29,149,.25);text-align:center;max-width:86vw;line-height:1.5";
+    t.innerHTML = html; document.body.appendChild(t); setTimeout(function () { t.remove(); }, ms || 3200);
+  } catch (e) {}
+};
 
 /* ======================================================================
    ★2026-08-02 追加：ゆめかわ拡張3システム
@@ -5396,7 +5422,7 @@ window.computeStageClearReward = function(stageId, opts) {
     if (baseReward < opts.MASTER_LOOP_REWARD_Q) masterCapHit = true;
     window.saveData.dailyMasterQEarned += baseReward;
   } else if (isReview) {
-    baseReward = Math.floor(opts.currentActiveStageReward / 2);
+    baseReward = opts.reviewPassed === false ? Math.min(window.REVIEW_FAIL_Q, Math.floor(opts.currentActiveStageReward / 2)) : Math.floor(opts.currentActiveStageReward / 2);
   } else if (isRecompleteAfterNewQuestion) {
     // ★2026-08-30修正：new_questionの報酬を10→5Qへ引き下げ（recompleteと同額に統一）。
     //   週次AI自動追加（question_drafts経由）により、この「済ステージへの新問題追加」が
@@ -5485,7 +5511,7 @@ window.renderSchoolNowStrip = function (panel) {
       b.onclick = () => {
         const isMaster = !!(window.saveData.reviewCounts && window.saveData.reviewCounts[stg.id] >= window.MASTER_CLEAR_THRESHOLD);
         const rd = window.saveData.reviewDates && window.saveData.reviewDates[stg.id];
-        stg.isMaster = isMaster; stg.isReview = !!(done && !isMaster && rd && (window.currentServerTime - rd) / 86400000 >= 1);
+        stg.isMaster = isMaster; stg.isReview = !!(done && !isMaster && rd && window.isReviewDue(stg.id));
         window.openBriefing(stg);
       };
       chips.appendChild(b);
@@ -5554,7 +5580,7 @@ window.renderStageMaps = function() {
             statusHtml = `<span style="font-size:12px; font-weight:700; color:#94a3b8;">済</span>`;
             if (window.saveData.reviewDates && window.saveData.reviewDates[stg.id]) {
               const passedDays = (window.currentServerTime - window.saveData.reviewDates[stg.id]) / (1000 * 60 * 60 * 24);
-              if (passedDays >= 1.0) {
+              if (passedDays >= window.reviewGapDays(stg.id)) {
                 isReview = true; statusHtml = `<span style="font-size:12px; font-weight:900; color:#10b981; background:#d1fae5; padding:4px 8px; border-radius:12px;">🔄 復習 ${Math.floor(stgRewardStr/2)}Q</span>`;
               } else {
                 const sd = new Date(window.currentServerTime); const todayStr = `${sd.getFullYear()}-${sd.getMonth()+1}-${sd.getDate()}`;
@@ -5656,7 +5682,7 @@ window.openBriefing = function(stg) {
 };
 window.closeBriefing = function() { document.getElementById("briefing-modal").style.display = "none"; };
 window.launchQuest = function() {
-  window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = [];
+  window.closeBriefing(); window.currentQIdx = 0; window.totalMistakes = 0; window.sessionMissedQuestions = []; window.sessionFirstTryOk = 0;
   window.activeItemBuff = null; window.activeBoostMultiplier = 1.0;
   window.sessionEarnedPts = 0; // ★2026-08-08追加：セコ技（途中でやめてptだけ稼ぐ）対策。abortQuest()で使う
   window.currentActiveStageId = window.currentStage.id;
@@ -6474,6 +6500,7 @@ window.trackFastMastery = function(current) {
   }
 };
 window.triggerCorrectAnswer = function(current) {
+  if (window.currentFirstTry && !window.currentQuestionHintUsed) window.sessionFirstTryOk = (window.sessionFirstTryOk || 0) + 1; // ★2026-11-07 ふくしゅう ごうかく 判定用
   // ★2026-08-08追加：解答時間・ヒント使用込みのログを記録（js/adaptive-question-generator.js側で分析に使う）
   if (window.recordAnswerLog) window.recordAnswerLog(current, true);
   window.trackFastMastery(current);
@@ -6753,9 +6780,14 @@ window.exitToMainMenu = function() {
     //   引かなかったが全問再コンプリート＝+5Q」に厳格化し、いずれもボーナス（動画/実験/パーフェクト）は
     //   加算しない（旧実装は!isClearedフラグのみで判定しておりボーナスが重複加算され得た）。
     const sessionQids = (window.currentQuestions || []).map(function (q) { return q && q.qid; }).filter(Boolean);
+    // ★2026-11-07：ふくしゅう・マスターチェックの ごうかく 判定（1回目で ヒントなしの 正解が 8わり いじょう）
+    const sessionN = Math.max(1, (window.currentQuestions || []).length);
+    const firstRate = Math.min(1, (window.sessionFirstTryOk || 0) / sessionN);
+    const reviewPassed = firstRate >= window.REVIEW_PASS_RATE;
     const rewardResult = window.computeStageClearReward(targetStageId, {
       isMaster: window.currentActiveStageIsMaster,
       isReview: window.currentActiveStageIsReview,
+      reviewPassed: reviewPassed,
       currentActiveStageReward: window.currentActiveStageReward,
       sessionQids: sessionQids,
       bonusVideoUsed: window.bonusVideoUsed,
@@ -6802,13 +6834,43 @@ window.exitToMainMenu = function() {
     if (!window.saveData.reviewDates) window.saveData.reviewDates = {}; window.saveData.reviewDates[targetStageId] = window.currentServerTime;
 
     let justTurnedMaster = false;
+    let reviewNote = "";
     if (window.currentActiveStageIsReview) {
       if (!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
       if (!window.saveData.reviewCounts[targetStageId]) window.saveData.reviewCounts[targetStageId] = 0;
-      window.saveData.reviewCounts[targetStageId]++;
       if (window.saveData.dailyLoopCounts) window.saveData.dailyLoopCounts[targetStageId] = 0;
-      if (window.saveData.reviewCounts[targetStageId] === window.MASTER_CLEAR_THRESHOLD) { justTurnedMaster = true; }
+      if (reviewPassed) {
+        window.saveData.reviewCounts[targetStageId]++;
+        const rc = window.saveData.reviewCounts[targetStageId];
+        if (rc === window.MASTER_CLEAR_THRESHOLD) { justTurnedMaster = true; const mc0 = (window.saveData.masterCheck || {})[targetStageId]; if (mc0) { mc0.revokedAt = 0; mc0.risk = 0; mc0.last = window.currentServerTime; } }
+        reviewNote = "ごうかく";
+        if (!justTurnedMaster) setTimeout(function () { window.v2Toast("✅ ふくしゅう ごうかく！<br><span style='font-size:13px'>🏆 MASTER まで あと " + Math.max(0, window.MASTER_CLEAR_THRESHOLD - rc) + "回</span>"); }, 600);
+      } else {
+        reviewNote = "ざんねん";
+        setTimeout(function () { window.v2Toast("🔁 ふくしゅう おしい！<br><span style='font-size:13px'>1回目で しっかり 正解できると「ごうかく」だよ</span>"); }, 600);
+      }
     }
+    // ★2026-11-07：まなびプランの 🏆 マスターチェック
+    let masterCheckNote = "";
+    if (window.currentActiveStageIsMaster && window.currentMasterCheckId === targetStageId) {
+      if (!window.saveData.masterCheck) window.saveData.masterCheck = {};
+      const mc = window.saveData.masterCheck[targetStageId] || (window.saveData.masterCheck[targetStageId] = { last: 0, risk: 0, revokedAt: 0 });
+      mc.last = window.currentServerTime;
+      if (reviewPassed) {
+        mc.risk = 0; masterCheckNote = "キープ";
+        setTimeout(function () { window.v2Toast("🏆 マスター キープ！<br><span style='font-size:13px'>さすが！ しっかり おぼえて いるね</span>"); }, 600);
+      } else if (!mc.risk) {
+        mc.risk = 1; masterCheckNote = "危機";
+        setTimeout(function () { window.v2Toast("⚠️ マスター はく奪の 危機！<br><span style='font-size:13px'>次の マスターチェックで ごうかく しよう</span>", 4000); }, 600);
+      } else {
+        mc.risk = 0; mc.revokedAt = window.currentServerTime; masterCheckNote = "はく奪";
+        if (!window.saveData.masterPromotedStages) window.saveData.masterPromotedStages = {}; window.saveData.masterPromotedStages[targetStageId] = true; // 返り咲きでは +30Q を 出さない
+        if (!window.saveData.reviewCounts) window.saveData.reviewCounts = {};
+        window.saveData.reviewCounts[targetStageId] = window.MASTER_CLEAR_THRESHOLD - 1;
+        setTimeout(function () { window.v2Toast("💔 マスター はく奪…<br><span style='font-size:13px'>2日 あけて ふくしゅうで ごうかく すれば 返り咲き！</span>", 4500); }, 600);
+      }
+    }
+    window.currentMasterCheckId = null;
     // ★昇格ボーナス(+50Q)は「このステージで初めてMASTERに達した瞬間」だけ一括付与。
     //   masterPromotedStagesフラグで二重付与（セーブ再送・リトライ等）を完全にブロックする。
     let masterBonusQ = 0;
@@ -6864,7 +6926,7 @@ window.exitToMainMenu = function() {
     if (rewardResult.caseType) logDetailParts.push(rewardResult.caseType === "new_question" ? "新問題クリア" : "再コンプリート");
     const logDetailStr = logDetailParts.length > 0 ? ` [${logDetailParts.join("・")}]` : "";
     // ★2026-11-07（保護者：Q の 内訳を 見たい）MASTER周回の Q と、MASTER昇格の +30Q も ログに 出す（前は 出て いなかった）
-    const promoStr = masterBonusQ > 0 ? ` ／ MASTER昇格 +${masterBonusQ}Q` : "";
+    const promoStr = (masterBonusQ > 0 ? ` ／ MASTER昇格 +${masterBonusQ}Q` : justTurnedMaster ? " ／ MASTER返り咲き" : "") + (reviewNote ? ` ／ ふくしゅう${reviewNote}（1回目正解 ${Math.round(firstRate * 100)}%）` : "") + (masterCheckNote ? ` ／ マスターチェック${masterCheckNote}（1回目正解 ${Math.round(firstRate * 100)}%）` : "");
     window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: (window.currentActiveStageIsMaster ? `MASTER周回完了 +${earnedQ}Q` : `クリア! +${earnedQ}Q獲得${logDetailStr}`) + promoStr });
     // ★2026-10-18：quitQuestで 復習/マスターの フラグが 消える 前に おぼえて おく（なぜ？メモ用）
     const whyOk = !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster;
