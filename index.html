@@ -1546,7 +1546,7 @@ window.studyRuleOff = function (feature) { const r = window.STUDY_RULE_OFF[windo
 window.REVIEW_PASS_RATE = 0.8;
 // ★2026-11-07（保護者：問題は いくらでも といて いい。Q は 1日 120 ぐらいを 目安）
 //   ステージ（はじめての クリア いがい）・探偵ラボ・危険探検隊 の Q は、1日 Q_DAY_CAP まで（saveData.qDay）。
-//   はじめての クリア と MASTER昇格は へらさない（数には 入れる）。こえた 分は 0Q（シールの かけら などは これまで どおり）。
+//   はじめての クリア と MASTER昇格は へらさない（数には 入れる）。こえた 分は Q_DAY_OVER_RATE（3分の1）。子どもには 知らせない。
 window.Q_DAY_CAP = 120;
 window.qDayState = function () {
   const sd = window.saveData; if (!sd) return { n: 0 };
@@ -1554,12 +1554,13 @@ window.qDayState = function () {
   if (!sd.qDay || sd.qDay.d !== k) sd.qDay = { d: k, n: 0, cut: 0 };
   return sd.qDay;
 };
+window.Q_DAY_OVER_RATE = 1 / 3; // ★2026-11-07（保護者：やらなく なるのを ふせぐ）目安を こえても 0 には しない。こえた 分は 3分の1（きりあげ）。子どもには 知らせない
 window.qDayGrant = function (amount, exempt) {
   const st = window.qDayState(); amount = Math.max(0, Math.floor(amount || 0));
   if (exempt || window.studyRuleOff("qDayCap")) { st.n += amount; return amount; }
-  const ok = Math.max(0, Math.min(amount, window.Q_DAY_CAP - st.n));
-  st.n += ok; st.cut = (st.cut || 0) + (amount - ok);
-  if (amount > ok && !st.told) { st.told = 1; setTimeout(function () { window.v2Toast("🌙 今日の Q は ここまで！<br><span style='font-size:13px'>問題は いくらでも とけるよ。シールの かけらは 出るよ</span>", 4000); }, 900); }
+  const full = Math.max(0, Math.min(amount, window.Q_DAY_CAP - st.n)), over = amount - full;
+  const ok = full + (over > 0 ? Math.ceil(over * window.Q_DAY_OVER_RATE) : 0);
+  st.n += full; st.cut = (st.cut || 0) + (amount - ok);
   return ok;
 };
 window.REVIEW_GAP_STEPS = [1, 2, 4, 7, 7];
