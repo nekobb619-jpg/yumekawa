@@ -6853,7 +6853,9 @@ window.exitToMainMenu = function() {
     if (vBonus > 0) logDetailParts.push("動画ボーナス");
     if (rewardResult.caseType) logDetailParts.push(rewardResult.caseType === "new_question" ? "新問題クリア" : "再コンプリート");
     const logDetailStr = logDetailParts.length > 0 ? ` [${logDetailParts.join("・")}]` : "";
-    window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: window.currentActiveStageIsMaster ? 'MASTER周回完了' : `クリア! +${earnedQ}Q獲得${logDetailStr}` });
+    // ★2026-11-07（保護者：Q の 内訳を 見たい）MASTER周回の Q と、MASTER昇格の +30Q も ログに 出す（前は 出て いなかった）
+    const promoStr = masterBonusQ > 0 ? ` ／ MASTER昇格 +${masterBonusQ}Q` : "";
+    window.syncWithGoogleSpreadsheet("LOG", { stage: targetStageId, msg: (window.currentActiveStageIsMaster ? `MASTER周回完了 +${earnedQ}Q` : `クリア! +${earnedQ}Q獲得${logDetailStr}`) + promoStr });
     // ★2026-10-18：quitQuestで 復習/マスターの フラグが 消える 前に おぼえて おく（なぜ？メモ用）
     const whyOk = !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster;
     const whyName = (window.currentStage && window.currentStage.name) || "";
