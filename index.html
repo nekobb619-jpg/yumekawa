@@ -1541,9 +1541,27 @@ window.MASTER_DAILY_Q_CAP = 20;
 //   ・まなびプランに ときどき「🏆 マスターチェック」。ざんねん 1回目＝はく奪の 危機、2回 つづけて ざんねん＝はく奪（ごうかく 4回に もどる）。
 //     ふくしゅうで ごうかく すれば 返り咲き（+30Q は 1つの ステージで 1回だけ なので 出ない）。
 // ★2026-11-07（保護者）りさ（保護者）は ふくしゅう ごうかく制・マスターチェック・探検隊の プラン条件の 対象外
-window.STUDY_RULE_OFF = { "りさ": { reviewPass: true, masterCheck: true, expeditionGate: true } };
+window.STUDY_RULE_OFF = { "りさ": { reviewPass: true, masterCheck: true, expeditionGate: true, qDayCap: true } };
 window.studyRuleOff = function (feature) { const r = window.STUDY_RULE_OFF[window.playerId]; return !!(r && r[feature]); };
 window.REVIEW_PASS_RATE = 0.8;
+// ★2026-11-07（保護者：問題は いくらでも といて いい。Q は 1日 120 ぐらいを 目安）
+//   ステージ（はじめての クリア いがい）・探偵ラボ・危険探検隊 の Q は、1日 Q_DAY_CAP まで（saveData.qDay）。
+//   はじめての クリア と MASTER昇格は へらさない（数には 入れる）。こえた 分は 0Q（シールの かけら などは これまで どおり）。
+window.Q_DAY_CAP = 120;
+window.qDayState = function () {
+  const sd = window.saveData; if (!sd) return { n: 0 };
+  const t = new Date(window.currentServerTime || Date.now()), k = t.getFullYear() + "-" + (t.getMonth() + 1) + "-" + t.getDate();
+  if (!sd.qDay || sd.qDay.d !== k) sd.qDay = { d: k, n: 0, cut: 0 };
+  return sd.qDay;
+};
+window.qDayGrant = function (amount, exempt) {
+  const st = window.qDayState(); amount = Math.max(0, Math.floor(amount || 0));
+  if (exempt || window.studyRuleOff("qDayCap")) { st.n += amount; return amount; }
+  const ok = Math.max(0, Math.min(amount, window.Q_DAY_CAP - st.n));
+  st.n += ok; st.cut = (st.cut || 0) + (amount - ok);
+  if (amount > ok && !st.told) { st.told = 1; setTimeout(function () { window.v2Toast("🌙 今日の Q は ここまで！<br><span style='font-size:13px'>問題は いくらでも とけるよ。シールの かけらは 出るよ</span>", 4000); }, 900); }
+  return ok;
+};
 window.REVIEW_GAP_STEPS = [1, 2, 4, 7, 7];
 window.REVIEW_FAIL_Q = 2;
 window.reviewGapDays = function (id) {
@@ -1932,7 +1950,7 @@ window.checkExpeditionResolution = function () {
       window.saveData.gachaEggs[id].count += 1;
     });
     const perStarQ = 3 + Math.random() * 2; // 3〜5Q
-    const earnedQ = Math.min(window.EXPEDITION_MAX_Q, Math.round(exp.totalStars * perStarQ));
+    const earnedQ = window.qDayGrant(Math.min(window.EXPEDITION_MAX_Q, Math.round(exp.totalStars * perStarQ))); // ★2026-11-07 1日の Q の 目安
     const earnedKakera = 2 + Math.floor(Math.random() * 2); // 2〜3個確定
     window.saveData.q += earnedQ;
     window.saveData.kakera = (window.saveData.kakera || 0) + earnedKakera;
@@ -2659,7 +2677,7 @@ window.finishDynamicPractice = function() {
   //   表示上の「正解○/○問」はcorrectCountのまま（正解かどうかは変わらないので）。
   const credit = window.dynamicPracticeCreditSum || 0;
   // ★脳内ブースター使用時はactiveBoostMultiplier(1.5)がここにも乗算されるようになった
-  const earnedQ = Math.floor(credit * 1.5 * window.getStarBuffMultiplier() * window.activeBoostMultiplier);
+  const earnedQ = window.qDayGrant(Math.floor(credit * 1.5 * window.getStarBuffMultiplier() * window.activeBoostMultiplier)); // ★2026-11-07 1日の Q の 目安
   window.saveData.q += earnedQ;
   window.registerStudyStreak();
   if (window.tutorPlanMark) window.tutorPlanMark("detective"); // ★2026-10-02追加：きょうのまなびプラン（js/tutor-plan.js）
@@ -6811,6 +6829,7 @@ window.exitToMainMenu = function() {
     let lBonus = rewardResult.lBonus;
     let pBonus = rewardResult.pBonus;
     let earnedQ = rewardResult.earnedQ;
+    earnedQ = window.qDayGrant(earnedQ, !isCleared && !window.currentActiveStageIsReview && !window.currentActiveStageIsMaster); // ★2026-11-07 1日の Q の 目安
 
     window.saveData.q += earnedQ; window.saveData.clearedStages[targetStageId] = true;
     // ★2026-10-04追加：🎀シール帳の ふくろ（ステージを 最後まで やった 日に 1つ。種類ごとに 1日 1つ＝周回で ふえない）
@@ -6883,6 +6902,7 @@ window.exitToMainMenu = function() {
       if (!window.saveData.masterPromotedStages[targetStageId]) {
         window.saveData.masterPromotedStages[targetStageId] = true;
         masterBonusQ = window.MASTER_PROMOTION_BONUS_Q;
+        window.qDayGrant(masterBonusQ, true); // 1日の 目安の 数には 入れる（へらさない）
         window.saveData.q += masterBonusQ;
       }
     }
