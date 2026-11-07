@@ -1540,10 +1540,14 @@ window.MASTER_DAILY_Q_CAP = 20;
 //   ・ふくしゅうの Q：ごうかく＝これまで どおり（ほうしゅうの 半分）、ざんねん＝ REVIEW_FAIL_Q。
 //   ・まなびプランに ときどき「🏆 マスターチェック」。ざんねん 1回目＝はく奪の 危機、2回 つづけて ざんねん＝はく奪（ごうかく 4回に もどる）。
 //     ふくしゅうで ごうかく すれば 返り咲き（+30Q は 1つの ステージで 1回だけ なので 出ない）。
+// ★2026-11-07（保護者）りさ（保護者）は ふくしゅう ごうかく制・マスターチェック・探検隊の プラン条件の 対象外
+window.STUDY_RULE_OFF = { "りさ": { reviewPass: true, masterCheck: true, expeditionGate: true } };
+window.studyRuleOff = function (feature) { const r = window.STUDY_RULE_OFF[window.playerId]; return !!(r && r[feature]); };
 window.REVIEW_PASS_RATE = 0.8;
 window.REVIEW_GAP_STEPS = [1, 2, 4, 7, 7];
 window.REVIEW_FAIL_Q = 2;
 window.reviewGapDays = function (id) {
+  if (window.studyRuleOff("reviewPass")) return 1;
   const sd = window.saveData || {}, mc = (sd.masterCheck || {})[id];
   if (mc && mc.revokedAt) return 2; // はく奪 された ステージは 2日 あけて 返り咲きチャンス
   const n = (sd.reviewCounts || {})[id] || 0;
@@ -1859,7 +1863,7 @@ window.computeExpeditionSurvivalChance = function (teamIds) {
 // ★2026-11-07（保護者：探検隊の Q が 勉強なしで 多い）1回の Q は さいだい 30（前は 35）。出発は きょうの まなびプランを たっせいしてから
 window.EXPEDITION_MAX_Q = 30;
 window.expeditionPlanGateOk = function () {
-  if (!window.tutorPlanDoneToday || window.tutorPlanDoneToday()) return true;
+  if (window.studyRuleOff("expeditionGate") || !window.tutorPlanDoneToday || window.tutorPlanDoneToday()) return true;
   alert("🏕️ 探検隊は、きょうの 🎯まなびプランを たっせいしたら 出発できるよ！");
   return false;
 };
@@ -2058,7 +2062,7 @@ window.renderExpeditionPanel = function () {
     return;
   }
   const surplus = window.getSurplusAvatarsForExpedition();
-  area.innerHTML = `<div style="font-size:11px; font-weight:900; color:#b45309; margin-bottom:6px;">${(!window.tutorPlanDoneToday || window.tutorPlanDoneToday()) ? "🎯 きょうの まなびプラン たっせい！ 出発 できるよ" : "🎯 きょうの まなびプランを たっせいしたら 出発 できるよ"}</div>
+  area.innerHTML = `<div style="font-size:11px; font-weight:900; color:#b45309; margin-bottom:6px;">${(window.studyRuleOff("expeditionGate") || !window.tutorPlanDoneToday || window.tutorPlanDoneToday()) ? "🎯 きょうの まなびプラン たっせい！ 出発 できるよ" : "🎯 きょうの まなびプランを たっせいしたら 出発 できるよ"}</div>
     <div style="font-size:11px; font-weight:900; color:#7c3aed; margin-bottom:6px;">🔍 出動条件：編成した3体の合計★数ぶん、探偵ラボの問題に答えてね！（★が多いほど問題数UP）</div>
     <div style="font-size:11px; color:var(--text-soft); margin-bottom:6px;">余剰アバター（2枚以上持っているキャラ）：${surplus.length}種</div>
     <div class="flex-row" style="justify-content:center;">
@@ -6783,7 +6787,7 @@ window.exitToMainMenu = function() {
     // ★2026-11-07：ふくしゅう・マスターチェックの ごうかく 判定（1回目で ヒントなしの 正解が 8わり いじょう）
     const sessionN = Math.max(1, (window.currentQuestions || []).length);
     const firstRate = Math.min(1, (window.sessionFirstTryOk || 0) / sessionN);
-    const reviewPassed = firstRate >= window.REVIEW_PASS_RATE;
+    const reviewPassed = window.studyRuleOff("reviewPass") || firstRate >= window.REVIEW_PASS_RATE;
     const rewardResult = window.computeStageClearReward(targetStageId, {
       isMaster: window.currentActiveStageIsMaster,
       isReview: window.currentActiveStageIsReview,
@@ -6844,7 +6848,7 @@ window.exitToMainMenu = function() {
         const rc = window.saveData.reviewCounts[targetStageId];
         if (rc === window.MASTER_CLEAR_THRESHOLD) { justTurnedMaster = true; const mc0 = (window.saveData.masterCheck || {})[targetStageId]; if (mc0) { mc0.revokedAt = 0; mc0.risk = 0; mc0.last = window.currentServerTime; } }
         reviewNote = "ごうかく";
-        if (!justTurnedMaster) setTimeout(function () { window.v2Toast("✅ ふくしゅう ごうかく！<br><span style='font-size:13px'>🏆 MASTER まで あと " + Math.max(0, window.MASTER_CLEAR_THRESHOLD - rc) + "回</span>"); }, 600);
+        if (!justTurnedMaster && !window.studyRuleOff("reviewPass")) setTimeout(function () { window.v2Toast("✅ ふくしゅう ごうかく！<br><span style='font-size:13px'>🏆 MASTER まで あと " + Math.max(0, window.MASTER_CLEAR_THRESHOLD - rc) + "回</span>"); }, 600);
       } else {
         reviewNote = "ざんねん";
         setTimeout(function () { window.v2Toast("🔁 ふくしゅう おしい！<br><span style='font-size:13px'>1回目で しっかり 正解できると「ごうかく」だよ</span>"); }, 600);
@@ -7080,6 +7084,7 @@ window.initQAMode();
 <script src="./js/kotoba-cards.js"></script>
 <script src="./js/challenge-pool.js"></script>
 <script src="./js/speed-review.js"></script>
+<script src="./js/master-check.js"></script>
 <script src="./js/swift-combo.js"></script>
 <script src="./js/luck-day.js"></script>
 <script src="./js/expedition-art.js"></script>

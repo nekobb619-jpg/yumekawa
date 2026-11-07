@@ -14,7 +14,7 @@
   "use strict";
 
   var PLAN_REWARD_Q = 5;          // 3ステップ全部できたときのおまけ（1日1回）
-  var MASTER_CHECK_EVERY = 3;  // ★2026-11-07 マスターチェックを まなびプランに 出す 間（日）。はく奪の 危機の ステージが あれば 毎日
+  var MASTER_CHECK_EVERY = 2;  // ★2026-11-07 マスターチェックを まなびプランに 出す 間（日）。はく奪の 危機の 単元が あれば 毎日
   var REVIEW_GAP_DAYS = 3;        // この日数以上あいたクリア済みステージを「ふくしゅう」候補にする
   var WEAK_FIRST_THRESHOLD = 3;   // にがて問題がこの数以上たまっていたら、復習は苦手撃破ラボを優先
   var DETECTIVE_KEY = { "算数": "math", "国語": "kokugo", "理科": "science", "社会": "shakai" };
@@ -194,18 +194,12 @@
       steps.push({ kind: "weak", name: "にがて問題 " + weakN + "問を やっつけよう", why: "まちがえた問題こそ のびるチャンス。もういちど 考えよう" });
     }
 
-    // ★2026-11-07（保護者：マスターも ときどき チェック）3日に 1回、いちばん 長く チェックして いない MASTER ステージを 1つ
-    var masters = entries.filter(function (e) { return isMasterStage(e.stg.id) && (data.clearedStages || {})[e.stg.id]; });
-    var mcData = data.masterCheck || {};
-    var riskOne = masters.filter(function (e) { return (mcData[e.stg.id] || {}).risk; })[0];
-    if (masters.length && (riskOne || dayIndex() % MASTER_CHECK_EVERY === 0)) {
-      var mpick = riskOne || masters.slice().sort(function (a, b) {
-        var la = (mcData[a.stg.id] || {}).last || (data.reviewDates || {})[a.stg.id] || 0, lb = (mcData[b.stg.id] || {}).last || (data.reviewDates || {})[b.stg.id] || 0;
-        return la - lb;
-      })[0];
-      used[mpick.e ? mpick.e.stg.id : mpick.stg.id] = true;
-      steps.push({ kind: "stage", role: "mastercheck", id: mpick.stg.id, name: "🏆 マスターチェック：" + mpick.stg.name, sub: mpick.sub,
-                   why: (mcData[mpick.stg.id] || {}).risk ? "⚠️ はく奪の 危機！ 1回目で しっかり 正解して マスターを まもろう" : "MASTER の ステージも ときどき たしかめ。1回目で しっかり 正解できたら キープ！" });
+    // ★2026-11-07（保護者：マスターも ときどき チェック。単元が 多いので まぜこぜで）2日に 1回（はく奪の 危機が あれば 毎日）
+    //   4つの MASTER 単元から 2問ずつの 🏆 マスターチェック（js/master-check.js）
+    var mcands = window.masterCheckCandidates ? window.masterCheckCandidates() : [];
+    if (mcands.length && (mcands[0].risk || dayIndex() % MASTER_CHECK_EVERY === 0)) {
+      steps.push({ kind: "mastercheck", name: "🏆 マスターチェック（" + Math.min(4, mcands.length) + "つの 単元から まぜこぜ）",
+                   why: mcands[0].risk ? "⚠️ はく奪の 危機の 単元が あるよ！ 1回目で しっかり 正解して マスターを まもろう" : "MASTER の 単元も ときどき たしかめ。1回目で しっかり 正解できたら キープ！" });
     }
 
     // ② あたらしく まなぶ：今週の問題数が少ない教科から、まだのステージを1つ
@@ -276,6 +270,7 @@
     if (step.kind === "detective") return !!(plan.marks && plan.marks.detective);
     if (step.kind === "sozo") return !!(plan.marks && plan.marks.sozo);
     if (step.kind === "speed") return !!(plan.marks && plan.marks.speed);
+    if (step.kind === "mastercheck") return !!(plan.marks && plan.marks.mastercheck);
     return false;
   }
 
@@ -309,6 +304,7 @@
     if (step.kind === "detective") return window.startDetectiveLab && window.startDetectiveLab(step.key || "math");
     if (step.kind === "sozo") return window.openSozo && window.openSozo("home");
     if (step.kind === "speed") return window.openSpeedReview && window.openSpeedReview();
+    if (step.kind === "mastercheck") return window.openMasterCheck && window.openMasterCheck();
     if (step.kind === "stage") {
       var e = findStage(step.id);
       if (!e) { alert("このステージは いま 見つからないみたい。教科の ぼうけんから えらんでね！"); return; }
