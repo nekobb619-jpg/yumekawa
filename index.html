@@ -1830,17 +1830,25 @@ window.computeExpeditionSurvivalChance = function (teamIds) {
 };
 
 // 予測獲得Q/カケラ数（表示用のレンジ）
+// ★2026-11-07（保護者：探検隊の Q が 勉強なしで 多い）1回の Q は さいだい 30（前は 35）。出発は きょうの まなびプランを たっせいしてから
+window.EXPEDITION_MAX_Q = 30;
+window.expeditionPlanGateOk = function () {
+  if (!window.tutorPlanDoneToday || window.tutorPlanDoneToday()) return true;
+  alert("🏕️ 探検隊は、きょうの 🎯まなびプランを たっせいしたら 出発できるよ！");
+  return false;
+};
 window.computeExpeditionPredictedRewards = function (teamIds) {
   const totalStars = window.computeExpeditionTotalStars(teamIds);
   return {
-    qMin: Math.min(35, Math.round(totalStars * 3)),
-    qMax: Math.min(35, Math.round(totalStars * 5)),
+    qMin: Math.min(window.EXPEDITION_MAX_Q, Math.round(totalStars * 3)),
+    qMax: Math.min(window.EXPEDITION_MAX_Q, Math.round(totalStars * 5)),
     kakeraMin: 2, kakeraMax: 3
   };
 };
 
 window.dispatchExpeditionTeam = function (teamIds) {
   if (window.saveData.expedition) { alert("🏕️ すでに探検隊が出発中だよ！帰りを待とう！"); return false; }
+  if (!window.expeditionPlanGateOk()) return false;
   if (!teamIds || teamIds.length !== window.EXPEDITION_TEAM_SIZE) { alert(`🏕️ ${window.EXPEDITION_TEAM_SIZE}体えらんでね！`); return false; }
   for (const id of teamIds) {
     const owned = window.saveData.gachaEggs[id];
@@ -1894,7 +1902,7 @@ window.checkExpeditionResolution = function () {
       window.saveData.gachaEggs[id].count += 1;
     });
     const perStarQ = 3 + Math.random() * 2; // 3〜5Q
-    const earnedQ = Math.min(35, Math.round(exp.totalStars * perStarQ));
+    const earnedQ = Math.min(window.EXPEDITION_MAX_Q, Math.round(exp.totalStars * perStarQ));
     const earnedKakera = 2 + Math.floor(Math.random() * 2); // 2〜3個確定
     window.saveData.q += earnedQ;
     window.saveData.kakera = (window.saveData.kakera || 0) + earnedKakera;
@@ -2024,7 +2032,8 @@ window.renderExpeditionPanel = function () {
     return;
   }
   const surplus = window.getSurplusAvatarsForExpedition();
-  area.innerHTML = `<div style="font-size:11px; font-weight:900; color:#7c3aed; margin-bottom:6px;">🔍 出動条件：編成した3体の合計★数ぶん、探偵ラボの問題に答えてね！（★が多いほど問題数UP）</div>
+  area.innerHTML = `<div style="font-size:11px; font-weight:900; color:#b45309; margin-bottom:6px;">${(!window.tutorPlanDoneToday || window.tutorPlanDoneToday()) ? "🎯 きょうの まなびプラン たっせい！ 出発 できるよ" : "🎯 きょうの まなびプランを たっせいしたら 出発 できるよ"}</div>
+    <div style="font-size:11px; font-weight:900; color:#7c3aed; margin-bottom:6px;">🔍 出動条件：編成した3体の合計★数ぶん、探偵ラボの問題に答えてね！（★が多いほど問題数UP）</div>
     <div style="font-size:11px; color:var(--text-soft); margin-bottom:6px;">余剰アバター（2枚以上持っているキャラ）：${surplus.length}種</div>
     <div class="flex-row" style="justify-content:center;">
       <button class="btn-sm" onclick="window.uiAutoFormAndDispatchExpedition()">🏕️ おまかせ編成で出発！</button>
@@ -2107,6 +2116,7 @@ window._pendingExpeditionTeam = null;
 
 window.startExpeditionQuiz = function (teamIds) {
   if (window.saveData.expedition) { alert("🏕️ すでに探検隊が出発中だよ！帰りを待とう！"); return; }
+  if (!window.expeditionPlanGateOk()) return;
   const count = window.computeExpeditionQuizQuestionCount(teamIds);
   const questions = window.buildExpeditionQuizQuestions(count);
   if (!questions.length) { alert("🔍 出題できる問題が見つからなかったよ……"); return; }

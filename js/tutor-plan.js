@@ -456,6 +456,8 @@
     clearTimeout(renderTimer);
     renderTimer = setTimeout(function () { try { render(); } catch (e) { console.error("tutor-plan render", e); } }, 0);
   }
+  // ★2026-11-07（保護者：探検隊の Q は 勉強と つなげる）きょうの まなびプランを たっせい ずみか
+  window.tutorPlanDoneToday = function () { try { var d = sd(); return d.tutorPlanLastDoneDate === todayKey() || !!(d.tutorPlan && d.tutorPlan.date === todayKey() && d.tutorPlan.rewarded); } catch (e) { return false; } };
   window.renderTutorPlan = function (opts) { try { render(opts); } catch (e) { console.error("tutor-plan render", e); } };
 
   // index.html 側の updateUI / renderStageMaps（ステージ終了・ログイン・データ更新のたびに呼ばれる）にあわせて描き直す
