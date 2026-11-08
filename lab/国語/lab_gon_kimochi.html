@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ごんの 気持ちラボ 🦊</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-08追加：4年 国語「ごんぎつね」（AI調査：ラボ0）。お話の 出来事を じゅんに ならべ、場面ごとの ごんの 気持ちを えらぶ（書かない）。出来事は この アプリ用に まとめた 文で、教科書の 本文は 写して いない。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #fffbeb; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .ch button, .pick button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok, .pick button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng, .pick button.ng { background: #fee2e2; border-color: #f87171; }
+  .pick button[disabled] { opacity: .35; cursor: default; }
+  .msg { min-height: 2.6em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  ol.done { margin: 6px 0 0; padding-left: 1.6em; } ol.done li { margin: 3px 0; background: #f0fdf4; border-radius: 8px; padding: 3px 8px; }
+  .big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: .06em; margin: 4px 0; } .big .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🦊 ごんの 気持ちラボ</h1>
+  <div class="lead">① お話の 出来事を じゅんばんに ならべよう。② 場面ごとの ごんの 気持ちを えらぼう。気持ちは「した こと（行動）」から 考えるのが コツ。</div>
+  <div class="card" id="ord"></div>
+  <div class="card" id="feel" hidden>
+    <div class="bar"><span>② ごんの 気持ち</span><span id="fc"></span></div>
+    <div id="fq" style="margin-top:6px"></div>
+    <div class="ch" id="fch"></div>
+    <div class="msg" id="fm" aria-live="polite"></div>
+    <div style="text-align:center"><button class="next" id="fn" type="button" hidden>つぎ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>テストの コツ</b>：「なぜ？」と 聞かれたら「<b>出来事 ＋ 気持ち</b>」で 答える。例：いたずらで 兵十を こまらせた ことを 後かいし、つぐないたいと 思ったから。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+  // ならべかえ：カードを 正しい じゅんに おす（まちがえたら ヒント、書かない）
+  function orderGame(hostId, set, onDone) {
+    var host = $(hostId), next = 0, miss = 0, cards = shuf(set.items.map(function (t, i) { return { t: t, i: i }; }));
+    function draw(msg) {
+      var done = set.items.slice(0, next);
+      host.innerHTML = '<div class="bar"><span>' + esc(set.title) + '</span><span>' + next + ' / ' + set.items.length + '</span></div>' +
+        (done.length ? '<ol class="done">' + done.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ol>' : '') +
+        (next < set.items.length ? '<div style="margin-top:6px;font-size:12.5px;color:#7a6985">' + (next + 1) + 'ばんめは どれ？</div><div class="pick">' + cards.map(function (c) { return '<button type="button" data-i="' + c.i + '"' + (c.i < next ? ' disabled' : '') + '>' + esc(c.t) + '</button>'; }).join("") + '</div>' : '') +
+        '<div class="msg" aria-live="polite">' + (msg || "") + '</div>';
+    }
+    host.onclick = function (e) {
+      var b = e.target.closest("button[data-i]"); if (!b || b.disabled) return;
+      if (Number(b.getAttribute("data-i")) !== next) { miss++; b.classList.add("ng"); host.querySelector(".msg").innerHTML = "🔁 ちがうよ。" + esc(set.hint || "「先に 起きた こと」は どれかな？"); return; }
+      next++;
+      if (next >= set.items.length) { draw("⭕ ぜんぶ ならんだ！" + (miss ? "（まちがい " + miss + "回）" : " 1回も まちがえずに ✨") + (set.after ? "<br>" + set.after : "")); if (onDone) onDone(miss); return; }
+      draw("⭕");
+    };
+    draw();
+  }
+
+  var SET = {"title": "お話の じゅんばん", "hint": "お話の 中で 先に 起きた ことは どれかな？", "items": ["ごんが いたずらで、兵十の とった うなぎを にがす", "兵十の おっかあの そう式を 見て、ごんが いたずらを 後かいする", "ごんが つぐないに いわしを 兵十の 家に 投げこむ（兵十が うたがわれて しまう）", "ごんが くりや まつたけを、毎日 こっそり とどける", "兵十が「神さまの しわざ」と 話すのを 聞いて、ごんは 引き合わないと 思う", "兵十が ごんを うち、くりを とどけて いたのが ごんだったと 気づく"], "after": "ごんの 気持ちは「いたずら → 後かい → つぐない → 引き合わない」と 変わって いくね。"}, FEEL = [[0, "いたずらが おもしろい", ["さびしくて 泣きたい", "兵十に お礼を したい"]], [1, "わるい ことを したなあ（後かい）", ["もっと いたずらしたい", "うなぎが 食べたい"]], [2, "つぐないを したい", ["兵十を こまらせたい", "自分が 食べたい"]], [3, "兵十の ために、つぐないを つづけたい", ["見つかって ほめられたい", "くりが あまって いる"]], [4, "気づいて もらえず、さびしい・つまらない", ["とても うれしい", "こわくて にげたい"]]];
+  var fi = 0, tried = false, clean = 0, ord;
+  function showF() {
+    var f = FEEL[fi]; tried = false; ord = shuf([f[1]].concat(f[2]));
+    $("fc").textContent = (fi + 1) + " / " + FEEL.length + "　1回で 正解：" + clean;
+    $("fq").innerHTML = "場面：<b>" + esc(SET.items[f[0]]) + "</b><br>この ときの ごんの 気持ちは？";
+    $("fch").innerHTML = ord.map(function (t, k) { return '<button type="button" data-k="' + k + '">' + esc(t) + '</button>'; }).join(""); $("fm").innerHTML = ""; $("fn").hidden = true;
+  }
+  $("fch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-k]"); if (!b || !$("fn").hidden) return;
+    if (ord[Number(b.getAttribute("data-k"))] !== FEEL[fi][1]) { b.classList.add("ng"); tried = true; $("fm").innerHTML = "🔁 ごんが した こと（行動）から 考えて みよう"; return; }
+    b.classList.add("ok"); if (!tried) clean++; $("fm").innerHTML = "⭕ 行動に 気持ちが 出て いるね"; $("fn").hidden = false;
+    $("fc").textContent = (fi + 1) + " / " + FEEL.length + "　1回で 正解：" + clean; $("fn").textContent = fi + 1 < FEEL.length ? "つぎ ▶" : "もう一度 🔁";
+  });
+  $("fn").addEventListener("click", function () { if (fi + 1 < FEEL.length) fi++; else { fi = 0; clean = 0; } showF(); });
+  orderGame("ord", SET, function () { $("feel").hidden = false; showF(); });
+
+})();
+</script>
+</body>
+</html>

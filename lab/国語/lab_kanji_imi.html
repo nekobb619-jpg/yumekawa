@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢字の 意味わけラボ 🈁</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-08追加：4年 国語「いろいろな意味を表す漢字」（AI調査：ラボ0）。漢字を えらび、ことばを 1つずつ 意味の グループに 分ける（書かない）。ことばと 意味は js/quizzes/japanese.js の 国語/漢字/imi01 と 同じ。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #fdf4ff; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .ch button, .pick button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok, .pick button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng, .pick button.ng { background: #fee2e2; border-color: #f87171; }
+  .pick button[disabled] { opacity: .35; cursor: default; }
+  .msg { min-height: 2.6em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  ol.done { margin: 6px 0 0; padding-left: 1.6em; } ol.done li { margin: 3px 0; background: #f0fdf4; border-radius: 8px; padding: 3px 8px; }
+  .big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: .06em; margin: 4px 0; } .big .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🈁 漢字の 意味わけラボ</h1>
+  <div class="lead">1つの 漢字でも、ことばに よって 意味が かわるよ。漢字を えらんで、出て くる ことばを 意味の グループに 分けよう。</div>
+  <div class="card"><div class="tabs" id="tabs" role="group" aria-label="漢字"></div></div>
+  <div class="card">
+    <div class="bar"><span id="cnt"></span><span id="sc"></span></div>
+    <div class="big" id="word" aria-live="polite"></div>
+    <div class="ch" id="ch"></div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+    <div style="text-align:center"><button class="next" id="next" type="button" hidden>つぎ ▶</button></div>
+  </div>
+  <div class="card"><div id="tree"></div></div>
+  <div class="card">💡 <b>見分け方</b>：ことば ぜんたいの 意味を 考えてから、その 漢字が どの はたらきを して いるかを 見る。わからない ときは「〇〇する 人？」「〇〇な もの？」と 言いかえて みよう。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+  var K = {"生": [["いきる", ["生活", "生き物"]], ["うまれる", ["生年月日", "生まれる"]], ["なま（そのまま）", ["生野菜", "生たまご"]]], "明": [["あかるい", ["明暗", "明るい"]], ["はっきり", ["説明", "明記"]], ["次の", ["明日", "明くる朝"]]], "手": [["体の 手", ["手首", "手ぶくろ"]], ["する 人", ["運転手", "歌手"]], ["やり方・うでまえ", ["上手", "手順"]]], "長": [["ながい", ["長方形", "長さ"]], ["かしら（いちばん 上の 人）", ["校長", "社長"]], ["そだつ・のびる", ["成長", "生長"]]], "重": [["おもい", ["体重", "重量"]], ["かさなる", ["二重", "重ね着"]], ["大切", ["重要", "重大"]]], "上": [["うえ", ["屋上", "上空"]], ["あがる・のぼる", ["上陸", "上り坂"]], ["よく なる", ["上達", "向上"]]]};
+  var kanji = Object.keys(K)[0], deck = [], qi = 0, clean = 0, tried = false, got = {};
+  function tabs() { $("tabs").innerHTML = Object.keys(K).map(function (k) { return '<button type="button" data-k="' + k + '" aria-pressed="' + (k === kanji) + '" style="font-size:20px">' + k + '</button>'; }).join(""); }
+  function start(k) {
+    kanji = k; tabs(); got = {}; qi = 0; clean = 0;
+    deck = []; K[k].forEach(function (m, mi) { m[1].forEach(function (w) { deck.push({ w: w, mi: mi }); }); }); shuf(deck); show();
+  }
+  function show() {
+    var d = deck[qi]; tried = false;
+    $("cnt").textContent = (qi + 1) + " / " + deck.length; $("sc").textContent = "1回で 正解：" + clean;
+    $("word").innerHTML = d.w.split("").map(function (c) { return c === kanji ? '<span class="hl">' + c + "</span>" : esc(c); }).join("");
+    $("ch").innerHTML = K[kanji].map(function (m, mi) { return '<button type="button" data-m="' + mi + '">「' + kanji + '」＝ ' + esc(m[0]) + '</button>'; }).join("");
+    $("msg").innerHTML = "「" + kanji + "」は どの 意味？"; $("next").hidden = true; tree();
+  }
+  function tree() {
+    $("tree").innerHTML = '<div style="font-size:12.5px;color:#7a6985">「' + kanji + '」の 意味の なかま</div>' + K[kanji].map(function (m, mi) {
+      return '<div style="margin-top:6px"><b>' + esc(m[0]) + '</b>：' + ((got[mi] || []).map(esc).join("・") || '<span style="color:#cbd5e1">？</span>') + '</div>';
+    }).join("");
+  }
+  $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-k]"); if (b) start(b.getAttribute("data-k")); });
+  $("ch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-m]"); if (!b || !$("next").hidden) return;
+    var d = deck[qi];
+    if (Number(b.getAttribute("data-m")) !== d.mi) { b.classList.add("ng"); tried = true; $("msg").innerHTML = "🔁 もう一度。「" + esc(d.w) + "」は どんな 意味の ことば？"; return; }
+    b.classList.add("ok"); if (!tried) clean++;
+    (got[d.mi] = got[d.mi] || []).push(d.w); tree();
+    $("msg").innerHTML = "⭕「" + esc(d.w) + "」の「" + kanji + "」は <b>" + esc(K[kanji][d.mi][0]) + "</b>"; $("sc").textContent = "1回で 正解：" + clean;
+    $("next").hidden = false; $("next").textContent = qi + 1 < deck.length ? "つぎ ▶" : "ちがう 漢字へ ▶";
+  });
+  $("next").addEventListener("click", function () {
+    if (qi + 1 < deck.length) { qi++; show(); return; }
+    var ks = Object.keys(K); start(ks[(ks.indexOf(kanji) + 1) % ks.length]);
+  });
+  start(kanji);
+
+})();
+</script>
+</body>
+</html>

@@ -596,7 +596,54 @@
     out += t(160, yb + 14, bad ? "ちがう 条件が " + diff.length + "つ → どれの せいか わからない" : "ちがうのは「" + diff[0] + "」だけ（ほかは 同じ）", 11, bad ? BLUE : MARK);
     return out;
   }
+  /* ---------------- ものの温度と体積 ★2026-11-08 ---------------- */
+  // k: "air"（せっけん水の まく：お湯で ふくらむ／氷水で へこむ） "water"（細い 管の 水面が 上がる／下がる）
+  //    "metal"（金ぞくの 玉と 輪：熱すると 通らない） "compare"（ふえ方 くらべ：空気＞水＞金ぞく） "rail"（レールの すき間）
+  function ondo(s) {
+    var k = s.k || "air", out = "";
+    function tub(x, y, w, h, c) { return '<path d="M' + (x - w) + ' ' + y + ' L' + (x - w) + ' ' + (y + h) + ' Q' + x + ' ' + (y + h + 10) + ' ' + (x + w) + ' ' + (y + h) + ' L' + (x + w) + ' ' + y + '" fill="' + (c || "#fff") + '" stroke="' + WIRE + '" stroke-width="2.4"/>'; }
+    function bath(x, hot) { return '<rect x="' + (x - 44) + '" y="70" width="88" height="56" rx="6" fill="' + (hot ? "#fecaca" : "#dbeafe") + '" stroke="' + (hot ? "#f87171" : "#93c5fd") + '" stroke-width="2"/>' + t(x, 120, hot ? "お湯" : "氷水", 11, hot ? "#b91c1c" : BLUE); }
+    if (k === "air") {
+      [[90, false], [230, true]].forEach(function (a) {
+        var x = a[0], hot = a[1];
+        out += bath(x, hot) + tub(x, 34, 12, 70);
+        for (var i = 0; i < 5; i++) out += '<circle cx="' + (x - 5 + (i % 2) * 10) + '" cy="' + (50 + i * 10) + '" r="2.2" fill="#94a3b8"/>';
+        out += hot ? '<path d="M' + (x - 12) + ' 34 Q' + x + ' 6 ' + (x + 12) + ' 34" fill="#f5d0fe" fill-opacity=".5" stroke="' + MARK + '" stroke-width="2"/>' + arrow(x, 30, x, 12, MARK)
+                   : '<path d="M' + (x - 12) + ' 34 Q' + x + ' 50 ' + (x + 12) + ' 34" fill="#f5d0fe" fill-opacity=".5" stroke="' + BLUE + '" stroke-width="2"/>' + arrow(x, 30, x, 46, BLUE);
+      });
+      return out + t(90, 146, "まくが へこむ（ちぢむ）", 11, BLUE) + t(230, 146, "まくが ふくらむ（ふえる）", 11, MARK);
+    }
+    if (k === "water") {
+      [[90, false], [230, true]].forEach(function (a) {
+        var x = a[0], hot = a[1], lv = hot ? 22 : 46;
+        out += bath(x, hot) + '<rect x="' + (x - 16) + '" y="56" width="32" height="56" rx="6" fill="#93c5fd" stroke="' + WIRE + '" stroke-width="2.4"/>' +
+          '<rect x="' + (x - 3) + '" y="10" width="6" height="48" fill="#fff" stroke="' + WIRE + '" stroke-width="1.6"/><rect x="' + (x - 2) + '" y="' + lv + '" width="4" height="' + (58 - lv) + '" fill="#3b82f6"/>' +
+          L(x - 14, 34, x + 14, 34, SUB, 1.4, "3 3") + (hot ? arrow(x + 20, 34, x + 20, 22, MARK) : arrow(x + 20, 34, x + 20, 46, BLUE));
+      });
+      return out + t(160, 30, "はじめの 水面", 10, SUB) + t(90, 146, "水面が 下がる", 11, BLUE) + t(230, 146, "水面が 上がる", 11, MARK);
+    }
+    if (k === "metal") {
+      function ring(x, r, ballR, through, cap, c) {
+        return '<circle cx="' + x + '" cy="60" r="' + r + '" fill="none" stroke="' + WIRE + '" stroke-width="5"/>' + L(x + r, 60, x + r + 30, 60, WIRE, 4) +
+          '<circle cx="' + x + '" cy="' + (through ? 96 : 60 - r - ballR + 4) + '" r="' + ballR + '" fill="' + c + '" stroke="' + WIRE + '" stroke-width="2"/>' + (through ? arrow(x, 74, x, 86, BLUE) : '') + t(x + 10, 136, cap, 11, through ? BLUE : MARK);
+      }
+      return ring(90, 20, 17, true, "ふつう：輪を 通る", "#cbd5e1") + ring(230, 20, 22, false, "熱すると：通らない", "#fdba74") + t(230, 18, "🔥 熱した 玉は 少し 大きく", 10, MARK);
+    }
+    if (k === "compare") {
+      var rows = [["空気", 120, "#c4b5fd", "とても ふえる"], ["水", 54, "#93c5fd", "少し ふえる"], ["金ぞく", 14, "#fdba74", "ほんの 少し"]];
+      rows.forEach(function (r, i) { var y = 30 + i * 38; out += t(52, y + 15, r[0], 13, INK, "end") + '<rect x="60" y="' + y + '" width="80" height="22" rx="4" fill="#e5e7eb"/><rect x="140" y="' + y + '" width="' + r[1] + '" height="22" rx="4" fill="' + r[2] + '"/>' + t(146 + r[1], y + 15, r[3], 11, SUB, "start"); });
+      return out + t(100, 20, "はじめ", 10, SUB) + t(200, 20, "あたためて ふえた 分", 10, MARK) + t(160, 146, "温度で 体積が 変わる 大きさ：空気 ＞ 水 ＞ 金ぞく", 11, MARK);
+    }
+    if (k === "rail") {
+      out += '<rect x="20" y="60" width="130" height="16" fill="#94a3b8"/><rect x="160" y="60" width="140" height="16" fill="#94a3b8"/>' + L(155, 40, 155, 96, MARK, 1.6, "3 3");
+      for (var j = 0; j < 7; j++) out += '<rect x="' + (28 + j * 42) + '" y="78" width="26" height="10" fill="#a16207"/>';
+      return out + t(155, 30, "すき間", 12, MARK) + t(160, 122, "夏に 熱で のびても おしあわない ように", 11, INK) + t(160, 140, "（冬は ちぢんで すき間が 広がる）", 11, SUB);
+    }
+    return out;
+  }
+
   T.fairtest = fairtest;
+  T.ondo = ondo;
   T.seasons = seasons; T.overwinter = overwinter;
   T.starmove = starmove; T.starcolor = starcolor; T.skydome = skydome;
   T.syringe = syringe; T.airgun = airgun; T.rod = rod; T.plate = plate; T.convection = convection;

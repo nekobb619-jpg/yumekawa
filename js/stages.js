@@ -317,6 +317,16 @@
       created: "2026-11-02"
     },
     {
+      subject: "算数",
+      category: "小数のかけ算・わり算（4年）",
+      grade: "4年生",
+      id: "算数/小数/shosu_shikumi01",
+      name: "小数の しくみ（0.1の いくつ分・10倍で 小数点が 動く）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_shosu_ten.html",
+      // ★2026-11-08追加（AI調査：小数のかけ算・わり算 11/16〜 の 入口。図・小数点ラボ つき）
+      created: "2026-11-08"
+    },
+    {
       subject: "理科",
       category: "星と月（4年）",
       grade: "4年生",
@@ -362,9 +372,19 @@
       grade: "4年生",
       id: "理科/温度と体積/ondo_taiseki01",
       name: "ものの温度と体積（空気・水・金ぞく）",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_ondo_taiseki.html",
       // ★2026-11-02追加（ポータルの 週の 報告：11/2〜 の 単元の 準備）
       created: "2026-11-02"
+    },
+    {
+      subject: "理科",
+      category: "ものの温度と体積（4年）",
+      grade: "4年生",
+      id: "理科/温度と体積/ondo_taiseki02",
+      name: "図で 考える 温度と体積（くらしの 中で）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/理科/lab_ondo_taiseki.html",
+      // ★2026-11-08追加（AI調査：図0・ラボ0。図と 温度と体積ラボ つき）
+      created: "2026-11-08"
     },
     {
       subject: "理科",
@@ -847,8 +867,18 @@
       grade: "4年生",
       id: "社会/先人/senjin01",
       name: "きょう土の 伝統・文化と 先人たち",
-      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/社会/lab_narabe.html",
       created: "2026-10-03"
+    },
+    {
+      subject: "社会",
+      category: "きょう土の伝統・文化と先人たち（4年）",
+      grade: "4年生",
+      id: "社会/伝統/tokoname01",
+      name: "常滑焼と 愛知の 先人（社会見学の 予習）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/社会/lab_narabe.html",
+      // ★2026-11-08追加（AI調査：先人 ラボ0。11/16 社会見学（常滑）の 予習。数字や「日本一」は 愛知県の 観光サイト Aichi Now で 確かめた）
+      created: "2026-11-08"
     },
     {
       // ★2026-10-03追加（ユーザー：探究・英語・社会・漢字の書きが少ない）。AGENTS.md 3.5 チェック済み
@@ -991,6 +1021,16 @@
       created: "2026-10-03"
     },
     {
+      subject: "国語",
+      category: "漢字（4年）",
+      grade: "4年生",
+      id: "国語/漢字/imi01",
+      name: "いろいろな 意味を 表す 漢字（生・明・手・長・重・上）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/国語/lab_kanji_imi.html",
+      // ★2026-11-08追加（AI調査：いろいろな意味を表す漢字 11/9〜。意味わけラボ つき）
+      created: "2026-11-08"
+    },
+    {
       // ★2026-10-03追加（塾の 診断テスト 小4算数から）：3けた÷1けたが 白紙だった。アプリは 2けた÷1けたしか なかった
       subject: "算数",
       category: "わり算（4年）",
@@ -1040,9 +1080,19 @@
       grade: "4年生",
       id: "国語/読解/monogatari01",
       name: "物語文の 読みとり（気持ち・慣用句・書きぬき・人物像）",
-      reward: 10, showCount: 7, video_url: "", lab_url: "",
+      reward: 10, showCount: 7, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/国語/lab_gon_kimochi.html",
       created: "2026-10-04"
-    }
+    },
+    {
+      subject: "国語",
+      category: "読解（4年）",
+      grade: "4年生",
+      id: "国語/読解/ichibun01",
+      name: "一文を えらぶ（文章から 答えの 文を 見つける）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/国語/lab_gon_kimochi.html",
+      // ★2026-11-08追加（ごんぎつねの テストで「一文を 書き出す」が できなかった → 選ぶ 練習。文章は オリジナル）
+      created: "2026-11-08"
+    },
   ];
 
   window.CONTENT_STAGES = STAGES;

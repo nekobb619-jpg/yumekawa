@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小数点ラボ 🔢</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-08追加：4年 算数「小数のかけ算・わり算」の 入口（AI調査：図0・ラボ0）。位の 表で 10倍・1/10 を おして 小数点の 動きを 見る。後半は えらぶ クイズ（書かない）。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #eff6ff; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .ch button, .pick button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok, .pick button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng, .pick button.ng { background: #fee2e2; border-color: #f87171; }
+  .pick button[disabled] { opacity: .35; cursor: default; }
+  .msg { min-height: 2.6em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  ol.done { margin: 6px 0 0; padding-left: 1.6em; } ol.done li { margin: 3px 0; background: #f0fdf4; border-radius: 8px; padding: 3px 8px; }
+  .big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: .06em; margin: 4px 0; } .big .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔢 小数点ラボ</h1>
+  <div class="lead">数を えらんで「×10」「÷10」を おしてみよう。数字は そのままで、<b>位が 1つ ずれる</b>（小数点が 動いて 見える）よ。</div>
+  <div class="card">
+    <div class="tabs" id="nums" role="group" aria-label="数"></div>
+    <div id="pv" style="margin-top:8px"></div>
+    <div class="tabs" style="margin-top:6px"><button type="button" id="mul">×10</button><button type="button" id="div">÷10（1/10）</button><button type="button" id="rst">もとに もどす</button></div>
+    <div class="msg" id="say" aria-live="polite" style="text-align:center"></div>
+  </div>
+  <div class="card">
+    <div class="bar"><span>🤔 クイズ</span><span id="qc"></span></div>
+    <div class="big" id="qt" style="font-size:24px"></div>
+    <div class="ch" id="qch"></div>
+    <div class="msg" id="qm" aria-live="polite"></div>
+    <div style="text-align:center"><button class="next" id="qn" type="button" hidden>つぎ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>まとめ</b>：10倍 → 小数点が 右へ 1つ。100倍 → 右へ 2つ。1/10 → 左へ 1つ。小数の かけ算は「0.1 が いくつ分」で 考えると 整数の 計算に なる（0.6×3 → 0.1が 6×3＝18こ → 1.8）。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+  var START = ["2.35", "0.7", "1.6", "4.08"], base = "2.35", e = 0; // e：10の 何じょう 倍
+  var COLS = ["百", "十", "一", "1/10", "1/100", "1/1000"]; // 一の位は index 2
+  function digits(str) { var p = str.split("."), ip = p[0], fp = p[1] || "", m = {}; ip.split("").reverse().forEach(function (d, k) { m[2 - k] = d; }); fp.split("").forEach(function (d, k) { m[3 + k] = d; }); return m; }
+  function val() { return Math.round(Number(base) * Math.pow(10, e) * 1e6) / 1e6; }
+  function fmt(v) { return String(Number(v.toFixed(6))); }
+  function draw(msg) {
+    $("nums").innerHTML = START.map(function (n) { return '<button type="button" data-n="' + n + '" aria-pressed="' + (n === base) + '">' + n + '</button>'; }).join("");
+    var m = digits(fmt(val())), cw = 52, x0 = 4, g = "";
+    COLS.forEach(function (c, i) { var x = x0 + i * cw; g += '<rect x="' + x + '" y="4" width="' + (cw - 4) + '" height="26" rx="6" fill="' + (i < 3 ? "#e0e7ff" : "#fce7f3") + '"/><text x="' + (x + cw / 2 - 2) + '" y="22" text-anchor="middle" font-size="12">' + c + '</text>';
+      g += '<rect x="' + x + '" y="34" width="' + (cw - 4) + '" height="54" rx="8" fill="#fff" stroke="#c7d2fe" stroke-width="2"/>' + (m[i] !== undefined ? '<text x="' + (x + cw / 2 - 2) + '" y="74" text-anchor="middle" font-size="30" fill="#1e3a8a">' + m[i] + '</text>' : ''); });
+    g += '<circle cx="' + (x0 + 3 * cw - 4) + '" cy="82" r="5" fill="#db2777"/>';
+    $("pv").innerHTML = '<svg viewBox="0 0 316 96" role="img" aria-label="位の 表 ' + fmt(val()) + '">' + g + '</svg><div class="big">' + fmt(val()) + '</div>';
+    $("say").innerHTML = msg || "ピンクの 点が 小数点（一の位の 右）。";
+  }
+  $("nums").addEventListener("click", function (ev) { var b = ev.target.closest("button[data-n]"); if (!b) return; base = b.getAttribute("data-n"); e = 0; draw(); });
+  $("mul").addEventListener("click", function () { if (e >= 2) return draw("これ いじょうは 表に 入らないよ"); e++; draw("×10：数字が 左の 位へ 1つ ずれた → 小数点が <b>右へ 1つ</b> 動いた ように 見える"); });
+  $("div").addEventListener("click", function () { if (e <= -1) return draw("これ いじょうは 表に 入らないよ"); e--; draw("÷10：数字が 右の 位へ 1つ ずれた → 小数点が <b>左へ 1つ</b>"); });
+  $("rst").addEventListener("click", function () { e = 0; draw(); });
+  draw();
+  function mk() {
+    var t = Math.floor(Math.random() * 4), a, q, ans, ng;
+    if (t === 0) { a = (Math.floor(Math.random() * 90) + 11) / 10; q = fmt(a) + " × 10"; ans = fmt(a * 10); ng = [fmt(a / 10), fmt(a * 100)]; }
+    else if (t === 1) { a = (Math.floor(Math.random() * 90) + 11) / 100; q = fmt(a) + " × 100"; ans = fmt(a * 100); ng = [fmt(a * 10), fmt(a / 10)]; }
+    else if (t === 2) { a = (Math.floor(Math.random() * 90) + 11) / 10; q = fmt(a) + " ÷ 10"; ans = fmt(a / 10); ng = [fmt(a * 10), fmt(a / 100)]; }
+    else { var x = Math.floor(Math.random() * 8) + 2, y = Math.floor(Math.random() * 4) + 2; q = "0." + x + " × " + y; ans = fmt(x * y / 10); ng = [String(x * y), fmt(x * y / 100)]; }
+    return { q: q, ans: ans, ch: shuf([ans].concat(ng)) };
+  }
+  var N = 8, qi = 0, clean = 0, tried = false, cur;
+  function showQ() { cur = mk(); tried = false; $("qc").textContent = (qi + 1) + " / " + N + "　1回で 正解：" + clean; $("qt").textContent = cur.q + " ＝ ？"; $("qm").innerHTML = ""; $("qn").hidden = true;
+    $("qch").innerHTML = cur.ch.map(function (c) { return '<button type="button" data-v="' + c + '">' + c + '</button>'; }).join(""); }
+  $("qch").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-v]"); if (!b || !$("qn").hidden) return;
+    if (b.getAttribute("data-v") !== cur.ans) { b.classList.add("ng"); tried = true; $("qm").innerHTML = "🔁 小数点は 右？ 左？ 何こ 動く？ 上の 表で ためして みよう"; return; }
+    b.classList.add("ok"); if (!tried) clean++; $("qm").innerHTML = "⭕ " + esc(cur.q) + " ＝ <b>" + cur.ans + "</b>"; $("qn").hidden = false;
+    $("qc").textContent = (qi + 1) + " / " + N + "　1回で 正解：" + clean; $("qn").textContent = qi + 1 < N ? "つぎ ▶" : "もう一度 🔁";
+  });
+  $("qn").addEventListener("click", function () { if (qi + 1 < N) qi++; else { qi = 0; clean = 0; } showQ(); });
+  showQ();
+
+})();
+</script>
+</body>
+</html>

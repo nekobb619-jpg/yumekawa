@@ -310,3 +310,9 @@
 - 2026-11-07 1日の Q の 目安 Q_DAY_CAP=120（window.qDayGrant／saveData.qDay {d,n,cut}）：ステージ（はじめての クリア・新問題の 再クリア いがい）・探偵ラボ・危険探検隊の Q に かける。はじめての クリアと MASTER昇格は へらさず 数に 入れる。こえたら 0Q＋1回だけ「🌙 今日の Q は ここまで」。りさ は 対象外（STUDY_RULE_OFF.qDayCap）。
 - 2026-11-07 Q_DAY_CAP を こえた 分は 0 で なく Q_DAY_OVER_RATE（1/3・きりあげ）。「今日の Q は ここまで」の おしらせは なくした（シークレット）。
 - 2026-11-08 自学ノートに a_kagakukan「ラーケーションの日 科学館の ふり返り」（11/6 名古屋市科学館・プラネタリウム。保護者の 話から 事実の 行を 下書き、自分で 書くのは おもしろかった こと・学んだ こと の 2つ）。FEATURED 11/8〜11/22 で いちばん上。
+
+## 2026-11-08 AI調査（11/7）の 5つを 追加
+- ステージ（各10〜12問・オリジナル・選ぶだけ）：`理科/温度と体積/ondo_taiseki02`（図 `ondo`＝figures-science.js、k：air/water/metal/compare/rail）・`算数/小数/shosu_shikumi01`（0.1の いくつ分・10倍と 1/10、図 placevalue）・`国語/漢字/imi01`（生・明・手・長・重・上の 意味、図 kanjicmp）・`国語/読解/ichibun01`（一文を ぬき出す。物語は オリジナル）・`社会/伝統/tokoname01`（常滑焼・六古窯・先人・社会見学の しかた）。台帳・school-units（u025・u011・u043・u042・u036）に 同期。
+- ラボ：`lab/理科/lab_ondo_taiseki.html`・`lab/算数/lab_shosu_ten.html`（位の 表で ×10／÷10）・`lab/国語/lab_kanji_imi.html`（意味わけ、データは imi01 と 同じ）・`lab/国語/lab_gon_kimochi.html`（出来事を ならべる → 場面ごとの 気持ちを えらぶ。出来事は アプリ用の 要約で 本文は 写さない）・`lab/社会/lab_narabe.html`（明治用水・愛知用水・常滑焼・社会見学の ならべかえ）。ならべかえは まちがえると ヒント、書かない。
+- 自学ノート：e_ondo（u025）・c_shosu「身の回りの 小数 しらべ」（u011）・a_tokoname「社会見学 常滑の ふり返り」（u036、FEATURED 11/16〜11/30）。
+

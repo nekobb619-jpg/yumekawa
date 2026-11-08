@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>先人と 伝統 ならべかえラボ 🏺</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-08追加：4年 社会「きょう土の伝統・文化と先人たち」（AI調査：ラボ0）＋ 11/16 社会見学（常滑）の 予習。出来事を じゅんに ならべる（書かない）。人名・年は アプリの 問題と 同じ（明治用水：都築弥厚→岡本兵松・伊予田与八郎、愛知用水：久野庄太郎・浜島辰雄、1961年）。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #fff7ed; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .ch button, .pick button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok, .pick button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng, .pick button.ng { background: #fee2e2; border-color: #f87171; }
+  .pick button[disabled] { opacity: .35; cursor: default; }
+  .msg { min-height: 2.6em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  ol.done { margin: 6px 0 0; padding-left: 1.6em; } ol.done li { margin: 3px 0; background: #f0fdf4; border-radius: 8px; padding: 3px 8px; }
+  .big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: .06em; margin: 4px 0; } .big .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏺 先人と 伝統 ならべかえラボ</h1>
+  <div class="lead">テーマを えらんで、出来事を じゅんばんに おしていこう。先人が どんな じゅんで 取り組んだか、やきものが どう できるかが 見えて くるよ。</div>
+  <div class="card"><div class="tabs" id="tabs" role="group" aria-label="テーマ"></div></div>
+  <div class="card" id="game"></div>
+  <div class="card">💡 先人の 取り組みは「こまって いた こと → 計画 → 協力 → 工事 → 完成」の じゅんが 多い。調べる ときも この じゅんで メモすると まとめやすい。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+  // ならべかえ：カードを 正しい じゅんに おす（まちがえたら ヒント、書かない）
+  function orderGame(hostId, set, onDone) {
+    var host = $(hostId), next = 0, miss = 0, cards = shuf(set.items.map(function (t, i) { return { t: t, i: i }; }));
+    function draw(msg) {
+      var done = set.items.slice(0, next);
+      host.innerHTML = '<div class="bar"><span>' + esc(set.title) + '</span><span>' + next + ' / ' + set.items.length + '</span></div>' +
+        (done.length ? '<ol class="done">' + done.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("") + '</ol>' : '') +
+        (next < set.items.length ? '<div style="margin-top:6px;font-size:12.5px;color:#7a6985">' + (next + 1) + 'ばんめは どれ？</div><div class="pick">' + cards.map(function (c) { return '<button type="button" data-i="' + c.i + '"' + (c.i < next ? ' disabled' : '') + '>' + esc(c.t) + '</button>'; }).join("") + '</div>' : '') +
+        '<div class="msg" aria-live="polite">' + (msg || "") + '</div>';
+    }
+    host.onclick = function (e) {
+      var b = e.target.closest("button[data-i]"); if (!b || b.disabled) return;
+      if (Number(b.getAttribute("data-i")) !== next) { miss++; b.classList.add("ng"); host.querySelector(".msg").innerHTML = "🔁 ちがうよ。" + esc(set.hint || "「先に 起きた こと」は どれかな？"); return; }
+      next++;
+      if (next >= set.items.length) { draw("⭕ ぜんぶ ならんだ！" + (miss ? "（まちがい " + miss + "回）" : " 1回も まちがえずに ✨") + (set.after ? "<br>" + set.after : "")); if (onDone) onDone(miss); return; }
+      draw("⭕");
+    };
+    draw();
+  }
+
+  var SETS = [{"title": "明治用水が できるまで", "hint": "計画した 人 → 引きついだ 人 → 工事 の じゅん", "items": ["江戸時代、都築弥厚が 矢作川の 水を 台地に 引く 計画を 立てる", "都築弥厚が なくなった あと、岡本兵松・伊予田与八郎たちが 計画を 引きつぐ", "多くの 人が 力を 合わせて 工事を する", "明治の はじめに 用水が 完成し、台地に 水が 流れる"], "after": "明治用水は、何十年も かけて 人から 人へ 引きつがれた。"}, {"title": "愛知用水が できるまで", "hint": "こまって いた こと → 計画 → よびかけ → 工事 → 完成", "items": ["知多半島は 大きな 川が なく、水不足に こまって いた", "久野庄太郎と 浜島辰雄が、木曽川の 水を 引く 計画を 考える", "人々に よびかけ、国にも はたらきかけて 協力を 集める", "長い 水路を つくる 大きな 工事を する", "1961年に 水が 流れ、田畑や 家・工場で 使われる"], "after": "「こまって いる ことを 何とか したい」と いう 思いが 始まり。"}, {"title": "常滑焼が できるまで", "hint": "土 → 形 → かわかす → 焼く", "items": ["やきものに 合う 土を ねって 用意する", "ろくろや 手で 形を つくる", "日かげで よく かわかす", "窯（かま）で 高い 温度で 焼く"], "after": "社会見学で、本当に この じゅんか たしかめて みよう。"}, {"title": "社会見学の ながれ", "hint": "行く 前 → 行った とき → 帰ってから", "items": ["前もって 調べ、聞きたい ことを メモに 書いて おく", "見学で 見た こと・聞いた ことを メモする", "わからない ことを 工房や お店の 人に 質問する", "帰ってから メモを 見て ふり返り、まとめる"], "after": "自学ノートの「社会見学 常滑の ふり返り」も 使えるよ。"}], cur = 0;
+  function tabs() { $("tabs").innerHTML = SETS.map(function (s, i) { return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === cur) + '">' + esc(s.title) + '</button>'; }).join(""); }
+  $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (!b) return; cur = Number(b.getAttribute("data-i")); tabs(); orderGame("game", SETS[cur]); });
+  tabs(); orderGame("game", SETS[cur]);
+
+})();
+</script>
+</body>
+</html>

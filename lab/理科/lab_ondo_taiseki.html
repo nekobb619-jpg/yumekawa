@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>温度と体積ラボ 🌡️</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-08追加：4年 理科「ものの温度と体積」（AI調査：図0・ラボ0）。
+     ① 空気・水・金ぞく を えらび、氷水／そのまま／お湯 を おして、体積の 変わり方を 見る（書かない）。
+     ② よそうクイズ 6問（えらぶだけ）。変わり方の 大きさは 空気 ＞ 水 ＞ 金ぞく。数字は 見た目の ための おおよそ。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; --blue: #2563eb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #fff7ed; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 6px 0; }
+  .row button { font: inherit; font-weight: 900; font-size: 15px; min-height: 44px; padding: 6px 14px; border-radius: 14px; border: 3px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .row button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .row.temp button[data-t="cold"][aria-pressed="true"] { background: var(--blue); border-color: var(--blue); }
+  .row.temp button[data-t="hot"][aria-pressed="true"] { background: #dc2626; border-color: #dc2626; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900; }
+  #say { text-align: center; min-height: 3.2em; font-size: 14px; }
+  #say b { color: var(--pink); }
+  .ch button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid #fdba74; background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng { background: #fee2e2; border-color: #f87171; }
+  #qmsg { min-height: 2.6em; margin-top: 6px; } #qmsg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #f59e0b, #ea580c); cursor: pointer; }
+  .bar { display: flex; justify-content: space-between; font-size: 13px; font-weight: 900; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌡️ 温度と体積ラボ</h1>
+  <div class="lead">空気・水・金ぞく を えらんで、氷水・そのまま・お湯 を おしてみよう。体積（かさ）は どう 変わる？ 3つの ちがいも くらべよう。</div>
+  <div class="card">
+    <div class="row" id="mat" role="group" aria-label="しらべる もの">
+      <button type="button" data-m="air" aria-pressed="true">💨 空気</button><button type="button" data-m="water" aria-pressed="false">💧 水</button><button type="button" data-m="metal" aria-pressed="false">🔩 金ぞく</button>
+    </div>
+    <div class="row temp" id="temp" role="group" aria-label="温度">
+      <button type="button" data-t="cold" aria-pressed="false">🧊 氷水</button><button type="button" data-t="room" aria-pressed="true">そのまま</button><button type="button" data-t="hot" aria-pressed="false">♨️ お湯</button>
+    </div>
+    <div id="pic"></div>
+    <div id="say" aria-live="polite"></div>
+  </div>
+  <div class="card">
+    <div class="bar"><span>🤔 よそうクイズ</span><span id="qcount"></span></div>
+    <div id="qtext" style="margin-top:4px"></div>
+    <div class="ch" id="qch"></div>
+    <div id="qmsg" aria-live="polite"></div>
+    <div style="text-align:center"><button class="next" id="qnext" type="button" hidden>つぎ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>まとめ</b><br>あたためると 体積が 大きく なり、冷やすと 小さく なる。変わり方の 大きさは <b>空気 ＞ 水 ＞ 金ぞく</b>。金ぞくは ほんの 少しなので 目では 分かりにくい。レールの すき間・温度計・びんの ふたも この しくみ。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var st = { m: "air", t: "room" };
+  var AMT = { air: 1, water: 0.35, metal: 0.08 }; // 変わり方の 大きさ（見た目の ための おおよそ）
+  var SAY = {
+    air: { cold: "空気が 冷えて 体積が <b>小さく</b> なった → まくが へこむ", room: "まくは まっすぐ。ここから 温度を 変えて みよう", hot: "空気が あたためられて 体積が <b>大きく</b> なった → まくが ふくらむ" },
+    water: { cold: "水も 冷えると 体積が <b>少し 小さく</b> なる → 水面が 下がる", room: "細い 管の 水面に 線が あるよ", hot: "水も あたためると 体積が <b>少し 大きく</b> なる → 水面が 上がる（空気ほどでは ない）" },
+    metal: { cold: "冷えた 玉は 輪を 通る", room: "ふつうの 玉は 輪を ぎりぎり 通る", hot: "熱した 玉は <b>ほんの 少し 大きく</b> なって、輪を 通らない！" }
+  };
+  function bath(t) { return t === "room" ? "" : '<rect x="40" y="96" width="240" height="70" rx="10" fill="' + (t === "hot" ? "#fecaca" : "#dbeafe") + '" stroke="' + (t === "hot" ? "#f87171" : "#93c5fd") + '" stroke-width="2"/><text x="268" y="158" text-anchor="end" font-size="13" fill="' + (t === "hot" ? "#b91c1c" : "#1d4ed8") + '">' + (t === "hot" ? "お湯" : "氷水") + '</text>'; }
+  function draw() {
+    var m = st.m, t = st.t, d = t === "hot" ? 1 : t === "cold" ? -1 : 0, g = bath(t), a = AMT[m] * d;
+    if (m === "air") {
+      g += '<path d="M140 40 L140 140 Q160 156 180 140 L180 40" fill="#fff" stroke="#475569" stroke-width="3"/>';
+      for (var i = 0; i < 8; i++) g += '<circle cx="' + (150 + (i % 2) * 20) + '" cy="' + (56 + i * 10) + '" r="3" fill="#94a3b8"/>';
+      var bulge = 40 - a * 34; // 上（小さい y）＝ ふくらむ
+      g += '<path d="M140 40 Q160 ' + bulge + ' 180 40" fill="#f5d0fe" fill-opacity=".55" stroke="#db2777" stroke-width="2.5"/><text x="200" y="36" font-size="12" fill="#7a6985" text-anchor="start">せっけん水の まく</text>';
+    } else if (m === "water") {
+      g += '<rect x="120" y="86" width="80" height="70" rx="10" fill="#93c5fd" stroke="#475569" stroke-width="3"/><rect x="154" y="14" width="12" height="74" fill="#fff" stroke="#475569" stroke-width="2"/>';
+      var lv = 52 - a * 40; g += '<rect x="156" y="' + lv + '" width="8" height="' + (88 - lv) + '" fill="#3b82f6"/><path d="M140 52 H200" stroke="#7a6985" stroke-width="1.6" stroke-dasharray="4 4"/><text x="206" y="56" font-size="12" fill="#7a6985" text-anchor="start">はじめの 水面</text>';
+    } else {
+      var r = 22 + a * 50, pass = t !== "hot";
+      g += '<circle cx="160" cy="70" r="24" fill="none" stroke="#475569" stroke-width="6"/><path d="M184 70 H240" stroke="#475569" stroke-width="5"/>';
+      g += '<circle cx="160" cy="' + (pass ? 118 : 70 - 24 - r + 6) + '" r="' + r + '" fill="' + (t === "hot" ? "#fb923c" : t === "cold" ? "#bfdbfe" : "#cbd5e1") + '" stroke="#475569" stroke-width="2"/>';
+      g += '<text x="160" y="186" text-anchor="middle" font-size="13" fill="' + (pass ? "#1d4ed8" : "#db2777") + '">' + (pass ? "輪を 通った" : "輪に ひっかかった") + '</text>';
+    }
+    $("pic").innerHTML = '<svg viewBox="0 0 320 196" role="img" aria-label="' + m + "・" + t + '">' + g + '</svg>';
+    $("say").innerHTML = SAY[m][t];
+  }
+  function press(groupId, attr, key) {
+    $(groupId).addEventListener("click", function (e) {
+      var b = e.target.closest("button[" + attr + "]"); if (!b) return;
+      st[key] = b.getAttribute(attr);
+      [].forEach.call($(groupId).querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      draw();
+    });
+  }
+  press("mat", "data-m", "m"); press("temp", "data-t", "t"); draw();
+
+  // よそうクイズ（えらぶだけ）
+  var Q = [
+    { q: "とじこめた 空気を お湯で あたためると、体積は？", a: ["大きく なる", "小さく なる", "変わらない"], c: 0, w: "空気は あたためると 体積が 大きく なる。" },
+    { q: "水を 氷水で 冷やすと、細い 管の 水面は？", a: ["下がる", "上がる", "変わらない"], c: 0, w: "水も 冷やすと 体積が 少し 小さく なる。" },
+    { q: "同じだけ あたためた とき、体積が いちばん 大きく 変わるのは？", a: ["空気", "水", "金ぞく"], c: 0, w: "変わり方は 空気 ＞ 水 ＞ 金ぞく。" },
+    { q: "熱して 輪を 通らなく なった 金ぞくの 玉。冷ますと？", a: ["また 通る", "もっと 通らない", "とける"], c: 0, w: "冷えると もとの 大きさに もどる。" },
+    { q: "空の ペットボトル（ふた つき）を 冷蔵庫に 入れると？", a: ["少し へこむ", "ふくらむ", "変わらない"], c: 0, w: "中の 空気が 冷えて 体積が 小さく なる。" },
+    { q: "金ぞくを あたためた ときの 体積の 変わり方は？", a: ["ほんの 少し 大きく なる", "空気と 同じくらい 大きく なる", "小さく なる"], c: 0, w: "金ぞくも ふえるが、ほんの 少し。" },
+    { q: "温度計の 液が 上がるのは、液の 体積が どうなる から？", a: ["大きく なる から", "小さく なる から", "変わらない"], c: 0, w: "あたためられて 体積が ふえ、細い 管を 上がる。" },
+    { q: "夏の 暑い 日、レールの すき間は？", a: ["せまく なる", "広く なる", "変わらない"], c: 0, w: "レール（金ぞく）が のびて すき間が せまく なる。" }
+  ];
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var deck = shuf(Q.slice()).slice(0, 6), qi = 0, clean = 0, tried = false, ord = [];
+  function showQ() {
+    var q = deck[qi]; tried = false; ord = shuf([0, 1, 2]);
+    $("qcount").textContent = (qi + 1) + " / " + deck.length + "　1回で 正解：" + clean;
+    $("qtext").textContent = q.q; $("qmsg").innerHTML = ""; $("qnext").hidden = true;
+    $("qch").innerHTML = ord.map(function (k) { return '<button type="button" data-k="' + k + '">' + q.a[k] + '</button>'; }).join("");
+  }
+  $("qch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-k]"); if (!b || !$("qnext").hidden) return;
+    var q = deck[qi];
+    if (Number(b.getAttribute("data-k")) !== q.c) { b.classList.add("ng"); tried = true; $("qmsg").innerHTML = "🔁 もう一度。上の ラボで ためして みよう！"; return; }
+    b.classList.add("ok"); if (!tried) clean++;
+    $("qmsg").innerHTML = "⭕ " + q.w; $("qnext").hidden = false;
+    $("qnext").textContent = qi + 1 < deck.length ? "つぎ ▶" : "もう一度 🔁";
+    $("qcount").textContent = (qi + 1) + " / " + deck.length + "　1回で 正解：" + clean;
+  });
+  $("qnext").addEventListener("click", function () { if (qi + 1 < deck.length) qi++; else { deck = shuf(Q.slice()).slice(0, 6); qi = 0; clean = 0; } showQ(); });
+  showQ();
+})();
+</script>
+</body>
+</html>
