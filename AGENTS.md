@@ -309,3 +309,4 @@
 - 2026-11-07 マスターチェックを まぜこぜ テストに 変更（js/master-check.js）：4単元×2問の 4択、2日に1回（危機が あれば 毎日）まなびプランの kind "mastercheck"。ステージごとに 2問とも 正解＝キープ、まちがい＝危機→はく奪。キープ 1つ +1Q。りさ は 対象外：window.STUDY_RULE_OFF / studyRuleOff（reviewPass・masterCheck・expeditionGate）。index.html の currentMasterCheckId（ステージ 1つの チェック）は もう プランからは 出ない（のこして ある だけ）。
 - 2026-11-07 1日の Q の 目安 Q_DAY_CAP=120（window.qDayGrant／saveData.qDay {d,n,cut}）：ステージ（はじめての クリア・新問題の 再クリア いがい）・探偵ラボ・危険探検隊の Q に かける。はじめての クリアと MASTER昇格は へらさず 数に 入れる。こえたら 0Q＋1回だけ「🌙 今日の Q は ここまで」。りさ は 対象外（STUDY_RULE_OFF.qDayCap）。
 - 2026-11-07 Q_DAY_CAP を こえた 分は 0 で なく Q_DAY_OVER_RATE（1/3・きりあげ）。「今日の Q は ここまで」の おしらせは なくした（シークレット）。
+- 2026-11-08 自学ノートに a_kagakukan「ラーケーションの日 科学館の ふり返り」（11/6 名古屋市科学館・プラネタリウム。保護者の 話から 事実の 行を 下書き、自分で 書くのは おもしろかった こと・学んだ こと の 2つ）。FEATURED 11/8〜11/22 で いちばん上。
