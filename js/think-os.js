@@ -65,7 +65,21 @@
     u012: { icon: "📋", trouble: "クラスの けがの 記録が ばらばら。どこで、いつ 多いのか 分からない…", can: "表に 整理して、多い ところ・少ない ところを 見つけられる", so: "だから「何を 知りたい？」を きめてから、たて・よこの 見出しを えらぼう" },
     u013: { icon: "🍕", trouble: "ピザを 1まいより 多く 食べた。「1と 半分」を 数で どう 書く？", can: "1より 大きい 分数や、大きさの 同じ 分数を あつかえる", so: "だから「1つ分は どれ？」を はっきり させてから 数えよう" },
     u014: { icon: "📈", trouble: "だんを つむと 何本 ストローが いる？ 10だんの ときを 全部 作って 数えるのは 大へん", can: "ともなって かわる 2つの 数の きまりを 見つけて、先を 予想できる", so: "だから 小さい 数で 表に して、きまりを 見つけてから 先を 考えよう" },
-    u015: { icon: "📦", trouble: "プレゼントの 箱を 作りたい。どんな 面が 何まい いる？", can: "箱の 形の 面・辺・頂点の きまりが 分かり、展開図が かける", so: "だから 実物を 思いうかべて、向かい合う 面に 注目しよう" }
+    u015: { icon: "📦", trouble: "プレゼントの 箱を 作りたい。どんな 面が 何まい いる？", can: "箱の 形の 面・辺・頂点の きまりが 分かり、展開図が かける", so: "だから 実物を 思いうかべて、向かい合う 面に 注目しよう" },
+    // ★2026-11-09 理科・社会・国語にも（保護者：なぜ 学ぶのかの 背景。「なるほど」と 思えると 知恵に なる）。
+    //   guess＝先に 1問 予想（えらぶだけ）→ 答えを 見て「なるほど！」→ こまりごと・できる こと・だから。a の 先頭が 正解
+    u024: { icon: "🍂", trouble: "秋に なると 虫の 声が へり、木の 葉が 色づいて 落ちる。生き物たちは 何を して いるの？", can: "気温の 変わり方と 生き物の ようすを むすびつけて、つぎの 季節を 予想できる", so: "だから 春・夏と 同じ 場所・同じ 生き物を 見て、気温と いっしょに 記録して くらべよう",
+      guess: { q: "サクラが 秋に 葉を 落とすのは、なぜ だと 思う？", a: ["寒い 冬に そなえて いる", "葉が 虫に 食べられた から", "風が 強く なる から"], aha: "葉を つけた ままだと 冬に 水が 足りなく なる。サクラは 葉を 落とし、えだに 冬芽を つけて 春を まって いるんだ。" } },
+    u025: { icon: "🎈", trouble: "へこんだ ピンポン玉、お湯に つけたら もとに もどった！ 何が 起きたの？", can: "空気・水・金ぞくが、あたためると ふくらみ、冷やすと ちぢむ ことが 分かる", so: "だから「何を あたためた？ 何が ふくらんだ？」を 1つずつ 分けて たしかめよう",
+      guess: { q: "電車の 線路の つなぎ目に、少し すき間が あるのは なぜ だと 思う？", a: ["夏の 暑さで 鉄が のびても ぶつからない ように", "雨水を 流す ため", "電車の 音を 小さく する ため"], aha: "金ぞくも あたためると ほんの 少し のびる。すき間が ないと、夏に レールが おし合って 曲がって しまうんだ。" } },
+    u036: { icon: "🏺", trouble: "大きな 川が ない 土地では、むかし 田畑に 水が 足りず 人々が こまって いた。どう したら いい？", can: "むかしの 人が どんな こまりごとを、どう 力を 合わせて のりこえたかを 調べて 説明できる", so: "だから「こまって いた こと → 計画 → 協力 → 完成」の じゅんで 調べよう。社会見学でも「なぜ ここで？」を 聞いて みよう",
+      guess: { q: "常滑で むかしから やきものが さかんに なったのは、なぜ だと 思う？", a: ["やきものに 合う 土が とれて、船で 運びやすかった", "雨が ほとんど ふらない から", "山が 高くて すずしい から"], aha: "よい 土が あって、海に 近いので 重い やきものを 船で 遠くまで 運べた。土地の ようすが 仕事を つくるんだ。" } },
+    u042: { icon: "🦊", trouble: "あやまりたいのに、気持ちが うまく 伝わらなかった こと、ない？", can: "登場人物の した ことから 気持ちを 読みとり、気持ちの 変化を 説明できる", so: "だから「何を した？ → どんな 気持ち？」の じゅんに 読もう。「なぜ？」には 出来事＋気持ちで 答えよう",
+      guess: { q: "ごんが 毎日 くりを とどけたのは、なぜ だと 思う？", a: ["いたずらの つぐないを したかった から", "くりが たくさん あまって いた から", "兵十に ほめて もらいたかった から"], aha: "気持ちは「した こと」に 出る。だまって とどけ続けた 行動から、ごんの 気持ちが 読みとれるんだ。" } },
+    u043: { icon: "🈁", trouble: "「生」は「生きる」「生まれる」「生野菜」…同じ 字なのに 意味が ちがう。どう 見分ける？", can: "ことば ぜんたいの 意味から 漢字の はたらきを 見分け、はじめて 見る ことばの 意味も 予想できる", so: "だから 漢字 1字だけを 見ないで、まず ことば ぜんたいの 意味を 考えよう",
+      guess: { q: "「生野菜」の「生」は、どの 意味 だと 思う？", a: ["火を 通して いない（なま）", "いきる", "うまれる"], aha: "漢字の 意味が 分かると、知らない ことばでも「たぶん こういう 意味」と 予想できる。これが 漢字の 力なんだ。" } },
+    u044: { icon: "📝", trouble: "読んだ 本の 話を 友だちに 1分で 伝えたい。でも ぜんぶ 話すと 長すぎる…", can: "中心に なる 文と 大事な ことばを えらんで、短く まとめられる", so: "だから まず 筆者が いちばん 言いたい ことを さがそう。さいごの 段落に ある ことが 多いよ",
+      guess: { q: "説明文で、筆者が いちばん 言いたい ことが 書いて ある ことが 多いのは どこ だと 思う？", a: ["さいごの 段落", "いちばん 長い 段落", "まん中の 例の ところ"], aha: "例や 説明を 重ねて、さいごに「つまり」と まとめる 書き方が 多い。さきに さいごを 読むと 地図が もてるんだ。" } }
   };
 
   /* ================= 🦄 ニコの 先生モード（問題は 役わりで ステップに 結びつける） =================
@@ -549,9 +563,19 @@
     var o = unitOrder(), ids = Object.keys(PURPOSE);
     var cur = ui.uid && PURPOSE[ui.uid] ? ui.uid : o.now.concat(o.soon).filter(function (u) { return PURPOSE[u]; })[0] || ids[0];
     var P = PURPOSE[cur];
+    ui.wg = ui.wg || {};
+    if (P.guess && !ui.wg[cur]) {
+      // 先に 予想（えらぶだけ）。答えを 見る 前に 自分の 考えを もつと「なるほど」に なる
+      ui.wo = ui.wo && ui.wo.u === cur ? ui.wo : { u: cur, o: shufIdx(P.guess.a.length) };
+      return '<div class="why"><div style="font-size:15px;font-weight:900;color:#155e75">' + P.icon + ' ' + esc(unitName(cur)) + '</div>' +
+        '<div class="r"><b>🤔 よそう</b><span>' + esc(P.guess.q) + '</span></div></div>' +
+        ui.wo.o.map(function (k) { return '<button type="button" class="opt" data-t="whyg" data-v="' + k + '">' + esc(P.guess.a[k]) + '</button>'; }).join("") +
+        '<div class="sub" style="text-align:center">まちがえても だいじょうぶ。よそうしてから 見ると、おぼえやすいよ</div>';
+    }
+    var gHtml = P.guess ? '<div class="r"><b>' + (ui.wg[cur] === 1 ? "⭕ よそう どおり！" : "💡 なるほど！") + '</b><span>' + esc(P.guess.a[0]) + '。' + esc(P.guess.aha) + '</span></div>' : '';
     var steps = THINK_OS.steps.filter(function (s) { return s.role !== "why"; }).map(function (s) { return s.icon; }).join(" → ");
     return '<div class="why"><div style="font-size:15px;font-weight:900;color:#155e75">' + P.icon + ' ' + esc(unitName(cur)) + '</div>' +
-      '<div class="r"><b>😣 こまりごと</b><span>' + esc(P.trouble) + '</span></div><div class="r"><b>✨ この 学びで</b><span>' + esc(P.can) + '</span></div><div class="r"><b>🧭 だから</b><span>' + esc(P.so) + '</span></div>' +
+      gHtml + '<div class="r"><b>😣 こまりごと</b><span>' + esc(P.trouble) + '</span></div><div class="r"><b>✨ この 学びで</b><span>' + esc(P.can) + '</span></div><div class="r"><b>🧭 だから</b><span>' + esc(P.so) + '</span></div>' +
       '<div class="sub" style="text-align:center;margin-top:4px">このあと OS の じゅんばんで：' + steps + '</div></div>' +
       '<div class="q">ほかの 単元</div>' + ids.filter(function (u) { return u !== cur; }).map(function (u) {
         var tag = o.now.indexOf(u) >= 0 ? " 📌いま" : o.soon.indexOf(u) >= 0 ? " もうすぐ" : "";
@@ -612,9 +636,11 @@
       ui.phase = "end"; save(); render(); return focusFirst();
     }
     if (a === "whyu") { ui.uid = v; markWhy(v); render(); return focusFirst(); }
+    if (a === "whyg") { var wu = ui.wo && ui.wo.u; if (wu) { ui.wg = ui.wg || {}; ui.wg[wu] = Number(v) === 0 ? 1 : 2; ui.uid = wu; log("💡 なんのため？ よそう（" + unitName(wu) + "）" + (Number(v) === 0 ? "⭕" : "→ なるほど")); } render(); return focusFirst(); }
     if (a === "print") return printCard();
     if (a === "life") { close(); if (window.showJigakuCard) { try { window.showJigakuCard("a_handan"); } catch (e) {} } else if (window.openJigakuNote) window.openJigakuNote(); log("📓 生活の 判断ふりかえりへ"); return; }
   }
+  function shufIdx(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); for (var j = n - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = a[j]; a[j] = a[r]; a[r] = t; } return a; }
   function markWhy(uid) { var s = S(); if (s && uid && !s.why[uid]) { s.why[uid] = today(); save(); log("💡 なんのため？（" + unitName(uid) + "）を 見た"); } }
 
   /* ================= ホーム・ステージ中との つなぎ ================= */
