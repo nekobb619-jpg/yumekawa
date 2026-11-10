@@ -1,6 +1,6 @@
 /* =====================================================================
    daily-lab.js — 🧪 今日の うごかすラボ（★2026-11-11 保護者：見方レンズの ラボを「今日の なぞとき」の ように ホームに）
-   - ホームの「今日のなぞとき」の 下に バナーを 1つ。日ごとに ラボが 1つ かわる。
+   - ホームの まなびプランの すぐ 下に 大きな カード（11/11 保護者：目立たない → 移動）。日ごとに ラボが 1つ かわる（その日は かえない）。「ほかの ラボも えらぶ」で ぜんぶ。
    - 学校で いま 習って いる 単元（schoolStageRank＝0）の ラボを 先に、つぎに それ いがい。新しい ラボ（NEW の 期間）は その 期間 さいゆうせん。
    - その日 はじめて ひらくと シールの かけら +1。saveData.dailyLab = { d: 日, ids: [さいきん ひらいた ラボ] }。LOG「🧪今日のラボ」。
    - ラボは stages.js の lab_url から 集める ＋ EXTRA（ステージに つながって いない ラボ）。
@@ -54,14 +54,20 @@
   }
   function pick() {
     var cs = candidates(); if (!cs.length) return null;
-    var t = iso();
+    var t = iso(), o0 = st();
+    // ★2026-11-11 その日の ラボは 1回 きめたら かえない（前は ひらいた 直後に えらび直して、ちがう ラボが ひらいて いた）
+    if (o0.pick && o0.pick.d === today()) { var keep = cs.filter(function (c) { return c.k === o0.pick.k; })[0]; if (keep) return keep; }
+    var r = pick0(cs, t);
+    if (r && window.saveData) { o0.pick = { d: today(), k: r.k }; window.saveData.dailyLab = o0; }
+    return r;
+  }
+  function pick0(cs, t) {
     var nw = cs.filter(function (c) { var r = NEW[c.k]; return r && r[0] <= t && t <= r[1]; });
     var now = cs.filter(function (c) { return c.rank === 0; }), rest = cs.filter(function (c) { return c.rank !== 0; });
     // 学校の 単元を 2日に 1回、それ いがいを 2日に 1回（さいきん ひらいた ものは あとまわし）
     var seen = st().ids, fresh = function (l) { var f = l.filter(function (c) { return seen.indexOf(c.k) < 0; }); return f.length ? f : l; };
     var n = dnum();
-    if (nw.length && st().d !== today()) return nw[n % nw.length];
-    if (nw.length && seen.indexOf(nw[0].k) < 0) return nw[0];
+    if (nw.length) return nw[n % nw.length]; // NEW の 期間は その ラボが 今日の ラボ
     var list = (n % 2 === 0 && now.length) ? fresh(now) : fresh(rest.length ? rest : now);
     list.sort(function (a, b) { return a.k < b.k ? -1 : 1; });
     return list[n % list.length];
@@ -69,31 +75,61 @@
 
   var cur = null;
   function render() {
-    var host = document.getElementById("dailylab-banner");
-    var anchor = document.getElementById("dailymission-banner");
+    // ★2026-11-11（保護者：目立たない）→ まなびプランの すぐ 下に 大きな カード。「ほかの ラボ」から ぜんぶ えらべる
+    var host = document.getElementById("dailylab-card");
+    var anchor = document.getElementById("tutor-plan-card");
     if (!anchor || !window.saveData) return;
     if (!host) {
-      host = document.createElement("div"); host.id = "dailylab-banner"; host.className = "dailymission-banner"; host.setAttribute("role", "button"); host.tabIndex = 0;
-      host.style.background = "linear-gradient(135deg,#ecfeff,#a5f3fc)"; host.style.borderColor = "#06b6d4"; host.style.boxShadow = "0 5px 0 #0e7490";
-      host.addEventListener("click", open); host.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
-      anchor.parentNode.insertBefore(host, anchor.nextSibling);
+      host = document.createElement("section"); host.id = "dailylab-card"; host.setAttribute("aria-label", "今日の うごかすラボ");
+      host.style.cssText = "margin:0 0 14px;padding:12px 14px;border-radius:20px;border:3px solid #06b6d4;background:linear-gradient(135deg,#ecfeff,#cffafe 55%,#a5f3fc);box-shadow:0 6px 0 #0e7490;font-family:'Zen Maru Gothic',sans-serif;";
+      host.addEventListener("click", function (e) { var b = e.target.closest && e.target.closest("[data-dl]"); if (!b) return; if (b.getAttribute("data-dl") === "today") open(); else openList(); });
     }
+    if (anchor.nextSibling !== host) anchor.parentNode.insertBefore(host, anchor.nextSibling);
     cur = pick(); if (!cur) { host.hidden = true; return; }
     var i = INFO[cur.k] || ["🧪", cur.name || "ラボ", ""], done = st().d === today(), isNew = NEW[cur.k] && NEW[cur.k][0] <= iso() && iso() <= NEW[cur.k][1];
     host.hidden = false;
-    host.innerHTML = '<div class="dailymission-banner-icon">' + i[0] + '</div><div class="dailymission-banner-text"><div class="dailymission-banner-title">今日の うごかすラボ' + (isNew ? ' 🆕' : '') + (cur.rank === 0 ? ' <small style="font-size:11px;">📌 いま 学校で</small>' : '') + '</div>' +
-      '<div class="dailymission-banner-sub">' + i[1] + '：' + i[2] + '</div></div><div class="dailymission-banner-badge">' + (done ? '✅' : '▶') + '</div>';
+    host.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;"><div style="font-size:15px;font-weight:900;color:#155e75;">🧪 今日の うごかすラボ' + (isNew ? ' <span style="background:#f472b6;color:#fff;border-radius:999px;padding:0 7px;font-size:11px;">NEW</span>' : '') + '</div>' + (cur.rank === 0 ? '<span style="font-size:11px;font-weight:900;color:#0e7490;background:#fff;border-radius:999px;padding:2px 8px;">📌 いま 学校で</span>' : '') + '</div>' +
+      '<button type="button" data-dl="today" style="display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;padding:10px 12px;min-height:64px;border:none;border-radius:16px;background:#fff;box-shadow:0 3px 0 #67e8f9;cursor:pointer;text-align:left;font-family:inherit;">' +
+        '<span style="font-size:38px;line-height:1;">' + i[0] + '</span><span style="flex:1;min-width:0;"><span style="display:block;font-size:16px;font-weight:900;color:#0f172a;">' + i[1] + '</span><span style="display:block;font-size:12.5px;font-weight:800;color:#0e7490;margin-top:2px;">' + i[2] + '</span></span>' +
+        '<span style="font-size:13px;font-weight:900;color:#fff;background:' + (done ? '#22c55e' : 'linear-gradient(135deg,#06b6d4,#3b82f6)') + ';border-radius:999px;padding:8px 12px;white-space:nowrap;">' + (done ? '✅ もう一度' : '▶ うごかす') + '</span></button>' +
+      '<button type="button" data-dl="list" style="display:block;width:100%;margin-top:8px;min-height:44px;border:2px dashed #67e8f9;border-radius:14px;background:rgba(255,255,255,.6);font:900 13.5px \'Zen Maru Gothic\',sans-serif;color:#155e75;cursor:pointer;">🧪 ほかの ラボも えらぶ（' + candidates().length + 'こ）</button>';
   }
+  var SUBJ = [["算数", "🔢"], ["理科", "🔬"], ["国語", "📖"], ["社会", "🗾"], ["探究", "🧩"]];
+  function openList() {
+    var cs = candidates(), w = document.getElementById("dailylab-list"); if (w) w.remove();
+    w = document.createElement("div"); w.id = "dailylab-list"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "ラボを えらぶ");
+    w.style.cssText = "position:fixed;inset:0;z-index:10002;background:rgba(8,47,73,.5);display:flex;align-items:center;justify-content:center;padding:12px;";
+    var row = function (c) { var i = INFO[c.k] || ["🧪", c.name || "ラボ", ""]; return '<button type="button" data-k="' + c.k + '" style="display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;padding:8px 10px;min-height:52px;border:2px solid #a5f3fc;border-radius:14px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;"><span style="font-size:26px;">' + i[0] + '</span><span style="flex:1;min-width:0;"><b style="font-size:14px;color:#0f172a;">' + i[1] + '</b>' + (c.rank === 0 ? ' <span style="font-size:10.5px;color:#0e7490;">📌いま</span>' : '') + (cur && cur.k === c.k ? ' <span style="font-size:10.5px;color:#db2777;">今日</span>' : '') + '<br><span style="font-size:11.5px;font-weight:700;color:#475569;">' + i[2] + '</span></span></button>'; };
+    var now = cs.filter(function (c) { return c.rank === 0; });
+    var html = (now.length ? '<div style="font-size:13px;font-weight:900;color:#0e7490;margin-top:8px;">📌 いま 学校で 習って いる ところ</div>' + now.map(row).join("") : '') +
+      SUBJ.map(function (s) { var l = cs.filter(function (c) { return c.k.indexOf("lab/" + s[0] + "/") === 0 && c.rank !== 0; }); return l.length ? '<div style="font-size:13px;font-weight:900;color:#155e75;margin-top:10px;">' + s[1] + ' ' + s[0] + '</div>' + l.map(row).join("") : ''; }).join("");
+    w.innerHTML = '<div style="width:100%;max-width:440px;max-height:88vh;overflow-y:auto;background:#f0fdff;border:3px solid #67e8f9;border-radius:22px;padding:14px;font-family:\'Zen Maru Gothic\',sans-serif;"><div style="font-size:18px;font-weight:900;color:#155e75;text-align:center;">🧪 ラボを えらぶ</div>' + html +
+      '<button type="button" data-x="1" style="display:block;width:100%;margin-top:12px;min-height:44px;border:none;border-radius:14px;background:#cffafe;font:900 14px \'Zen Maru Gothic\',sans-serif;color:#155e75;cursor:pointer;">とじる</button></div>';
+    w.addEventListener("click", function (e) {
+      if (e.target === w || (e.target.closest && e.target.closest("[data-x]"))) return w.remove();
+      var b = e.target.closest && e.target.closest("button[data-k]"); if (!b) return;
+      var c = cs.filter(function (x) { return x.k === b.getAttribute("data-k"); })[0]; w.remove(); if (c) go(c);
+    });
+    document.addEventListener("keydown", function esc(e) { if (e.key === "Escape") { var x = document.getElementById("dailylab-list"); if (x) x.remove(); document.removeEventListener("keydown", esc); } });
+    document.body.appendChild(w); var f = w.querySelector("button"); if (f) try { f.focus(); } catch (e) {}
+  }
+  function go(c) {
+    if (cur && c.k === cur.k) return open();
+    var i = INFO[c.k] || ["🧪", "ラボ"];
+    try { if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🧪ラボ（えらんだ）", msg: i[1] }); } catch (e) {}
+    if (window.openHybridContent) window.openHybridContent(c.url, i[0] + " " + i[1], false); else window.open(c.url, "_blank");
+  }
+  window.openLabList = openList;
   function open() {
     if (!cur) return;
-    var o = st(), t = today(), first = o.d !== t, i = INFO[cur.k] || ["🧪", "ラボ"];
-    o.d = t; o.ids = o.ids.filter(function (x) { return x !== cur.k; }).concat([cur.k]).slice(-12);
+    var lab = cur, o = st(), t = today(), first = o.d !== t, i = INFO[lab.k] || ["🧪", "ラボ"];
+    o.d = t; o.ids = o.ids.filter(function (x) { return x !== lab.k; }).concat([lab.k]).slice(-12);
     if (window.saveData) window.saveData.dailyLab = o;
     if (first && window.stickerAddShardsExternal) { try { window.stickerAddShardsExternal(1, "今日の ラボ"); } catch (e) {} }
     try { if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🧪今日のラボ", msg: i[1] + (first ? "（今日 はじめて・かけら+1）" : "") }); } catch (e) {}
     try { if (window.saveGame) window.saveGame(); } catch (e) {}
     render();
-    if (window.openHybridContent) window.openHybridContent(cur.url, i[0] + " " + i[1], false); else window.open(cur.url, "_blank");
+    if (window.openHybridContent) window.openHybridContent(lab.url, i[0] + " " + i[1], false); else window.open(lab.url, "_blank");
   }
   window.openDailyLab = open;
   window.dailyLabPick = function () { return pick(); };
