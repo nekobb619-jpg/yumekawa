@@ -105,6 +105,9 @@
   function choicesOf(it) { var D = dictOf(it), ids = [it.t].concat(it.ng); return ids.map(function (k) { return D[k].icon + " " + D[k].name; }); }
   function record(id, ok) {
     var o = st(), m = id >= 100, bag = m ? (o.mq = o.mq || {}) : o.tool, r = bag[id] || [0, 0]; r[0]++; if (ok) r[1]++; bag[id] = r;
+    // ★2026-11-11 分析用：どうぐ・モデルごとの 合計（勉強ノート v2 の「🧠 情報処理の 育ち」）。tk／mk = { key: [出た, 正解] }
+    var it0 = (m ? MITEMS : ITEMS).filter(function (x) { return x.id === id; })[0];
+    if (it0) { var agg = m ? (o.mk = o.mk || {}) : (o.tk = o.tk || {}), g = agg[it0.t] || [0, 0]; g[0]++; if (ok) g[1]++; agg[it0.t] = g; }
     if (m && ok) { var it = MITEMS.filter(function (x) { return x.id === id; })[0]; if (it) unlock(it.t); }
   }
   function unlock(mid) { var o = st(); o.models = o.models || {}; if (!o.models[mid] && MODELS[mid]) { o.models[mid] = today(); o.newM = mid; return mid; } return null; }
