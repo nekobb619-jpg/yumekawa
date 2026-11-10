@@ -58,7 +58,7 @@
       '<span class="boxes"><span class="yomi">' + esc(m[2]) + '</span><span class="cells">' + cells + '</span></span>' + esc(m[3]) + '</div>';
   }).join("");
   document.getElementById("root").innerHTML = '<div class="page">' +
-    '<div class="head"><h1>✍️ 漢字の 書き取りシート（4年）' + (cinfo && course !== "mix" ? '<span style="font-size:12pt;margin-left:3mm;">' + esc(cinfo.name) + '</span>' : '') + '</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／10</div></div>' +
+    '<div class="head"><h1>✍️ 漢字の 書き取りシート（4年）' + (cinfo && course !== "mix" ? '<span style="font-size:12pt;margin-left:3mm;white-space:nowrap;">' + esc(cinfo.name) + '</span>' : '') + '</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／10</div></div>' +
     '<div class="tip">読みがなの 漢字を マスに 書こう。とめ・はね・はらいに 気を つけて、ていねいに。書けたら アプリの「✍️ 漢字シート」→「丸つけ」で 自分で 丸つけ しよう。' + (prio.length ? '（🔁 マークの 言葉は 前に まちがえた 言葉だよ）' : '') + '</div>' +
     rows.replace(/<span class="no">\((\d+)\)<\/span>/g, function (all, n) { return Number(n) <= prio.length ? '<span class="no">🔁' + n + '</span>' : all; }) +
     '</div>';
