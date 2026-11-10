@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>回ると 波ラボ 🎡</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-11追加：🔭 見方レンズの「くりかえし（周期）」の 入口。観覧車の ゴンドラを「高さだけ」「左右だけ」の レンズで 見ると、回る 動きが 行って もどる 波に なる（中学の 三角関数の たね。式は 出さない）。後半は くりかえす もの さがし（えらぶだけ）。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #eef2ff; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .ch button, .pick button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok, .pick button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng, .pick button.ng { background: #fee2e2; border-color: #f87171; }
+  .pick button[disabled] { opacity: .35; cursor: default; }
+  .msg { min-height: 2.6em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  ol.done { margin: 6px 0 0; padding-left: 1.6em; } ol.done li { margin: 3px 0; background: #f0fdf4; border-radius: 8px; padding: 3px 8px; }
+  .big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: .06em; margin: 4px 0; } .big .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+</style>
+</head>
+<body>
+<style>
+  svg text { font-family: 'Zen Maru Gothic', sans-serif; font-weight: 800; }
+  .ctl { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+  .ctl button { font: inherit; font-weight: 900; font-size: 13px; min-height: 44px; padding: 6px 12px; border-radius: 12px; border: 2px solid #c7d2fe; background: #fff; color: #3730a3; cursor: pointer; }
+  .ctl button[aria-pressed="true"] { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+</style>
+<div class="wrap">
+  <h1>🎡 回ると 波ラボ</h1>
+  <div class="lead">観覧車の ゴンドラは ぐるぐる 回る。でも「高さだけ」の レンズで 見ると…？ レンズを かえて、グラフが どう なるか 見て みよう。</div>
+  <div class="card"><div class="tabs" id="tabs" role="group" aria-label="ラボ">
+    <button type="button" data-t="0" aria-pressed="true">🎡 観覧車の かげ</button><button type="button" data-t="1" aria-pressed="false">🔁 くりかえし さがし</button></div></div>
+
+  <div id="p0">
+    <div class="card">
+      <svg id="sv" viewBox="0 0 320 218" role="img" aria-label="観覧車と かげと グラフ"></svg>
+      <div class="ctl" id="lens" role="group" aria-label="レンズ">
+        <button type="button" data-l="all" aria-pressed="true">👀 そのまま</button><button type="button" data-l="y" aria-pressed="false">🟦 高さだけ（横から）</button><button type="button" data-l="x" aria-pressed="false">🟥 左右だけ（上から）</button></div>
+      <div class="ctl"><button type="button" id="play">⏸ とめる</button><button type="button" id="spd">はやさ：ふつう</button><button type="button" id="clr">🧽 グラフを けす</button></div>
+      <div class="msg" id="say" aria-live="polite" style="text-align:center"></div>
+    </div>
+    <div class="card">
+      <div class="bar"><span>🤔 クイズ</span><span id="qc"></span></div>
+      <div id="qt" style="margin-top:4px"></div><div class="ch" id="qch"></div><div class="msg" id="qm" aria-live="polite"></div>
+      <div style="text-align:center"><button class="next" id="qn" type="button" hidden>つぎ ▶</button></div>
+    </div>
+  </div>
+
+  <div id="p1" hidden>
+    <div class="card">
+      <div class="bar"><span>🔁 くりかえす？ くりかえさない？</span><span id="kc"></span></div>
+      <div class="big" id="kt" style="font-size:20px;line-height:1.5"></div>
+      <div class="ch" id="kch"><button type="button" data-v="1">🔁 くりかえす（行って もどる）</button><button type="button" data-v="0">➡ くりかえさない（ずっと 進む）</button></div>
+      <div class="msg" id="km" aria-live="polite"></div>
+      <div style="text-align:center"><button class="next" id="kn" type="button" hidden>つぎ ▶</button></div>
+    </div>
+  </div>
+  <div class="card">💡 <b>見方の ひみつ</b>：回る ものを「高さだけ」で 見ると、上がって 下がって また 上がる 波に なる。1年の 気温、月の 形、ブランコも 同じ「くりかえし」の なかま。中学生に なると、この 波を 数で あらわす 方法を 習うよ。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  // ---- 観覧車 ----
+  var CX = 90, CY = 105, R = 62, GX0 = 175, GX1 = 312, GY = 105, th = 0, lens = "all", run = true, sp = 1, pts = [], t0 = null, last = null;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) { run = false; }
+  function draw() {
+    var gx = CX + R * Math.sin(th), gy = CY + R * Math.cos(th); // 下から 乗って 反時計回り
+    var g = '<rect x="0" y="0" width="320" height="218" fill="#f8fafc" rx="10"/>';
+    // 地面と 支柱
+    g += '<line x1="10" y1="' + (CY + R + 22) + '" x2="165" y2="' + (CY + R + 22) + '" stroke="#94a3b8" stroke-width="3"/><line x1="' + CX + '" y1="' + CY + '" x2="' + (CX - 30) + '" y2="' + (CY + R + 22) + '" stroke="#cbd5e1" stroke-width="4"/><line x1="' + CX + '" y1="' + CY + '" x2="' + (CX + 30) + '" y2="' + (CY + R + 22) + '" stroke="#cbd5e1" stroke-width="4"/>';
+    g += '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="#a5b4fc" stroke-width="3"/>';
+    for (var k = 0; k < 8; k++) { var a = k * Math.PI / 4; g += '<line x1="' + CX + '" y1="' + CY + '" x2="' + (CX + R * Math.cos(a)) + '" y2="' + (CY + R * Math.sin(a)) + '" stroke="#e0e7ff" stroke-width="2"/>'; }
+    // かげ：横から（高さ）＝ 右の かべ、下から（左右）＝ 地面
+    var showY = lens !== "x", showX = lens !== "y";
+    if (showY) g += '<line x1="' + gx + '" y1="' + gy + '" x2="160" y2="' + gy + '" stroke="#3b82f6" stroke-dasharray="4 3" stroke-width="2"/><rect x="156" y="' + (CY - R) + '" width="8" height="' + 2 * R + '" fill="#dbeafe" rx="3"/><circle cx="160" cy="' + gy + '" r="7" fill="#3b82f6"/>';
+    if (showX) g += '<line x1="' + gx + '" y1="' + gy + '" x2="' + gx + '" y2="' + (CY + R + 14) + '" stroke="#ef4444" stroke-dasharray="4 3" stroke-width="2"/><rect x="' + (CX - R) + '" y="' + (CY + R + 10) + '" width="' + 2 * R + '" height="8" fill="#fee2e2" rx="3"/><circle cx="' + gx + '" cy="' + (CY + R + 14) + '" r="7" fill="#ef4444"/>';
+    g += '<rect x="' + (gx - 9) + '" y="' + (gy - 8) + '" width="18" height="16" rx="5" fill="#f472b6" stroke="#fff" stroke-width="2"/><circle cx="' + CX + '" cy="' + CY + '" r="5" fill="#6366f1"/>';
+    // グラフ（横じく＝時間）
+    var top = CY - R, bot = CY + R;
+    g += '<text x="' + GX0 + '" y="20" font-size="11" fill="#475569">' + (lens === "x" ? "🟥 左右の いち" : "🟦 高さ") + ' と 時間</text>';
+    g += '<line x1="' + GX0 + '" y1="' + top + '" x2="' + GX0 + '" y2="' + bot + '" stroke="#94a3b8"/><line x1="' + GX0 + '" y1="' + bot + '" x2="' + GX1 + '" y2="' + bot + '" stroke="#94a3b8"/><text x="' + (GX1 - 2) + '" y="' + (bot + 14) + '" font-size="10" text-anchor="end" fill="#64748b">時間 →</text>';
+    g += '<text x="' + (GX0 - 3) + '" y="' + (top + 4) + '" font-size="10" text-anchor="end" fill="#64748b">' + (lens === "x" ? "右" : "上") + '</text><text x="' + (GX0 - 3) + '" y="' + (bot) + '" font-size="10" text-anchor="end" fill="#64748b">' + (lens === "x" ? "左" : "下") + '</text>';
+    if (pts.length > 1) {
+      var col = lens === "x" ? "#ef4444" : "#3b82f6";
+      var d = pts.map(function (p, i) { var v = lens === "x" ? p.x : p.y; var yy = lens === "x" ? CY - (v - CX) : v; return (i ? "L" : "M") + (GX0 + p.t).toFixed(1) + " " + yy.toFixed(1); }).join(" ");
+      g += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5"/>';
+    }
+    g += '<text x="10" y="' + (CY + R + 42) + '" font-size="11" fill="#475569">1周 ' + Math.floor(pts.length ? pts[pts.length - 1].lap : 0) + ' 回め</text>';
+    $("sv").innerHTML = g;
+  }
+  function step(ts) {
+    if (last == null) last = ts;
+    var dt = Math.min(50, ts - last); last = ts;
+    if (run) {
+      th += dt * 0.0016 * sp;
+      var tx = (pts.length ? pts[pts.length - 1].t : 0) + dt * 0.022 * sp;
+      if (tx > GX1 - GX0) { pts = []; tx = 0; }
+      pts.push({ t: tx, x: CX + R * Math.sin(th), y: CY + R * Math.cos(th), lap: th / (2 * Math.PI) });
+      draw();
+    }
+    requestAnimationFrame(step);
+  }
+  function say() {
+    $("say").innerHTML = lens === "y" ? "🟦 横から 見ると、ゴンドラは <b>上と 下を 行ったり 来たり</b>。グラフは 山と 谷が くりかえす 波に なる。" :
+      lens === "x" ? "🟥 上から 見ると、<b>右と 左を 行ったり 来たり</b>。これも 波。高さの 波と くらべると、山の 場所が 少し ずれて いるよ。" :
+      "回る 動きを、2つの かげ（🟦 高さ・🟥 左右）に 分けて 見られるよ。レンズを かえて みよう。";
+  }
+  $("lens").addEventListener("click", function (e) { var b = e.target.closest("button[data-l]"); if (!b) return; lens = b.getAttribute("data-l"); [].forEach.call($("lens").children, function (x) { x.setAttribute("aria-pressed", String(x === b)); }); say(); draw(); });
+  $("play").addEventListener("click", function () { run = !run; this.textContent = run ? "⏸ とめる" : "▶ うごかす"; });
+  $("spd").addEventListener("click", function () { sp = sp === 1 ? 2 : sp === 2 ? 0.5 : 1; this.textContent = "はやさ：" + (sp === 1 ? "ふつう" : sp === 2 ? "はやい" : "ゆっくり"); });
+  $("clr").addEventListener("click", function () { pts = []; draw(); });
+  if (reduce) $("play").textContent = "▶ うごかす";
+  say(); draw(); requestAnimationFrame(step);
+
+  // ---- クイズ ----
+  var QS = [
+    ["ゴンドラの「高さ」を グラフに すると、どんな 形に なる？", ["山と 谷が くりかえす 波の 形", "ずっと 上がりつづける 線", "まっすぐ 横の 線"], "回るから、上がって 下がって また 上がる。だから 波に なる。"],
+    ["1周 20分の 観覧車。いちばん 高い ところから、つぎに いちばん 高く なるのは 何分後？", ["20分後", "10分後", "40分後"], "1周すると もとの 場所に もどる。波の 山から 山までが 1周分（20分）。"],
+    ["ゴンドラが いちばん 高い とき、🟥 左右の かげは どこ？", ["まん中", "いちばん 右", "いちばん 左"], "てっぺんは 観覧車の まん中の 真上。だから 左右の かげは まん中。高さの 波と 左右の 波は 山の 場所が ずれて いる。"],
+    ["1周 20分の 観覧車。下で 乗ってから 10分後、ゴンドラは どこ？", ["いちばん 高い ところ", "いちばん 下", "まん中の 高さ"], "20分で 1周だから、10分は 半周。下から 半周すると てっぺん。"],
+    ["観覧車の 高さの 波と、同じ「くりかえし」の なかまは どれ？", ["1年の 気温の 変わり方", "自分の 身長の のび方", "ためた お金の ふえ方"], "気温は 夏に 高く 冬に 低く、毎年 くりかえす。身長や ちょ金は 進む だけで もどらない。"]
+  ];
+  var qi = 0, tried = false, clean = 0, ord;
+  function showQ() { var q = QS[qi]; tried = false; ord = shuf([0, 1, 2]); $("qc").textContent = (qi + 1) + " / " + QS.length + "　1回で 正解：" + clean; $("qt").textContent = q[0]; $("qm").innerHTML = ""; $("qn").hidden = true;
+    $("qch").innerHTML = ord.map(function (k) { return '<button type="button" data-k="' + k + '">' + esc(q[1][k]) + '</button>'; }).join(""); }
+  $("qch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-k]"); if (!b || !$("qn").hidden) return;
+    if (b.getAttribute("data-k") !== "0") { b.classList.add("ng"); tried = true; $("qm").innerHTML = "🔁 上の 観覧車で レンズを かえて 見て みよう"; return; }
+    b.classList.add("ok"); if (!tried) clean++; $("qm").innerHTML = "⭕ " + esc(QS[qi][2]); $("qn").hidden = false;
+    $("qc").textContent = (qi + 1) + " / " + QS.length + "　1回で 正解：" + clean; $("qn").textContent = qi + 1 < QS.length ? "つぎ ▶" : "もう一度 🔁";
+  });
+  $("qn").addEventListener("click", function () { if (qi + 1 < QS.length) qi++; else { qi = 0; clean = 0; } showQ(); });
+  showQ();
+
+  // ---- くりかえし さがし ----
+  var KS = shuf([
+    ["1年の 気温（夏は あつく、冬は さむい）", 1, "毎年 同じように くりかえす。"],
+    ["月の 形（満月 → 見えない → 満月）", 1, "およそ 30日で もとに もどる。"],
+    ["1日の 太陽の 高さ", 1, "朝 のぼって、昼に 高く、夕方 しずむ。毎日 くりかえす。"],
+    ["ブランコの ゆれ", 1, "前と うしろを 行ったり 来たり。"],
+    ["時計の 長い はりの 先の 高さ", 1, "1時間で 1周。観覧車と 同じ。"],
+    ["1週間の 曜日", 1, "日曜から 土曜まで いくと、また 日曜。"],
+    ["自分の 身長", 0, "のびて いく だけで、もとには もどらない。"],
+    ["育てて いる ヘチマの くきの 長さ", 0, "のびて いく。くりかえしては いない。"],
+    ["ちょ金箱に ためた お金", 0, "ためる だけなら ふえて いく いっぽう。"],
+    ["星の 動き（東から 西へ）", 1, "1日で ほぼ 1周して、また 同じ 場所に 来る。"]
+  ]);
+  var ki = 0, kok = 0, ktried = false;
+  function showK() { var k = KS[ki]; ktried = false; $("kc").textContent = (ki + 1) + " / " + KS.length + "　1回で 正解：" + kok; $("kt").textContent = k[0]; $("km").innerHTML = ""; $("kn").hidden = true; [].forEach.call($("kch").children, function (b) { b.className = ""; }); }
+  $("kch").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-v]"); if (!b || !$("kn").hidden) return;
+    var k = KS[ki];
+    if (Number(b.getAttribute("data-v")) !== k[1]) { b.classList.add("ng"); ktried = true; $("km").innerHTML = "🔁 しばらく たつと、もとに もどる？"; return; }
+    b.classList.add("ok"); if (!ktried) kok++; $("km").innerHTML = (k[1] ? "⭕ 🔁 くりかえし。" : "⭕ ➡ くりかえさない。") + esc(k[2]); $("kn").hidden = false;
+    $("kc").textContent = (ki + 1) + " / " + KS.length + "　1回で 正解：" + kok; $("kn").textContent = ki + 1 < KS.length ? "つぎ ▶" : "もう一度 🔁";
+  });
+  $("kn").addEventListener("click", function () { if (ki + 1 < KS.length) ki++; else { ki = 0; kok = 0; shuf(KS); } showK(); });
+  showK();
+
+  $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (!b) return; var t = b.getAttribute("data-t"); [].forEach.call($("tabs").children, function (x) { x.setAttribute("aria-pressed", String(x === b)); }); $("p0").hidden = t !== "0"; $("p1").hidden = t !== "1"; });
+})();
+</script>
+</body>
+</html>

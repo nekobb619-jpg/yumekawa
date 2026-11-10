@@ -48,11 +48,12 @@
 
   var TAGS = [
     { id: "kurabe", icon: "⚖️", name: "くらべる" }, { id: "henka", icon: "📈", name: "変わり方" }, { id: "inga", icon: "🔗", name: "原因と 結果" },
-    { id: "kimari", icon: "🔍", name: "きまり" }, { id: "junban", icon: "🔢", name: "順番" }, { id: "nakama", icon: "🗂", name: "なかま分け" }, { id: "bubun", icon: "🧩", name: "部分と 全体" }
+    { id: "kimari", icon: "🔍", name: "きまり" }, { id: "junban", icon: "🔢", name: "順番" }, { id: "nakama", icon: "🗂", name: "なかま分け" }, { id: "bubun", icon: "🧩", name: "部分と 全体" },
+    { id: "shuki", icon: "🔁", name: "くりかえし" } // ★2026-11-11 周期（行って もどる）。中学の 三角関数・波の たね
   ];
   // ニコの 見方（ステージ id と 名前からの 目安。見方は 1つでは ないので「ニコは こう 思った」と して 出す）
   var NIKO = [
-    [/グラフ|折れ線|変わり|温度|天気|季節|星|月の|1日|気温/, "henka"], [/くらべ|比べ|角|面積|大きさ|使い分け|にた|ちがい/, "kurabe"],
+    [/星|月の|季節|1年|くりかえ|ふりこ/, "shuki"], [/グラフ|折れ線|変わり|温度|天気|1日|気温/, "henka"], [/くらべ|比べ|角|面積|大きさ|使い分け|にた|ちがい/, "kurabe"],
     [/体|電気|なぜ|理由|風水害|災害|水の|じょう発|もの/, "inga"], [/計算|式|きまり|順じょ|わり算|かけ算|筆算|パターン/, "kimari"],
     [/手順|ならべ|歴史|先人|昔|物語|お話|ごんぎつね|伝統/, "junban"], [/なかま|分類|生き物|漢字|部首|都道府県|地図|ことば/, "nakama"],
     [/小数|分数|がい数|割合|あまり|見積/, "bubun"]
@@ -111,6 +112,7 @@
     return '<div style="font-size:19px;font-weight:900;text-align:center;">🔭 見方レンズ</div>' +
       '<div style="font-size:12px;font-weight:700;color:#475569;text-align:center;margin:2px 0 8px;line-height:1.6;">ものしりな 人は、問題を 見た しゅんかんに「どの どうぐ？」「どんな なかま？」が 分かる。<br>解く 前に えらぶ 練習を しよう。</div>' +
       '<button type="button" data-ln="tool" style="' + BIG + 'width:100%;">🔭 どの どうぐ？ 5問（とかなくて OK）</button>' +
+      '<button type="button" data-ln="nami" style="' + BIG + 'width:100%;margin-top:8px;background:linear-gradient(135deg,#06b6d4,#3b82f6);">🎡 回ると 波ラボ（レンズを かえて 見る）</button>' +
       '<div style="font-size:13px;font-weight:900;margin-top:12px;">🧰 どうぐ図鑑</div><div style="display:grid;gap:6px;margin-top:4px;">' + tk + '</div>' +
       '<div style="font-size:13px;font-weight:900;margin-top:12px;">🏷 名札図鑑 <span style="font-size:11px;color:#64748b;">（ステージの あとに はった 名札）</span></div>' +
       '<div style="display:grid;gap:4px;margin-top:4px;">' + TAGS.map(function (t, i) { return '<div style="display:grid;grid-template-columns:7.5em 1fr 2em;gap:6px;align-items:center;font-size:12.5px;font-weight:800;"><span>' + t.icon + ' ' + t.name + '</span><span style="display:block;height:10px;background:#e0e7ff;border-radius:5px;overflow:hidden;"><span style="display:block;height:100%;width:' + Math.round(tagN[i] / mx * 100) + '%;background:#6366f1;"></span></span><span style="text-align:right;">' + tagN[i] + '</span></div>'; }).join("") + '</div>' +
@@ -140,6 +142,7 @@
   function act(a, v) {
     if (a === "close") return close();
     if (a === "hub") { ui = { ph: "hub" }; return render(); }
+    if (a === "nami") { close(); var u = "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_mawaru_nami.html"; if (window.openHybridContent) window.openHybridContent(u, "🎡 回ると 波ラボ", false); else window.open(u, "_blank"); return; }
     if (a === "note") { close(); if (window.showJigakuCard) window.showJigakuCard("a_lens"); return; }
     if (a === "tool") { var items = pickItems(5); ui = { ph: "tool", items: items, i: 0, ok: 0, ord: shuffle([0, 1, 2]) }; return render(); }
     if (a === "ans" && ui && !ui.res) { var it = ui.items[ui.i], ok = Number(v) === 0; record(it.id, ok); if (ok) ui.ok++; ui.res = { ok: ok }; return render(); }

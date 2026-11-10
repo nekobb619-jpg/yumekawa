@@ -327,3 +327,5 @@
   ①「どの どうぐ？」ITEMS 22問（解かずに 道具を えらぶ。TOOLS＝線分図・表・図・逆から・きまり・だいたい・なかま分け。まちがいの 道具は その 問題で 使いにくい ものを 2つ えらんで ある）。ハブで 5問、⚡すらすら ふくしゅうに 1まい（window.lensToolCard／lensToolAnswered、speed-review.js）。5問 ぜんぶ 正解で かけら +2（1日1回）。
   ② 🏷 名札はり：askWhyAfterClear を つつみ、その日 はじめての ふつうの クリアだけ なるほど？の かわりに 名札（TAGS 7つ）。正解なし。ニコの 見方は NIKO の 正規表現（ステージ id・名前）からの 目安。かけら +1（1日1回）。
   ③ 自学ノート a_lens「3つの レンズで 見る」。saveData.lens {tool,tags,tagD,toolD,log}。LOG「🔭見方レンズ」。☰メニュー「🔭 見方レンズ」。
+- 2026-11-11 🧪 今日の うごかすラボ js/daily-lab.js（保護者：ラボを「今日の なぞとき」の ように）：ホームの #dailymission-banner の 下に バナー。stages.js の lab_url ＋ EXTRA から INFO に ある ラボを 集め、NEW 期間の ラボ → 学校の 単元（schoolStageRank 0）と それ いがいを 1日おき（さいきん ひらいた ものは あとまわし）。その日 はじめて ひらくと かけら +1。saveData.dailyLab {d, ids}。LOG「🧪今日のラボ」。新しい ラボを 足したら INFO に 1行。
+- 2026-11-11 🎡 lab/算数/lab_mawaru_nami.html「回ると 波ラボ」（ステージ なし、EXTRA）：観覧車の ゴンドラを 🟦高さだけ（横から）・🟥左右だけ（上から）の レンズで 見て、時間の グラフが 波に なる。クイズ 5問・くりかえし さがし 10問（えらぶだけ）。prefers-reduced-motion なら 止めて 始まる。見方レンズの ハブからも ひらける。名札に 🔁 くりかえし（shuki）を 追加。
