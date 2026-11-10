@@ -301,6 +301,10 @@
     { id: "e_nikki", kind: "exp", title: "まいにち 観察日記", menu: "B：〇〇特集（理科）",
       note: "同じ ものを 毎日 見て 書く（学校の 植物・家の 植物・月・天気）。3日 つづくと 変化が 見える。",
       page: ["観察日記　（見る もの：　　　　）", "1日目　月　日　色・形・大きさ・さわりごこち", "2日目　月　日　きのうと ちがう ところ", "3日目　月　日　きのうと ちがう ところ", "3日間で 変わった こと", "これから どう なると 思う？（予想）"] },
+    // ★2026-11-10 てだすけ 3だん階の ゴール：テーマから 自分で 決める（保護者：AI・ゆめかわに 頼らず できる ように）
+    { id: "a_jibun", kind: "a", title: "自分で テーマを 決めて 書く", menu: "A・B：自由（自分で 決める）", hot: true,
+      note: "テーマも 書き方も 自分で 決める ページ。授業で 気に なった こと・行った 場所・好きな もの、なんでも OK。見出しを 自分で 考えて、1ページ うめよう。",
+      page: ["テーマ　（自分で 決めて 書く）", "なぜ この テーマに した？　（書く）", "調べた こと・やった こと　（書く）", "わかった こと　（書く）", "つぎに 知りたい こと　（書く）"] },
     // ★2026-10-07追加：自分の ぎ問から 次の 問いを 出す（「調べた あと、新しい 問いは 見つかった？」）
     { id: "a_toi", kind: "a", title: "今日の ぎ問 → 次の 問い", menu: "B：〇〇特集・調べ学習", hot: true,
       note: "ふと 思った ぎ問を 1つ 書こう。例：「男子だけ・女子だけの 学校は どうして あるの？」→ 次の 問い「わたしの 県には いくつ ある？」「いつから あるの？」。答えが 分かったら、また 次の 問いを 出す。",
@@ -474,6 +478,32 @@
   };
   function findCard(id) { var a = appCard(); return (a && a.id === id) ? a : CARDS.filter(function (c) { return c.id === id; })[0]; }
   // ノートと 同じ 横書きの マス目（左から 右へ。1ページ NOTE_H 行）。うすい 黄色の 行は 自分で 書く ところ
+  /* ★2026-11-10 てだすけ 3だん階（保護者：AI・ゆめかわに 頼らず できる ように。少しずつ 手助けを へらす）
+     Lv1 たっぷり＝今までの ページ（写せる 文 あり）／Lv2 すこし＝見出しだけ（中身は 自分で 書く）／Lv3 なし＝題だけ。見出しも 自分で 決める
+     saveData.jigakuLv = { lv: いまの レベル, n: その レベル いじょうで 書いた 数 }。LV_UP まいで 1つ 上がる。下の レベルを えらぶのは いつでも OK（へらない）。
+     クイズ・アプリの まちがい・自分で テーマ（a_jibun）は ちがう 形なので、レベルで かえない。 */
+  var LV_UP = 3, LV_NAME = { 1: "📗 てだすけ たっぷり", 2: "📘 てだすけ すこし", 3: "📙 てだすけ なし" };
+  function lvState() { var sd = window.saveData || {}; var o = sd.jigakuLv && typeof sd.jigakuLv === "object" ? sd.jigakuLv : {}; return { lv: Math.min(3, Math.max(1, Number(o.lv) || 1)), n: Number(o.n) || 0 }; }
+  function leveled(c) { return c && (c.kind === "exp" || c.kind === "cmp" || c.kind === "a") && c.id !== "a_jibun"; }
+  function pageFor(c, lv) {
+    if (!leveled(c) || lv <= 1) return c.page;
+    var title = String(c.page[0]).replace(/　（[^）]*）$/, "");
+    if (lv >= 3) return [title, "見出し①　（自分で 決めて 書く）", "見出し②　（書く）", "見出し③　（書く）", "まとめ・思った こと　（書く）"];
+    var out = [c.page[0]];
+    c.page.slice(1).forEach(function (p, i) {
+      var t = String(p), k = t.indexOf("　");
+      if (k > 0) out.push(t.slice(0, k) + "　（書く）");
+      else if (writable(clean(t), i + 1)) out.push(t);
+    });
+    if (out.length < 3) out.push("わかった こと　（書く）", "思った こと　（書く）");
+    return out;
+  }
+  function lvHints(c, lv) { // Lv2・3 の ときの「こまったら 見る」：Lv1 の 見出し
+    if (!leveled(c) || lv <= 1) return "";
+    var hs = c.page.slice(1).map(function (p) { var t = String(p), k = t.indexOf("　"); return k > 0 ? t.slice(0, k) : ""; }).filter(Boolean);
+    return '<details style="margin-top:6px;font-size:12px;font-weight:800;color:#64748b;"><summary style="cursor:pointer;">🔎 こまったら 見る（見出しの れい' + (lv >= 3 ? "" : "・中身") + '）</summary><div style="margin-top:4px;line-height:1.7;">' +
+      (lv >= 3 ? hs.map(esc).join("・") || "なし" : c.page.slice(1).map(function (p) { return "・" + esc(p); }).join("<br>")) + '</div></details>';
+  }
   function notebook(c) {
     var rows = layout(c.page), pages = [];
     for (var i = 0; i < rows.length; i += NOTE_H) pages.push(rows.slice(i, i + NOTE_H));
@@ -497,15 +527,20 @@
       '<div style="font-size:12px;font-weight:900;color:#a21caf;">❓ アプリで 書いた なぜ？（1つ えらんで「今日の ぎ問」に 書こう）</div>' +
       ws.map(function (w) { return '<div style="font-size:13px;font-weight:800;color:#6b21a8;margin-top:4px;">・' + esc(w.t) + '<span style="font-size:10px;color:#9ca3af;">（' + esc(w.n || "") + '）</span></div>'; }).join("") + '</div>';
   }
-  window.showJigakuCard = function (id) {
+  window.showJigakuCard = function (id, lvPick) {
     var c = findCard(id); if (!c) return;
-    var ok = done().indexOf(id) >= 0;
+    var ok = done().indexOf(id) >= 0, st = lvState(), lv = leveled(c) ? (lvPick || st.lv) : 1;
+    window._jgLv = { id: id, lv: lv };
+    var lvBox = leveled(c) ? '<div style="margin-top:6px;background:#f0fdfa;border-radius:12px;padding:6px 8px;">' +
+      '<div style="display:flex;gap:4px;flex-wrap:wrap;">' + [1, 2, 3].map(function (n) { return '<button type="button" aria-pressed="' + (n === lv) + '" style="' + BTN + 'flex:1 1 30%;padding:6px 4px;font-size:11.5px;' + (n === lv ? "background:#0f766e;color:#fff;" : "background:#fff;color:#0f766e;border:2px solid #99f6e4;") + '" onclick="window.showJigakuCard(\'' + id + '\',' + n + ')">' + LV_NAME[n] + (n > st.lv ? " ✨" : "") + '</button>'; }).join("") + '</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#0f766e;margin-top:4px;">' + (st.lv >= 3 ? "🏆 てだすけ なしまで きた！ テーマから 自分で 決める「自分で テーマを 決めて 書く」にも ちょうせん しよう" : "いまの レベル：" + LV_NAME[st.lv] + "。この レベル いじょうで あと " + Math.max(0, LV_UP - st.n) + "まい 書くと、つぎの レベルへ") + '</div></div>' : "";
     shell('<div style="font-size:11px;font-weight:900;color:#a21caf;">' + KIND[c.kind] + '　先生の メニュー：' + esc(c.menu) + '</div>' +
       '<div style="font-size:17px;font-weight:900;color:#6b21a8;margin:2px 0 6px;">' + esc(c.title) + '</div>' +
       (c.note ? '<div style="background:#fefce8;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:800;color:#854d0e;line-height:1.6;">💡 ' + esc(c.note) + '</div>' : '') +
       '<div style="font-size:12px;font-weight:700;color:#7a6985;margin-top:6px;">（　）の ところと、<span style="background:#fef9c3;padding:0 3px;">うすい 黄色の 行</span>は 自分で 書こう。1ページ うめられるよ。線は じょうぎで。</div>' +
+      lvBox + lvHints(c, lv) +
       whyBox(id) +
-      notebook(c) +
+      notebook({ page: pageFor(c, lv) }) +
       '<div style="display:grid;gap:8px;margin-top:12px;">' +
         '<button style="' + BTN + 'padding:12px;font-size:15px;color:#fff;background:linear-gradient(135deg,#10b981,#059669);" onclick="window.jigakuDone(\'' + id + '\')">' + (ok ? "✅ 書けた（もう一度 記録）" : "✅ ノートに 書けた！") + '</button>' +
         '<button style="' + BTN + 'padding:10px;font-size:13px;color:#7e22ce;background:#f3e8ff;" onclick="window.openJigakuNote()">◀ ほかの ネタを 見る</button>' +
@@ -515,13 +550,19 @@
     var sd = window.saveData; if (!sd) return;
     var c = findCard(id) || {}, t = today();
     sd.jigakuDone = done().filter(function (x) { return x !== id; }).concat([id]).slice(-60);
+    var lvNow = window._jgLv && window._jgLv.id === id ? window._jgLv.lv : 1, lvMsg = "", lvUp = false;
+    if (leveled(c)) {
+      var st = lvState(); lvMsg = "・" + LV_NAME[lvNow].slice(2);
+      if (lvNow >= st.lv) { st.n++; if (st.n >= LV_UP && st.lv < 3) { st.lv++; st.n = 0; lvUp = true; } }
+      sd.jigakuLv = st;
+    } else if (id === "a_jibun") lvMsg = "・自分で テーマ";
     var reward = sd.jigakuLastDate === t ? 0 : JIGAKU_PTS;
     sd.jigakuLastDate = t; sd.pts = (Number(sd.pts) || 0) + reward;
     if (window.grantStickerPack) window.grantStickerPack("jigaku"); // ★2026-10-04：🎀シール帳の ふくろ（1日 1つ）
     if (window.saveGame) window.saveGame(); if (window.updateUI) window.updateUI();
-    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "📓自学ノート", msg: (c.title || id) + "（" + (KIND[c.kind] || "") + "）" + (reward ? " +" + reward + "pt" : "") });
+    if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "📓自学ノート", msg: (c.title || id) + "（" + (KIND[c.kind] || "") + lvMsg + "）" + (reward ? " +" + reward + "pt" : "") + (lvUp ? " ⬆レベルアップ" : "") });
     var r = document.getElementById("jigaku-result");
-    if (r) r.innerHTML = '<div style="background:#ecfdf5;border-radius:14px;padding:10px;text-align:center;font-weight:900;color:#065f46;">📓 よく がんばったね！' + (reward ? '　🎁 +' + reward + 'pt' : '') + '<div style="font-size:12px;margin-top:4px;">先生に 見せて、コメントを もらおう。</div></div>';
+    if (r) r.innerHTML = '<div style="background:#ecfdf5;border-radius:14px;padding:10px;text-align:center;font-weight:900;color:#065f46;">📓 よく がんばったね！' + (reward ? '　🎁 +' + reward + 'pt' : '') + '<div style="font-size:12px;margin-top:4px;">先生に 見せて、コメントを もらおう。</div>' + (lvUp ? '<div style="font-size:14px;margin-top:6px;color:#0f766e;">⬆ レベルアップ！ つぎから ' + LV_NAME[lvState().lv] + ' で 書けるよ</div>' : '') + '</div>';
   };
 
   /* ---------------- 🌼 よかった帳（ポリアンナの よかったさがし。書いた ものを ためる） ----------------
