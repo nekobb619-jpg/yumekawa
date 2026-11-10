@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>漢字の書き取りシート</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Klee+One:wght@600&display=swap" rel="stylesheet">
-<!-- ★2026-10-03追加：漢字の 書き取りシート（印刷用）。?no=1234 で 10問、&p=3.17 で 前に まちがえた 言葉を 先に、&answers=1 で 答え。
+<!-- ★2026-10-03追加：漢字の 書き取りシート（印刷用）。?no=1234 で 10問、&c=ken などで コース（js/kanji-sheet.js の COURSES）、&p=3.17 で 前に まちがえた 言葉を 先に、&answers=1 で 答え。
      問題は js/kanji-sheet.js の KANJI_SHEET.make(no, prio) で 作るので、アプリの 丸つけと 同じ 問題に なる。 -->
 <style>
   :root { --ink: #4a3b52; --soft: #7a6985; --accent: #db2777; }
@@ -49,7 +49,8 @@
   var showAns = qs.get("answers") === "1";
   document.getElementById("ansbtn").onclick = function () { var u = new URL(location.href); if (showAns) u.searchParams.delete("answers"); else u.searchParams.set("answers", "1"); location.href = u.toString(); };
   function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
-  var words = window.KANJI_SHEET.make(no, prio), d = new Date();
+  var course = qs.get("c") || "mix", cinfo = (window.KANJI_SHEET.COURSES || []).filter(function (c) { return c.id === course; })[0];
+  var words = window.KANJI_SHEET.make(no, prio, course), d = new Date();
   var rows = words.map(function (w, i) {
     var m = w.s.match(/^(.*)【(.*)】(.*)$/);
     var cells = w.a.split("").map(function (ch) { return '<span class="cell">' + (showAns ? esc(ch) : "") + '</span>'; }).join("");
@@ -57,7 +58,7 @@
       '<span class="boxes"><span class="yomi">' + esc(m[2]) + '</span><span class="cells">' + cells + '</span></span>' + esc(m[3]) + '</div>';
   }).join("");
   document.getElementById("root").innerHTML = '<div class="page">' +
-    '<div class="head"><h1>✍️ 漢字の 書き取りシート（4年）</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／10</div></div>' +
+    '<div class="head"><h1>✍️ 漢字の 書き取りシート（4年）' + (cinfo && course !== "mix" ? '<span style="font-size:12pt;margin-left:3mm;">' + esc(cinfo.name) + '</span>' : '') + '</h1><div class="meta">シート No.<b style="font-size:14pt;">' + no + '</b><br>なまえ ＿＿＿＿＿＿　' + (d.getMonth() + 1) + '月' + d.getDate() + '日　　　／10</div></div>' +
     '<div class="tip">読みがなの 漢字を マスに 書こう。とめ・はね・はらいに 気を つけて、ていねいに。書けたら アプリの「✍️ 漢字シート」→「丸つけ」で 自分で 丸つけ しよう。' + (prio.length ? '（🔁 マークの 言葉は 前に まちがえた 言葉だよ）' : '') + '</div>' +
     rows.replace(/<span class="no">\((\d+)\)<\/span>/g, function (all, n) { return Number(n) <= prio.length ? '<span class="no">🔁' + n + '</span>' : all; }) +
     '</div>';
