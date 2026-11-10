@@ -29,9 +29,11 @@
     "lab/国語/lab_gon_kimochi.html": ["🦊", "ごんの 気持ちラボ", "行動から 気持ちを 読む"],
     "lab/国語/lab_kosoado.html": ["🦄", "こそあど探検ラボ", "「それ」は 何を さす？"],
     "lab/社会/lab_narabe.html": ["🏺", "先人と 伝統 ならべかえ", "どの じゅんで 起きた？"],
-    "lab/探究/lab_programming_block.html": ["🧩", "プログラミングラボ", "じゅんばん・くりかえし・もし"]
+    "lab/探究/lab_programming_block.html": ["🧩", "プログラミングラボ", "じゅんばん・くりかえし・もし"],
+    "lab/算数/lab_maker_tenbin.html": ["⚖️", "魔法の 天びんラボ", "左右が つりあうのは どこ？"],
+    "lab/算数/lab_balance.html": ["⚖️", "てんびん 実験ラボ", "重さと きょりで つりあう？"]
   };
-  var EXTRA = ["lab/算数/lab_mawaru_nami.html"];
+  var EXTRA = ["lab/算数/lab_mawaru_nami.html", "lab/算数/lab_maker_tenbin.html", "lab/算数/lab_balance.html"];
   var NEW = { "lab/算数/lab_mawaru_nami.html": ["2026-11-11", "2026-11-17"] };
 
   function today() { var d = new Date(window.currentServerTime || Date.now()); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
@@ -116,6 +118,7 @@
   function go(c) {
     if (cur && c.k === cur.k) return open();
     var i = INFO[c.k] || ["🧪", "ラボ"];
+    if (window.lensModelSeen) { window.lensModelSeen(c.k); try { if (window.saveGame) window.saveGame(); } catch (e) {} }
     try { if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🧪ラボ（えらんだ）", msg: i[1] }); } catch (e) {}
     if (window.openHybridContent) window.openHybridContent(c.url, i[0] + " " + i[1], false); else window.open(c.url, "_blank");
   }
@@ -124,6 +127,7 @@
     if (!cur) return;
     var lab = cur, o = st(), t = today(), first = o.d !== t, i = INFO[lab.k] || ["🧪", "ラボ"];
     o.d = t; o.ids = o.ids.filter(function (x) { return x !== lab.k; }).concat([lab.k]).slice(-12);
+    if (window.lensModelSeen) window.lensModelSeen(lab.k); // ★2026-11-11 🗃 モデル図鑑
     if (window.saveData) window.saveData.dailyLab = o;
     if (first && window.stickerAddShardsExternal) { try { window.stickerAddShardsExternal(1, "今日の ラボ"); } catch (e) {} }
     try { if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🧪今日のラボ", msg: i[1] + (first ? "（今日 はじめて・かけら+1）" : "") }); } catch (e) {}

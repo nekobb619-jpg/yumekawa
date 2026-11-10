@@ -46,6 +46,37 @@
     [22, "教室の ゆかに、たて 2m・よこ 3mの マットを しく。ほかの 机は どこに おける？", "zu", ["kimari", "gyaku"], "場所の 問題は、教室の 図を かいて マットを 書きこむと すぐ 分かる。"]
   ].map(function (x) { return { id: x[0], q: x[1], t: x[2], ng: x[3], why: x[4] }; });
 
+  /* ★2026-11-11 🗃 モデル図鑑（保護者：ラボの 体験を モデル・フレームワークの 判断に）。
+     ラボを ひらく（js/daily-lab.js → lensModelSeen）か「どの モデル？」で 正解すると カードが ひらく。saveData.lens.models {id: 日}、lens.mq {問題id: [出た, 正解]} */
+  var MODELS = {
+    shuki: { icon: "🎡", name: "くりかえし（周期）", say: "行って もどる。しばらく たつと もとに もどる", life: "ブランコ・1年の 気温・月の 形・1週間", labs: ["lab/算数/lab_mawaru_nami.html", "lab/理科/lab_hoshi_ugoki.html", "lab/理科/lab_kisetsu.html"] },
+    tsuriai: { icon: "⚖️", name: "つりあい", say: "両方が 同じに なる ところを さがす", life: "シーソー・おこづかいの 入る お金と 使う お金", labs: ["lab/算数/lab_balance.html", "lab/算数/lab_maker_tenbin.html"] },
+    joken: { icon: "🧪", name: "1つだけ かえて くらべる", say: "かえるのは 1つ。ほかは 同じに する", life: "紙ひこうきの つばさだけ かえて とばす", labs: ["lab/理科/lab_jouken_soroe.html", "lab/理科/lab_kuki_teppou.html"] },
+    wakeru: { icon: "🗂", name: "もれなく 分ける", say: "決まりを 決めて、のこりなく 分ける", life: "本だなの 整理・生き物の なかま分け", labs: ["lab/算数/lab_nakama_sagashi.html", "lab/国語/lab_kanji_imi.html"] },
+    junban: { icon: "🔗", name: "順番と つながり", say: "何が 先で、何が 原因で、どう なったか", life: "ねぼう → 朝ごはん ぬき → おなかが すく", labs: ["lab/社会/lab_narabe.html", "lab/国語/lab_gon_kimochi.html"] },
+    kankei: { icon: "📈", name: "いっしょに 変わる", say: "片方が 変わると、もう 片方も 変わる", life: "気温が 上がると アイスが 売れる", labs: ["lab/理科/lab_ondo_taiseki.html", "lab/理科/lab_karada_ude.html", "lab/理科/lab_atatamari.html"] },
+    hub: { icon: "🕸", name: "中心に 集めて 配る", say: "いったん まん中に 集めて、そこから 分ける", life: "大きな 倉庫から 家へ 荷物・連らくもう", labs: [] },
+    yusen: { icon: "🥇", name: "先に やる ことを 決める", say: "どれから やるか、じゅんばんを 決める", life: "しゅくだいと 習い事と ゲームの 時間", labs: ["lab/算数/lab_keisan_junjo.html", "lab/算数/lab_hissan2.html", "lab/探究/lab_programming_block.html"] }
+  };
+  // [id, 場面, 正解の モデル, まちがい 2つ, ひとこと]
+  var MITEMS = [
+    [101, "ブランコが 前と うしろを 行ったり 来たり する。", "shuki", ["tsuriai", "hub"], "しばらく たつと もとの 場所に もどる。くりかえしの モデル。"],
+    [102, "シーソーを 平らに したい。重い 人が まん中に 近づく。", "tsuriai", ["shuki", "junban"], "左と 右が 同じに なる ところを さがす。つりあいの モデル。"],
+    [103, "どちらの ひりょうが よく 育つか。水や 日当たりは 同じに して くらべる。", "joken", ["hub", "shuki"], "ひりょうだけ かえて、ほかは 同じ。1つだけ かえて くらべる モデル。"],
+    [104, "学級文庫を「物語」「図かん」「まんが」に 分けて ならべる。", "wakeru", ["shuki", "tsuriai"], "決まりを 決めて、のこりなく 分ける。もれなく 分ける モデル。"],
+    [105, "ねぼうした → 朝ごはんを ぬいた → 3時間目に おなかが すいた。", "junban", ["tsuriai", "hub"], "何が 先で、何が 原因か を たどる。順番と つながりの モデル。"],
+    [106, "気温が 高い 日ほど、アイスが よく 売れる。", "kankei", ["wakeru", "hub"], "気温が 変わると 売れる 数も 変わる。いっしょに 変わる モデル。"],
+    [107, "町じゅうの 荷物を いったん 大きな 倉庫に 集めて、そこから 家に 配る。", "hub", ["shuki", "joken"], "まん中に 集めて から 配ると、運ぶ 道が 少なくて すむ。"],
+    [108, "しゅくだい・習い事・ゲーム。時間が ない 日は 何から やるか 決める。", "yusen", ["shuki", "kankei"], "大事な ものから じゅんばんを 決める。先に やる ことを 決める モデル。"],
+    [109, "1年の 気温は 夏に 高く、冬に 低く、また 夏に 高く なる。", "shuki", ["yusen", "wakeru"], "毎年 もとに もどる。くりかえしの モデル。"],
+    [110, "おこづかいで、もらう お金より 使う お金が 多く ならない ように する。", "tsuriai", ["shuki", "wakeru"], "入る お金と 出る お金を くらべて つりあわせる。"],
+    [111, "紙ひこうきの つばさの 形だけ かえて、とんだ きょりを くらべる。", "joken", ["hub", "yusen"], "かえるのは つばさだけ。投げ方や 紙は 同じに する。"],
+    [112, "先生が 学級委員に 伝え、学級委員が はんごとに 伝える。", "hub", ["kankei", "shuki"], "まず 中心に 伝え、そこから 分かれて 広がる。"],
+    [113, "水を あたためるほど、体積が 大きく なる。", "kankei", ["wakeru", "yusen"], "温度が 変わると 体積も 変わる。いっしょに 変わる モデル。"],
+    [114, "ごんが いたずら → 後かい → つぐない と、気持ちが かわった わけを たどる。", "junban", ["tsuriai", "hub"], "出来事の じゅんと、気持ちが かわった 原因を つなげて 読む。"],
+    [115, "運動会の じゅんびで、まず 道具を 出し、つぎに ならべ、さいごに たしかめる。", "yusen", ["shuki", "kankei"], "やる じゅんばんを 先に 決めて おくと、まよわない。"],
+    [116, "ゴミを「もえる」「もえない」「しげん」に 分けて 出す。", "wakeru", ["kankei", "tsuriai"], "決まりで 分けて、どれにも 入らない ものが ない ように する。"]
+  ].map(function (x) { return { id: x[0], q: x[1], t: x[2], ng: x[3], why: x[4], m: 1 }; });
   var TAGS = [
     { id: "kurabe", icon: "⚖️", name: "くらべる" }, { id: "henka", icon: "📈", name: "変わり方" }, { id: "inga", icon: "🔗", name: "原因と 結果" },
     { id: "kimari", icon: "🔍", name: "きまり" }, { id: "junban", icon: "🔢", name: "順番" }, { id: "nakama", icon: "🗂", name: "なかま分け" }, { id: "bubun", icon: "🧩", name: "部分と 全体" },
@@ -70,18 +101,28 @@
   function log(msg) { try { if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🔭見方レンズ", msg: msg }); } catch (e) {} }
   function save() { try { if (window.saveGame) window.saveGame(); } catch (e) {} }
   function shard(n, why) { try { return window.stickerAddShardsExternal ? window.stickerAddShardsExternal(n, why) : 0; } catch (e) { return 0; } }
-  function choicesOf(it) { var ids = [it.t].concat(it.ng); return ids.map(function (k) { return TOOLS[k].icon + " " + TOOLS[k].name; }); }
-  function record(id, ok) { var o = st(), r = o.tool[id] || [0, 0]; r[0]++; if (ok) r[1]++; o.tool[id] = r; }
+  function dictOf(it) { return it.m ? MODELS : TOOLS; }
+  function choicesOf(it) { var D = dictOf(it), ids = [it.t].concat(it.ng); return ids.map(function (k) { return D[k].icon + " " + D[k].name; }); }
+  function record(id, ok) {
+    var o = st(), m = id >= 100, bag = m ? (o.mq = o.mq || {}) : o.tool, r = bag[id] || [0, 0]; r[0]++; if (ok) r[1]++; bag[id] = r;
+    if (m && ok) { var it = MITEMS.filter(function (x) { return x.id === id; })[0]; if (it) unlock(it.t); }
+  }
+  function unlock(mid) { var o = st(); o.models = o.models || {}; if (!o.models[mid] && MODELS[mid]) { o.models[mid] = today(); o.newM = mid; return mid; } return null; }
+  window.lensModelSeen = function (labKey) {
+    try { var k = String(labKey || ""), got = null; Object.keys(MODELS).forEach(function (id) { if (MODELS[id].labs.indexOf(k) >= 0 && !got) got = unlock(id); }); if (got) { log("モデル図鑑：" + MODELS[got].name + "（ラボで 発見）"); save(); } return got; } catch (e) { return null; }
+  };
   // まだ 出て いない → 正解が 少ない じゅんに
-  function pickItems(n) {
-    var o = st();
-    return shuffle(ITEMS.slice()).sort(function (a, b) { var x = o.tool[a.id] || [0, 0], y = o.tool[b.id] || [0, 0]; return (x[0] > 0) - (y[0] > 0) || x[1] - y[1]; }).slice(0, n);
+  function pickItems(n, model) {
+    var o = st(), bag = model ? (o.mq || {}) : o.tool;
+    return shuffle((model ? MITEMS : ITEMS).slice()).sort(function (a, b) { var x = bag[a.id] || [0, 0], y = bag[b.id] || [0, 0]; return (x[0] > 0) - (y[0] > 0) || x[1] - y[1]; }).slice(0, n);
   }
 
   // ⚡すらすら ふくしゅう に まぜる 1まい（js/speed-review.js）
   window.lensToolCard = function () {
-    var it = pickItems(1)[0]; if (!it) return null;
-    return { k: "tool::" + it.id, sid: "tool", ch: true, tool: it.id, q: { q: "🔭 どの どうぐで 考える？（とかなくて OK）\n" + it.q, a: choicesOf(it), c: 0, job_desc: it.why } };
+    // 1日おきに「どの どうぐ？」と「どの モデル？」
+    var model = Math.floor((window.currentServerTime || Date.now()) / 86400000) % 2 === 1;
+    var it = pickItems(1, model)[0]; if (!it) return null;
+    return { k: "tool::" + it.id, sid: "tool", ch: true, tool: it.id, q: { q: (model ? "🗃 どの モデルの なかま？\n" : "🔭 どの どうぐで 考える？（とかなくて OK）\n") + it.q, a: choicesOf(it), c: 0, job_desc: it.why } };
   };
   window.lensToolAnswered = function (id, ok) { try { record(Number(id), ok); save(); } catch (e) {} };
 
@@ -112,21 +153,32 @@
     return '<div style="font-size:19px;font-weight:900;text-align:center;">🔭 見方レンズ</div>' +
       '<div style="font-size:12px;font-weight:700;color:#475569;text-align:center;margin:2px 0 8px;line-height:1.6;">ものしりな 人は、問題を 見た しゅんかんに「どの どうぐ？」「どんな なかま？」が 分かる。<br>解く 前に えらぶ 練習を しよう。</div>' +
       '<button type="button" data-ln="tool" style="' + BIG + 'width:100%;">🔭 どの どうぐ？ 5問（とかなくて OK）</button>' +
+      '<button type="button" data-ln="model" style="' + BIG + 'width:100%;margin-top:8px;background:linear-gradient(135deg,#f59e0b,#ef4444);">🗃 どの モデル？ 5問（身のまわりの 場面）</button>' +
       '<button type="button" data-ln="nami" style="' + BIG + 'width:100%;margin-top:8px;background:linear-gradient(135deg,#06b6d4,#3b82f6);">🎡 回ると 波ラボ（レンズを かえて 見る）</button>' +
+      modelZukan() +
       '<div style="font-size:13px;font-weight:900;margin-top:12px;">🧰 どうぐ図鑑</div><div style="display:grid;gap:6px;margin-top:4px;">' + tk + '</div>' +
       '<div style="font-size:13px;font-weight:900;margin-top:12px;">🏷 名札図鑑 <span style="font-size:11px;color:#64748b;">（ステージの あとに はった 名札）</span></div>' +
       '<div style="display:grid;gap:4px;margin-top:4px;">' + TAGS.map(function (t, i) { return '<div style="display:grid;grid-template-columns:7.5em 1fr 2em;gap:6px;align-items:center;font-size:12.5px;font-weight:800;"><span>' + t.icon + ' ' + t.name + '</span><span style="display:block;height:10px;background:#e0e7ff;border-radius:5px;overflow:hidden;"><span style="display:block;height:100%;width:' + Math.round(tagN[i] / mx * 100) + '%;background:#6366f1;"></span></span><span style="text-align:right;">' + tagN[i] + '</span></div>'; }).join("") + '</div>' +
       (tagN.some(function (n) { return !n; }) ? '<div style="font-size:11px;font-weight:700;color:#64748b;margin-top:4px;">まだ つかって いない 見方：' + TAGS.filter(function (t, i) { return !tagN[i]; }).map(function (t) { return t.name; }).join("・") + '</div>' : '') +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;"><button type="button" data-ln="note" style="min-height:44px;border:2px dashed #c7d2fe;border-radius:12px;background:#fff;font:800 12.5px \'Zen Maru Gothic\',sans-serif;color:#4338ca;cursor:pointer;">👓 自学ノート<br>3つの レンズ</button><button type="button" data-ln="close" style="min-height:44px;border:none;border-radius:12px;background:#e0e7ff;font:900 14px \'Zen Maru Gothic\',sans-serif;color:#3730a3;cursor:pointer;">とじる</button></div>';
   }
+  function modelZukan() {
+    var o = st(), have = o.models || {}, n = Object.keys(MODELS).filter(function (k) { return have[k]; }).length;
+    return '<div style="font-size:13px;font-weight:900;margin-top:12px;">🗃 モデル図鑑 <span style="font-size:11px;color:#64748b;">' + n + ' ／ ' + Object.keys(MODELS).length + '（ラボを ひらくか「どの モデル？」で 正解すると ふえる）</span></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;">' + Object.keys(MODELS).map(function (k) {
+        var M = MODELS[k], on = !!have[k], nw = o.newM === k;
+        return '<div style="background:' + (on ? "#fff" : "#f1f5f9") + ';border:2px solid ' + (nw ? "#f59e0b" : on ? "#c7d2fe" : "#e2e8f0") + ';border-radius:12px;padding:6px 8px;font-size:11.5px;font-weight:700;line-height:1.5;color:' + (on ? "#1e1b4b" : "#94a3b8") + ';">' +
+          '<b style="font-size:13px;">' + (on ? M.icon : "❔") + ' ' + M.name + '</b>' + (nw ? ' <span style="color:#f59e0b;">NEW</span>' : '') + '<br>' + (on ? esc(M.say) + '<br><span style="color:#6366f1;">身のまわり：' + esc(M.life) + '</span>' : '？？？') + '</div>';
+      }).join("") + '</div>';
+  }
   function toolHtml() {
-    var it = ui.items[ui.i], ch = choicesOf(it);
-    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#4f46e5;"><span>🔭 どの どうぐ？ ' + (ui.i + 1) + ' ／ ' + ui.items.length + '</span><span>⭕ ' + ui.ok + '</span></div>' +
+    var it = ui.items[ui.i], ch = choicesOf(it), D = dictOf(it);
+    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#4f46e5;"><span>' + (it.m ? "🗃 どの モデル？ " : "🔭 どの どうぐ？ ") + (ui.i + 1) + ' ／ ' + ui.items.length + '</span><span>⭕ ' + ui.ok + '</span></div>' +
       '<div style="font-size:15px;font-weight:900;background:#fff;border:2px solid #e0e7ff;border-radius:14px;padding:10px 12px;margin-top:6px;line-height:1.6;">' + esc(it.q) + '</div>' +
-      '<div style="font-size:12px;font-weight:800;color:#6366f1;margin-top:6px;">とかなくて いいよ。どの どうぐで 考えると 分かりやすい？</div>';
+      '<div style="font-size:12px;font-weight:800;color:#6366f1;margin-top:6px;">' + (it.m ? "この 場面は どの モデルの なかま？" : "とかなくて いいよ。どの どうぐで 考えると 分かりやすい？") + '</div>';
     if (ui.res) {
       var ok = ui.res.ok;
-      return head + '<div style="margin-top:8px;background:' + (ok ? "#ecfdf5" : "#fff7ed") + ';border-radius:14px;padding:10px 12px;font-size:13.5px;font-weight:800;line-height:1.7;">' + (ok ? "⭕ そう！ " : "💡 この 問題は ") + '<b>' + TOOLS[it.t].icon + ' ' + TOOLS[it.t].name + '</b>' + (ok ? "" : " が 使いやすいよ") + '<br>' + esc(it.why) + '</div>' +
+      return head + '<div style="margin-top:8px;background:' + (ok ? "#ecfdf5" : "#fff7ed") + ';border-radius:14px;padding:10px 12px;font-size:13.5px;font-weight:800;line-height:1.7;">' + (ok ? "⭕ そう！ " : it.m ? "💡 この 場面は " : "💡 この 問題は ") + '<b>' + D[it.t].icon + ' ' + D[it.t].name + '</b>' + (ok ? "" : it.m ? " の なかまだよ" : " が 使いやすいよ") + '<br>' + esc(it.why) + '</div>' +
         '<div style="text-align:center;margin-top:10px;"><button type="button" data-ln="next" style="' + BIG + '">' + (ui.i + 1 < ui.items.length ? "つぎ ▶" : "おわり") + '</button></div>';
     }
     return head + ui.ord.map(function (j) { return '<button type="button" data-ln="ans" data-v="' + j + '" style="' + BTN + '">' + esc(ch[j]) + '</button>'; }).join("");
@@ -134,7 +186,7 @@
   function endHtml() {
     var r = ui.reward;
     return '<div style="text-align:center;font-size:40px;">' + (ui.ok === ui.items.length ? "🏆" : ui.ok >= 3 ? "🔭" : "💪") + '</div>' +
-      '<div style="text-align:center;font-size:16px;font-weight:900;">' + ui.items.length + '問中 ' + ui.ok + '問、どうぐを 見ぬけた！</div>' +
+      '<div style="text-align:center;font-size:16px;font-weight:900;">' + ui.items.length + '問中 ' + ui.ok + '問、' + (ui.model ? "モデルを" : "どうぐを") + ' 見ぬけた！</div>' + (ui.model ? modelZukan() : '') +
       '<div style="font-size:12.5px;font-weight:800;background:#fff;border-radius:14px;padding:10px 12px;margin-top:8px;line-height:1.7;">ふだんの 問題でも、とく 前に「どの どうぐ？」と 1びょう 考えて みよう。それが ものしりな 人の やり方だよ。' + (r ? "<br>🧩 シールの かけら +" + r : "") + '</div>' +
       '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;"><button type="button" data-ln="hub" style="' + BIG + '">🔭 もどる</button></div>';
   }
@@ -144,19 +196,20 @@
     if (a === "hub") { ui = { ph: "hub" }; return render(); }
     if (a === "nami") { close(); var u = "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_mawaru_nami.html"; if (window.openHybridContent) window.openHybridContent(u, "🎡 回ると 波ラボ", false); else window.open(u, "_blank"); return; }
     if (a === "note") { close(); if (window.showJigakuCard) window.showJigakuCard("a_lens"); return; }
-    if (a === "tool") { var items = pickItems(5); ui = { ph: "tool", items: items, i: 0, ok: 0, ord: shuffle([0, 1, 2]) }; return render(); }
+    if (a === "tool" || a === "model") { var md = a === "model", items = pickItems(5, md); ui = { ph: "tool", model: md, items: items, i: 0, ok: 0, ord: shuffle([0, 1, 2]) }; return render(); }
     if (a === "ans" && ui && !ui.res) { var it = ui.items[ui.i], ok = Number(v) === 0; record(it.id, ok); if (ok) ui.ok++; ui.res = { ok: ok }; return render(); }
     if (a === "next" && ui) {
       ui.i++; ui.res = null; ui.ord = shuffle([0, 1, 2]);
       if (ui.i < ui.items.length) return render();
       var o = st(), t = today(); ui.reward = 0;
-      if (ui.ok === ui.items.length && o.toolD !== t) { o.toolD = t; ui.reward = shard(2, "どの どうぐ"); }
-      log("どの どうぐ？ ⭕" + ui.ok + "/" + ui.items.length + (ui.reward ? " かけら+" + ui.reward : ""));
+      var rk = ui.model ? "modelD" : "toolD";
+      if (ui.ok === ui.items.length && o[rk] !== t) { o[rk] = t; ui.reward = shard(2, ui.model ? "どの モデル" : "どの どうぐ"); }
+      log((ui.model ? "どの モデル？ ⭕" : "どの どうぐ？ ⭕") + ui.ok + "/" + ui.items.length + (ui.reward ? " かけら+" + ui.reward : ""));
       save(); ui.ph = "end"; return render();
     }
     if (a === "tag" && ui && ui.ph === "tag" && !ui.picked) { ui.picked = v; return tagDone(); }
   }
-  window.openLensTools = function () { ui = { ph: "hub" }; render(); };
+  window.openLensTools = function () { ui = { ph: "hub" }; render(); try { var o = st(); if (o.newM) { o.newM = ""; save(); } } catch (e) {} };
 
   /* ---------------- 🏷 名札はり（ステージ クリアの あと、1日 1回） ---------------- */
   function nikoTag(stageId, name) { var s = String(stageId || "") + " " + String(name || ""); for (var i = 0; i < NIKO.length; i++) if (NIKO[i][0].test(s)) return NIKO[i][1]; return null; }
@@ -205,5 +258,8 @@
       return orig.apply(this, arguments);
     };
   }
-  window.LENS = { TOOLS: TOOLS, ITEMS: ITEMS, TAGS: TAGS, nikoTag: nikoTag };
+  // 自学ノート「47都道府県 きょりの わ」（ハブ＆スポーク）を 書いたら 🕸 中心に 集めて 配る
+  var oj = window.jigakuDone;
+  if (typeof oj === "function") window.jigakuDone = function (id) { var r = oj.apply(this, arguments); try { if (id === "c_kencho47" && unlock("hub")) { log("モデル図鑑：中心に 集めて 配る（自学ノート）"); save(); } } catch (e) {} return r; };
+  window.LENS = { TOOLS: TOOLS, ITEMS: ITEMS, TAGS: TAGS, MODELS: MODELS, MITEMS: MITEMS, nikoTag: nikoTag };
 })();
