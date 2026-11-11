@@ -48,7 +48,7 @@
     var o = st(), d = dayDiff(iso(), TRIP.date), L = [];
     if (d <= 0) {
       L.push({ k: "stage", icon: "📚", t: "ステージ「常滑焼と 先人」を やる", ok: !!o.done.stage || cleared(TRIP.stage) });
-      L.push({ k: "lab", icon: "🏺", t: "ラボで「常滑焼が できるまで」を ならべる", ok: !!o.done.lab });
+      L.push({ k: "lab", icon: "🏺", t: "ラボで「常滑焼が できるまで」を ならべる", ok: !!o.done.lab || (((window.saveData || {}).dailyLab || {}).ids || []).indexOf("lab/社会/lab_narabe.html") >= 0 });
       L.push({ k: "goal", icon: "🎯", t: "自分の 目標と 聞きたい ことを えらぶ", ok: !!o.goal, sub: o.goal ? "目標：" + o.goal + (o.qs.length ? "／聞きたい こと：" + o.qs.join("・") : "") : "" });
       if (d >= -1) { var n = TRIP.bag.filter(function (b) { return o.bag[b]; }).length; L.push({ k: "bag", icon: "🎒", t: "持ち物チェック（" + n + "／" + TRIP.bag.length + "）", ok: n === TRIP.bag.length }); }
     } else {
@@ -72,7 +72,7 @@
     var L = tasks(), left = L.filter(function (x) { return !x.ok && !x.lock && x.k !== "lens"; }).length;
     var when = d < 0 ? "あと " + (-d) + "日" : d === 0 ? "きょう！" : d + "日前に 行った";
     host.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;"><div style="font-size:15px;font-weight:900;color:#92400e;">🚌 ' + TRIP.title + '　<span style="font-size:13px;">' + when + '</span></div><span style="font-size:11px;font-weight:900;color:#b45309;">' + (d <= 0 ? "📖 よしゅう" : "🔁 ふくしゅう") + '</span></div>' +
-      '<div style="font-size:11.5px;font-weight:800;color:#a16207;margin-top:2px;">' + TRIP.place + '</div>' +
+      '<div style="font-size:11.5px;font-weight:800;color:#a16207;margin-top:2px;">' + TRIP.place + '　<span style="color:#92400e;">（1日 1つずつで OK）</span></div>' +
       L.map(function (x) {
         return '<button type="button" data-tp="' + x.k + '"' + (x.lock ? ' disabled' : '') + ' style="display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;padding:8px 10px;min-height:48px;border:2px solid ' + (x.ok ? "#86efac" : "#fcd34d") + ';border-radius:14px;background:' + (x.ok ? "#f0fdf4" : x.lock ? "#f8fafc" : "#fff") + ';cursor:' + (x.lock ? "default" : "pointer") + ';text-align:left;font-family:inherit;opacity:' + (x.lock ? ".6" : "1") + ';">' +
           '<span style="font-size:22px;">' + (x.ok ? "✅" : x.icon) + '</span><span style="flex:1;min-width:0;"><b style="font-size:13.5px;color:#1f2937;">' + esc(x.t) + '</b>' + (x.sub ? '<br><span style="font-size:11px;font-weight:700;color:#92400e;">' + esc(x.sub) + '</span>' : '') + '</span></button>';

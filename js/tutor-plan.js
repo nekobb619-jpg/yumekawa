@@ -390,8 +390,8 @@
     var streakAlive = sd().tutorPlanLastDoneDate === todayKey() || sd().tutorPlanLastDoneDate === yesterdayKey();
     if (footEl) {
       footEl.innerHTML = allDone
-        ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく"
-        : p.steps.filter(function (x) { return !x.optional; }).length + "つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚 ＆ 🎀×2</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "");
+        ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく<br><span style=\"font-size:12px;\">✅ きょうは ここまでで 十分。この 下は やりたい ものだけ（できたら）で OK</span>"
+        : p.steps.filter(function (x) { return !x.optional; }).length + "つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚 ＆ 🎀×2</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "") + "<br><span style=\"font-size:11.5px;\">⏱ めやすは 15〜20分。のこりは「できたら」で いいよ</span>";
     }
     card.classList.toggle("all-done", allDone);
     if (chara) {

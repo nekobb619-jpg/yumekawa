@@ -90,7 +90,8 @@
     var nc = challengeN();
     if (nc) { var chs = challengeCards(nc); deck = deck.slice(0, N - chs.length); chs.forEach(function (c) { deck.splice(1 + Math.floor(Math.random() * deck.length), 0, c); }); }
     // ★2026-11-11 🔭 どの どうぐ？（js/lens-tools.js）を 1まい（解かずに 道具を えらぶ。トリガ判断の 練習）
-    if (window.lensToolCard && deck.length >= 4) { try { var tc = window.lensToolCard(); if (tc) { deck = deck.slice(0, N - 1); deck.splice(2 + Math.floor(Math.random() * (deck.length - 2)), 0, tc); } } catch (e) {} }
+    // ★2026-11-11（保護者：軽い 負荷で 定着）とくべつな カード（ながい 問題・どうぐ・ことば）は 3まいまで。のこりは ふつうの ふくしゅう
+    if (window.lensToolCard && deck.length >= 4 && nc <= 1) { try { var tc = window.lensToolCard(); if (tc) { deck = deck.slice(0, N - 1); deck.splice(2 + Math.floor(Math.random() * (deck.length - 2)), 0, tc); } } catch (e) {} }
     // ★2026-11-05：📇 ことばカード（js/kotoba-cards.js）を 1まい「この ことばの いみは？」で まぜる（書かずに えらぶ）
     var kc = kotobaCard(); if (kc && deck.length) { deck[deck.length - 1] = kc; shuffle(deck); }
     return deck;
