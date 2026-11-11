@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文→絵→図→式ラボ 📐</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-11追加：学級通信 No.125（算数：割合）の 先生の とき方の じゅん「文 → 絵 → 図 → 式 → 答え」を 1問ずつ たどる。① キーワード・数字に しるし（いらない 数字は しるしを つけない＝ノイズを 消す）② どんな 話か ③ 倍の 図（もと → □倍 → いま）で □の 場所 ④ 式 ⑤ 答え。ぜんぶ えらぶだけ（書かない）。問題は オリジナル。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #fff7ed; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .ch button, .pick button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok, .pick button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng, .pick button.ng { background: #fee2e2; border-color: #f87171; }
+  .pick button[disabled] { opacity: .35; cursor: default; }
+  .msg { min-height: 2.6em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #ec4899, #a855f7); cursor: pointer; }
+  ol.done { margin: 6px 0 0; padding-left: 1.6em; } ol.done li { margin: 3px 0; background: #f0fdf4; border-radius: 8px; padding: 3px 8px; }
+  .big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: .06em; margin: 4px 0; } .big .hl { color: var(--pink); text-decoration: underline 4px; text-underline-offset: 6px; }
+</style>
+</head>
+<body>
+<style>
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; line-height: 1.4; }
+  .chips button { font: inherit; font-weight: 800; font-size: 14.5px; min-height: 40px; padding: 6px 10px; border-radius: 10px; border: 2px dashed #fdba74; background: #fff; color: var(--ink); cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: #fde68a; border-style: solid; border-color: #f59e0b; }
+  .chips span { font-size: 14.5px; font-weight: 700; padding: 8px 2px; }
+  .steps { display: flex; gap: 4px; justify-content: center; margin: 4px 0 2px; flex-wrap: wrap; }
+  .steps i { font-style: normal; font-size: 11.5px; font-weight: 900; padding: 3px 8px; border-radius: 999px; background: #ffedd5; color: #9a3412; }
+  .steps i.on { background: #ea580c; color: #fff; } .steps i.ok { background: #22c55e; color: #fff; }
+  svg text { font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900; }
+</style>
+<div class="wrap">
+  <h1>📐 文 → 絵 → 図 → 式 → 答え ラボ</h1>
+  <div class="lead">先生の とき方の じゅんで、1問ずつ たどろう。答えを 出す 前に「大事な 数字は どれ？」「どんな 話？」「図に すると？」を えらぶよ。</div>
+  <div class="card"><div class="tabs" id="tabs" role="group" aria-label="問題"></div></div>
+  <div class="card">
+    <div class="steps" id="steps"></div>
+    <div id="prob" style="margin-top:6px"></div>
+    <div id="work"></div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+    <div style="text-align:center"><button class="next" id="nx" type="button" hidden>つぎ ▶</button></div>
+  </div>
+  <div class="card">💡 <b>図の きまり</b>：□が「いま」に ある → もと × 倍。□が「もと」に ある → いま ÷ 倍。□が「倍」に ある → いま ÷ もと。倍の 倍は かけ算。<br>問題を 読んで 場面が うかぶ ように なる には、ふだんの 読書も 大切（先生より）。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // text：[文字, 大事(1)／いらない数字(2)／ふつう(0)]。fig：[もと, 倍, いま]（null が □）。chain：倍の 倍
+  var P = [
+    { name: "ヒマワリ", text: [["ある 学校の 花だんの ヒマワリは、", 0], ["植えた とき", 1], ["は", 0], ["8cm", 1], ["でした。いまは", 0], ["24cm", 1], ["です。いまの 高さは 植えた ときの", 0], ["何倍", 1], ["ですか。", 0]],
+      story: ["植えた ときと いまの 高さを くらべて、何倍に なったかを 聞いて いる", "ヒマワリが 何cm のびたかを 聞いて いる", "花だんに ヒマワリが 何本 あるかを 聞いて いる"],
+      fig: [8, null, 24], unit: "cm", shiki: ["24 ÷ 8", "24 × 8", "24 − 8"], ans: ["3倍", "16倍", "192倍"] },
+    { name: "本の ページ", text: [["まさとさんは", 0], ["毎日", 2], ["本を 読みます。おととい 読んだ ページは", 0], ["きのうの 3倍", 1], ["で、", 0], ["45ページ", 1], ["でした。", 0], ["きのう", 1], ["は 何ページ 読みましたか。", 0]],
+      story: ["きのうの ページ数を もとに すると、おとといは その 3倍で 45ページ。きのうを 聞いて いる", "おとといと きのうを 合わせた ページ数を 聞いて いる", "毎日 何ページずつ 読むかを 聞いて いる"],
+      fig: [null, 3, 45], unit: "ページ", shiki: ["45 ÷ 3", "45 × 3", "45 − 3"], ans: ["15ページ", "135ページ", "42ページ"] },
+    { name: "リボン（いらない 数字）", text: [["工作の 時間は", 0], ["45分", 2], ["です。", 0], ["赤い リボン", 1], ["は", 0], ["15cm", 1], ["、青い リボンは", 0], ["赤の 4倍", 1], ["の 長さです。", 0], ["青い リボン", 1], ["は 何cm ですか。", 0]],
+      story: ["赤い リボンを もとに して、その 4倍の 青い リボンの 長さを 聞いて いる", "工作の 時間を 聞いて いる", "赤と 青の リボンの 長さの ちがいを 聞いて いる"],
+      fig: [15, 4, null], unit: "cm", shiki: ["15 × 4", "15 ÷ 4", "45 × 4"], ans: ["60cm", "19cm", "180cm"] },
+    { name: "倍の 倍", text: [["えんぴつ 1本は", 0], ["60円", 1], ["。ノートは", 0], ["えんぴつの 2倍", 1], ["、ふでばこは", 0], ["ノートの 4倍", 1], ["の ねだんです。", 0], ["ふでばこ", 1], ["は 何円ですか。", 0]],
+      story: ["えんぴつ → 2倍 → ノート → 4倍 → ふでばこ と つながって いる。ふでばこの ねだんを 聞いて いる", "えんぴつと ノートと ふでばこを 合わせた ねだんを 聞いて いる", "ノートの ねだんだけを 聞いて いる"],
+      fig: [60, 8, null], chain: [2, 4], unit: "円", shiki: ["60 × (2 × 4)", "60 × 2 + 4", "60 ÷ 2 ÷ 4"], ans: ["480円", "124円", "7.5円"] }
+  ];
+  var STEP = ["① 文", "② 話", "③ 図", "④ 式", "⑤ 答え"];
+  var pi = 0, st = 0, picked = {}, tried = false, firstOk = 0, ord = null;
+  function tabs() { $("tabs").innerHTML = P.map(function (p, i) { return '<button type="button" data-p="' + i + '" aria-pressed="' + (i === pi) + '">' + (i + 1) + ' ' + esc(p.name) + '</button>'; }).join(""); }
+  function steps() { $("steps").innerHTML = STEP.map(function (s, i) { return '<i class="' + (i < st ? "ok" : i === st ? "on" : "") + '">' + s + '</i>'; }).join(""); }
+  function probText() { var p = P[pi]; return p.text.map(function (t) { return t[0]; }).join(""); }
+  function figSvg(showQ) {
+    var p = P[pi], f = p.fig, lab = function (v, u) { return v == null ? "□" : v + (u || ""); };
+    if (p.chain && showQ !== "chain") {
+      return '<svg viewBox="0 0 320 70" role="img" aria-label="倍の 図"><rect x="4" y="22" width="70" height="30" rx="6" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/><text x="39" y="42" text-anchor="middle" font-size="14">60円</text><rect x="125" y="22" width="70" height="30" rx="6" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/><text x="160" y="42" text-anchor="middle" font-size="13">ノート</text><rect x="246" y="22" width="70" height="30" rx="6" fill="#fef3c7" stroke="#ea580c" stroke-width="2"/><text x="281" y="42" text-anchor="middle" font-size="14">□円</text><path d="M76 37 H121" stroke="#ea580c" stroke-width="2" marker-end="url(#a)"/><path d="M197 37 H242" stroke="#ea580c" stroke-width="2" marker-end="url(#a)"/><text x="98" y="16" text-anchor="middle" font-size="13" fill="#ea580c">×2</text><text x="220" y="16" text-anchor="middle" font-size="13" fill="#ea580c">×4</text><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#ea580c"/></marker></defs></svg>';
+    }
+    return '<svg viewBox="0 0 320 70" role="img" aria-label="倍の 図"><text x="50" y="14" text-anchor="middle" font-size="11" fill="#9a3412">もとの 大きさ</text><text x="270" y="14" text-anchor="middle" font-size="11" fill="#9a3412">いまの 大きさ</text><rect x="10" y="22" width="80" height="32" rx="6" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/><text x="50" y="43" text-anchor="middle" font-size="15">' + esc(lab(f[0], p.unit)) + '</text><rect x="230" y="22" width="80" height="32" rx="6" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/><text x="270" y="43" text-anchor="middle" font-size="15">' + esc(lab(f[2], p.unit)) + '</text><path d="M94 38 H224" stroke="#ea580c" stroke-width="2.5" marker-end="url(#b)"/><text x="160" y="31" text-anchor="middle" font-size="15" fill="#ea580c">' + (f[1] == null ? "□倍" : "×" + f[1]) + '</text><defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#ea580c"/></marker></defs></svg>';
+  }
+  function figOpts() {
+    var p = P[pi];
+    if (p.chain) return [["chain", "60円 → ×2 → ノート → ×4 → □円"], ["x1", "60円 → ×2 → □円（ふでばこ）"], ["x2", "□円 → ×4 → 60円"]];
+    var f = p.fig, u = p.unit, a = function (x) { return x == null ? "□" : x + u; }, b = function (x) { return x == null ? "□倍" : "×" + x; };
+    var ok = a(f[0]) + " → " + b(f[1]) + " → " + a(f[2]);
+    var vals = [f[0], f[1], f[2]], known = vals.filter(function (v) { return v != null; });
+    var w1 = f[0] == null ? a(known[1]) + " → " + b(known[0]) + " → □" : f[2] == null ? "□ → " + b(f[1]) + " → " + a(f[0]) : a(f[2]) + " → □倍 → " + a(f[0]);
+    var w2 = f[1] == null ? a(f[0]) + " → ×" + f[2] + " → □" : a(f[0] == null ? f[2] : f[0]) + " → □倍 → " + (f[1]);
+    return [["ok", ok], ["w1", w1], ["w2", w2]];
+  }
+  function show(msg) {
+    var p = P[pi]; steps(); $("nx").hidden = true; tried = false;
+    if (st === 0) {
+      $("prob").innerHTML = '<div style="font-size:12.5px;color:#9a3412">① 問題文の 大事な ことば・数字を タップして しるしを つけよう（いらない 数字は つけない）</div>';
+      $("work").innerHTML = '<div class="chips">' + p.text.map(function (t, i) { return t[1] ? '<button type="button" data-c="' + i + '" aria-pressed="' + (!!picked[i]) + '">' + esc(t[0]) + '</button>' : '<span>' + esc(t[0]) + '</span>'; }).join("") + '</div><div style="text-align:center;margin-top:8px"><button class="next" type="button" id="chk">しるし OK？</button></div>';
+    } else {
+      $("prob").innerHTML = '<div style="font-size:14px;background:#fffbeb;border-radius:10px;padding:6px 8px">' + p.text.map(function (t) { return t[1] === 1 ? '<b style="background:#fde68a">' + esc(t[0]) + '</b>' : t[1] === 2 ? '<s style="color:#94a3b8">' + esc(t[0]) + '</s>' : esc(t[0]); }).join("") + '</div>';
+      var opts, label;
+      if (st === 1) { label = "② どんな 話？"; opts = p.story.map(function (s, i) { return [i ? "w" + i : "ok", s]; }); }
+      else if (st === 2) { label = "③ 図に すると？（倍の 図）"; opts = figOpts(); }
+      else if (st === 3) { label = "④ 式は？"; opts = p.shiki.map(function (s, i) { return [i ? "w" + i : "ok", s]; }); }
+      else { label = "⑤ 答えは？"; opts = p.ans.map(function (s, i) { return [i ? "w" + i : "ok", s]; }); }
+      ord = shuf(opts.slice());
+      $("work").innerHTML = (st >= 3 ? '<div style="margin-top:6px">' + figSvg(st >= 3 && p.chain ? "" : "") + '</div>' : '') + '<div style="font-size:13px;font-weight:900;margin-top:6px">' + label + '</div><div class="ch">' + ord.map(function (o, i) { return '<button type="button" data-o="' + i + '">' + esc(o[1]) + '</button>'; }).join("") + '</div>';
+    }
+    $("msg").innerHTML = msg || "";
+  }
+  function next() { st++; if (st > 4) { $("msg").innerHTML = "🎉 " + esc(P[pi].name) + "：文 → 絵 → 図 → 式 → 答え、ぜんぶ たどれた！" + (pi + 1 < P.length ? "" : " ぜんぶの 問題 クリア！"); steps(); $("work").innerHTML = '<div style="margin-top:6px">' + figSvg() + '</div>'; $("nx").hidden = pi + 1 >= P.length; $("nx").textContent = "つぎの 問題 ▶"; return; } show(); }
+  $("work").addEventListener("click", function (e) {
+    var c = e.target.closest("button[data-c]");
+    if (c) { var i = Number(c.getAttribute("data-c")); picked[i] = !picked[i]; c.setAttribute("aria-pressed", String(!!picked[i])); return; }
+    if (e.target.id === "chk") {
+      var p = P[pi], miss = p.text.filter(function (t, i) { return t[1] === 1 && !picked[i]; }).length, noise = p.text.filter(function (t, i) { return t[1] === 2 && picked[i]; }).length;
+      if (!miss && !noise) { $("msg").innerHTML = "⭕ 大事な ところに しるしが ついた！"; setTimeout(next, 700); return; }
+      $("msg").innerHTML = (noise ? "🔍 しるしを つけた 中に、この 問題では <b>いらない ことば・数字</b> が あるよ。" : "") + (miss ? "🔍 大事な ことば・数字が あと " + miss + "つ あるよ。「何を 聞かれて いる？」「数字は？」" : ""); return;
+    }
+    var b = e.target.closest("button[data-o]"); if (!b || !$("nx").hidden && st > 4) return;
+    var o = ord[Number(b.getAttribute("data-o"))];
+    if (o[0] !== "ok" && !(st === 2 && o[0] === "chain")) { b.classList.add("ng"); tried = true; $("msg").innerHTML = st === 2 ? "🔁 もとに する 大きさは どれ？「〇〇の □倍」の 〇〇が もと。" : st === 3 ? "🔁 □が 図の どこに ある？ いま → もと×倍、もと → いま÷倍。" : "🔁 もう一度 文を 読んで みよう"; return; }
+    b.classList.add("ok"); $("msg").innerHTML = "⭕"; setTimeout(next, 500);
+  });
+  $("nx").addEventListener("click", function () { pi = Math.min(P.length - 1, pi + 1); st = 0; picked = {}; tabs(); show(); });
+  $("tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-p]"); if (!b) return; pi = Number(b.getAttribute("data-p")); st = 0; picked = {}; tabs(); show(); });
+  tabs(); show();
+})();
+</script>
+</body>
+</html>

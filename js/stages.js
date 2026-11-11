@@ -327,6 +327,16 @@
       created: "2026-11-08"
     },
     {
+      subject: "算数",
+      category: "倍の見方（割合）（4年）",
+      grade: "4年生",
+      id: "算数/割合/bai_zu01",
+      name: "倍の 図（もと → □倍 → いま）と とき方の じゅん",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_bun_zu_shiki.html",
+      // ★2026-11-11追加（学級通信 No.125：先生の「文 → 絵 → 図 → 式 → 答え」と 割合の 図。いらない 数字を 見ぬく 問題も）
+      created: "2026-11-11"
+    },
+    {
       subject: "理科",
       category: "星と月（4年）",
       grade: "4年生",
