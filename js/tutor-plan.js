@@ -14,6 +14,9 @@
   "use strict";
 
   var PLAN_REWARD_Q = 5;          // 3ステップ全部できたときのおまけ（1日1回）
+  // ★2026-11-12（保護者）ふくろは 2段：番号の ついた ステップ（必須）が ぜんぶ → 🎀 1つ ＋ 🧩 かけら PLAN_SHARDS こ。
+  //   「できたら」も ふくめて ぜんぶ → 🎀 もう 1つ（kind plan2）。前は 必須だけで 🎀×2 だった
+  var PLAN_SHARDS = 3;
   var MASTER_CHECK_EVERY = 2;  // ★2026-11-07 マスターチェックを まなびプランに 出す 間（日）。はく奪の 危機の 単元が あれば 毎日
   var REVIEW_GAP_DAYS = 3;        // この日数以上あいたクリア済みステージを「ふくしゅう」候補にする
   var WEAK_FIRST_THRESHOLD = 3;   // にがて問題がこの数以上たまっていたら、復習は苦手撃破ラボを優先
@@ -413,6 +416,7 @@
     var doneN = doneFlags.filter(function (d, i) { return d && !p.steps[i].optional; }).length;
     var allDone = doneN >= p.steps.filter(function (x) { return !x.optional; }).length;
     var nextIdx = doneFlags.indexOf(false);
+    var optLeft = p.steps.filter(function (x, i) { return x.optional && !doneFlags[i]; }).length, everyDone = optLeft === 0;
     // ★2026-11-12（保護者：ホームは 次に やる 1つを 大きく）「できたら」の ステップは、プランの 3つが おわるまで 1行に たたむ。
     //   おすと その日は ひらいた まま（moreOpen）。たっせい後は 今まで どおり ぜんぶ 見える。りさ など homeFocus 対象外は 今まで どおり。
     var fold = !allDone && !moreOpen && !!(window.homeFocusOn && window.homeFocusOn()) && !(window.tutorPlanDoneToday && window.tutorPlanDoneToday());
@@ -437,8 +441,8 @@
     var streakAlive = sd().tutorPlanLastDoneDate === todayKey() || sd().tutorPlanLastDoneDate === yesterdayKey();
     if (footEl) {
       footEl.innerHTML = allDone
-        ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく<br><span style=\"font-size:12px;\">✅ きょうは ここまでで 十分。この 下は やりたい ものだけ（できたら）で OK</span>"
-        : p.steps.filter(function (x) { return !x.optional; }).length + "つ ぜんぶ できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚 ＆ 🎀×2</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "") + "<br><span style=\"font-size:11.5px;\">⏱ めやすは 15〜20分。のこりは「できたら」で いいよ</span>";
+        ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく<br><span style=\"font-size:12px;\">" + (everyDone ? "🎀 「できたら」も ぜんぶ できた！ ふくろ もう 1つ" : "✅ きょうは ここまでで 十分。「できたら」も ぜんぶ やると 🎀 もう 1つ（あと " + optLeft + "つ）") + "</span>"
+        : "番号の " + p.steps.filter(function (x) { return !x.optional; }).length + "つが できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚 ＆ 🎀 ＆ 🧩+" + PLAN_SHARDS + "</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "") + "<br><span style=\"font-size:11.5px;\">「できたら」も ぜんぶで 🎀 もう 1つ。⏱ めやすは 15〜20分</span>";
     }
     card.classList.toggle("all-done", allDone);
     if (chara) {
@@ -456,8 +460,16 @@
       navi.setAttribute("data-tplan", "1");
     }
     if (allDone && !p.rewarded) giveReward(p);
+    if (allDone && everyDone && !p.rewardedAll) giveRewardAll(p);
   }
 
+  // ★2026-11-12「できたら」も ふくめて ぜんぶ できた → 🎀 もう 1つ（1日 1回。plan2 は 1日 1つまで）
+  function giveRewardAll(p) {
+    p.rewardedAll = true;
+    var got = window.grantStickerPack ? window.grantStickerPack("plan2", "できたらも ぜんぶ") : false;
+    if (window.saveGame) window.saveGame();
+    if (got && window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🎯まなびプラン", msg: "できたらも ぜんぶ 達成 🎀+1 [" + p.steps.map(function (s) { return s.role || s.kind; }).join(", ") + "]" });
+  }
   function giveReward(p) {
     var data = sd();
     p.rewarded = true;
@@ -469,7 +481,8 @@
     // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）を 1こ、3日れんぞくごとに もう1こ
     var eggGift = (data.tutorPlanStreak % 3 === 0) ? 2 : 1;
     if (window.grantNakamaEgg) window.grantNakamaEgg(eggGift, "まなびプラン達成" + (eggGift === 2 ? "＋3日れんぞく" : ""));
-    if (window.grantStickerPack) { window.grantStickerPack("plan"); window.grantStickerPack("plan2"); } // ★2026-11-04（保護者：プランの 量が ふえたので ふくろを 2つに） // ★2026-10-04：🎀シール帳の ふくろ
+    if (window.grantStickerPack) window.grantStickerPack("plan"); // ★2026-10-04：🎀シール帳の ふくろ。2つめ（plan2）は 2026-11-12 から「できたら」も ぜんぶ やった とき（giveRewardAll）
+    if (window.stickerAddShardsExternal) window.stickerAddShardsExternal(PLAN_SHARDS, "", true); // ★2026-11-12 かけら（1日の 上限を こえても わたす）
     if (window.saveGame) window.saveGame();
     if (window.syncWithGoogleSpreadsheet) {
       window.syncWithGoogleSpreadsheet("LOG", {
@@ -502,7 +515,8 @@
         '<div style="display:flex;justify-content:center;align-items:flex-end;">' + teacherSvg("cheer") + (newFriend ? newFriend.svg("cheer") : friendSvg("cheer")) + '</div>' +
         '<div style="font-size:20px;font-weight:900;color:#be185d;margin-top:6px;">きょうの プラン たっせい！</div>' +
         '<div style="font-size:13px;font-weight:800;color:#6b21a8;margin:8px 0 4px;line-height:1.7;">ふくしゅう・あたらしい 学び・ちょうせん、<br>ぜんぶ やりきったね。えらい！</div>' +
-        '<div style="font-size:15px;font-weight:900;color:#4a3b52;margin:6px 0 12px;">🎁 +' + PLAN_REWARD_Q + 'Q　🥚 たまご +' + (streak % 3 === 0 ? 2 : 1) + '　🔥 ' + streak + '日 れんぞく</div>' +
+        '<div style="font-size:15px;font-weight:900;color:#4a3b52;margin:6px 0 12px;">🎁 +' + PLAN_REWARD_Q + 'Q　🥚 たまご +' + (streak % 3 === 0 ? 2 : 1) + '　🎀 +1　🧩 +' + PLAN_SHARDS + '<br>🔥 ' + streak + '日 れんぞく</div>' +
+        '<div style="font-size:12px;font-weight:800;color:#7e22ce;margin:-6px 0 12px;">「できたら」も ぜんぶ やると 🎀 もう 1つ</div>' +
         (newFriend ? '<div style="font-size:13px;font-weight:900;color:#db2777;background:#fff;border-radius:14px;padding:8px;margin:-4px 0 12px;">🐾 ' + newFriend.kind + 'の「' + newFriend.name + '」が なかまに なったよ！<br><span style="font-size:11px;color:#7e22ce;">どうぐばこの「なかま」で いっしょに いられるよ</span></div>' : '') +
         '<button style="border:none;border-radius:999px;padding:12px 26px;font-family:\'Zen Maru Gothic\';font-weight:900;font-size:15px;color:#fff;background:linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 4px 0 #86198f;cursor:pointer;" onclick="document.getElementById(\'tplan-celebrate\').remove()">やったー！</button>' +
       '</div>';

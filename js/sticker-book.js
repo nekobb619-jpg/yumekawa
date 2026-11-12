@@ -19,7 +19,7 @@
   var K = "#1f1b2e", P = "#7c3aed", PL = "#a78bfa", PLL = "#c4b5fd", PK = "#f472b6", PKL = "#f9a8d4", G = "#fbbf24", GL = "#fde68a", W = "#fff";
   var FAMILY = ["りお", "りさ", "papa"], GIFT_PER_DAY = 3, PAGE_MAX = 24, OUT_MAX = 90, SEEN_MAX = 300;
   var RATES = [[1, 0.58], [2, 0.28], [3, 0.11], [4, 0.03]];
-  var KINDS = { plan: "まなびプラン", plan2: "まなびプラン 2つめ", stage: "ステージ", review: "ふくしゅう", school: "いま 学校の 単元", lab: "探偵ラボ", jigaku: "自学ノート", why: "なぜ？メモ" }; // ★2026-10-16 school：学校で いま 習って いる 単元の ステージを クリア（ステージの ふくろとは 別に もう1つ）
+  var KINDS = { plan: "まなびプラン", plan2: "まなびプラン ぜんぶ", stage: "ステージ", review: "ふくしゅう", school: "いま 学校の 単元", lab: "探偵ラボ", jigaku: "自学ノート", why: "なぜ？メモ" }; // ★2026-10-16 school：学校で いま 習って いる 単元の ステージを クリア（ステージの ふくろとは 別に もう1つ）
 
   /* ---------------- 絵の 部品（viewBox 0 0 40 40） ---------------- */
   function n(v) { return (Math.round(v * 10) / 10); }
@@ -483,9 +483,10 @@
     if (!d.stickerShardDay || d.stickerShardDay.d !== t) d.stickerShardDay = { d: t, n: 0 };
     return d;
   }
-  function addShards(n, tag) {
+  function addShards(n, tag, force) {
     var lk = window.luckToday ? window.luckToday() : { capPlus: 0 }; // ★2026-11-05：きょうの ラッキー（js/luck-day.js）で 1日の 上限が ふえる
-    var d = shardData(), add = Math.max(0, Math.min(n, SHARD_DAY + (lk.capPlus || 0) - d.stickerShardDay.n));
+    // ★2026-11-12 force：1日の 上限を こえても わたす（まなびプラン たっせいの ように、画面で 約束した ごほうび 用）
+    var d = shardData(), add = force ? Math.max(0, n) : Math.max(0, Math.min(n, SHARD_DAY + (lk.capPlus || 0) - d.stickerShardDay.n));
     if (!add) return 0;
     d.stickerShardDay.n += add; d.stickerShards += add; d.stickerTicketProg += add; shardSession += add;
     while (d.stickerShards >= SHARD_PACK) {
@@ -501,7 +502,7 @@
     return add;
   }
   // ★2026-10-29：探偵ラボ（js/detective-boost.js）から よぶ。ステージの クリア表示用の かけら数には 入れない。返り値＝ふえた かけら
-  window.stickerAddShardsExternal = function (n, tag) { try { var keep = shardSession, a = addShards(n, tag || ""); shardSession = keep; return a; } catch (e) { return 0; } };
+  window.stickerAddShardsExternal = function (n, tag, force) { try { var keep = shardSession, a = addShards(n, tag || "", !!force); shardSession = keep; return a; } catch (e) { return 0; } };
   window.stickerMissionEvent = function (key, v) { try { mEvent(key, v); } catch (e) {} };
   function installShards() {
     var orig = window.recordAnswerLog;
