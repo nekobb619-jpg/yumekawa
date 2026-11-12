@@ -17,7 +17,8 @@
     openStampModal: "ログインスタンプ", openTreasureBookModal: "お宝図鑑", openGachaModal: "ガチャ", openKuroPonModal: "クロぽん",
     launchSurvivalMode: "サバイバル", exchangePtsToQ: "pts両替", exchangePtsToQBulk: "まとめて両替",
     openParentReportModal: "ほごしゃレポート", openAllowanceScreen: "おこづかい", fetchBattleStats: "きょうだいバトル",
-    fetchSurvivalLeaderboard: "サバイバルランキング", buyShopItem: "宝島ショップ", useInventoryItem: "アイテム使用"
+    fetchSurvivalLeaderboard: "サバイバルランキング", buyShopItem: "宝島ショップ", useInventoryItem: "アイテム使用",
+    homeFocusShelfOpenedEarly: "開:おたのしみ(プラン前)" // ★2026-11-12 js/home-focus.js。「開:」で 始まる 名前は pt が つかない
   };
   function today() { var d = new Date(window.currentServerTime || Date.now()); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
   function count(name) {

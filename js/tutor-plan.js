@@ -372,10 +372,16 @@
     var doneN = doneFlags.filter(function (d, i) { return d && !p.steps[i].optional; }).length;
     var allDone = doneN >= p.steps.filter(function (x) { return !x.optional; }).length;
     var nextIdx = doneFlags.indexOf(false);
+    // ★2026-11-12（保護者：ホームは 次に やる 1つを 大きく）「できたら」の ステップは、プランの 3つが おわるまで 1行に たたむ。
+    //   おすと その日は ひらいた まま（moreOpen）。たっせい後は 今まで どおり ぜんぶ 見える。りさ など homeFocus 対象外は 今まで どおり。
+    var fold = !allDone && !moreOpen && !!(window.homeFocusOn && window.homeFocusOn()) && !(window.tutorPlanDoneToday && window.tutorPlanDoneToday());
+    var foldN = fold ? p.steps.filter(function (x, i) { return x.optional && !doneFlags[i]; }).length : 0;
+    if (fold) { nextIdx = -1; p.steps.some(function (x, i) { if (!x.optional && !doneFlags[i]) { nextIdx = i; return true; } return false; }); }
     var KIND = { review: "🔁 ふくしゅう", review2: "🔁 ふくしゅう", learn: "🎯 あたらしく まなぶ", weak: "🔁 ふくしゅう", book: "📖 よむ", mystery: "🧩 ちょうせん", detective: "🔍 ちょうせん", sozo: "🎨 つくる（できたら）", speed: "⚡ くりかえす（できたら）" };
     var NUM = ["①", "②", "③", "④", "⑤", "⑥"];
     stepsEl.innerHTML = p.steps.map(function (s, i) {
       var done = doneFlags[i];
+      if (fold && s.optional && !done) return "";
       var kind = (KIND[s.role] || KIND[s.kind] || "") + (s.optional && s.kind !== "sozo" && s.kind !== "speed" ? "（できたら）" : "");
       var sub = s.sub ? " ・ " + esc(subjectLabel(s.sub)) : "";
       var btn = done ? '<span class="go" style="background:#dcfce7;color:#15803d;cursor:default;">できた！</span>'
@@ -384,7 +390,7 @@
         '<div class="num">' + (done ? "✅" : NUM[i]) + '</div>' +
         '<div class="body"><div class="kind">' + kind + sub + '</div><div class="name">' + esc(s.name) + '</div>' +
         (done ? "" : '<div class="why">💡 ' + esc(s.why) + '</div>') + '</div>' + btn + '</div>';
-    }).join("");
+    }).join("") + (foldN ? '<button type="button" class="tplan-more" onclick="window.tutorPlanShowMore()" style="display:block;width:100%;min-height:44px;margin:0 0 7px;border:2px dashed #e9d5ff;border-radius:14px;background:rgba(255,255,255,.6);font:900 13px \'Zen Maru Gothic\',sans-serif;color:#7e22ce;cursor:pointer;">＋ できたら（' + foldN + 'つ）を 見る</button>' : "");
     if (dotsEl) dotsEl.innerHTML = p.steps.map(function (s, i) { return '<i class="' + (doneFlags[i] ? "on" : "") + '"></i>'; }).join("");
     var streak = sd().tutorPlanStreak || 0;
     var streakAlive = sd().tutorPlanLastDoneDate === todayKey() || sd().tutorPlanLastDoneDate === yesterdayKey();
@@ -463,6 +469,8 @@
     if (window.speakText) { try { window.speakText("きょうのプラン、たっせい！", "ja-JP"); } catch (e) {} }
   }
 
+  var moreOpen = false; // ★2026-11-12「できたら」を ひらいたか（その 画面を 開いて いる 間だけ。セーブしない）
+  window.tutorPlanShowMore = function () { moreOpen = true; try { render(); } catch (e) { console.error("tutor-plan render", e); } };
   var renderTimer = null;
   function scheduleRender() {
     clearTimeout(renderTimer);
