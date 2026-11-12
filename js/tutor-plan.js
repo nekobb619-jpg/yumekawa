@@ -167,6 +167,22 @@
   function dayIndex() { return Math.floor(nowMs() / 86400000); }
 
   /* ---------------- プランを組み立てる（1日1回） ---------------- */
+  // ★2026-11-12（保護者：いま 学校で ならって いる ところを しっかり やって 記憶定着）プランの ふくしゅう・あたらしく まなぶ を 学校の 単元に よせる。
+  //   0＝いま 習って いる（js/school-units.js の schoolStageRank 0）／0.5＝おわって 14日 いない（テストの あとも わすれない ように）／1＝もうすぐ／2＝それ いがい。通年（term "0"）は 2。
+  var SCHOOL_AFTER_DAYS = 14;
+  function schoolRank(id) {
+    try {
+      if (!window.schoolStageRank) return 2;
+      var r = window.schoolStageRank(id); if (r === 0) return 0;
+      var t = keyIso(nowMs()), from = keyIso(nowMs() - SCHOOL_AFTER_DAYS * 86400000);
+      var recent = (window.SCHOOL_UNITS || []).some(function (u) { return u.term !== "0" && u.to < t && u.to >= from && u.stages.indexOf(id) !== -1; });
+      return recent ? 0.5 : r;
+    } catch (e) { return 2; }
+  }
+  window.tutorPlanSchoolRank = schoolRank; // js/speed-review.js が 使う
+  function keyIso(ms) { var d = new Date(ms); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function schoolTag(r) { return r === 0 ? "📌 いま 学校で ならって いる ところ。" : r === 0.5 ? "📌 さいきん 学校で ならった ところ。" : r === 1 ? "⏳ もうすぐ 学校で ならう ところ。" : ""; }
+
   function buildPlan() {
     var entries = listStages();
     var data = sd();
@@ -177,14 +193,17 @@
     var reviewCands = entries.filter(function (e) {
       var f = window.computeStageBadgeFlags ? window.computeStageBadgeFlags(e.stg) : { isCleared: !!(data.clearedStages || {})[e.stg.id] };
       var rd = (data.reviewDates || {})[e.stg.id];
-      return f.isCleared && !isMasterStage(e.stg.id) && rd && (nowMs() - rd) >= Math.max(REVIEW_GAP_DAYS, window.reviewGapDays ? window.reviewGapDays(e.stg.id) : 0) * 86400000;
-    }).sort(function (a, b) { return (data.reviewDates[a.stg.id] || 0) - (data.reviewDates[b.stg.id] || 0); });
+      // ★2026-11-12 いま・さいきんの 単元は 3日 またずに、ふくしゅうの 間（1→2→4→7日）が きたら すぐ 出す（習って いる 間に 何回も 思い出す）
+      var gap = window.reviewGapDays ? window.reviewGapDays(e.stg.id) : 0;
+      var need = schoolRank(e.stg.id) < 1 ? Math.max(1, gap) : Math.max(REVIEW_GAP_DAYS, gap);
+      return f.isCleared && !isMasterStage(e.stg.id) && rd && (nowMs() - rd) >= need * 86400000;
+    }).sort(function (a, b) { return (schoolRank(a.stg.id) - schoolRank(b.stg.id)) || ((data.reviewDates[a.stg.id] || 0) - (data.reviewDates[b.stg.id] || 0)); });
     var used = {};
     function reviewStep(e) {
       var days = Math.floor((nowMs() - data.reviewDates[e.stg.id]) / 86400000);
       used[e.stg.id] = true;
       return { kind: "stage", role: "review", id: e.stg.id, name: e.stg.name, sub: e.sub,
-               why: days + "日ぶり。わすれかけた ころに 思い出すと、記憶が ぐんと 強くなるよ" };
+               why: schoolTag(schoolRank(e.stg.id)) + days + "日ぶり。わすれかけた ころに 思い出すと、記憶が ぐんと 強くなるよ" };
     }
     if (weakN >= WEAK_FIRST_THRESHOLD) {
       steps.push({ kind: "weak", name: "にがて問題 " + weakN + "問を やっつけよう", why: "まちがえた問題こそ のびるチャンス。もういちど 考えよう" });
@@ -212,7 +231,29 @@
       (bySub[e.sub] = bySub[e.sub] || []).push({ e: e, isNew: !!f.isNewStage });
     });
     var subs = Object.keys(bySub);
-    if (subs.length > 0) {
+    // ★2026-11-12 学校の 単元を 先に：いまの 単元の まだの ステージ → いま・さいきんの 単元の ふくしゅう（2つめ）→ もうすぐの 単元の まだの ステージ → 今まで どおり（今週 少ない 教科）
+    var schoolPick = function (rank) {
+      var c = [];
+      subs.forEach(function (sb) { bySub[sb].forEach(function (x) { if (schoolRank(x.e.stg.id) === rank) c.push(x); }); });
+      if (!c.length) return null;
+      c.sort(function (x, y) { return ((counts[x.e.sub] || 0) - (counts[y.e.sub] || 0)) || ((y.isNew ? 1 : 0) - (x.isNew ? 1 : 0)); }); // 今週 少ない 教科 → 新しい ステージ
+      return c[0];
+    };
+    var learnStep = function (x, r) {
+      used[x.e.stg.id] = true;
+      return { kind: "stage", role: "learn", id: x.e.stg.id, name: x.e.stg.name, sub: x.e.sub, why: schoolTag(r) + (x.isNew ? "🆕 新しい ステージだよ" : "学校と 同じ ところを アプリでも やって みよう") };
+    };
+    // 2つめの ふくしゅうは、1つめと ちがう 教科を 先に（同じ 単元を 2つ つづけるより、まぜた 方が おぼえやすい）
+    var firstSub = (steps.filter(function (x) { return x.role === "review"; })[0] || {}).sub;
+    var sRevs = reviewCands.filter(function (e) { return !used[e.stg.id] && schoolRank(e.stg.id) < 1; });
+    var sNow = schoolPick(0), sRev = sRevs.filter(function (e) { return e.sub !== firstSub; })[0] || sRevs[0], sSoon = schoolPick(1);
+    if (sNow) {
+      steps.push(learnStep(sNow, 0));
+    } else if (sRev) {
+      var rs2 = reviewStep(sRev); rs2.role = "review2"; steps.push(rs2);
+    } else if (sSoon) {
+      steps.push(learnStep(sSoon, 1));
+    } else if (subs.length > 0) {
       var rot = dayIndex();
       subs.sort(function (a, b) {
         var d = (counts[a] || 0) - (counts[b] || 0);

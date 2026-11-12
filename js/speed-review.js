@@ -79,11 +79,18 @@
       else fresh.push(c);
     });
     shuffle(weak); shuffle(fresh);
-    due.sort(function (a, b) { return (getBox(a.k) || 0) - (getBox(b.k) || 0) || (Math.random() - 0.5); });
+    // ★2026-11-12（保護者：いま 学校で ならって いる ところを 記憶定着）同じ 箱なら いま・さいきんの 単元の カードを 先に。まだの カードも その 単元の ステージから
+    var srk = function (sid) { try { return window.tutorPlanSchoolRank ? window.tutorPlanSchoolRank(sid) : 2; } catch (e) { return 2; } };
+    due.forEach(function (c) { c._r = Math.random(); });
+    due.sort(function (a, b) { return (getBox(a.k) || 0) - (getBox(b.k) || 0) || (srk(a.sid) - srk(b.sid)) || (a._r - b._r); });
     var deck = weak.slice(0, 3).concat(due).slice(0, N);
     // まだの カードは いろいろな ステージから
     var bySid = {}; fresh.forEach(function (c) { (bySid[c.sid] = bySid[c.sid] || []).push(c); });
     var sids = shuffle(Object.keys(bySid)), i = 0;
+    var schoolSids = sids.filter(function (x) { return srk(x) < 1; });
+    if (schoolSids.length) { // いま・さいきんの 単元の まだの カードを 先に（その 中では ステージを まぜる）
+      var j = 0; while (deck.length < N && schoolSids.length) { var ss = schoolSids[j % schoolSids.length], ll = bySid[ss]; if (ll.length) deck.push(ll.shift()); else schoolSids.splice(j % schoolSids.length, 1); j++; }
+    }
     while (deck.length < N && sids.length) { var sid = sids[i % sids.length], l = bySid[sid]; if (l.length) deck.push(l.shift()); else sids.splice(i % sids.length, 1); i++; }
     deck = deck.slice(0, N);
     // ★2026-11-05（保護者）：ふくしゅう・正答率が 上がって きたら「ちょっと ながい 問題」（js/challenge-pool.js）を こっそり 1〜2まい まぜる
