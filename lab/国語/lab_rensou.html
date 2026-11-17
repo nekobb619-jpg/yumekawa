@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ことば 連想カード 🃏</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-18追加（保護者の アイデア）：今まで 習った ことばで 連想ゲーム。紙の カードを 印刷（文字だけ）して 厚紙に はる ＋ シャッフル アプリ。
+     ① つなげる：まん中の 1まいと つながる カードを さがし、どんな つながりか えらぶ（書かない）
+     ② 共通さがし：ランダムに 3〜5まい → 共通を 見つけて ならべる → 「れい」で ほかの つながりも 見る
+     ③ いんさつ：A4 1まいに 24まい（文字だけ・読みがなつき）。おうちの ことばも 足せる（この 端末に 保存）
+     ことばは 自学ノート No.45・46、テスト、ステージの ことばから。正解は 1つでは ない（れい は ヒント）。 -->
+<style>
+  :root { --ink: #4a3b52; --sub: #7a6985; --pink: #db2777; --line: #e9d5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #fff7ed; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button, .chip { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: #faf5ff; color: #6b21a8; cursor: pointer; }
+  .tabs button[aria-pressed="true"], .chip[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .chip { font-size: 12.5px; min-height: 40px; padding: 4px 10px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .wc { font: inherit; min-height: 74px; border-radius: 12px; border: 2px solid #fdba74; background: #fffbeb; color: var(--ink); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
+  .wc .r { font-size: 10.5px; color: var(--sub); font-weight: 700; } .wc .w { font-size: 19px; font-weight: 900; line-height: 1.25; }
+  .wc[aria-pressed="true"] { background: #fce7f3; border-color: var(--pink); box-shadow: 0 0 0 3px #fbcfe8; }
+  .wc.center { min-height: 96px; border-color: var(--pink); background: #fff; cursor: default; margin: 6px auto 0; width: 60%; }
+  .wc.center .w { font-size: 26px; }
+  .wc .no { font-size: 11px; color: var(--pink); font-weight: 900; }
+  .msg { min-height: 2.2em; margin-top: 8px; } .msg b { color: var(--pink); }
+  button.next { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 11px 18px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #f97316, #db2777); cursor: pointer; }
+  button.sub { font: inherit; font-weight: 900; border: 2px solid var(--line); border-radius: 14px; padding: 9px 14px; min-height: 44px; background: #fff; color: #6b21a8; cursor: pointer; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+  .hint { background: #f5f3ff; border-radius: 12px; padding: 8px 10px; margin-top: 8px; font-size: 13px; }
+  .hint li { margin: 3px 0; }
+  .order { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 8px; min-height: 30px; }
+  .order span { background: #fce7f3; border-radius: 8px; padding: 2px 8px; font-weight: 900; }
+  textarea { width: 100%; min-height: 90px; font: inherit; font-size: 13px; border-radius: 10px; border: 2px solid var(--line); padding: 6px; }
+  .note { font-size: 12px; color: var(--sub); }
+  #sheet { display: none; }
+  @media print {
+    @page { size: A4; margin: 8mm; }
+    body { background: #fff; }
+    .wrap { display: none; }
+    #sheet { display: block; }
+    .pg { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 46mm; page-break-after: always; break-after: page; }
+    .pg:last-child { page-break-after: auto; break-after: auto; }
+    .pc { border: 0.3mm dashed #999; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2mm; }
+    .pc .r { font-size: 9pt; color: #555; } .pc .w { font-size: 22pt; font-weight: 900; line-height: 1.2; }
+    .pc .w.s { font-size: 16pt; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🃏 ことば 連想カード</h1>
+  <div class="lead">今まで 習った ことばで あそぼう。<b>正解は 1つじゃない</b>よ。「どうして つながる？」を 口で 言えたら OK。</div>
+  <div class="card">
+    <div class="tabs" id="tabs" role="group" aria-label="あそび方">
+      <button type="button" data-m="tsunagu" aria-pressed="true">🔗 つなげる</button>
+      <button type="button" data-m="kyotsu" aria-pressed="false">🃏 共通さがし</button>
+      <button type="button" data-m="print" aria-pressed="false">🖨 いんさつ</button>
+    </div>
+    <div class="note" style="margin-top:8px">つかう カード：</div>
+    <div class="chips" id="decks" role="group" aria-label="カードの しゅるい"></div>
+  </div>
+  <div class="card" id="main"></div>
+</div>
+<div id="sheet" aria-hidden="true"></div>
+<script>
+(function () {
+  "use strict";
+  // [ことば, よみ, なかま（ヒント用）]。なかまは「れい」。子どもが 見つけた つながりの ほうが 大事。
+  var DECKS = {
+    kengaku: { n: "🚌 見学・愛知", w: [
+      ["常滑", "とこなめ", ["愛知", "焼き物", "海の近く", "見学"]],
+      ["焼き物", "やきもの", ["焼き物", "土から 作る", "見学"]],
+      ["土管", "どかん", ["焼き物", "土から 作る", "見学", "水が 通る"]],
+      ["泥団子", "どろだんご", ["土から 作る", "見学", "丸い 形"]],
+      ["体験", "たいけん", ["見学", "自分で やる"]],
+      ["博物館", "はくぶつかん", ["見学", "建物"]],
+      ["空港", "くうこう", ["海の近く", "乗り物", "建物"]],
+      ["愛知", "あいち", ["愛知", "県の 名前"]],
+      ["尾張", "おわり", ["愛知", "昔の 国の 名前"]],
+      ["三河", "みかわ", ["愛知", "昔の 国の 名前"]],
+      ["美濃", "みの", ["岐阜", "昔の 国の 名前", "焼き物", "紙"]],
+      ["知多", "ちた", ["愛知", "海の近く", "半島"]],
+      ["有松", "ありまつ", ["愛知", "「松」の 字"]],
+      ["半島", "はんとう", ["地形", "海の近く", "半島"]],
+      ["用水", "ようすい", ["水が 通る", "昔の 人の くふう"]],
+      ["明治用水", "めいじようすい", ["愛知", "水が 通る", "昔の 人の くふう"]],
+      ["愛知用水", "あいちようすい", ["愛知", "水が 通る", "昔の 人の くふう"]],
+      ["茶臼山", "ちゃうすやま", ["愛知", "山"]],
+      ["和紙", "わし", ["紙", "作る しごと"]],
+      ["工業", "こうぎょう", ["作る しごと"]],
+      ["生産", "せいさん", ["作る しごと"]],
+      ["畜産", "ちくさん", ["作る しごと", "生き物", "食べ物"]],
+      ["果実", "かじつ", ["食べ物", "植物"]],
+      ["お茶", "おちゃ", ["食べ物", "植物", "静岡"]]
+    ] },
+    chiri: { n: "🗾 日本の 地名", w: [
+      ["岐阜", "ぎふ", ["岐阜", "県の 名前", "海なし県"]],
+      ["長野", "ながの", ["県の 名前", "海なし県", "山"]],
+      ["山梨", "やまなし", ["県の 名前", "海なし県", "山", "「山」の 字"]],
+      ["静岡", "しずおか", ["県の 名前", "静岡", "海の近く"]],
+      ["佐賀", "さが", ["県の 名前", "九州", "焼き物"]],
+      ["松本", "まつもと", ["長野", "「松」の 字", "城"]],
+      ["熊本城", "くまもとじょう", ["九州", "城"]],
+      ["九州", "きゅうしゅう", ["九州", "島"]],
+      ["富士山", "ふじさん", ["山", "静岡", "「山」の 字"]],
+      ["三保の松原", "みほのまつばら", ["静岡", "松林", "海の近く", "「松」の 字"]],
+      ["虹の松原", "にじのまつばら", ["九州", "松林", "海の近く", "「松」の 字"]],
+      ["天橋立", "あまのはしだて", ["松林", "海の近く"]],
+      ["牧ノ原", "まきのはら", ["静岡", "お茶の 産地"]],
+      ["平野", "へいや", ["地形", "平ら"]],
+      ["盆地", "ぼんち", ["地形", "山に かこまれる"]],
+      ["内陸", "ないりく", ["地形", "海なし県"]],
+      ["47都道府県", "よんじゅうななとどうふけん", ["日本 ぜんぶ"]],
+      ["日本", "にほん", ["日本 ぜんぶ", "島"]]
+    ] },
+    rika: { n: "🔬 理科", w: [
+      ["体積", "たいせき", ["温度で かわる", "大きさ"]],
+      ["性質", "せいしつ", ["しらべる"]],
+      ["状態", "じょうたい", ["温度で かわる"]],
+      ["温度", "おんど", ["温度で かわる", "はかる"]],
+      ["気温", "きおん", ["天気", "はかる"]],
+      ["気温差", "きおんさ", ["天気", "くらべる"]],
+      ["季節", "きせつ", ["季節", "時間"]],
+      ["正午", "しょうご", ["時間", "太陽"]],
+      ["太陽", "たいよう", ["空", "太陽"]],
+      ["月", "つき", ["空", "形が かわる"]],
+      ["星座", "せいざ", ["空", "時間で 動く"]],
+      ["空気", "くうき", ["温度で かわる", "目に 見えない"]],
+      ["水", "みず", ["温度で かわる", "水が 通る"]],
+      ["金属", "きんぞく", ["温度で かわる"]],
+      ["種子", "しゅし", ["植物", "生き物"]],
+      ["ヘチマ", "へちま", ["植物", "季節"]],
+      ["オオカマキリ", "おおかまきり", ["生き物", "季節"]],
+      ["たまご", "たまご", ["生き物", "丸い 形"]],
+      ["呼吸", "こきゅう", ["体", "空気"]],
+      ["吸収", "きゅうしゅう", ["体", "水"]],
+      ["筋肉", "きんにく", ["体", "動く しくみ"]],
+      ["関節", "かんせつ", ["体", "動く しくみ"]]
+    ] },
+    sansu: { n: "🔢 算数", w: [
+      ["小数", "しょうすう", ["数"]],
+      ["がい数", "がいすう", ["数", "だいたい"]],
+      ["四捨五入", "ししゃごにゅう", ["だいたい", "きまり"]],
+      ["見積もり", "みつもり", ["だいたい"]],
+      ["倍", "ばい", ["くらべる", "かけ算"]],
+      ["わり算", "わりざん", ["計算"]],
+      ["あまり", "あまり", ["計算"]],
+      ["面積", "めんせき", ["大きさ", "図形"]],
+      ["角度", "かくど", ["図形", "はかる"]],
+      ["直角", "ちょっかく", ["図形", "90度"]],
+      ["分度器", "ぶんどき", ["道具", "はかる"]],
+      ["円", "えん", ["図形", "丸い 形"]],
+      ["球", "きゅう", ["図形", "丸い 形"]]
+    ] },
+    kokugo: { n: "📖 国語", w: [
+      ["議題", "ぎだい", ["話し合い"]],
+      ["提案", "ていあん", ["話し合い", "理由が いる"]],
+      ["司会", "しかい", ["話し合い", "役わり"]],
+      ["賛成", "さんせい", ["話し合い", "理由が いる", "反対の 意味"]],
+      ["反対", "はんたい", ["話し合い", "理由が いる", "反対の 意味"]],
+      ["質問", "しつもん", ["話し合い", "たしかめる"]],
+      ["記録", "きろく", ["話し合い", "役わり", "のこす"]],
+      ["ごんぎつね", "ごんぎつね", ["物語", "生き物"]],
+      ["漢字", "かんじ", ["文字"]],
+      ["読みがな", "よみがな", ["文字"]]
+    ] }
+  };
+  var LENS = ["同じ なかま", "同じ 場所", "作る・使う", "原因 → 結果", "反対", "形・大きさ", "自分の 体験"];
+  var KEY = "rensou_v1";
+  var st = { m: "tsunagu", d: { kengaku: 1, chiri: 1 } };
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || "null"); if (sv && sv.d) st.d = sv.d; } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ d: st.d })); } catch (e) {} }
+  function custom() {
+    var t = ""; try { t = localStorage.getItem(KEY + "_my") || ""; } catch (e) {}
+    return t.split(/\n/).map(function (l) { var p = l.split(/[,、，]/).map(function (x) { return x.trim(); }); return p[0] ? [p[0], p[1] || "", p.slice(2).filter(Boolean)] : null; }).filter(Boolean);
+  }
+  function pool() {
+    var a = [];
+    Object.keys(DECKS).forEach(function (k) { if (st.d[k]) a = a.concat(DECKS[k].w); });
+    if (st.d.my) a = a.concat(custom());
+    return a;
+  }
+  function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function cardHtml(w, i, extra) {
+    return '<button type="button" class="wc" data-i="' + i + '" aria-pressed="false"' + (extra || "") + '><span class="r">' + esc(w[1]) + '</span><span class="w">' + esc(w[0]) + '</span><span class="no"></span></button>';
+  }
+  var $ = function (id) { return document.getElementById(id); };
+
+  function renderDecks() {
+    var h = Object.keys(DECKS).map(function (k) { return '<button type="button" class="chip" data-d="' + k + '" aria-pressed="' + (!!st.d[k]) + '">' + DECKS[k].n + '</button>'; }).join("");
+    var n = custom().length;
+    h += '<button type="button" class="chip" data-d="my" aria-pressed="' + (!!st.d.my) + '">🏠 おうちの ことば（' + n + '）</button>';
+    $("decks").innerHTML = h;
+    $("decks").querySelectorAll(".chip").forEach(function (b) {
+      b.onclick = function () { var k = b.dataset.d; st.d[k] = st.d[k] ? 0 : 1; if (!pool().length) st.d[k] = 1; save(); renderDecks(); render(); };
+    });
+  }
+  document.querySelectorAll("#tabs button").forEach(function (b) {
+    b.onclick = function () { st.m = b.dataset.m; document.querySelectorAll("#tabs button").forEach(function (x) { x.setAttribute("aria-pressed", x === b); }); render(); };
+  });
+  function render() { ({ tsunagu: tsunagu, kyotsu: kyotsu, print: printView })[st.m](); }
+
+  // ① つなげる
+  function tsunagu() {
+    var p = shuf(pool()); var c = p[0]; var others = p.slice(1, 10); var sel = {};
+    var h = '<div style="text-align:center">まん中の ことばと <b>つながる</b> カードを タップ（いくつでも）</div>';
+    h += '<div class="wc center"><span class="r">' + esc(c[1]) + '</span><span class="w">' + esc(c[0]) + '</span></div>';
+    h += '<div class="grid" id="g">' + others.map(function (w, i) { return cardHtml(w, i); }).join("") + '</div>';
+    h += '<div class="note" style="margin-top:8px">どんな つながり？（えらぶ だけで OK・口で 言えたら ◎）</div><div class="chips" id="lens">' + LENS.map(function (l) { return '<button type="button" class="chip" aria-pressed="false">' + l + '</button>'; }).join("") + '</div>';
+    h += '<div class="row"><button type="button" class="sub" id="hint">💡 れい を 見る</button><button type="button" class="next" id="again">🔀 つぎの カード</button></div><div id="hb"></div>';
+    $("main").innerHTML = h;
+    $("g").querySelectorAll(".wc").forEach(function (b) { b.onclick = function () { var i = b.dataset.i; sel[i] = !sel[i]; b.setAttribute("aria-pressed", !!sel[i]); }; });
+    $("lens").querySelectorAll(".chip").forEach(function (b) { b.onclick = function () { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); }; });
+    $("again").onclick = tsunagu;
+    $("hint").onclick = function () {
+      var li = [];
+      others.forEach(function (w) { var com = w[2].filter(function (t) { return c[2].indexOf(t) >= 0; }); if (com.length) li.push("<li><b>" + esc(w[0]) + "</b>：" + com.map(esc).join("・") + "</li>"); });
+      $("hb").innerHTML = '<div class="hint">' + (li.length ? "こんな つながりも あるよ（れい）：<ul style='margin:4px 0;padding-left:1.3em'>" + li.join("") + "</ul>" : "れいは 見つからなかった。") + "ほかの つながりを 見つけたら、それも 正解！</div>";
+    };
+  }
+
+  // ② 共通さがし
+  var nPick = 4;
+  function kyotsu() {
+    var p = shuf(pool()); var cards = p.slice(0, Math.min(nPick, p.length)); var order = [];
+    var h = '<div style="text-align:center">カードの <b>共通</b>を さがそう。見つけたら、つながる じゅんに タップして ならべてね</div>';
+    h += '<div class="chips" style="justify-content:center">' + [3, 4, 5].map(function (n) { return '<button type="button" class="chip" data-n="' + n + '" aria-pressed="' + (n === nPick) + '">' + n + 'まい</button>'; }).join("") + '</div>';
+    h += '<div class="grid" id="g">' + cards.map(function (w, i) { return cardHtml(w, i); }).join("") + '</div>';
+    h += '<div class="order" id="ord" aria-live="polite"></div>';
+    h += '<div class="row"><button type="button" class="sub" id="swap">1まい 入れかえ</button><button type="button" class="sub" id="hint">💡 れい を 見る</button><button type="button" class="next" id="again">🔀 くばりなおす</button></div><div id="hb"></div>';
+    $("main").innerHTML = h;
+    $("main").querySelectorAll("[data-n]").forEach(function (b) { b.onclick = function () { nPick = +b.dataset.n; kyotsu(); }; });
+    function drawOrder() {
+      $("ord").innerHTML = order.map(function (i, k) { return "<span>" + (k + 1) + ". " + esc(cards[i][0]) + "</span>"; }).join(" → ");
+      $("g").querySelectorAll(".wc").forEach(function (b) { var k = order.indexOf(+b.dataset.i); b.setAttribute("aria-pressed", k >= 0); b.querySelector(".no").textContent = k >= 0 ? (k + 1) + "ばん" : ""; });
+    }
+    $("g").querySelectorAll(".wc").forEach(function (b) { b.onclick = function () { var i = +b.dataset.i, k = order.indexOf(i); if (k >= 0) order.splice(k, 1); else order.push(i); drawOrder(); }; });
+    $("again").onclick = kyotsu;
+    $("swap").onclick = function () {
+      var rest = p.filter(function (w) { return cards.indexOf(w) < 0; }); if (!rest.length) return;
+      var i = Math.floor(Math.random() * cards.length); cards[i] = rest[Math.floor(Math.random() * rest.length)];
+      var b = $("g").querySelector('[data-i="' + i + '"]'); b.querySelector(".r").textContent = cards[i][1]; b.querySelector(".w").textContent = cards[i][0];
+      order = order.filter(function (x) { return x !== i; }); drawOrder(); $("hb").innerHTML = "";
+    };
+    $("hint").onclick = function () {
+      var m = {};
+      cards.forEach(function (w) { w[2].forEach(function (t) { (m[t] = m[t] || []).push(w[0]); }); });
+      var li = Object.keys(m).filter(function (t) { return m[t].length >= 2; }).sort(function (a, b) { return m[b].length - m[a].length; })
+        .map(function (t) { return "<li><b>" + esc(t) + "</b>：" + m[t].map(esc).join("・") + (m[t].length === cards.length ? " 🎉ぜんぶ" : "") + "</li>"; });
+      $("hb").innerHTML = '<div class="hint">' + (li.length ? "れい：<ul style='margin:4px 0;padding-left:1.3em'>" + li.join("") + "</ul>" : "れいでは 共通が 見つからない…！ 自分で つなげられたら すごい。") + "「1まい 入れかえ」で ちがう 共通も さがせるよ。</div>";
+    };
+  }
+
+  // ③ いんさつ
+  function printView() {
+    var p = pool(); var t = ""; try { t = localStorage.getItem(KEY + "_my") || ""; } catch (e) {}
+    var h = '<div>上で えらんだ カード <b>' + p.length + 'まい</b>を A4に 24まいずつ ならべて 印刷します（文字だけ・読みがなつき）。点線で 切って 厚紙に はってね。</div>';
+    h += '<div class="row"><button type="button" class="next" id="pr">🖨 いんさつ（' + Math.ceil(p.length / 24) + 'ページ）</button></div>';
+    h += '<div class="note" style="margin-top:12px">🏠 おうちの ことばを 足す（1行に 1こ：<b>ことば, よみ, なかま, なかま…</b>／よみ・なかまは なくても OK）。この 端末だけに 保存。</div>';
+    h += '<textarea id="my" placeholder="れい：有田焼, ありたやき, 焼き物, 九州">' + esc(t) + '</textarea><div class="row"><button type="button" class="sub" id="sv">ほぞん</button></div><div class="msg" id="say" aria-live="polite"></div>';
+    $("main").innerHTML = h;
+    $("sv").onclick = function () { try { localStorage.setItem(KEY + "_my", $("my").value); } catch (e) {} st.d.my = 1; save(); renderDecks(); $("say").innerHTML = "ほぞん したよ（<b>" + custom().length + "こ</b>）。"; };
+    $("pr").onclick = function () {
+      var all = pool(), out = "";
+      for (var i = 0; i < all.length; i += 24) {
+        out += '<div class="pg">' + all.slice(i, i + 24).map(function (w) { return '<div class="pc"><span class="r">' + esc(w[1]) + '</span><span class="w' + (w[0].length > 4 ? " s" : "") + '">' + esc(w[0]) + "</span></div>"; }).join("") + "</div>";
+      }
+      $("sheet").innerHTML = out; window.print();
+    };
+  }
+  renderDecks(); render();
+})();
+</script>
+</body>
+</html>

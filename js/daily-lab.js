@@ -20,6 +20,7 @@
     "lab/理科/lab_kisetsu.html": ["🌸", "季節と 生き物ラボ", "季節で 生き物は どう かわる？"],
     "lab/理科/lab_jouken_soroe.html": ["🧪", "条件そろえラボ", "かえるのは 1つだけ"],
     "lab/算数/lab_shosu_ten.html": ["🔢", "小数点ラボ", "×10 で 小数点が 動く？"],
+    "lab/国語/lab_rensou.html": ["🃏", "ことば 連想カード", "習った ことばの 共通を さがそう（紙の カードも 印刷できる）"],
     "lab/算数/lab_bun_zu_shiki.html": ["📐", "文→絵→図→式ラボ", "大事な 数字は どれ？ 図に すると？"],
     "lab/算数/lab_gaisu.html": ["📏", "がい数ラボ", "だいたい いくつ？"],
     "lab/算数/lab_keisan_junjo.html": ["🔢", "計算の 順じょラボ", "どこから 計算する？"],
@@ -34,8 +35,8 @@
     "lab/算数/lab_maker_tenbin.html": ["⚖️", "魔法の 天びんラボ", "左右が つりあうのは どこ？"],
     "lab/算数/lab_balance.html": ["⚖️", "てんびん 実験ラボ", "重さと きょりで つりあう？"]
   };
-  var EXTRA = ["lab/算数/lab_mawaru_nami.html", "lab/算数/lab_maker_tenbin.html", "lab/算数/lab_balance.html"];
-  var NEW = { "lab/算数/lab_mawaru_nami.html": ["2026-11-11", "2026-11-17"] };
+  var EXTRA = ["lab/算数/lab_mawaru_nami.html", "lab/算数/lab_maker_tenbin.html", "lab/算数/lab_balance.html", "lab/国語/lab_rensou.html"];
+  var NEW = { "lab/算数/lab_mawaru_nami.html": ["2026-11-11", "2026-11-17"], "lab/国語/lab_rensou.html": ["2026-11-18", "2026-11-22"] };
 
   function today() { var d = new Date(window.currentServerTime || Date.now()); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
   function iso() { var d = new Date(window.currentServerTime || Date.now()); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
