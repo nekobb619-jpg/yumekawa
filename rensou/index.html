@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f97316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ことばつなぎ">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>ことばつなぎ 🃏</title>
+<!-- 2026-11-18 家族で あそぶ スマホ用の ことば連想ゲーム（ゆめかわ とは べつの アプリ）。
+     1台の スマホを まわして あそぶ。サーバーなし・ログなし。名前・点・おうちの ことばは この スマホの 中だけ（localStorage）。
+     ホーム画面に 追加すると オフラインでも うごく（sw.js）。カードは words.js（ゆめかわの ことば連想カードと 同じ ＋ みんなの ことば）。 -->
+<style>
+  :root { --ink: #3f2d48; --sub: #7a6985; --pink: #db2777; --org: #f97316; --line: #f3e8ff; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Noto Sans JP", system-ui, sans-serif; color: var(--ink); background: linear-gradient(180deg, #fff7ed, #fdf2f8); -webkit-user-select: none; user-select: none; }
+  .app { max-width: 520px; margin: 0 auto; min-height: 100%; padding: calc(10px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; }
+  h1 { font-size: 30px; text-align: center; margin: 18px 0 2px; letter-spacing: .04em; }
+  h2 { font-size: 20px; margin: 10px 0 6px; }
+  .lead { text-align: center; color: var(--sub); font-weight: 700; font-size: 14px; line-height: 1.6; }
+  .box { background: #fff; border-radius: 18px; padding: 12px 14px; margin: 8px 0; box-shadow: 0 2px 8px rgba(120, 60, 120, .07); }
+  button { font: inherit; cursor: pointer; }
+  .big { display: block; width: 100%; min-height: 58px; border: none; border-radius: 18px; font-size: 20px; font-weight: 900; color: #fff; background: linear-gradient(135deg, var(--org), var(--pink)); margin-top: 10px; box-shadow: 0 4px 0 #be185d; }
+  .big:active { transform: translateY(3px); box-shadow: 0 1px 0 #be185d; }
+  .sub { display: block; width: 100%; min-height: 50px; border: 2px solid #e9d5ff; border-radius: 16px; font-size: 16px; font-weight: 900; color: #6b21a8; background: #fff; margin-top: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid #e9d5ff; background: #faf5ff; color: #6b21a8; font-weight: 900; font-size: 14px; }
+  .chip[aria-pressed="true"] { background: #6b21a8; color: #fff; border-color: #6b21a8; }
+  .mode { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; min-height: 64px; border: 2px solid #e9d5ff; border-radius: 16px; background: #fff; padding: 8px 12px; margin-top: 8px; color: var(--ink); }
+  .mode[aria-pressed="true"] { border-color: var(--pink); background: #fdf2f8; box-shadow: 0 0 0 3px #fbcfe8; }
+  .mode .e { font-size: 30px; } .mode b { font-size: 17px; display: block; } .mode small { color: var(--sub); font-weight: 700; font-size: 12.5px; }
+  .pl { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .pl .av { font-size: 26px; width: 48px; height: 48px; border-radius: 50%; border: 2px solid #e9d5ff; background: #fff; }
+  .pl input { flex: 1; min-height: 46px; font: inherit; font-size: 17px; font-weight: 700; border: 2px solid #e9d5ff; border-radius: 12px; padding: 4px 10px; -webkit-user-select: text; user-select: text; }
+  .pl .x { width: 44px; height: 46px; border: none; background: #fee2e2; color: #b91c1c; border-radius: 12px; font-weight: 900; }
+  .turn { text-align: center; font-size: 22px; font-weight: 900; margin: 6px 0; }
+  .turn .av { font-size: 34px; vertical-align: middle; }
+  .score { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; font-size: 13px; font-weight: 800; color: var(--sub); }
+  .score span { background: #fff; border-radius: 999px; padding: 2px 10px; }
+  .score span.now { background: #fce7f3; color: var(--pink); }
+  .score span.out { opacity: .4; text-decoration: line-through; }
+  .cards { display: grid; gap: 10px; margin: 10px 0; }
+  .cards.c3 { grid-template-columns: 1fr; } .cards.c4 { grid-template-columns: 1fr 1fr; }
+  .wc { min-height: 92px; border-radius: 16px; border: 3px solid #fdba74; background: #fffbeb; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; color: var(--ink); animation: pop .35s ease both; }
+  .wc .r { font-size: 12px; color: var(--sub); font-weight: 700; min-height: 1em; } .wc .w { font-size: 30px; font-weight: 900; line-height: 1.2; text-align: center; }
+  .cards.c4 .wc .w { font-size: 24px; }
+  .wc.sel { background: #fce7f3; border-color: var(--pink); box-shadow: 0 0 0 4px #fbcfe8; }
+  .wc.center { min-height: 130px; border-color: var(--pink); background: #fff; } .wc.center .w { font-size: 40px; }
+  @keyframes pop { from { transform: scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .wc { animation: none; } }
+  .cover { min-height: 260px; border-radius: 20px; border: 3px dashed #f9a8d4; background: #fff; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 20px; font-weight: 900; color: var(--pink); margin: 10px 0; width: 100%; }
+  .say { text-align: center; font-weight: 800; font-size: 15px; line-height: 1.6; margin: 6px 0; }
+  .votes { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; margin-top: 6px; }
+  .votes button { min-height: 56px; border-radius: 14px; border: 2px solid #e9d5ff; background: #fff; font-size: 18px; font-weight: 900; color: #6b21a8; }
+  .hint { background: #f5f3ff; border-radius: 12px; padding: 8px 12px; font-size: 14px; font-weight: 700; line-height: 1.6; margin-top: 8px; }
+  .hint ul { margin: 2px 0; padding-left: 1.3em; }
+  .bar { height: 14px; border-radius: 999px; background: #f3e8ff; overflow: hidden; margin: 8px 0; }
+  .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #f59e0b, #ef4444); transform-origin: left; }
+  .tsec { text-align: center; font-size: 40px; font-weight: 900; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ok { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 0 #15803d; }
+  .ng { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 4px 0 #475569; }
+  .rank li { font-size: 20px; font-weight: 900; margin: 6px 0; list-style: none; background: #fff; border-radius: 14px; padding: 8px 12px; display: flex; justify-content: space-between; }
+  .rank { padding: 0; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .back { min-height: 44px; border: none; background: transparent; color: var(--sub); font-weight: 900; font-size: 15px; padding: 0 6px; }
+  textarea { width: 100%; min-height: 120px; font: inherit; font-size: 15px; border: 2px solid #e9d5ff; border-radius: 12px; padding: 8px; -webkit-user-select: text; user-select: text; }
+  .note { color: var(--sub); font-size: 13px; font-weight: 700; line-height: 1.6; }
+  .seg { display: flex; gap: 6px; margin-top: 4px; }
+  .seg .chip { flex: 1; }
+</style>
+</head>
+<body>
+<div class="app" id="app" aria-live="polite"></div>
+<script src="words.js"></script>
+<script>
+(function () {
+  "use strict";
+  var DECKS = window.DECKS || {};
+  var AV = ["🐱", "🐶", "🐰", "🐻", "🦊", "🐸"];
+  var MODES = {
+    kyotsu: { e: "🃏", n: "共通さがし", d: "3まいの カードの 共通を 見つけて 言う" },
+    hazure: { e: "🙅", n: "なかまはずれ", d: "4まいから 1まい えらんで 理由を 言う" },
+    relay: { e: "🔗", n: "連想リレー", d: "つながる ことばを じゅんばんに 言う（10秒）" }
+  };
+  var KEY = "kotobatsunagi_v1";
+  var S = { players: [{ a: "🐱", n: "" }, { a: "🐶", n: "" }], mode: "kyotsu", decks: { minna: 1, kengaku: 1, chiri: 1 }, turns: 3, sec: 10, my: "" };
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || "null"); if (sv) for (var k in sv) S[k] = sv[k]; } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  var $app = document.getElementById("app");
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function myWords() { return (S.my || "").split(/\n/).map(function (l) { var p = l.split(/[,、，]/).map(function (x) { return x.trim(); }); return p[0] ? [p[0], p[1] || "", p.slice(2).filter(Boolean)] : null; }).filter(Boolean); }
+  function pool() { var a = []; Object.keys(DECKS).forEach(function (k) { if (S.decks[k]) a = a.concat(DECKS[k].w); }); if (S.decks.my) a = a.concat(myWords()); return a; }
+  function pname(p, i) { return p.n || ("プレイヤー" + (i + 1)); }
+  function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+  function card(w, cls, i) { return '<button type="button" class="wc ' + (cls || "") + '"' + (i != null ? ' data-i="' + i + '"' : "") + '><span class="r">' + esc(w[1]) + '</span><span class="w">' + esc(w[0]) + "</span></button>"; }
+
+  // ---------- ホーム ----------
+  function home() {
+    stopTimer();
+    $app.innerHTML = '<h1>🃏 ことばつなぎ</h1><div class="lead">ことばの「つながり」を 見つける 家族ゲーム。<br>スマホを まわして あそぼう。<b>正解は 1つじゃない</b>よ。</div>' +
+      '<div class="box"><h2>👥 だれが あそぶ？</h2><div id="pls"></div>' + (S.players.length < 6 ? '<button type="button" class="sub" id="add">＋ 人を ふやす</button>' : "") + "</div>" +
+      '<div class="box"><h2>🎮 あそびかた</h2>' + Object.keys(MODES).map(function (m) { return '<button type="button" class="mode" data-m="' + m + '" aria-pressed="' + (S.mode === m) + '"><span class="e">' + MODES[m].e + '</span><span><b>' + MODES[m].n + "</b><small>" + MODES[m].d + "</small></span></button>"; }).join("") +
+      '<div class="note" style="margin-top:8px">' + (S.mode === "relay" ? "1人 何秒？" : "1人 何回？") + '</div><div class="seg" id="seg"></div></div>' +
+      '<div class="box"><h2>🗂 カード</h2><div class="chips" id="dk"></div><div class="note" style="margin-top:6px">いま <b id="cnt"></b>まい</div><button type="button" class="sub" id="myb">🏠 おうちの ことばを 足す</button></div>' +
+      '<button type="button" class="big" id="go">▶ はじめる</button><button type="button" class="sub" id="how">❓ ルール</button>';
+    var pls = document.getElementById("pls");
+    pls.innerHTML = S.players.map(function (p, i) { return '<div class="pl"><button type="button" class="av" data-i="' + i + '" aria-label="アイコンを かえる">' + p.a + '</button><input data-i="' + i + '" maxlength="8" placeholder="プレイヤー' + (i + 1) + '" value="' + esc(p.n) + '" aria-label="なまえ">' + (S.players.length > 2 ? '<button type="button" class="x" data-i="' + i + '" aria-label="けす">✕</button>' : "") + "</div>"; }).join("");
+    pls.querySelectorAll(".av").forEach(function (b) { b.onclick = function () { var p = S.players[b.dataset.i]; p.a = AV[(AV.indexOf(p.a) + 1) % AV.length]; save(); home(); }; });
+    pls.querySelectorAll("input").forEach(function (t) { t.oninput = function () { S.players[t.dataset.i].n = t.value; save(); }; });
+    pls.querySelectorAll(".x").forEach(function (b) { b.onclick = function () { S.players.splice(+b.dataset.i, 1); save(); home(); }; });
+    var add = document.getElementById("add"); if (add) add.onclick = function () { S.players.push({ a: AV[S.players.length % AV.length], n: "" }); save(); home(); };
+    $app.querySelectorAll(".mode").forEach(function (b) { b.onclick = function () { S.mode = b.dataset.m; save(); home(); }; });
+    var opts = S.mode === "relay" ? [[8, "8秒"], [10, "10秒"], [15, "15秒"]] : [[2, "2回"], [3, "3回"], [5, "5回"]];
+    var sk = S.mode === "relay" ? "sec" : "turns";
+    document.getElementById("seg").innerHTML = opts.map(function (o) { return '<button type="button" class="chip" data-v="' + o[0] + '" aria-pressed="' + (S[sk] === o[0]) + '">' + o[1] + "</button>"; }).join("");
+    document.querySelectorAll("#seg .chip").forEach(function (b) { b.onclick = function () { S[sk] = +b.dataset.v; save(); home(); }; });
+    var dk = document.getElementById("dk");
+    var keys = ["minna"].concat(Object.keys(DECKS).filter(function (k) { return k !== "minna"; }));
+    dk.innerHTML = keys.map(function (k) { return '<button type="button" class="chip" data-k="' + k + '" aria-pressed="' + (!!S.decks[k]) + '">' + DECKS[k].n + "</button>"; }).join("") + '<button type="button" class="chip" data-k="my" aria-pressed="' + (!!S.decks.my) + '">✏️ おうち（' + myWords().length + "）</button>";
+    dk.querySelectorAll(".chip").forEach(function (b) { b.onclick = function () { var k = b.dataset.k; S.decks[k] = S.decks[k] ? 0 : 1; if (!pool().length) S.decks[k] = 1; save(); home(); }; });
+    document.getElementById("cnt").textContent = pool().length;
+    document.getElementById("myb").onclick = myEdit;
+    document.getElementById("how").onclick = rules;
+    document.getElementById("go").onclick = start;
+  }
+  function myEdit() {
+    $app.innerHTML = '<div class="top"><button type="button" class="back" id="bk">← もどる</button></div><h2>🏠 おうちの ことば</h2>' +
+      '<div class="note">1行に 1こ。<b>ことば, よみ, なかま, なかま…</b>（よみ・なかまは なくても OK）。なかまを 書くと「れい」に 出ます。この スマホだけに 保存。</div>' +
+      '<textarea id="t" placeholder="有田焼, ありたやき, 焼き物, 九州&#10;おばあちゃんの家&#10;運動会, うんどうかい, 秋, スポーツ">' + esc(S.my) + '</textarea><button type="button" class="big" id="sv">ほぞんして もどる</button>';
+    document.getElementById("bk").onclick = home;
+    document.getElementById("sv").onclick = function () { S.my = document.getElementById("t").value; if (myWords().length) S.decks.my = 1; save(); home(); };
+  }
+  function rules() {
+    $app.innerHTML = '<div class="top"><button type="button" class="back" id="bk">← もどる</button></div><h2>❓ ルール</h2>' +
+      '<div class="box"><b>🃏 共通さがし</b><br>じぶんの ばんで カードを ひらく → 3まいの 共通を 言う。ほかの 人は「なるほど！」と 思ったら 👍。👍の 数が 点に なる。</div>' +
+      '<div class="box"><b>🙅 なかまはずれ</b><br>4まいから「なかまはずれ」を 1まい えらんで、理由を 言う。ほかの 3まいの 共通も 言えたら すごい。👍の 数が 点。</div>' +
+      '<div class="box"><b>🔗 連想リレー</b><br>まん中の ことばから、つながる ことばを じゅんばんに 言う。前の 人が 言った ことばに つなげても OK。時間内に 言えたら「言えた」、言えなかったら アウト。のこった 1人に 3点。</div>' +
+      '<div class="box"><b>💡 れい</b><br>👍を つけた あとに、カードの なかまの「れい」が 見られる。れいと ちがっても、みんなが なっとくすれば 正解！</div>' +
+      '<div class="note">📱 ホーム画面に 追加（iPhone は 共有 →「ホーム画面に追加」、Android は メニュー →「ホーム画面に追加」）すると、アプリの ように ひらけて、電波が なくても あそべます。</div>';
+    document.getElementById("bk").onclick = home;
+  }
+
+  // ---------- ゲーム ----------
+  var G = null;
+  function start() {
+    var p = pool(); if (p.length < 5) { alert("カードが 少ないよ。カードの しゅるいを ふやしてね"); return; }
+    G = { mode: S.mode, deck: shuf(p), di: 0, pts: S.players.map(function () { return 0; }), turn: 0, total: S.players.length * S.turns };
+    if (G.mode === "relay") relayRound(); else turnCover();
+  }
+  function draw(n) { var out = []; for (var i = 0; i < n; i++) { if (G.di >= G.deck.length) { G.deck = shuf(pool()); G.di = 0; } out.push(G.deck[G.di++]); } return out; }
+  // 共通が 1つは ある 組を 作る（ぜんぶ ばらばらだと 小さい 子は こまる）
+  function share(a, b) { return a[2].some(function (t) { return b[2].indexOf(t) >= 0; }); }
+  function drawLinked(n) {
+    for (var tries = 0; tries < 40; tries++) {
+      var base = draw(1)[0]; if (!base[2].length) continue;
+      var pl = shuf(pool()), tag = shuf(base[2])[0];
+      var mates = pl.filter(function (w) { return w !== base && w[2].indexOf(tag) >= 0; });
+      if (mates.length < (n === 4 ? 2 : 1)) continue;
+      if (n === 4) { // なかまはずれ：3まいが 同じ なかま ＋ 1まいは ちがう
+        var odd = pl.filter(function (w) { return w[2].indexOf(tag) < 0 && !share(w, base); })[0];
+        if (!odd) continue;
+        return shuf([base, mates[0], mates[1], odd]);
+      }
+      var rest = pl.filter(function (w) { return w !== base && w !== mates[0]; });
+      var third = rest.filter(function (w) { return w[2].indexOf(tag) >= 0; })[0] && Math.random() < .6 ? rest.filter(function (w) { return w[2].indexOf(tag) >= 0; })[0] : rest[0];
+      return shuf([base, mates[0], third]);
+    }
+    return draw(n);
+  }
+  function scoreHtml(cur, outs) { return '<div class="score">' + S.players.map(function (p, i) { return '<span class="' + (i === cur ? "now" : "") + (outs && outs[i] ? " out" : "") + '">' + p.a + " " + esc(pname(p, i)) + "：" + G.pts[i] + "点</span>"; }).join("") + "</div>"; }
+  function topBar() { return '<div class="top"><button type="button" class="back" id="quit">✕ やめる</button><span class="note">' + MODES[G.mode].e + " " + MODES[G.mode].n + "</span></div>"; }
+  function bindQuit() { document.getElementById("quit").onclick = function () { if (confirm("ゲームを やめる？")) { stopTimer(); home(); } }; }
+
+  function turnCover() {
+    if (G.turn >= G.total) return result();
+    var pi = G.turn % S.players.length, p = S.players[pi];
+    $app.innerHTML = topBar() + scoreHtml(pi) + '<div class="turn"><span class="av">' + p.a + "</span> " + esc(pname(p, pi)) + ' の ばん</div><div class="note" style="text-align:center">' + (Math.floor(G.turn / S.players.length) + 1) + " / " + S.turns + ' 回目</div>' +
+      '<button type="button" class="cover" id="open">スマホを わたしたら<br>タップして カードを ひらく 👆</button>';
+    bindQuit();
+    document.getElementById("open").onclick = function () { buzz(20); G.mode === "kyotsu" ? kyotsu(pi) : hazure(pi); };
+  }
+  function voteArea(pi, cards, sel) {
+    var others = S.players.length - 1;
+    var h = '<div class="say">ほかの 人：「なるほど！」と 思った 人は 何人？</div><div class="votes">';
+    for (var v = 0; v <= others; v++) h += '<button type="button" data-v="' + v + '">' + (v ? "👍×" + v : "0") + "</button>";
+    return h + '</div><div id="after"></div>';
+  }
+  function hintHtml(cards, odd) {
+    var m = {};
+    cards.forEach(function (w, i) { if (i === odd) return; w[2].forEach(function (t) { (m[t] = m[t] || []).push(w[0]); }); });
+    var need = odd != null ? cards.length - 1 : 2;
+    var li = Object.keys(m).filter(function (t) { return m[t].length >= need; }).sort(function (a, b) { return m[b].length - m[a].length; }).slice(0, 5)
+      .map(function (t) { return "<li><b>" + esc(t) + "</b>：" + m[t].map(esc).join("・") + "</li>"; });
+    if (odd != null) {
+      if (li.length) return '<div class="hint">のこりの ' + need + "まいの 共通（れい）：<ul>" + li.join("") + "</ul></div>";
+      var alt = "";
+      cards.forEach(function (w, j) { if (alt || j === odd) return; var r = cards.filter(function (x, k) { return k !== j; });
+        var t = r[0][2].filter(function (g) { return r.every(function (x) { return x[2].indexOf(g) >= 0; }); })[0];
+        if (t) alt = "れいの なかまはずれは <b>" + esc(w[0]) + "</b>（ほかの 3まいは「" + esc(t) + "」）。"; });
+      return '<div class="hint">' + (alt || "") + "みんなが なっとくすれば、どちらも 正解！</div>";
+    }
+    return '<div class="hint">' + (li.length ? "こんな つながりも（れい）：<ul>" + li.join("") + "</ul>" : "れいでは 共通なし…！ 見つけたら すごい。") + "</div>";
+  }
+  function bindVotes(pi, cards, getOdd) {
+    $app.querySelectorAll(".votes button").forEach(function (b) {
+      b.onclick = function () {
+        var v = +b.dataset.v; G.pts[pi] += v; buzz(v ? 30 : 10);
+        $app.querySelectorAll(".votes button").forEach(function (x) { x.disabled = true; x.style.opacity = x === b ? 1 : .35; });
+        document.getElementById("after").innerHTML = (v ? '<div class="say">+' + v + "点！ 🎉</div>" : "") + hintHtml(cards, getOdd ? getOdd() : null) + '<button type="button" class="big" id="nx">つぎの 人へ ▶</button>';
+        document.getElementById("nx").onclick = function () { G.turn++; turnCover(); };
+      };
+    });
+  }
+  function kyotsu(pi) {
+    var cards = drawLinked(3);
+    $app.innerHTML = topBar() + scoreHtml(pi) + '<div class="say">3まいの <b>共通</b>を 言おう！（2まいだけでも OK）</div><div class="cards c3">' + cards.map(function (w) { return card(w); }).join("") + "</div>" + voteArea(pi, cards);
+    bindQuit(); bindVotes(pi, cards, null);
+  }
+  function hazure(pi) {
+    var cards = drawLinked(4), odd = null;
+    $app.innerHTML = topBar() + scoreHtml(pi) + '<div class="say"><b>なかまはずれ</b>は どれ？ タップして 理由を 言おう</div><div class="cards c4">' + cards.map(function (w, i) { return card(w, "", i); }).join("") + '</div><div id="va"></div>';
+    bindQuit();
+    $app.querySelectorAll(".wc").forEach(function (b) {
+      b.onclick = function () {
+        odd = +b.dataset.i; $app.querySelectorAll(".wc").forEach(function (x) { x.classList.toggle("sel", x === b); });
+        if (!document.querySelector(".votes")) { document.getElementById("va").innerHTML = voteArea(pi, cards); bindVotes(pi, cards, function () { return odd; }); }
+      };
+    });
+  }
+
+  // 連想リレー
+  var T = null;
+  function stopTimer() { if (T) { clearInterval(T.id); T = null; } }
+  function relayRound() {
+    G.rounds = (G.rounds || 0) + 1;
+    if (G.rounds > S.turns) return result();
+    G.outs = S.players.map(function () { return false; });
+    G.cur = (G.rounds - 1) % S.players.length; G.chain = 0; G.center = draw(1)[0];
+    relayCover();
+  }
+  function alive() { return G.outs.filter(function (o) { return !o; }).length; }
+  function relayCover() {
+    stopTimer();
+    $app.innerHTML = topBar() + scoreHtml(-1, G.outs) + '<div class="note" style="text-align:center">' + G.rounds + " / " + S.turns + ' ラウンド</div><div class="say">まん中の ことば</div><div class="cards c3">' + card(G.center, "center") + "</div>" +
+      '<div class="say">' + S.players[G.cur].a + " " + esc(pname(S.players[G.cur], G.cur)) + ' から スタート！<br>つながる ことばを じゅんばんに 言おう</div><button type="button" class="big" id="st">▶ スタート</button>';
+    bindQuit();
+    document.getElementById("st").onclick = relayTurn;
+  }
+  function relayTurn() {
+    var pi = G.cur, p = S.players[pi];
+    $app.innerHTML = topBar() + scoreHtml(pi, G.outs) + '<div class="cards c3">' + card(G.center, "center") + '</div><div class="note" style="text-align:center">つながった ことば：' + G.chain + 'こ</div>' +
+      '<div class="turn"><span class="av">' + p.a + "</span> " + esc(pname(p, pi)) + '</div><div class="bar"><i id="bar"></i></div><div class="tsec" id="ts">' + S.sec + '</div>' +
+      '<div class="two"><button type="button" class="big ng" id="ng">✕ アウト</button><button type="button" class="big ok" id="ok">✓ 言えた</button></div>';
+    bindQuit();
+    var t0 = Date.now(), dur = S.sec * 1000, bar = document.getElementById("bar"), ts = document.getElementById("ts");
+    stopTimer();
+    T = { id: setInterval(function () {
+      var left = Math.max(0, dur - (Date.now() - t0)); bar.style.transform = "scaleX(" + left / dur + ")"; ts.textContent = Math.ceil(left / 1000);
+      if (left <= 3000 && left > 2900) buzz(15);
+      if (left <= 0) { stopTimer(); buzz([80, 60, 80]); out(); }
+    }, 100) };
+    document.getElementById("ok").onclick = function () { stopTimer(); buzz(15); G.chain++; nextAlive(); relayTurn(); };
+    document.getElementById("ng").onclick = function () { stopTimer(); out(); };
+  }
+  function nextAlive() { var n = S.players.length; for (var k = 1; k <= n; k++) { var j = (G.cur + k) % n; if (!G.outs[j]) { G.cur = j; return; } } }
+  function out() {
+    G.outs[G.cur] = true;
+    if (alive() <= 1) {
+      var w = G.outs.indexOf(false); G.pts[w] += 3;
+      $app.innerHTML = topBar() + scoreHtml(w, null) + '<div class="cards c3">' + card(G.center, "center") + '</div><div class="say" style="font-size:20px">🏆 ' + S.players[w].a + " " + esc(pname(S.players[w], w)) + " の かち！ +3点</div><div class=\"say\">つながった ことば：" + G.chain + "こ</div>" + hintRelay() +
+        '<button type="button" class="big" id="nx">' + (G.rounds >= S.turns ? "けっか を 見る ▶" : "つぎの ラウンド ▶") + "</button>";
+      bindQuit(); document.getElementById("nx").onclick = relayRound; return;
+    }
+    nextAlive();
+    $app.innerHTML = topBar() + scoreHtml(-1, G.outs) + '<div class="say" style="font-size:20px">アウト！</div><div class="say">つぎは ' + S.players[G.cur].a + " " + esc(pname(S.players[G.cur], G.cur)) + '</div><button type="button" class="big" id="nx">▶ つづける</button>';
+    bindQuit(); document.getElementById("nx").onclick = relayTurn;
+  }
+  function hintRelay() {
+    var c = G.center, same = pool().filter(function (w) { return w !== c && w[2].some(function (t) { return c[2].indexOf(t) >= 0; }); });
+    if (!same.length) return "";
+    var s = shuf(same).slice(0, 6);
+    return '<div class="hint">ほかにも つながる カード（れい）：' + s.map(function (w) { return "<b>" + esc(w[0]) + "</b>"; }).join("・") + "</div>";
+  }
+
+  function result() {
+    stopTimer();
+    var order = S.players.map(function (p, i) { return i; }).sort(function (a, b) { return G.pts[b] - G.pts[a]; });
+    var medal = ["🥇", "🥈", "🥉"];
+    $app.innerHTML = '<h1>🎉 けっか</h1><ul class="rank">' + order.map(function (i, k) { return "<li><span>" + (medal[k] || "　") + " " + S.players[i].a + " " + esc(pname(S.players[i], i)) + "</span><span>" + G.pts[i] + "点</span></li>"; }).join("") + "</ul>" +
+      '<div class="lead">いちばん「なるほど！」と 思った つながりは どれだった？</div><button type="button" class="big" id="again">🔁 もう いっかい</button><button type="button" class="sub" id="hm">🏠 さいしょへ</button>';
+    document.getElementById("again").onclick = start; document.getElementById("hm").onclick = home;
+  }
+
+  home();
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>
