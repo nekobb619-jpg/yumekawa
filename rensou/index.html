@@ -78,6 +78,9 @@
 <body>
 <div class="app" id="app" aria-live="polite"></div>
 <script src="words.js"></script>
+<script src="school.js"></script>
+<script src="hyakunin.js"></script>
+<script src="../js/school-units.js"></script>
 <script>
 (function () {
   "use strict";
@@ -86,10 +89,41 @@
   var MODES = {
     kyotsu: { e: "🃏", n: "共通さがし", d: "3まいの カードの 共通を 見つけて 言う" },
     hazure: { e: "🙅", n: "なかまはずれ", d: "4まいから 1まい えらんで 理由を 言う" },
-    relay: { e: "🔗", n: "連想リレー", d: "つながる ことばを じゅんばんに 言う（10秒）" }
+    relay: { e: "🔗", n: "連想リレー", d: "つながる ことばを じゅんばんに 言う（10秒）" },
+    imi: { e: "📚", n: "いみ あて（学校の ことば）", d: "いみを 読んで、どの ことばか 4つから えらぶ" },
+    karuta: { e: "🎴", n: "百人一首（下の句 あて）", d: "上の句が 出て くる。下の句を 早く えらぶ" }
   };
+  // ---- 学校の 単元の ことば（期間は ../js/school-units.js から。ゆめかわ・ポータルと 同じ） ----
+  function today() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  var SW = window.SCHOOL_WORDS || {}, SU = window.SCHOOL_UNITS || [];
+  function unitWords(f) {
+    var out = [];
+    SU.forEach(function (u) { if (!SW[u.id] || !f(u)) return; SW[u.id].forEach(function (x) { out.push([x[0], x[1], [u.name, u.subject], x[2], u.subject]); }); });
+    return out;
+  }
+  function addDays(d, n) { var t = new Date(d + "T00:00:00"); t.setDate(t.getDate() + n); return t.toISOString().slice(0, 10); }
+  (function () {
+    var t = today(), soon = addDays(t, 60);
+    var real = function (u) { return u.term !== "0"; };
+    DECKS.s_now = { n: "📌 いま 学校で", w: unitWords(function (u) { return real(u) && u.from <= t && t <= u.to; }), school: 1 };
+    DECKS.s_rev = { n: "🔁 ふくしゅう", w: unitWords(function (u) { return real(u) && u.to < t; }), school: 1 };
+    DECKS.s_pre = { n: "⏳ よしゅう", w: unitWords(function (u) { return real(u) && u.from > t && u.from <= soon; }), school: 1 };
+    if (!DECKS.s_pre.w.length) DECKS.s_pre.w = unitWords(function (u) { return real(u) && u.from > t; }).slice(0, 30);
+  })();
+  // ---- 百人一首 ----
+  var HK = (window.HYAKUNIN || []).map(function (p) { return { no: p[0], up: p[1], lo: p[2], uk: p[3], lk: p[4], au: p[5] }; });
+  function yomi(k) { // 決まり字を きめる ための 読み（歴史的かなづかい → 読む 音）
+    k = k.replace(/ /g, ""); if (k.indexOf("あふ") === 0) k = "おう" + k.slice(2);
+    k = k[0] + k.slice(1).replace(/は/g, "わ").replace(/ひ/g, "い").replace(/ふ/g, "う").replace(/へ/g, "え").replace(/ほ/g, "お");
+    return k.replace(/を/g, "お").replace(/ゐ/g, "い").replace(/ゑ/g, "え").replace(/ぢ/g, "じ").replace(/づ/g, "ず").replace(/^おう/, "おお");
+  }
+  (function () {
+    var Y = HK.map(function (h) { return yomi(h.uk); });
+    HK.forEach(function (h, i) { for (var n = 1; n <= Y[i].length; n++) { var pre = Y[i].slice(0, n); if (Y.every(function (t, j) { return j === i || t.indexOf(pre) !== 0; })) { h.km = n; break; } } h.kmk = h.uk.replace(/ /g, "").slice(0, h.km); });
+  })();
+  var KR = { musume: ["むすめふさほせ（1字）", function (h) { return h.km === 1; }], a: ["1〜25", function (h) { return h.no <= 25; }], b: ["26〜50", function (h) { return h.no > 25 && h.no <= 50; }], c: ["51〜75", function (h) { return h.no > 50 && h.no <= 75; }], d: ["76〜100", function (h) { return h.no > 75; }], all: ["ぜんぶ", function () { return true; }] };
   var KEY = "kotobatsunagi_v1";
-  var S = { players: [{ a: "🐱", n: "" }, { a: "🐶", n: "" }], mode: "kyotsu", decks: { minna: 1, kengaku: 1, chiri: 1 }, turns: 3, sec: 10, my: "" };
+  var S = { players: [{ a: "🐱", n: "" }, { a: "🐶", n: "" }], mode: "kyotsu", decks: { minna: 1, kengaku: 1, chiri: 1 }, turns: 3, sec: 10, my: "", kr: "musume", voice: 0 };
   try { var sv = JSON.parse(localStorage.getItem(KEY) || "null"); if (sv) for (var k in sv) S[k] = sv[k]; } catch (e) {}
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   var $app = document.getElementById("app");
@@ -97,6 +131,7 @@
   function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function myWords() { return (S.my || "").split(/\n/).map(function (l) { var p = l.split(/[,、，]/).map(function (x) { return x.trim(); }); return p[0] ? [p[0], p[1] || "", p.slice(2).filter(Boolean)] : null; }).filter(Boolean); }
   function pool() { var a = []; Object.keys(DECKS).forEach(function (k) { if (S.decks[k]) a = a.concat(DECKS[k].w); }); if (S.decks.my) a = a.concat(myWords()); return a; }
+  function imiPool() { var a = []; ["s_now", "s_rev", "s_pre"].forEach(function (k) { if (S.decks[k]) a = a.concat(DECKS[k].w); }); if (a.length < 8) a = DECKS.s_now.w.concat(DECKS.s_rev.w); return a; }
   function pname(p, i) { return p.n || ("プレイヤー" + (i + 1)); }
   function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
   function card(w, cls, i) { return '<button type="button" class="wc ' + (cls || "") + '"' + (i != null ? ' data-i="' + i + '"' : "") + '><span class="r">' + esc(w[1]) + '</span><span class="w">' + esc(w[0]) + "</span></button>"; }
@@ -108,7 +143,8 @@
       '<div class="box"><h2>👥 だれが あそぶ？</h2><div id="pls"></div>' + (S.players.length < 6 ? '<button type="button" class="sub" id="add">＋ 人を ふやす</button>' : "") + "</div>" +
       '<div class="box"><h2>🎮 あそびかた</h2>' + Object.keys(MODES).map(function (m) { return '<button type="button" class="mode" data-m="' + m + '" aria-pressed="' + (S.mode === m) + '"><span class="e">' + MODES[m].e + '</span><span><b>' + MODES[m].n + "</b><small>" + MODES[m].d + "</small></span></button>"; }).join("") +
       '<div class="note" style="margin-top:8px">' + (S.mode === "relay" ? "1人 何秒？" : "1人 何回？") + '</div><div class="seg" id="seg"></div></div>' +
-      '<div class="box"><h2>🗂 カード</h2><div class="chips" id="dk"></div><div class="note" style="margin-top:6px">いま <b id="cnt"></b>まい</div><button type="button" class="sub" id="myb">🏠 おうちの ことばを 足す</button></div>' +
+      (S.mode === "karuta" ? '<div class="box"><h2>🎴 どの 歌？</h2><div class="chips" id="kr"></div><div class="note" style="margin-top:6px"><b id="cnt"></b>首。はじめは「むすめふさほせ」（1字目で わかる 7首）が おすすめ。</div><div class="chips" style="margin-top:8px"><button type="button" class="chip" id="vo" aria-pressed="' + (!!S.voice) + '">🔊 読み上げ</button></div></div>'
+      : '<div class="box"><h2>🗂 カード</h2><div class="chips" id="dk"></div><div class="note" style="margin-top:6px">いま <b id="cnt"></b>まい' + (S.mode === "imi" ? "（いみ あては 📌🔁⏳ の 学校の ことばだけ）" : "") + '</div><button type="button" class="sub" id="myb">🏠 おうちの ことばを 足す</button></div>') +
       '<button type="button" class="big" id="go">▶ はじめる</button><button type="button" class="sub" id="how">❓ ルール</button>';
     var pls = document.getElementById("pls");
     pls.innerHTML = S.players.map(function (p, i) { return '<div class="pl"><button type="button" class="av" data-i="' + i + '" aria-label="アイコンを かえる">' + p.a + '</button><input data-i="' + i + '" maxlength="8" placeholder="プレイヤー' + (i + 1) + '" value="' + esc(p.n) + '" aria-label="なまえ">' + (S.players.length > 2 ? '<button type="button" class="x" data-i="' + i + '" aria-label="けす">✕</button>' : "") + "</div>"; }).join("");
@@ -121,11 +157,19 @@
     var sk = S.mode === "relay" ? "sec" : "turns";
     document.getElementById("seg").innerHTML = opts.map(function (o) { return '<button type="button" class="chip" data-v="' + o[0] + '" aria-pressed="' + (S[sk] === o[0]) + '">' + o[1] + "</button>"; }).join("");
     document.querySelectorAll("#seg .chip").forEach(function (b) { b.onclick = function () { S[sk] = +b.dataset.v; save(); home(); }; });
+    if (S.mode === "karuta") {
+      var kr = document.getElementById("kr");
+      kr.innerHTML = Object.keys(KR).map(function (k) { return '<button type="button" class="chip" data-k="' + k + '" aria-pressed="' + (S.kr === k) + '">' + KR[k][0] + "</button>"; }).join("");
+      kr.querySelectorAll(".chip").forEach(function (b) { b.onclick = function () { S.kr = b.dataset.k; save(); home(); }; });
+      document.getElementById("cnt").textContent = HK.filter(KR[S.kr][1]).length;
+      document.getElementById("vo").onclick = function () { S.voice = S.voice ? 0 : 1; save(); home(); };
+      document.getElementById("how").onclick = rules; document.getElementById("go").onclick = start; return;
+    }
     var dk = document.getElementById("dk");
-    var keys = ["minna"].concat(Object.keys(DECKS).filter(function (k) { return k !== "minna"; }));
+    var keys = ["s_now", "s_rev", "s_pre", "minna"].concat(Object.keys(DECKS).filter(function (k) { return ["minna", "s_now", "s_rev", "s_pre"].indexOf(k) < 0; }));
     dk.innerHTML = keys.map(function (k) { return '<button type="button" class="chip" data-k="' + k + '" aria-pressed="' + (!!S.decks[k]) + '">' + DECKS[k].n + "</button>"; }).join("") + '<button type="button" class="chip" data-k="my" aria-pressed="' + (!!S.decks.my) + '">✏️ おうち（' + myWords().length + "）</button>";
     dk.querySelectorAll(".chip").forEach(function (b) { b.onclick = function () { var k = b.dataset.k; S.decks[k] = S.decks[k] ? 0 : 1; if (!pool().length) S.decks[k] = 1; save(); home(); }; });
-    document.getElementById("cnt").textContent = pool().length;
+    document.getElementById("cnt").textContent = S.mode === "imi" ? imiPool().length : pool().length;
     document.getElementById("myb").onclick = myEdit;
     document.getElementById("how").onclick = rules;
     document.getElementById("go").onclick = start;
@@ -142,6 +186,8 @@
       '<div class="box"><b>🃏 共通さがし</b><br>じぶんの ばんで カードを ひらく → 3まいの 共通を 言う。ほかの 人は「なるほど！」と 思ったら 👍。👍の 数が 点に なる。</div>' +
       '<div class="box"><b>🙅 なかまはずれ</b><br>4まいから「なかまはずれ」を 1まい えらんで、理由を 言う。ほかの 3まいの 共通も 言えたら すごい。👍の 数が 点。</div>' +
       '<div class="box"><b>🔗 連想リレー</b><br>まん中の ことばから、つながる ことばを じゅんばんに 言う。前の 人が 言った ことばに つなげても OK。時間内に 言えたら「言えた」、言えなかったら アウト。のこった 1人に 3点。</div>' +
+      '<div class="box"><b>📚 いみ あて</b><br>学校で 習う ことばの「いみ」が 出る。どの ことばか 4つから えらぶ。📌いま・🔁ふくしゅう・⏳よしゅう の カードを えらべる（単元の 時期は ゆめかわと 同じ）。せいかいで +1点。</div>' +
+      '<div class="box"><b>🎴 百人一首</b><br>上の句が 1文字ずつ 出て くる。下の句を 4つから えらぶ。読み終わる 前に せいかい＝+2点、あと＝+1点。答えの あとに「決まり字」（そこまで 聞けば わかる 文字）が 出る。🔊 で 読み上げも できる。</div>' +
       '<div class="box"><b>💡 れい</b><br>👍を つけた あとに、カードの なかまの「れい」が 見られる。れいと ちがっても、みんなが なっとくすれば 正解！</div>' +
       '<div class="note">📱 ホーム画面に 追加（iPhone は 共有 →「ホーム画面に追加」、Android は メニュー →「ホーム画面に追加」）すると、アプリの ように ひらけて、電波が なくても あそべます。</div>';
     document.getElementById("bk").onclick = home;
@@ -150,8 +196,10 @@
   // ---------- ゲーム ----------
   var G = null;
   function start() {
-    var p = pool(); if (p.length < 5) { alert("カードが 少ないよ。カードの しゅるいを ふやしてね"); return; }
+    var p = S.mode === "imi" ? imiPool() : S.mode === "karuta" ? [] : pool();
+    if (S.mode !== "karuta" && p.length < 5) { alert("カードが 少ないよ。カードの しゅるいを ふやしてね"); return; }
     G = { mode: S.mode, deck: shuf(p), di: 0, pts: S.players.map(function () { return 0; }), turn: 0, total: S.players.length * S.turns };
+    if (G.mode === "karuta") { G.hk = shuf(HK.filter(KR[S.kr][1])); G.hi = 0; }
     if (G.mode === "relay") relayRound(); else turnCover();
   }
   function draw(n) { var out = []; for (var i = 0; i < n; i++) { if (G.di >= G.deck.length) { G.deck = shuf(pool()); G.di = 0; } out.push(G.deck[G.di++]); } return out; }
@@ -184,7 +232,7 @@
     $app.innerHTML = topBar() + scoreHtml(pi) + '<div class="turn"><span class="av">' + p.a + "</span> " + esc(pname(p, pi)) + ' の ばん</div><div class="note" style="text-align:center">' + (Math.floor(G.turn / S.players.length) + 1) + " / " + S.turns + ' 回目</div>' +
       '<button type="button" class="cover" id="open">スマホを わたしたら<br>タップして カードを ひらく 👆</button>';
     bindQuit();
-    document.getElementById("open").onclick = function () { buzz(20); G.mode === "kyotsu" ? kyotsu(pi) : hazure(pi); };
+    document.getElementById("open").onclick = function () { buzz(20); ({ kyotsu: kyotsu, hazure: hazure, imi: imi, karuta: karuta })[G.mode](pi); };
   }
   function voteArea(pi, cards, sel) {
     var others = S.players.length - 1;
@@ -231,6 +279,52 @@
       b.onclick = function () {
         odd = +b.dataset.i; $app.querySelectorAll(".wc").forEach(function (x) { x.classList.toggle("sel", x === b); });
         if (!document.querySelector(".votes")) { document.getElementById("va").innerHTML = voteArea(pi, cards); bindVotes(pi, cards, function () { return odd; }); }
+      };
+    });
+  }
+
+  // 📚 いみ あて（アプリが 正解を きめる）
+  function nextBtn(ok, pi, extra) {
+    var a = document.getElementById("after");
+    a.innerHTML = '<div class="say" style="font-size:20px">' + (ok ? "⭕ せいかい！ +" + ok + "点" : "❌ ざんねん") + "</div>" + (extra || "") + '<button type="button" class="big" id="nx">つぎの 人へ ▶</button>';
+    document.getElementById("nx").onclick = function () { stopTimer(); try { speechSynthesis.cancel(); } catch (e) {} G.turn++; turnCover(); };
+  }
+  function imi(pi) {
+    var w = draw(1)[0], pl = imiPool().filter(function (x) { return x[0] !== w[0]; });
+    var same = shuf(pl.filter(function (x) { return x[4] === w[4]; })), other = shuf(pl.filter(function (x) { return x[4] !== w[4]; }));
+    var ch = shuf([w].concat(same.concat(other).slice(0, 3)));
+    $app.innerHTML = topBar() + scoreHtml(pi) + '<div class="note" style="text-align:center">' + esc(w[2][1]) + "「" + esc(w[2][0]) + '」</div><div class="box" style="font-size:20px;font-weight:900;line-height:1.6;text-align:center">' + esc(w[3]) + '</div><div class="say">この いみの ことばは どれ？</div><div class="cards c4">' + ch.map(function (x, i) { return card(x, "", i); }).join("") + '</div><div id="after"></div>';
+    bindQuit();
+    $app.querySelectorAll(".wc").forEach(function (b) {
+      b.onclick = function () {
+        if (document.getElementById("nx")) return;
+        var ok = ch[+b.dataset.i] === w; if (ok) G.pts[pi] += 1; buzz(ok ? 30 : [60, 40, 60]);
+        $app.querySelectorAll(".wc").forEach(function (x) { var c = ch[+x.dataset.i] === w; x.style.borderColor = c ? "#22c55e" : ""; x.style.background = c ? "#dcfce7" : (x === b ? "#fee2e2" : ""); });
+        nextBtn(ok ? 1 : 0, pi, ok ? "" : '<div class="hint">こたえ：<b>' + esc(w[0]) + "</b></div>");
+      };
+    });
+  }
+  // 🎴 百人一首：上の句が 1文字ずつ 出る。読み終わる 前に 正解で +2、あとなら +1
+  function speak(t) { try { if (!S.voice || !window.speechSynthesis) return; speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "ja-JP"; u.rate = .75; speechSynthesis.speak(u); } catch (e) {} }
+  function karuta(pi) {
+    if (G.hi >= G.hk.length) { G.hk = shuf(G.hk); G.hi = 0; }
+    var h = G.hk[G.hi++], pl = HK.filter(KR[S.kr][1]).filter(function (x) { return x !== h; });
+    if (pl.length < 3) pl = HK.filter(function (x) { return x !== h; });
+    var ch = shuf([h].concat(shuf(pl).slice(0, 3)));
+    var kana = h.uk.replace(/ /g, "\n");
+    $app.innerHTML = topBar() + scoreHtml(pi) + '<div class="box" style="text-align:center"><div class="note">' + h.no + "番</div>" + '<div id="up" style="font-size:24px;font-weight:900;letter-spacing:.06em;min-height:4.2em;line-height:1.4;white-space:pre-line"></div></div>' +
+      '<div class="say">下の句は どれ？（はやいほど 点が 多い）</div><div class="cards c3" id="ch">' + ch.map(function (x, i) { return '<button type="button" class="wc" data-i="' + i + '" style="min-height:70px"><span class="w" style="font-size:20px">' + esc(x.lk.replace(/ /g, "　")) + "</span></button>"; }).join("") + '</div><div id="after"></div>';
+    bindQuit();
+    var up = document.getElementById("up"), n = 0, done = false;
+    speak(h.uk);
+    stopTimer(); T = { id: setInterval(function () { n++; up.textContent = kana.slice(0, n); if (n >= kana.length) { stopTimer(); done = true; } }, 260) };
+    $app.querySelectorAll("#ch .wc").forEach(function (b) {
+      b.onclick = function () {
+        if (document.getElementById("nx")) return;
+        var early = !done; stopTimer(); up.textContent = kana;
+        var ok = ch[+b.dataset.i] === h, pts = ok ? (early ? 2 : 1) : 0; G.pts[pi] += pts; buzz(ok ? 30 : [60, 40, 60]);
+        $app.querySelectorAll("#ch .wc").forEach(function (x) { var c = ch[+x.dataset.i] === h; x.style.borderColor = c ? "#22c55e" : ""; x.style.background = c ? "#dcfce7" : (x === b ? "#fee2e2" : ""); });
+        nextBtn(pts, pi, '<div class="hint"><b>' + esc(h.up) + "　" + esc(h.lo) + "</b><br>（" + esc(h.au) + "）<br>決まり字：<b>" + esc(h.kmk) + "</b>（ここまで 聞けば 下の句が わかる）</div>");
       };
     });
   }
