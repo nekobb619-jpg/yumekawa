@@ -75,6 +75,9 @@
     , [172, "【とうきょう】都は 日本の 首都だ。", "とうきょう", "東京", "ken"], [173, "【ちば】県は 東京都の 東に ある。", "ちば", "千葉", "ken"], [174, "【いわて】県は 東北地方に ある。", "いわて", "岩手", "ken"],
     [175, "【あきた】県は 米づくりが さかんだ。", "あきた", "秋田", "ken"], [176, "【ふくしま】県は ももが 有名だ。", "ふくしま", "福島", "ken"], [177, "【きょうと】府には 古い お寺が 多い。", "きょうと", "京都", "ken"],
     [178, "【やまぐち】県は 本州の いちばん 西に ある。", "やまぐち", "山口", "ken"]
+    // ★2026-11-19 漢字の たしかめ（76点）で × だった 字の うち、まだ 無かった もの（文は オリジナル。答えは 4年までの 字）
+    , [179, "港の【そうこ】に 荷物を しまう。", "そうこ", "倉庫", "kotoba"], [180, "日本の【かくち】で 雪が ふった。", "かくち", "各地", "kotoba"], [181, "けがが【なお】る。", "なお", "治", "okuri"],
+    [182, "【くろう】して 山の 上まで 登った。", "くろう", "苦労", "kotoba"], [183, "駅が 近くて【べんり】だ。", "べんり", "便利", "kotoba"], [184, "朝の 光を【あ】びる。", "あ", "浴", "okuri"]
   ].map(function (x) { return { id: x[0], s: x[1], r: x[2], a: x[3], k: x[4] || (x[0] >= 34 ? "ken" : x[0] >= 29 ? "okuri" : x[0] === 1 || x[0] === 2 ? "nita" : "kotoba") }; });
   var COURSES = [
     { id: "mix", name: "🎯 おまかせ", sub: "ぜんぶから" },
@@ -82,18 +85,22 @@
     { id: "okuri", name: "✏️ 送りがな", sub: "「つづ く」「むす ぶ」など" },
     { id: "nita", name: "🧩 にた 漢字", sub: "機会と 機械・末と 未 など" },
     { id: "kotoba", name: "📚 4年の ことば", sub: "教科で 使う ことば" },
-    { id: "miss", name: "🔁 まちがえた 漢字", sub: "前に 🔁 に した もの" }
+    { id: "miss", name: "🔁 まちがえた 漢字", sub: "前に 🔁 に した もの" },
+    // ★2026-11-19 テストで × だった 12こ（浴・各・倉・料・労・便・治・焼ける・続く・照らす・挙げる・借りる）。ids の 言葉だけ、n 問
+    { id: "t1119", name: "📝 11/19 テストの 漢字", sub: "まちがえた 12こ", ids: [160, 180, 179, 154, 182, 183, 181, 87, 79, 88, 81, 80], n: 12, until: "2026-12-31" }
   ];
+  function cdef(c) { return COURSES.filter(function (x) { return x.id === c; })[0] || {}; }
 
   function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   function make(no, prio, course) {
     var r = rng(no * 104729 + 7), pick = [], used = {};
-    var pool = course && course !== "mix" && course !== "miss" ? BANK.filter(function (b) { return b.k === course; }) : BANK;
+    var cd = cdef(course), lim = cd.n || 10;
+    var pool = cd.ids ? BANK.filter(function (b) { return cd.ids.indexOf(b.id) >= 0; }) : course && course !== "mix" && course !== "miss" ? BANK.filter(function (b) { return b.k === course; }) : BANK;
     if (course === "miss") pool = BANK.filter(function (b) { return (prio || []).indexOf(String(b.id)) >= 0 || (prio || []).indexOf(b.id) >= 0; });
     (prio || []).slice(0, course === "miss" ? 10 : 5).forEach(function (id) { var w = BANK.filter(function (b) { return b.id === Number(id); })[0]; if (w && !used[w.id]) { used[w.id] = 1; pick.push(w); } });
     var rest = pool.filter(function (b) { return !used[b.id]; });
     for (var i = rest.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = rest[i]; rest[i] = rest[j]; rest[j] = t; }
-    while (pick.length < 10 && rest.length) pick.push(rest.shift());
+    while (pick.length < lim && rest.length) pick.push(rest.shift());
     return pick;
   }
   window.KANJI_SHEET = { BANK: BANK, make: make, COURSES: COURSES };
@@ -121,8 +128,8 @@
       '<div style="font-size:12px;font-weight:700;color:var(--text-soft);text-align:center;margin:4px 0 10px;line-height:1.6;">漢字は 手で 書くと おぼえられる。<br>印刷して 書く → アプリで 自分で 丸つけ（その日 1まい目は ○1つ 1Q）</div>' +
       (m ? '<div style="background:#fff7ed;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:800;color:#c2410c;text-align:center;margin-bottom:10px;">🔁 前に まちがえた 言葉が ' + m + 'こ。次の シートに また 出るよ</div>' : '') +
       '<div style="font-size:12px;font-weight:900;color:#9d174d;margin-bottom:4px;">📄 コースを えらんで 印刷（10問）</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">' + COURSES.filter(function (c) { return c.id !== "miss" || m; }).map(function (c) {
-        var n = c.id === "mix" ? BANK.length : c.id === "miss" ? m : BANK.filter(function (b) { return b.k === c.id; }).length;
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">' + COURSES.filter(function (c) { return (c.id !== "miss" || m) && (!c.until || new Date().toISOString().slice(0, 10) <= c.until); }).map(function (c) {
+        var n = c.ids ? c.ids.length : c.id === "mix" ? BANK.length : c.id === "miss" ? m : BANK.filter(function (b) { return b.k === c.id; }).length;
         return '<button style="' + BTN + 'padding:9px 6px;font-size:13px;color:#831843;background:' + (c.id === "mix" ? "linear-gradient(135deg,#fbcfe8,#e9d5ff)" : "#fdf2f8") + ';line-height:1.35;" onclick="window.printKanjiSheet(\'' + c.id + '\')">' + c.name + '<br><span style="font-size:10.5px;font-weight:700;color:#9d174d;">' + c.sub + '（' + n + '）</span></button>';
       }).join("") + '</div>' +
       '<div style="display:grid;gap:8px;">' +
@@ -134,7 +141,7 @@
 
   window.printKanjiSheet = function (course) {
     course = course || "mix";
-    var no = 1000 + Math.floor(Math.random() * 9000), all = missed(), cb = function (id) { var w = BANK.filter(function (b) { return b.id === Number(id); })[0]; return w && (course === "mix" || course === "miss" || w.k === course); };
+    var no = 1000 + Math.floor(Math.random() * 9000), all = missed(), cb = function (id) { var w = BANK.filter(function (b) { return b.id === Number(id); })[0]; return w && !cdef(course).ids && (course === "mix" || course === "miss" || w.k === course); };
     var prio = all.filter(cb).slice(0, course === "miss" ? 10 : 5);
     var ids = make(no, prio, course).map(function (w) { return w.id; });
     if (window.saveData) { window.saveData.kanjiLastSheet = { no: no, ids: ids, c: course }; if (window.saveGame) window.saveGame(); }
