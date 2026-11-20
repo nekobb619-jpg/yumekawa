@@ -179,7 +179,7 @@
     wrongIds.forEach(function (id) { if (miss.indexOf(id) < 0) miss.push(id); });
     sd.kanjiMissed = miss.slice(-20);
     sd.kanjiChecks = Array.isArray(sd.kanjiChecks) ? sd.kanjiChecks : [];
-    sd.kanjiCheckTotal = (sd.kanjiCheckTotal || 0) + 1; // ★2026-11-21 丸つけの 合計（お父さんミッション kanji15 で 使う）
+    sd.kanjiCheckTotal = (sd.kanjiCheckTotal || 0) + 1; // ★2026-11-21 丸つけの 合計（お父さんミッション お父さんミッションで 使う かも）
     var t = today(), already = sd.kanjiChecks.some(function (c) { return c.no === last.no; }), rewardedToday = sd.kanjiChecks.some(function (c) { return c.d === t && c.rewarded; });
     var reward = (!already && !rewardedToday) ? ok : 0;
     sd.q = (sd.q || 0) + reward;
