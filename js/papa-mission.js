@@ -30,6 +30,60 @@
       ] }
   ];
 
+  /* ★2026-11-21（保護者）No.50 とうたつ → りお アカウントだけに「つぎの ミッション、どうしたい？」（えらぶ だけ）。
+     どれを えらんでも ごほうびは 同じ（1000ロバックス・お父さんから）。毎日の 条件は つけない（へとへとの日も ある ため）。
+     saveData.papaNext = { from, pick, at, base:{ plan, kanji } }。えらんだ あと すすみが 0 の 間は えらびなおせる。
+     note＝お父さんが しゃしんで たしかめた 番号（confirmed に 足して いく）、plan＝tutorPlanDoneCount、kanji＝kanjiCheckTotal（js/kanji-sheet.js の 丸つけ 回数）。
+     own は お父さんと 話して 決める（決まったら この ファイルに 新しい ミッションを 足す）。 */
+  var NEXT = { from: "jigaku50", reward: "1000ロバックス", opts: [
+    { id: "note60", e: "📓", n: "自学ノートを あと 10さつ（No.60 まで）", goal: 10, kind: "note", unit: "さつ" },
+    { id: "plan30", e: "🎯", n: "まなびプランを 30回 たっせい", goal: 30, kind: "plan", unit: "回" },
+    { id: "kanji15", e: "✍️", n: "漢字シートを 15まい 丸つけ", goal: 15, kind: "kanji", unit: "まい" },
+    { id: "own", e: "💬", n: "じぶんで 考えたい（お父さんと 話す）", kind: "own" }
+  ] };
+  function nextOpt(id) { return NEXT.opts.filter(function (o) { return o.id === id; })[0]; }
+  function nextProg(m, o, nx) {
+    var sd = window.saveData || {}, b = nx.base || {};
+    if (o.kind === "note") return Math.max(0, curNo(m) - m.goalNo);
+    if (o.kind === "plan") return Math.max(0, (sd.tutorPlanDoneCount || 0) - (b.plan || 0));
+    if (o.kind === "kanji") return Math.max(0, (sd.kanjiCheckTotal || 0) - (b.kanji || 0));
+    return 0;
+  }
+  function nextHtml(m) {
+    var sd = window.saveData; if (!sd || m.id !== NEXT.from || curNo(m) < m.goalNo) return "";
+    var nx = sd.papaNext && sd.papaNext.from === NEXT.from ? sd.papaNext : null, o = nx && nextOpt(nx.pick);
+    var B = "border:none;border-radius:14px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;cursor:pointer;min-height:44px;";
+    var head = '<section style="margin:10px 0;background:linear-gradient(135deg,#fdf2f8,#ede9fe);border:3px solid #a855f7;border-radius:18px;padding:12px 14px;font-family:\'Zen Maru Gothic\',sans-serif;box-shadow:0 4px 0 rgba(126,34,206,.2)">';
+    if (!o) {
+      return head + '<div style="font-size:12px;font-weight:900;color:#7e22ce">👨 お父さんから</div>' +
+        '<div style="font-size:17px;font-weight:900;color:#581c87;margin:3px 0 4px;line-height:1.4">🎉 No.' + m.goalNo + ' とうたつ！ つぎの ミッション、どうしたい？</div>' +
+        '<div style="font-size:12.5px;font-weight:800;color:#6b21a8;margin-bottom:8px;line-height:1.6">どれを えらんでも、できたら <b>' + esc(NEXT.reward) + '</b>。じぶんで えらんでね。</div>' +
+        '<div style="display:grid;gap:6px">' + NEXT.opts.map(function (x) {
+          return '<button type="button" onclick="window.papaNextPick(\'' + x.id + '\')" style="' + B + 'text-align:left;padding:9px 12px;font-size:14px;background:#fff;border:2px solid #d8b4fe;color:#581c87">' + x.e + ' ' + esc(x.n) + '</button>';
+        }).join("") + '</div></section>';
+    }
+    if (o.kind === "own") return head + '<div style="font-size:15px;font-weight:900;color:#581c87">💬 つぎの ミッションは じぶんで 考える</div><div style="font-size:12.5px;font-weight:800;color:#6b21a8;margin-top:4px;line-height:1.6">お父さんに「こう したい」を 話して みよう。決まったら ここに 出るよ。</div>' +
+      '<button type="button" onclick="window.papaNextPick(\'\')" style="' + B + 'margin-top:6px;padding:4px 12px;min-height:36px;font-size:12px;background:transparent;color:#7e22ce;border:1.5px dashed #d8b4fe">えらびなおす</button></section>';
+    var n = nextProg(m, o, nx), left = Math.max(0, o.goal - n), pct = Math.min(100, Math.round(n / o.goal * 100));
+    if (!left && !nx.done) { nx.done = 1; log("🎉 たっせい：" + o.n + "（" + NEXT.reward + "）"); save(); }
+    return head + '<div style="font-size:12px;font-weight:900;color:#7e22ce">👨 お父さんミッション（じぶんで えらんだ）</div>' +
+      '<div style="font-size:16px;font-weight:900;color:#581c87;margin:3px 0 4px;line-height:1.4">' + o.e + ' ' + esc(o.n) + 'で ' + esc(NEXT.reward) + '！</div>' +
+      '<div style="font-size:13px;font-weight:800;color:#6b21a8">いま <b style="font-size:16px">' + n + '</b> / ' + o.goal + o.unit + (left ? '（あと ' + left + o.unit + '）' : '') + '</div>' +
+      '<div style="height:10px;background:#fff;border-radius:999px;overflow:hidden;margin:4px 0 6px"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#a855f7,#ec4899)"></div></div>' +
+      (left ? (o.kind === "note" ? '<div style="font-size:11px;font-weight:700;color:#6b21a8">書いた ノートは お父さんに 見せてね（たしかめると ふえるよ）</div>' : '') +
+        (n === 0 ? '<button type="button" onclick="window.papaNextPick(\'\')" style="' + B + 'margin-top:6px;padding:4px 12px;min-height:36px;font-size:12px;background:transparent;color:#7e22ce;border:1.5px dashed #d8b4fe">えらびなおす</button>' : '')
+        : '<div style="margin-top:6px;background:#16a34a;color:#fff;border-radius:12px;padding:8px;text-align:center;font-weight:900">🎉 たっせい！ お父さんから ' + esc(NEXT.reward) + '</div>') +
+      '</section>';
+  }
+  window.papaNextPick = function (id) {
+    var sd = window.saveData; if (!sd) return;
+    if (!id) { delete sd.papaNext; log("つぎの ミッションを えらびなおす"); save(); render(); return; }
+    var o = nextOpt(id); if (!o) return;
+    sd.papaNext = { from: NEXT.from, pick: id, at: today(), base: { plan: sd.tutorPlanDoneCount || 0, kanji: sd.kanjiCheckTotal || 0 } };
+    log("つぎの ミッション（じぶんで えらんだ）：" + o.n);
+    save(); render();
+  };
+
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function today() { return iso(new Date(window.currentServerTime || Date.now())); }
@@ -94,7 +148,7 @@
       var ms = mine();
       if (!ms.length || !window.saveData) { if (old) old.remove(); return; }
       var box = old || document.createElement("div"); box.id = "papa-mission-box";
-      box.innerHTML = ms.map(cardHtml).join("");
+      box.innerHTML = ms.map(function (m) { return cardHtml(m) + nextHtml(m); }).join("");
       if (!old) host.parentNode.insertBefore(box, host);
     } catch (e) { console.error("papa-mission", e); }
   }
