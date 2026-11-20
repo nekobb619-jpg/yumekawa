@@ -398,6 +398,47 @@
     return name + "おかえり！ きょうは " + nextLabel + " から はじめよう。いっしょに やろうね";
   }
 
+  /* ★2026-11-21 😮‍💨 へとへとの日（保護者：動画「やりたくないと 言っても 怒られない 環境が 先」）。
+     おすと きょうの プランを 番号 1つだけに する（のこりは「できたら」）。理由は 聞かない・記録しない。
+     その 1つが できたら れんぞく日は つづく＋🎀 1つ（Q・🥚・🧩 は なし。🎀 は 週 2回まで）。たっせい前なら「やっぱり ぜんぶ やる」で もどせる。
+     saveData.lightDays（日付、さいご 30）。LOG「🎯まなびプラン」に「かるめの日」。 */
+  function weekStartMs() { var d = new Date(nowMs()); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getTime(); }
+  function lightCountThisWeek() { var ws = weekStartMs(); return (sd().lightDays || []).filter(function (k) { var a = k.split("-"); return new Date(+a[0], +a[1] - 1, +a[2]).getTime() >= ws; }).length; }
+  window.tutorPlanLight = function (on) {
+    var p = ensurePlan(); if (!p || p.rewarded) return;
+    var data = sd();
+    if (on && !p.light) {
+      var keep = -1; p.steps.forEach(function (x, i) { if (keep < 0 && !x.optional && !stepDone(x, p)) keep = i; });
+      if (keep < 0) return;
+      p.steps.forEach(function (x, i) { if (!x.optional && i !== keep) { x.optional = true; x._req = 1; } });
+      p.light = 1;
+      var tk = todayKey(); data.lightDays = (data.lightDays || []).filter(function (k) { return k !== tk; }).concat([tk]).slice(-30);
+      if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🎯まなびプラン", msg: "かるめの日（番号 1つ）" });
+    } else if (!on && p.light) {
+      p.steps.forEach(function (x) { if (x._req) { x.optional = false; delete x._req; } });
+      p.light = 0;
+      var tk2 = todayKey(); data.lightDays = (data.lightDays || []).filter(function (k) { return k !== tk2; });
+      if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🎯まなびプラン", msg: "かるめの日 → やっぱり ぜんぶ" });
+    }
+    var m = document.getElementById("tplan-light-ask"); if (m) m.remove();
+    if (window.saveGame) window.saveGame();
+    scheduleRender();
+  };
+  window.tutorPlanLightAsk = function () {
+    var old = document.getElementById("tplan-light-ask"); if (old) old.remove();
+    var w = document.createElement("div"); w.id = "tplan-light-ask"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true");
+    w.style.cssText = "position:fixed;inset:0;z-index:240;background:rgba(74,59,82,.45);display:flex;align-items:center;justify-content:center;padding:16px;";
+    var B = "border:none;border-radius:999px;padding:11px 18px;min-height:44px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:14px;cursor:pointer;";
+    w.innerHTML = '<div style="background:#fff;border-radius:22px;padding:18px 16px;max-width:340px;width:100%;text-align:center;font-family:\'Zen Maru Gothic\',sans-serif;">' +
+      '<div style="font-size:34px;">🌙</div><div style="font-size:17px;font-weight:900;color:#6b21a8;margin:4px 0;">きょうは かるめに しよう</div>' +
+      '<div style="font-size:13px;font-weight:800;color:#4a3b52;line-height:1.8;margin-bottom:12px;">番号の プランを <b>1つだけ</b> に するよ。<br>わけは 言わなくて いいよ。<br>休むのも 大事な こと。</div>' +
+      '<div style="display:grid;gap:8px;"><button type="button" onclick="window.tutorPlanLight(true)" style="' + B + 'color:#fff;background:linear-gradient(135deg,#a855f7,#6366f1);">1つだけに する</button>' +
+      '<button type="button" onclick="document.getElementById(\'tplan-light-ask\').remove()" style="' + B + 'background:#f3e8ff;color:#7e22ce;">やっぱり ふつうに やる</button></div></div>';
+    w.onclick = function (e) { if (e.target === w) w.remove(); };
+    document.body.appendChild(w);
+    var b = w.querySelector("button"); if (b) b.focus();
+  };
+
   function render(opts) {
     opts = opts || {};
     var card = document.getElementById("tutor-plan-card");
@@ -435,13 +476,16 @@
         '<div class="num">' + (done ? "✅" : NUM[i]) + '</div>' +
         '<div class="body"><div class="kind">' + kind + sub + '</div><div class="name">' + esc(s.name) + '</div>' +
         (done ? "" : '<div class="why">💡 ' + esc(s.why) + '</div>') + '</div>' + btn + '</div>';
-    }).join("") + (foldN ? '<button type="button" class="tplan-more" onclick="window.tutorPlanShowMore()" style="display:block;width:100%;min-height:44px;margin:0 0 7px;border:2px dashed #e9d5ff;border-radius:14px;background:rgba(255,255,255,.6);font:900 13px \'Zen Maru Gothic\',sans-serif;color:#7e22ce;cursor:pointer;">＋ できたら（' + foldN + 'つ）を 見る</button>' : "");
+    }).join("") + (p.rewarded ? "" : p.light
+      ? '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 7px;padding:6px 10px;border-radius:14px;background:#f5f3ff;font:800 12.5px \'Zen Maru Gothic\',sans-serif;color:#6b21a8;">🌙 きょうは かるめの日：番号 1つで OK<button type="button" onclick="window.tutorPlanLight(false)" style="border:none;background:transparent;color:#7e22ce;font:900 12px \'Zen Maru Gothic\',sans-serif;text-decoration:underline;cursor:pointer;min-height:36px;">やっぱり ぜんぶ やる</button></div>'
+      : (allDone ? "" : '<div style="text-align:right;margin:-2px 0 6px;"><button type="button" onclick="window.tutorPlanLightAsk()" style="border:1.5px dashed #d8b4fe;background:transparent;border-radius:999px;padding:4px 12px;min-height:36px;font:800 12px \'Zen Maru Gothic\',sans-serif;color:#7e22ce;cursor:pointer;">😮‍💨 きょうは へとへと</button></div>')) + (foldN ? '<button type="button" class="tplan-more" onclick="window.tutorPlanShowMore()" style="display:block;width:100%;min-height:44px;margin:0 0 7px;border:2px dashed #e9d5ff;border-radius:14px;background:rgba(255,255,255,.6);font:900 13px \'Zen Maru Gothic\',sans-serif;color:#7e22ce;cursor:pointer;">＋ できたら（' + foldN + 'つ）を 見る</button>' : "");
     if (dotsEl) dotsEl.innerHTML = p.steps.map(function (s, i) { return '<i class="' + (doneFlags[i] ? "on" : "") + '"></i>'; }).join("");
     var streak = sd().tutorPlanStreak || 0;
     var streakAlive = sd().tutorPlanLastDoneDate === todayKey() || sd().tutorPlanLastDoneDate === yesterdayKey();
     if (footEl) {
       footEl.innerHTML = allDone
         ? "🎉 きょうの プラン たっせい！ 🔥<b>" + streak + "日</b> れんぞく<br><span style=\"font-size:12px;\">" + (everyDone ? "🎀 「できたら」も ぜんぶ できた！ ふくろ もう 1つ" : "✅ きょうは ここまでで 十分。「できたら」も ぜんぶ やると 🎀 もう 1つ（あと " + optLeft + "つ）") + "</span>"
+        : p.light ? "🌙 番号の 1つが できたら、きょうは おしまいで OK。🔥れんぞくも つづくよ"
         : "番号の " + p.steps.filter(function (x) { return !x.optional; }).length + "つが できたら <b>+" + PLAN_REWARD_Q + "Q ＆ 🥚 ＆ 🎀 ＆ 🧩+" + PLAN_SHARDS + "</b>" + (streakAlive && streak > 0 ? "　🔥れんぞく <b>" + streak + "日</b>" : "") + "<br><span style=\"font-size:11.5px;\">「できたら」も ぜんぶで 🎀 もう 1つ。⏱ めやすは 15〜20分</span>";
     }
     card.classList.toggle("all-done", allDone);
@@ -477,6 +521,14 @@
     data.tutorPlanStreak = (last === yesterdayKey()) ? (data.tutorPlanStreak || 0) + 1 : (last === todayKey() ? (data.tutorPlanStreak || 1) : 1);
     data.tutorPlanLastDoneDate = todayKey();
     data.tutorPlanDoneCount = (data.tutorPlanDoneCount || 0) + 1;
+    if (p.light) { // ★2026-11-21 かるめの日：れんぞくは つづく＋🎀（週 2回まで）。Q・🥚・🧩 は なし
+      var bag = lightCountThisWeek() <= 2 && window.grantStickerPack ? window.grantStickerPack("plan") : false;
+      if (window.saveGame) window.saveGame();
+      if (window.syncWithGoogleSpreadsheet) window.syncWithGoogleSpreadsheet("LOG", { stage: "🎯まなびプラン", msg: "かるめの日 1つ達成" + (bag ? " 🎀+1" : "") + " れんぞく" + data.tutorPlanStreak + "日 通算" + data.tutorPlanDoneCount + "回" });
+      showCelebration(data.tutorPlanStreak, null, { light: 1, bag: bag });
+      setTimeout(function () { if (window.updateUI) window.updateUI(); }, 0);
+      return;
+    }
     data.q = (data.q || 0) + PLAN_REWARD_Q;
     // ★2026-10-03追加：なかまのたまご（js/nakama-egg.js）を 1こ、3日れんぞくごとに もう1こ
     var eggGift = (data.tutorPlanStreak % 3 === 0) ? 2 : 1;
@@ -496,7 +548,7 @@
     setTimeout(function () { if (window.updateUI) window.updateUI(); }, 0);
   }
 
-  function showCelebration(streak, newFriend) {
+  function showCelebration(streak, newFriend, lt) {
     var old = document.getElementById("tplan-celebrate"); if (old) old.remove();
     var wrap = document.createElement("div");
     wrap.id = "tplan-celebrate";
@@ -513,10 +565,11 @@
       '<div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#fff,#fdf2f8 60%,#fef9c3);border-radius:26px;padding:20px 18px 18px;max-width:340px;width:100%;text-align:center;box-shadow:0 10px 0 rgba(147,51,234,.25);animation:tplanPop .45s ease-out;">' +
         confetti +
         '<div style="display:flex;justify-content:center;align-items:flex-end;">' + teacherSvg("cheer") + (newFriend ? newFriend.svg("cheer") : friendSvg("cheer")) + '</div>' +
-        '<div style="font-size:20px;font-weight:900;color:#be185d;margin-top:6px;">きょうの プラン たっせい！</div>' +
+        (lt ? '<div style="font-size:20px;font-weight:900;color:#6b21a8;margin-top:6px;">きょうは これで OK！</div><div style="font-size:13px;font-weight:800;color:#6b21a8;margin:8px 0 12px;line-height:1.7;">つかれた 日も 1つ やれたね。<br>ゆっくり 休んでね 🌙<br>' + (lt.bag ? "🎀 +1　" : "") + '🔥 ' + streak + '日 れんぞく</div>' : '') +
+        (lt ? '' : '<div style="font-size:20px;font-weight:900;color:#be185d;margin-top:6px;">きょうの プラン たっせい！</div>' +
         '<div style="font-size:13px;font-weight:800;color:#6b21a8;margin:8px 0 4px;line-height:1.7;">ふくしゅう・あたらしい 学び・ちょうせん、<br>ぜんぶ やりきったね。えらい！</div>' +
         '<div style="font-size:15px;font-weight:900;color:#4a3b52;margin:6px 0 12px;">🎁 +' + PLAN_REWARD_Q + 'Q　🥚 たまご +' + (streak % 3 === 0 ? 2 : 1) + '　🎀 +1　🧩 +' + PLAN_SHARDS + '<br>🔥 ' + streak + '日 れんぞく</div>' +
-        '<div style="font-size:12px;font-weight:800;color:#7e22ce;margin:-6px 0 12px;">「できたら」も ぜんぶ やると 🎀 もう 1つ</div>' +
+        '<div style="font-size:12px;font-weight:800;color:#7e22ce;margin:-6px 0 12px;">「できたら」も ぜんぶ やると 🎀 もう 1つ</div>') +
         (newFriend ? '<div style="font-size:13px;font-weight:900;color:#db2777;background:#fff;border-radius:14px;padding:8px;margin:-4px 0 12px;">🐾 ' + newFriend.kind + 'の「' + newFriend.name + '」が なかまに なったよ！<br><span style="font-size:11px;color:#7e22ce;">どうぐばこの「なかま」で いっしょに いられるよ</span></div>' : '') +
         '<button style="border:none;border-radius:999px;padding:12px 26px;font-family:\'Zen Maru Gothic\';font-weight:900;font-size:15px;color:#fff;background:linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 4px 0 #86198f;cursor:pointer;" onclick="document.getElementById(\'tplan-celebrate\').remove()">やったー！</button>' +
       '</div>';
