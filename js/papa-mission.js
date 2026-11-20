@@ -12,6 +12,8 @@
    ・ごほうび（ロバックス）は アプリでは わたさない。たっせいしたら LOG に 1行 書いて、お父さんが わたす。
    ===================================================================== */
 (function () {
+  // ★2026-11-21（保護者）4年生の あいだの 大きな ゴールは No.100。ミッションの カードに 1行 出す（3月 おわりまで）
+  var GRAND = { to: "りお", no: 100, until: "2027-03-31", label: "4年生の ゴール" };
   var PAPA_MISSIONS = [
     { id: "jigaku50", to: "りお", start: "2026-10-28", startNo: 39, goalNo: 50,
       title: "自学ノート No.50 たっせいで 1000ロバックス！", cond: "（ゆめかわを 毎日 やれば）",
@@ -91,6 +93,7 @@
       '<div style="font-size:12px;font-weight:900;color:#b45309">👨 お父さんミッション（' + esc(m.to) + 'へ）</div>' +
       '<div style="font-size:17px;font-weight:900;color:#7c2d12;margin:3px 0 0;line-height:1.4">' + esc(m.title) + '</div>' +
       '<div style="font-size:13px;font-weight:900;color:#9a3412">' + esc(m.cond) + '</div>' +
+      (GRAND.to === m.to && today() <= GRAND.until ? '<div style="font-size:12px;font-weight:900;color:#7c2d12;margin-top:4px">🏁 ' + esc(GRAND.label) + '：No.' + GRAND.no + (no < GRAND.no ? '（あと ' + (GRAND.no - no) + '題・3月まで）' : '（とうたつ！）') + '</div>' : '') +
       '<div style="margin-top:8px;font-size:12.5px;font-weight:800;color:#7c2d12">📓 いまの 自学ノート：<b style="font-size:16px">No.' + no + '</b>' + (left ? '（あと ' + left + '題）' : '（No.' + m.goalNo + ' たっせい！）') + '</div>' +
       (lc ? '<div style="font-size:11px;font-weight:700;color:#92400e">さいごに お父さんが たしかめた ページ：No.' + lc.no + (lc.t ? '「' + esc(lc.t) + '」' : '') + '（' + esc(lc.d.slice(5).replace("-", "/")) + '）</div>' : '') +
       '<div style="height:10px;background:#fff;border-radius:999px;overflow:hidden;margin:4px 0 8px"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div></div>' +

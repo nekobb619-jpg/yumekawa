@@ -385,3 +385,4 @@
 - 😮‍💨 `js/tutor-plan.js` へとへとの日：プランの 下の「😮‍💨 きょうは へとへと」→ 番号の プランを 1つ（まだの 最初の 1つ）だけに（ほかは optional、x._req で もどせる）。わけは 聞かない・記録しない。その 1つで れんぞく日は つづく＋🎀 plan（週 2回まで、lightCountThisWeek）。Q・🥚・🧩 は なし。たっせい前なら「やっぱり ぜんぶ やる」で もどす。tutorPlan.light、saveData.lightDays（30）、LOG「🎯まなびプラン：かるめの日」。
 - 採用しなかった 案（いまは）：プランを 自分で えらぶ・いつやる？・てつだって ボタン・週の ふりかえり。
 - 2026-11-21 👨 お父さんミッションの つぎ：保護者「えらぶ 形では なく No.75、ゆめかわを つづける」→ PAPA_MISSIONS に jigaku75（after: "jigaku50"・startNo 50・goalNo 75・confirmed は jigaku50 と 同じ 配列を 共有・毎日 条件あり）。No.50 を たしかめた 日（confirmed の d）から 始まり、jigaku50 は 1行の「✅ とうたつ」に なる。番号は ノートの「題目」の 番号（さつ では ない）。いったん 入れた「どうしたい？」の えらぶ 形（NEXT・papaNext）は とりやめ。kanji-sheet.js の kanjiCheckTotal（丸つけ 合計）は のこして ある。
+- 2026-11-21 保護者：4年生の あいだの ゴールは 自学ノート No.100。papa-mission.js の GRAND（to りお・no 100・until 2027-03-31）で ミッションカードに「🏁 4年生の ゴール：No.100（あと N題・3月まで）」を 1行。
