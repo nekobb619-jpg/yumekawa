@@ -98,7 +98,9 @@
     if (nc) { var chs = challengeCards(nc); deck = deck.slice(0, N - chs.length); chs.forEach(function (c) { deck.splice(1 + Math.floor(Math.random() * deck.length), 0, c); }); }
     // ★2026-11-11 🔭 どの どうぐ？（js/lens-tools.js）を 1まい（解かずに 道具を えらぶ。トリガ判断の 練習）
     // ★2026-11-11（保護者：軽い 負荷で 定着）とくべつな カード（ながい 問題・どうぐ・ことば）は 3まいまで。のこりは ふつうの ふくしゅう
-    if (window.lensToolCard && deck.length >= 4 && nc <= 1) { try { var tc = window.lensToolCard(); if (tc) { deck = deck.slice(0, N - 1); deck.splice(2 + Math.floor(Math.random() * (deck.length - 2)), 0, tc); } } catch (e) {} }
+    // ★2026-11-21 📈 ふえた？へった？（js/fuehe.js）を 1まい。入る 日は どうぐカードは ながい 問題が 0まいの ときだけ（とくべつな カードは 3まいまで）
+    var fh = null; if (window.fueheCard && deck.length >= 4) { try { fh = window.fueheCard(getBox, getDue, dnum(today())); if (fh) { deck = deck.slice(0, N - 1); deck.splice(1 + Math.floor(Math.random() * (deck.length - 1)), 0, fh); } } catch (e) { fh = null; } }
+    if (window.lensToolCard && deck.length >= 4 && nc <= (fh ? 0 : 1)) { try { var tc = window.lensToolCard(); if (tc) { deck = deck.slice(0, N - 1); deck.splice(2 + Math.floor(Math.random() * (deck.length - 2)), 0, tc); } } catch (e) {} }
     // ★2026-11-05：📇 ことばカード（js/kotoba-cards.js）を 1まい「この ことばの いみは？」で まぜる（書かずに えらぶ）
     var kc = kotobaCard(); if (kc && deck.length) { deck[deck.length - 1] = kc; shuffle(deck); }
     return deck;
@@ -181,7 +183,7 @@
   }
   function cardHtml() {
     var c = ui.deck[ui.i], q = c.q, ord = ui.ord;
-    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.kid ? '　📇 ことばカード' : c.tool ? '　🔭 どの どうぐ？' : c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
+    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.kid ? '　📇 ことばカード' : c.tool ? '　🔭 どの どうぐ？' : c.fh ? '　📈 ふえた？へった？' : c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
       '<div style="height:8px;background:#fef3c7;border-radius:999px;overflow:hidden;margin:4px 0 8px"><div style="height:100%;width:' + Math.round(ui.i / ui.deck.length * 100) + '%;background:linear-gradient(90deg,#f59e0b,#ea580c)"></div></div>';
     var qs = '<div style="background:#fff;border:2px solid #fde68a;border-radius:16px;padding:12px;font-size:15.5px;font-weight:900;line-height:1.6">' + esc(plain(q.q)) + '</div>';
     if (ui.res) {
@@ -223,6 +225,7 @@
     } else if (ok && !slow) ui.fast++;
     if (!ok && !ui.retry[c.k] && !ui.again) { ui.retry[c.k] = 1; ui.deck.push(c); }
     if (window.swiftComboHit) { try { window.swiftComboHit({ ok: ok, first: !ui.again, ms: ms, q: c.ch && !c.kid ? { ch: true } : c.q, stageId: c.sid, review: true }); } catch (e) {} } // ★2026-11-05：⚡すらすらコンボ
+    if (c.fh && window.fueheAnswered) { try { window.fueheAnswered(c.fh, ok); } catch (e) {} }
     if (c.tool && window.lensToolAnswered) { try { window.lensToolAnswered(c.tool, ok); } catch (e) {} }
     if (c.kid && window.kotobaSeen) { try { window.kotobaSeen(c.kid, ok && !slow); } catch (e) {} }
     if (ok && window.weeklyBonusCount) { try { window.weeklyBonusCount(1); } catch (e) {} } // ★2026-11-04：反復も 週の ひみつボーナスに 数える（正解だけ）
