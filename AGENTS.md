@@ -387,3 +387,11 @@
 - 2026-11-21 👨 お父さんミッションの つぎ：保護者「えらぶ 形では なく No.75、ゆめかわを つづける」→ PAPA_MISSIONS に jigaku75（after: "jigaku50"・startNo 50・goalNo 75・confirmed は jigaku50 と 同じ 配列を 共有・毎日 条件あり）。No.50 を たしかめた 日（confirmed の d）から 始まり、jigaku50 は 1行の「✅ とうたつ」に なる。番号は ノートの「題目」の 番号（さつ では ない）。いったん 入れた「どうしたい？」の えらぶ 形（NEXT・papaNext）は とりやめ。kanji-sheet.js の kanjiCheckTotal（丸つけ 合計）は のこして ある。
 - 2026-11-21 保護者：4年生の あいだの ゴールは 自学ノート No.100。papa-mission.js の GRAND（to りお・no 100・until 2027-03-31）で ミッションカードに「🏁 4年生の ゴール：No.100（あと N題・3月まで）」を 1行。
 - 2026-11-21 📈 js/fuehe.js「ふえた？へった？」（ポータル meetings/2026-11-21-shakai-chiiki 案2）：社会テストで ふえる／へる を 資料と 反対に 書く まちがい 3回 から。向きを 決める ことば（過疎化・高れい化・あとつぎ・空き家を 直す・節水・理科の 体積・わり算の きまり など）を「 」で 見せて、ふえた／へった／かわらない を えらぶ 24問（オリジナル。答えの ことばを 問題文に 入れない）。⚡すらすら ふくしゅうに 1日 1まい（window.fueheCard(getBox,getDue,today)、箱は speedRev と 同じ、k=fh::id）。入る 日は どうぐカードは ながい 問題 0まいの ときだけ（とくべつ 3まいまで）。saveData.fuehe.s{id:[出た,正解]}。
+
+## 🖨 プリント置き場（2026-11-22〜、保護者：今後 印刷できる ように。学年が 上がっても 使う）
+- 印刷する プリント（テスト・練習・チャレラン・白紙マップ など）は `prints/` に 置く。ファイル名は `YYYY-MM-DD_なかみ.html` と 同じ 名前の `.pdf`。
+  html は 画面で 見て「🖨 印刷する」（window.print）、pdf は レイアウトが くずれない 予備。A4 たて、答えは 別ページ。フォントは Noto → ヒラギノ → 游 の 順に 書く。
+- 公開リポジトリなので：子どもの 名前・学校・先生・地域が わかる 言葉は 入れない。教科書・市販テストの 文や 図は 写さない（オリジナル）。
+- 作ったら こども学習サポートポータルの DB `prints/<id>` に 1件 足す：{ title, kind（テスト／練習／チャレラン／白紙マップ／カード／そのほか）, subject, grade（"小4" など）, schoolYear, unit, date, desc, minutes, pages, files:[{label,url}], done:[] }。
+  url は https://nekobb619-jpg.github.io/yumekawa/prints/... 。ポータルの「🖨 プリント」タブに 学年・教科・種類で ならぶ。やった 日・点数は ポータルで 保護者が 入れる。
+- いつでも 作れる 印刷ページ（kanji_sheet.html・hissan_sheet.html・lab/国語/lab_rensou.html）は ポータルの `printTools/<id>`、作成依頼の 文の ひな形は `printReqs/<id>`（{学年}{単元} を ポータルが 入れかえる）。
