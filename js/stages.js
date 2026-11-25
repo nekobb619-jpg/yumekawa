@@ -221,6 +221,17 @@
     },
     {
       subject: "算数",
+      category: "面積の変身ラボ（4年）",
+      grade: "4年生",
+      id: "算数/面積/menseki_lji01",
+      name: "L字の 面積（分けて 足す・取りのぞく）と m²",
+      reward: 10, showCount: 8, video_url: "",
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=3",
+      // ★2026-11-25追加（学級通信 No.127「公式は 使いこなして こそ」：L字を 2つに 分ける／大きい 四角から 取りのぞく。式の わけ・たんいを そろえる も）
+      created: "2026-11-25"
+    },
+    {
+      subject: "算数",
       category: "図形（垂直・平行と四角形）4年",
       grade: "4年生",
       id: "算数/図形/suichoku_heikou01",

@@ -173,6 +173,36 @@
     return out;
   }
 
+
+  /* ---------------- L字の 面積（2026-11-25 学級通信 No.127） ---------------- */
+  // w×h の 長方形の（H は 図の 高さに 使われるので 小文字） 右上を nw×nh だけ 切りとった L字。mode: plain（数字だけ）／split（2つに 分ける）／sub（大きい 四角から 取りのぞく）
+  function lshape(s) {
+    var W = s.w, H = s.h, nw = s.nw, nh = s.nh, u = s.unit || "cm", sc = Math.min(200 / W, 112 / H), x0 = 160 - W * sc / 2, y0 = 14, out = "";
+    function X(v) { return Math.round((x0 + v * sc) * 10) / 10; } function Y(v) { return Math.round((y0 + v * sc) * 10) / 10; }
+    var pts = [[0, 0], [W - nw, 0], [W - nw, nh], [W, nh], [W, H], [0, H]].map(function (q) { return X(q[0]) + " " + Y(q[1]); }).join(" L");
+    if (s.mode === "sub") {
+      out += '<rect x="' + X(W - nw) + '" y="' + Y(0) + '" width="' + (nw * sc) + '" height="' + (nh * sc) + '" fill="#fecdd3" stroke="' + MARK + '" stroke-width="2" stroke-dasharray="5 4"/>';
+      out += t(X(W - nw / 2), Y(nh / 2) + 5, "−" + nw + "×" + nh, 12, MARK);
+      out += '<path d="M' + pts + 'Z" fill="#ede9fe" stroke="' + INK + '" stroke-width="2.4"/>';
+      out += t(X((W - nw) / 2), Y(H / 2) + 5, W + "×" + H, 13, INK);
+    } else if (s.mode === "split") {
+      out += '<rect x="' + X(0) + '" y="' + Y(0) + '" width="' + ((W - nw) * sc) + '" height="' + (H * sc) + '" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>';
+      out += '<rect x="' + X(W - nw) + '" y="' + Y(nh) + '" width="' + (nw * sc) + '" height="' + ((H - nh) * sc) + '" fill="#fce7f3" stroke="' + MARK + '" stroke-width="2"/>';
+      out += t(X((W - nw) / 2), Y(H / 2) + 5, (W - nw) + "×" + H, 13, "#1d4ed8") + t(X(W - nw / 2), Y((nh + H) / 2) + 5, nw + "×" + (H - nh), 13, MARK);
+      out += '<path d="M' + pts + 'Z" fill="none" stroke="' + INK + '" stroke-width="2.4"/>';
+    } else {
+      out += '<path d="M' + pts + 'Z" fill="#f5f3ff" stroke="' + INK + '" stroke-width="2.4"/>';
+    }
+    out += t(X(W / 2), Y(H) + 16, W + u, 12, DARK) + t(X(0) - 6, Y(H / 2) + 4, H + u, 12, DARK, "end");
+    if (s.mode !== "split") {
+      out += t(X(W - nw / 2), s.mode === "sub" ? Y(0) - 4 : Y(nh) - 5, nw + u, 11, SUB) + t(X(W - nw) - 5, Y(nh / 2) + 4, nh + u, 11, SUB, "end");
+      if (s.top) out += t(X((W - nw) / 2), Y(0) - 3, (W - nw) + u, 11, SUB);
+    }
+    return out;
+  }
+  lshape.H = 160;
+
+  T.lshape = lshape;
   T.steps = steps; T.distrib = distrib; T.kanjicard = kanjicard; T.kanjicmp = kanjicmp; T.circles = circles;
   T.prog = prog; T.grid = grid; T.okng = okng; T.mindmap = mindmap;
 })();

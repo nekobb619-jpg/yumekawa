@@ -736,6 +736,15 @@ module.exports = {
     9: { fig: CI("chain", { rs: [3, 5], labels: ["半径 3cm", "半径 5cm"], mid: "？cm" }) },
     10: { fig: CI("chain", { rs: [4, 9], labels: ["半径 ？", "半径 9cm"], mid: "13cm" }) }
   },
+  /* ---------------- 2026-11-25 L字の 面積（学級通信 No.127） ---------------- */
+  "算数/面積/menseki_lji01": {
+    1: { fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3 }, explain_fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "sub", cap: "10×8 − 4×3 ＝ 68cm²" } },
+    2: { fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3 }, explain_fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "split", cap: "6×8 ＋ 4×5 ＝ 68cm²" } },
+    3: { fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3 }, explain_fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "sub", cap: "大きい 四角 − ない ところ" } },
+    4: { fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3 }, explain_fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "sub", cap: "4×3 ＝ 切りとった ところ" } },
+    5: { fig: { t: "lshape", w: 9, h: 7, nw: 5, nh: 4 }, explain_fig: { t: "lshape", w: 9, h: 7, nw: 5, nh: 4, mode: "split", cap: "4×7 ＋ 5×3 ＝ 43cm²" } },
+    6: E({ t: "row", items: [{ t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "split", cap: "分けて 足す 68" }, { t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "sub", cap: "取りのぞく 68" }] })
+  },
   "算数/グラフ/oresen_yomi01": {
     0: { fig: GY() }, 1: GYQ({ vals: [2], unit: "人" }), 2: GYQ({ vals: [6], unit: "人" }), 3: GYQ({ vals: [4, 5], unit: "人", hi: [4, 5] }),
     4: GYQ({ vals: [2, 3], unit: "人", hi: [2, 3] }, "10人 ふえた"), 5: GYQ({ vals: [6, 7], unit: "人", hi: [6, 7] }, "6人 へった"), 6: GYQ({ hi: [4, 5] }, "横に まっすぐ ＝ 変わらない"),

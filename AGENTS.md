@@ -401,3 +401,5 @@
 - 作ったら こども学習サポートポータルの DB `prints/<id>` に 1件 足す：{ title, kind（テスト／練習／チャレラン／白紙マップ／カード／そのほか）, subject, grade（"小4" など）, schoolYear, unit, date, desc, minutes, pages, files:[{label,url}], done:[] }。
   url は https://nekobb619-jpg.github.io/yumekawa/prints/... 。ポータルの「🖨 プリント」タブに 学年・教科・種類で ならぶ。やった 日・点数は ポータルで 保護者が 入れる。
 - いつでも 作れる 印刷ページ（kanji_sheet.html・hissan_sheet.html・lab/国語/lab_rensou.html）は ポータルの `printTools/<id>`、作成依頼の 文の ひな形は `printReqs/<id>`（{学年}{単元} を ポータルが 入れかえる）。
+
+- 2026-11-25 算数「L字の 面積（分けて 足す・取りのぞく）と m²」（算数/面積/menseki_lji01・12問・面積の変身ラボ）。学級通信 No.127「公式は 使いこなして こそ」が もと。図は 新しい 種類 lshape（js/figures-extra.js。spec は w,h,nw,nh,mode:plain|split|sub。H は 図の 高さに 使われるので 小文字の w,h）。tools/figures/spec.js に 対応表、build-figure-map.js で js/figure-map.js を 作り直し済み。#4 は「式の わけ」（4×3 は 何？）、#8 は 1m²＝10000cm²（自学 No.51 の 100×100 と つながる）、#9 は たんいを そろえる。
