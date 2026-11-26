@@ -1541,7 +1541,7 @@ window.MASTER_DAILY_Q_CAP = 20;
 //   ・まなびプランに ときどき「🏆 マスターチェック」。ざんねん 1回目＝はく奪の 危機、2回 つづけて ざんねん＝はく奪（ごうかく 4回に もどる）。
 //     ふくしゅうで ごうかく すれば 返り咲き（+30Q は 1つの ステージで 1回だけ なので 出ない）。
 // ★2026-11-07（保護者）りさ（保護者）は ふくしゅう ごうかく制・マスターチェック・探検隊の プラン条件の 対象外
-window.STUDY_RULE_OFF = { "りさ": { reviewPass: true, masterCheck: true, expeditionGate: true, qDayCap: true, homeFocus: true, readGuard: true , kotobaTantei: true } }; // ★2026-11-12 homeFocus（js/home-focus.js）・readGuard（js/read-guard.js）
+window.STUDY_RULE_OFF = { "りさ": { reviewPass: true, masterCheck: true, expeditionGate: true, qDayCap: true, homeFocus: true, readGuard: true , kotobaTantei: true, redo: true } }; // ★2026-11-12 homeFocus（js/home-focus.js）・readGuard（js/read-guard.js）
 window.studyRuleOff = function (feature) { const r = window.STUDY_RULE_OFF[window.playerId]; return !!(r && r[feature]); };
 window.REVIEW_PASS_RATE = 0.8;
 // ★2026-11-07（保護者：問題は いくらでも といて いい。Q は 1日 120 ぐらいを 目安）
@@ -7098,6 +7098,8 @@ window.initQAMode();
 <script src="./js/field-trip.js"></script>
 <script src="./js/my-goal.js"></script>
 <script src="./js/fuehe.js"></script>
+<script src="./js/nitekotoba.js"></script>
+<script src="./js/redo.js"></script>
 <script src="./js/think-bonus.js"></script>
 <script src="./js/papa-mission.js"></script>
 <script src="./js/detective-boost.js"></script>

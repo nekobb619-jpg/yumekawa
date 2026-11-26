@@ -99,7 +99,11 @@
     // ★2026-11-11 🔭 どの どうぐ？（js/lens-tools.js）を 1まい（解かずに 道具を えらぶ。トリガ判断の 練習）
     // ★2026-11-11（保護者：軽い 負荷で 定着）とくべつな カード（ながい 問題・どうぐ・ことば）は 3まいまで。のこりは ふつうの ふくしゅう
     // ★2026-11-21 📈 ふえた？へった？（js/fuehe.js）を 1まい。入る 日は どうぐカードは ながい 問題が 0まいの ときだけ（とくべつな カードは 3まいまで）
-    var fh = null; if (window.fueheCard && deck.length >= 4) { try { fh = window.fueheCard(getBox, getDue, dnum(today())); if (fh) { deck = deck.slice(0, N - 1); deck.splice(1 + Math.floor(Math.random() * (deck.length - 1)), 0, fh); } } catch (e) { fh = null; } }
+    // ★2026-11-26 🔤 にてる ことば どっち？（js/nitekotoba.js）：fuehe と 同じ わく。日で 交代（niteTurn）、出せなければ もう一方
+    var fh = null; if ((window.fueheCard || window.niteCard) && deck.length >= 4) { try {
+      var tn = window.niteTurn ? window.niteTurn() : false, fns = tn ? [window.niteCard, window.fueheCard] : [window.fueheCard, window.niteCard];
+      for (var fi = 0; fi < fns.length && !fh; fi++) if (fns[fi]) fh = fns[fi](getBox, getDue, dnum(today()));
+      if (fh) { deck = deck.slice(0, N - 1); deck.splice(1 + Math.floor(Math.random() * (deck.length - 1)), 0, fh); } } catch (e) { fh = null; } }
     if (window.lensToolCard && deck.length >= 4 && nc <= (fh ? 0 : 1)) { try { var tc = window.lensToolCard(); if (tc) { deck = deck.slice(0, N - 1); deck.splice(2 + Math.floor(Math.random() * (deck.length - 2)), 0, tc); } } catch (e) {} }
     // ★2026-11-05：📇 ことばカード（js/kotoba-cards.js）を 1まい「この ことばの いみは？」で まぜる（書かずに えらぶ）
     var kc = kotobaCard(); if (kc && deck.length) { deck[deck.length - 1] = kc; shuffle(deck); }
@@ -182,15 +186,15 @@
       '<div style="font-size:11.5px;font-weight:700;color:#78716c;text-align:center;margin-top:8px">' + (doneToday ? "✅ 今日の 1回は できたよ。何回 やっても いいよ（くりかえすほど 強く なる）" : "今日 さいしょの 1回を 最後まで やると 🎀 シールの ふくろ（ふくしゅう）") + '</div>';
   }
   function cardHtml() {
-    var c = ui.deck[ui.i], q = c.q, ord = ui.ord;
-    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.kid ? '　📇 ことばカード' : c.tool ? '　🔭 どの どうぐ？' : c.fh ? '　📈 ふえた？へった？' : c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
+    var c = ui.deck[ui.i], q = ui.sub ? c.q2 : c.q, ord = ui.ord;
+    var head = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#a16207"><span>' + (ui.i + 1) + ' ／ ' + ui.deck.length + (ui.again ? '（もう一度）' : '') + (c.kid ? '　📇 ことばカード' : c.tool ? '　🔭 どの どうぐ？' : c.fh ? '　📈 ふえた？へった？' : c.nt ? '　🔤 にてる ことば' + (ui.sub ? '（なぜ？）' : '') : c.ch ? '　🌟 ちょっと ながい 問題' : '') + '</span><span>⭐ すらすら ' + ui.fast + '</span></div>' +
       '<div style="height:8px;background:#fef3c7;border-radius:999px;overflow:hidden;margin:4px 0 8px"><div style="height:100%;width:' + Math.round(ui.i / ui.deck.length * 100) + '%;background:linear-gradient(90deg,#f59e0b,#ea580c)"></div></div>';
     var qs = '<div style="background:#fff;border:2px solid #fde68a;border-radius:16px;padding:12px;font-size:15.5px;font-weight:900;line-height:1.6">' + esc(plain(q.q)) + '</div>';
     if (ui.res) {
       var ok = ui.res.ok, slow = ui.res.slow;
       return head + qs + '<div style="margin-top:8px;border-radius:14px;padding:10px 12px;font-weight:900;line-height:1.6;background:' + (ok && !slow ? "#dcfce7" : ok ? "#fef9c3" : "#fee2e2") + '">' +
-        (ok && !slow ? "⭐ すらすら！（" + (ui.res.ms / 1000).toFixed(1) + "びょう）" : ok ? "⭕ 正解。でも " + (ui.res.ms / 1000).toFixed(1) + "びょう かかったね。すらすら に なるまで また 出すよ" : "❌ 答えは「" + esc(q.a[q.c]) + "」。この カードは さいごに もう一度 出るよ") +
-        (q.job_desc && !(ok && !slow) ? '<div style="font-size:12.5px;font-weight:700;margin-top:4px">' + esc(plain(q.job_desc)) + '</div>' : '') + '</div>' +
+        (ok && !slow ? "⭐ すらすら！（" + (ui.res.ms / 1000).toFixed(1) + "びょう）" : ok ? "⭕ 正解。でも " + (ui.res.ms / 1000).toFixed(1) + "びょう かかったね。すらすら に なるまで また 出すよ" : c.nt ? "❌ 答えは「" + esc(c.ans) + "」。わけ：" + esc(c.why) + "。この カードは さいごに もう一度 出るよ" : "❌ 答えは「" + esc(q.a[q.c]) + "」。この カードは さいごに もう一度 出るよ") +
+        ((c.nt ? c.d : q.job_desc) && !(ok && !slow) ? '<div style="font-size:12.5px;font-weight:700;margin-top:4px">' + esc(plain(c.nt ? c.d : q.job_desc)) + '</div>' : '') + '</div>' +
         '<div style="text-align:center;margin-top:10px"><button type="button" data-sp="next" style="' + BIG + '">つぎ ▶</button></div>';
     }
     return head + qs + ord.map(function (j) { return '<button type="button" data-sp="ans" data-v="' + j + '" style="' + BTN + '">' + esc(q.a[j]) + '</button>'; }).join("");
@@ -210,12 +214,20 @@
   function start() {
     var deck = pickDeck(); if (!deck.length) return;
     if (window.swiftComboReset) window.swiftComboReset();
-    ui.deck = deck; ui.base = deck.length; ui.i = 0; ui.fast = 0; ui.miss = 0; ui.slowN = 0; ui.res = null; ui.again = false; ui.retry = {};
+    ui.deck = deck; ui.base = deck.length; ui.i = 0; ui.fast = 0; ui.miss = 0; ui.slowN = 0; ui.res = null; ui.sub = null; ui.again = false; ui.retry = {};
     ui.phase = "card"; ui.ord = shuffle(deck[0].q.a.map(function (_, j) { return j; })); render();
   }
   function answer(j) {
     if (!ui || ui.res) return;
-    var c = ui.deck[ui.i], ms = Date.now() - (ui.t0 || Date.now()), ok = Number(j) === c.q.c, slow = ms > (c.ch ? SLOW_CH_MS : SLOW_MS);
+    var c = ui.deck[ui.i];
+    // ★2026-11-26 2だんかいの カード（にてる ことば）：① どっち？ → ② なぜ？。① の あと 箱は まだ さわらない
+    if (c.q2 && !ui.sub) {
+      var ok1 = Number(j) === c.q.c;
+      if (!ok1) { if (c.nt && window.niteAnswered && !ui.again) { try { window.niteAnswered(c.nt, false, 1); } catch (e) {} } }
+      else { ui.sub = { ms: Date.now() - (ui.t0 || Date.now()) }; ui.ord = shuffle(c.q2.a.map(function (_, k) { return k; })); render(); return; }
+    }
+    var qq = ui.sub ? c.q2 : c.q, ms = Date.now() - (ui.t0 || Date.now()) + (ui.sub ? ui.sub.ms : 0), ok = Number(j) === qq.c, slow = ms > (c.ch ? SLOW_CH_MS : SLOW_MS);
+    if (c.nt && ui.sub && window.niteAnswered && !ui.again) { try { window.niteAnswered(c.nt, ok, 2); } catch (e) {} }
     var b = getBox(c.k) || 0;
     if (!ui.again) {
       if (ok && !slow) { b = Math.min(5, b + 1); ui.fast++; }
@@ -233,7 +245,7 @@
   }
   function next() {
     if (!ui) return;
-    ui.i++; ui.res = null;
+    ui.i++; ui.res = null; ui.sub = null;
     if (ui.i >= ui.deck.length) return finish();
     ui.again = ui.i >= ui.base; ui.ord = shuffle(ui.deck[ui.i].q.a.map(function (_, j) { return j; })); render();
   }
