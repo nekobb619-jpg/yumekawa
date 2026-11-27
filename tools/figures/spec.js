@@ -736,6 +736,15 @@ module.exports = {
     9: { fig: CI("chain", { rs: [3, 5], labels: ["半径 3cm", "半径 5cm"], mid: "？cm" }) },
     10: { fig: CI("chain", { rs: [4, 9], labels: ["半径 ？", "半径 9cm"], mid: "13cm" }) }
   },
+  /* ---------------- 2026-11-27 面積の たんい（算数 面積テストの × から） ---------------- */
+  "算数/面積/menseki_tani01": {
+    0: { explain_fig: { t: "unitladder", hi: 1, cap: "1m² ＝ 100cm × 100cm ＝ 10000cm²" } },
+    2: { explain_fig: { t: "unitladder", hi: 3, cap: "1ha ＝ 1辺 100m ＝ 100a" } },
+    4: { explain_fig: { t: "unitladder", hi: 3, cap: "1辺の 長さで おぼえる" } },
+    9: { fig: { t: "halfgrid", cols: 4, rows: 4, cells: [[1, 1, "br"], [2, 1, "bl"], [1, 2, "f"], [2, 2, "f"], [1, 3, "f"], [2, 3, "f"]] }, explain_fig: { t: "halfgrid", cols: 4, rows: 4, mark: 1, cells: [[1, 1, "br"], [2, 1, "bl"], [1, 2, "f"], [2, 2, "f"], [1, 3, "f"], [2, 3, "f"]], cap: "4 ＋ 半分 2つ（＝1）＝ 5cm²" } },
+    10: { fig: { t: "halfgrid", cols: 5, rows: 4, cells: [[0, 1, "br"], [0, 2, "tr"], [1, 1, "f"], [2, 1, "f"], [3, 1, "f"], [1, 2, "f"], [2, 2, "f"], [3, 2, "f"], [4, 1, "bl"], [4, 2, "tl"]] }, explain_fig: { t: "halfgrid", cols: 5, rows: 4, mark: 1, cells: [[0, 1, "br"], [0, 2, "tr"], [1, 1, "f"], [2, 1, "f"], [3, 1, "f"], [1, 2, "f"], [2, 2, "f"], [3, 2, "f"], [4, 1, "bl"], [4, 2, "tl"]], cap: "6 ＋ 半分 4つ（＝2）＝ 8cm²" } },
+    11: { explain_fig: { t: "unitladder", cap: "小さい じゅん" } }
+  },
   /* ---------------- 2026-11-25 L字の 面積（学級通信 No.127） ---------------- */
   "算数/面積/menseki_lji01": {
     1: { fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3 }, explain_fig: { t: "lshape", w: 10, h: 8, nw: 4, nh: 3, mode: "sub", cap: "10×8 − 4×3 ＝ 68cm²" } },

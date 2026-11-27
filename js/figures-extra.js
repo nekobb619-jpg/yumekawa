@@ -174,6 +174,41 @@
   }
 
 
+
+  /* ---------------- 面積の たんい（2026-11-27 算数 面積テストの × から） ---------------- */
+  // unitladder：cm² → m² → a → ha → km²（1辺の 長さと 100倍ずつ）。正方形の 大きさは 見やすさの ための もので 実際の 比では ない
+  function unitladder(s) {
+    var U = [["1cm²", "1辺 1cm"], ["1m²", "1辺 1m"], ["1a", "1辺 10m"], ["1ha", "1辺 100m"], ["1km²", "1辺 1km"]], out = "", x = 16, G = 34;
+    U.forEach(function (u, i) {
+      var w = 14 + i * 9, y = 96 - w;
+      out += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + w + '" fill="' + (s.hi === i ? "#fce7f3" : "#ede9fe") + '" stroke="' + (s.hi === i ? MARK : INK) + '" stroke-width="2"/>';
+      out += t(x + w / 2, 114, u[0], 12, DARK) + t(x + w / 2, 128, u[1], 9, SUB);
+      if (i < 4) out += t(x + w + G / 2, 30, i === 0 ? "×10000" : "×100", 8.5, MARK) + '<path d="M' + (x + w + 5) + ' 38 L' + (x + w + G - 5) + ' 38" stroke="' + MARK + '" stroke-width="1.5" marker-end="none"/><path d="M' + (x + w + G - 9) + ' 34 L' + (x + w + G - 5) + ' 38 L' + (x + w + G - 9) + ' 42" fill="none" stroke="' + MARK + '" stroke-width="1.5"/>';
+      x += w + G;
+    });
+    return out;
+  }
+  unitladder.H = 135;
+  // halfgrid：マス目の 図形。cells:[[x,y,k]] k＝"f"（1マス）／"tl""tr""bl""br"（その 角の 半分の 三角形）
+  function halfgrid(s) {
+    var cols = s.cols || 6, rows = s.rows || 4, sz = Math.min(200 / cols, 104 / rows), x0 = 160 - cols * sz / 2, y0 = 10, out = "";
+    for (var i = 0; i <= cols; i++) out += '<line x1="' + (x0 + i * sz) + '" y1="' + y0 + '" x2="' + (x0 + i * sz) + '" y2="' + (y0 + rows * sz) + '" stroke="#cbd5e1" stroke-width="1"/>';
+    for (var j = 0; j <= rows; j++) out += '<line x1="' + x0 + '" y1="' + (y0 + j * sz) + '" x2="' + (x0 + cols * sz) + '" y2="' + (y0 + j * sz) + '" stroke="#cbd5e1" stroke-width="1"/>';
+    (s.cells || []).forEach(function (c) {
+      var X = x0 + c[0] * sz, Y = y0 + c[1] * sz, k = c[2], P;
+      if (k === "f") P = [[X, Y], [X + sz, Y], [X + sz, Y + sz], [X, Y + sz]];
+      else if (k === "tl") P = [[X, Y], [X + sz, Y], [X, Y + sz]];
+      else if (k === "tr") P = [[X, Y], [X + sz, Y], [X + sz, Y + sz]];
+      else if (k === "bl") P = [[X, Y], [X + sz, Y + sz], [X, Y + sz]];
+      else P = [[X + sz, Y], [X + sz, Y + sz], [X, Y + sz]];
+      var half = k !== "f" && s.mark;
+      out += '<polygon points="' + P.map(function (q) { return q[0] + "," + q[1]; }).join(" ") + '" fill="' + (half ? "#fbcfe8" : "#fde68a") + '" stroke="' + (half ? MARK : "#b45309") + '" stroke-width="1.4"/>';
+    });
+    out += t(x0 + sz / 2, y0 + rows * sz + 14, "1マス＝1cm²", 10, SUB);
+    return out;
+  }
+  halfgrid.H = 130;
+
   /* ---------------- L字の 面積（2026-11-25 学級通信 No.127） ---------------- */
   // w×h の 長方形の（H は 図の 高さに 使われるので 小文字） 右上を nw×nh だけ 切りとった L字。mode: plain（数字だけ）／split（2つに 分ける）／sub（大きい 四角から 取りのぞく）
   function lshape(s) {
@@ -203,6 +238,8 @@
   lshape.H = 160;
 
   T.lshape = lshape;
+  T.unitladder = unitladder;
+  T.halfgrid = halfgrid;
   T.steps = steps; T.distrib = distrib; T.kanjicard = kanjicard; T.kanjicmp = kanjicmp; T.circles = circles;
   T.prog = prog; T.grid = grid; T.okng = okng; T.mindmap = mindmap;
 })();

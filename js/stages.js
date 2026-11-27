@@ -223,6 +223,17 @@
       subject: "算数",
       category: "面積の変身ラボ（4年）",
       grade: "4年生",
+      id: "算数/面積/menseki_tani01",
+      name: "面積の たんい（cm²・m²・a・ha・km²）と 半分の マス",
+      reward: 10, showCount: 8, video_url: "",
+      lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_maker_menseki.html?level=3",
+      // ★2026-11-27追加（算数 面積テスト 知識 70点：1m²＝10cm²・1km²＝100m²・a⇔ha・480a・半分の マス が ×）
+      created: "2026-11-27"
+    },
+    {
+      subject: "算数",
+      category: "面積の変身ラボ（4年）",
+      grade: "4年生",
       id: "算数/面積/menseki_lji01",
       name: "L字の 面積（分けて 足す・取りのぞく）と m²",
       reward: 10, showCount: 8, video_url: "",
