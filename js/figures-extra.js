@@ -209,6 +209,22 @@
   }
   halfgrid.H = 130;
 
+
+  // unitblocks：「〇m を 1 と する」で 区切った 長方形（2026-11-27 保護者の ノートから）。r×c の ブロック、wl・hl＝横・たての 長さの 文字（W・H は 図の 大きさに 使われるので 使わない）、side＝1つの 辺の 長さ、unit＝1ブロックの 面積、fill＝なか書きする ブロック数（省略で ぜんぶ）
+  function unitblocks(s) {
+    var r = s.r || 2, c = s.c || 2, sz = Math.min(230 / c, 100 / r, 46), x0 = 172 - c * sz / 2, y0 = 22, out = "", n = 0, fill = s.fill == null ? r * c : s.fill;
+    for (var j = 0; j < r; j++) for (var i = 0; i < c; i++) {
+      out += '<rect x="' + (x0 + i * sz) + '" y="' + (y0 + j * sz) + '" width="' + sz + '" height="' + sz + '" fill="' + (n < fill ? "#ede9fe" : "#fff") + '" stroke="' + INK + '" stroke-width="1.6"/>';
+      if (n < fill && s.unit) out += t(x0 + i * sz + sz / 2, y0 + j * sz + sz / 2 + 4, s.unit, sz < 34 ? 9 : 11, DARK);
+      n++;
+    }
+    out += t(x0 + c * sz / 2, y0 - 7, (s.wl || "") + (s.side ? "（" + s.side + " が " + c + "こ）" : ""), 10.5, MARK);
+    out += t(x0 - 6, y0 + r * sz / 2 + 4, s.hl || "", 10.5, MARK, "end");
+    if (s.side && r > 1) out += t(x0 - 6, y0 + r * sz / 2 + 18, "（" + r + "こ）", 9, SUB, "end");
+    return out;
+  }
+  unitblocks.H = 130;
+
   /* ---------------- L字の 面積（2026-11-25 学級通信 No.127） ---------------- */
   // w×h の 長方形の（H は 図の 高さに 使われるので 小文字） 右上を nw×nh だけ 切りとった L字。mode: plain（数字だけ）／split（2つに 分ける）／sub（大きい 四角から 取りのぞく）
   function lshape(s) {
@@ -240,6 +256,7 @@
   T.lshape = lshape;
   T.unitladder = unitladder;
   T.halfgrid = halfgrid;
+  T.unitblocks = unitblocks;
   T.steps = steps; T.distrib = distrib; T.kanjicard = kanjicard; T.kanjicmp = kanjicmp; T.circles = circles;
   T.prog = prog; T.grid = grid; T.okng = okng; T.mindmap = mindmap;
 })();
