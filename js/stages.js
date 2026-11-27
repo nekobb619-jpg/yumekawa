@@ -339,6 +339,16 @@
     },
     {
       subject: "算数",
+      category: "小数のかけ算・わり算（4年）",
+      grade: "4年生",
+      id: "算数/小数/shosu_hissan01",
+      name: "小数 × 整数・小数 ÷ 整数の 筆算（小数点の うち方・あまり・見積もり）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "https://nekobb619-jpg.github.io/yumekawa/lab/算数/lab_shosu_ten.html",
+      // ★2026-11-27追加（保護者「フルコース」：u011 に 筆算の ステージが なかった。学校の「たてる・かける・ひく・おろす」）
+      created: "2026-11-27"
+    },
+    {
+      subject: "算数",
       category: "倍の見方（割合）（4年）",
       grade: "4年生",
       id: "算数/割合/bai_zu01",
@@ -674,6 +684,16 @@
       name: "因果関係トレーニング（なぜ？→だから）",
       reward: 10, showCount: 8, video_url: "", lab_url: "",
       created: "2026-08-12"
+    },
+    {
+      subject: "国語",
+      category: "説明文の要約（4年）",
+      grade: "4年生",
+      id: "国語/説明文/yoyaku01",
+      name: "説明文の 要約（まとめの 文・キーワード・例は けずる）",
+      reward: 10, showCount: 8, video_url: "", lab_url: "",
+      // ★2026-11-27追加（u044 説明文の要約 12/1〜 に 専用の ステージが なかった。文章は オリジナル）
+      created: "2026-11-27"
     },
     {
       // ★2026-08-12追加：三つの論理 B. イコールの関係（つまり・たとえば・比喩）。
