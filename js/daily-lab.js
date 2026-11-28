@@ -11,6 +11,7 @@
   // [ファイル, アイコン, 名前, ひとこと]（名前が ない ものは ステージ名から）
   var INFO = {
     "lab/算数/lab_mawaru_nami.html": ["🎡", "回ると 波ラボ", "観覧車を「高さだけ」で 見ると 波に なる？"],
+    "lab/探究/lab_hashiru.html": ["🏃", "はやく 走るラボ", "うでふり？ 歩はば？ はやさの しくみを しらべよう"],
     "lab/理科/lab_hoshi_ugoki.html": ["🌌", "星の 動きラボ", "時間を 動かして 星の いちを くらべよう"],
     "lab/理科/lab_ondo_taiseki.html": ["🌡️", "温度と 体積ラボ", "あたためると ふくらむ？ ちぢむ？"],
     "lab/理科/lab_kuki_teppou.html": ["🌬️", "空気でっぽうラボ", "おしちぢめた 空気の 力"],
@@ -35,8 +36,8 @@
     "lab/算数/lab_maker_tenbin.html": ["⚖️", "魔法の 天びんラボ", "左右が つりあうのは どこ？"],
     "lab/算数/lab_balance.html": ["⚖️", "てんびん 実験ラボ", "重さと きょりで つりあう？"]
   };
-  var EXTRA = ["lab/算数/lab_mawaru_nami.html", "lab/算数/lab_maker_tenbin.html", "lab/算数/lab_balance.html", "lab/国語/lab_rensou.html"];
-  var NEW = { "lab/算数/lab_mawaru_nami.html": ["2026-11-11", "2026-11-17"], "lab/国語/lab_rensou.html": ["2026-11-18", "2026-11-22"] };
+  var EXTRA = ["lab/探究/lab_hashiru.html", "lab/算数/lab_mawaru_nami.html", "lab/算数/lab_maker_tenbin.html", "lab/算数/lab_balance.html", "lab/国語/lab_rensou.html"];
+  var NEW = { "lab/探究/lab_hashiru.html": ["2026-11-29", "2026-12-05"], "lab/算数/lab_mawaru_nami.html": ["2026-11-11", "2026-11-17"], "lab/国語/lab_rensou.html": ["2026-11-18", "2026-11-22"] };
 
   function today() { var d = new Date(window.currentServerTime || Date.now()); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
   function iso() { var d = new Date(window.currentServerTime || Date.now()); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }

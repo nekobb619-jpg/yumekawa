@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はやく 走るラボ 🏃</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- ★2026-11-29追加：りおの しつもん「足が はやく なるには？」から（保護者）。
+     ① フォームの ひみつ（えらぶ 5問）② はやさの しくみ（速さ ＝ 歩はば × 1秒の 歩数。小数の かけ算・わり算）
+     ③ 記録ノート（50m などの タイムを 書いて 折れ線グラフ。この たんまつの localStorage hashiru_v1 だけ、セーブ・GAS なし）。
+     練習は 1回 10〜15分・週 2〜3回・短い 全力を 休みながら（けがを しない）。数字は 目安。 -->
+<style>
+  :root { --ink: #3b2f52; --sub: #6b5d7a; --pink: #db2777; --line: #e9d5ff; --go: #16a34a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Zen Maru Gothic', sans-serif; color: var(--ink); background: #ecfdf5; }
+  .wrap { max-width: 540px; margin: 0 auto; padding: 12px 12px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; } .lead { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 13px; margin: 8px 0; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tabs button { font: inherit; font-weight: 900; font-size: 13.5px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 2px solid #bbf7d0; background: #f0fdf4; color: #166534; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: #166534; color: #fff; border-color: #166534; }
+  .ch button { display: block; width: 100%; text-align: left; font: inherit; font-weight: 800; font-size: 14.5px; min-height: 44px; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .ch button.ok { background: #dcfce7; border-color: #22c55e; } .ch button.ng { background: #fee2e2; border-color: #f87171; }
+  .msg { min-height: 2.4em; margin-top: 6px; } .msg b { color: var(--pink); }
+  button.next, button.act { font: inherit; font-weight: 900; border: none; border-radius: 14px; padding: 10px 16px; min-height: 44px; color: #fff; background: linear-gradient(135deg, #22c55e, #0ea5e9); cursor: pointer; }
+  button.sub { font: inherit; font-weight: 900; border: 2px solid #bbf7d0; border-radius: 12px; padding: 8px 12px; min-height: 44px; color: #166534; background: #fff; cursor: pointer; }
+  label.sl { display: block; margin-top: 8px; } input[type=range] { width: 100%; height: 32px; }
+  .big { text-align: center; font-size: 26px; font-weight: 900; margin: 6px 0; } .big b { color: var(--pink); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row input { font: inherit; font-weight: 800; font-size: 15px; padding: 8px; border-radius: 10px; border: 2px solid var(--line); min-height: 44px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { border-bottom: 1px solid #e5e7eb; padding: 4px 6px; text-align: left; }
+  .chk label { display: flex; align-items: center; gap: 8px; min-height: 40px; } .chk input { width: 22px; height: 22px; }
+  svg text { font-family: 'Zen Maru Gothic', sans-serif; font-weight: 800; }
+  .note { font-size: 12px; color: var(--sub); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏃 はやく 走るラボ</h1>
+  <div class="lead">「足が はやく なるには どう したら いい？」を しらべる ラボ。フォームの ひみつ → はやさの しくみ → 自分の 記録、の じゅんに ためして みよう。</div>
+  <div class="card"><div class="tabs" id="tabs" role="group" aria-label="ラボ">
+    <button type="button" data-t="0" aria-pressed="true">🏃 フォームの ひみつ</button><button type="button" data-t="1" aria-pressed="false">📐 はやさの しくみ</button><button type="button" data-t="2" aria-pressed="false">📈 記録ノート</button></div></div>
+  <div id="view"></div>
+  <div class="card note">⚠️ 走る 前に 体を あたためよう（かるい スキップ・足首まわし）。練習は 1回 10〜15分、週 2〜3回で じゅうぶん。いたい ところが あったら やすむ。数字は めやすだよ。</div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var KEY = "hashiru_v1", st = load(), tab = 0, qi = 0, qok = 0, done = false;
+  function load() { try { var o = JSON.parse(localStorage.getItem(KEY) || "{}"); return { rec: o.rec || [], chk: o.chk || {} }; } catch (e) { return { rec: [], chk: {} }; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ① フォームの ひみつ（オリジナルの 4択。答えは 0 番、表示で まぜる）
+  var QS = [
+    { q: "うでの ふり方で、はやく 走れるのは？", a: ["ひじを 曲げて、前後に 大きく ふる", "うでは ふらずに 体に くっつける", "うでを 左右に 大きく ふる", "うでを 上に あげた まま 走る"],
+      d: "うでの リズムに 足が ついて くる。ひじを 90度くらいに 曲げて、うしろに しっかり 引こう。左右に ふると 体が ねじれて おそく なる。" },
+    { q: "目線（どこを 見るか）は？", a: ["まっすぐ 前（ゴールの ほう）", "自分の 足もと", "空の ほう", "となりの 人"],
+      d: "下を 見ると 体が まるまり、上を 見ると あごが あがって ブレる。まっすぐ 前を 見ると 体が まっすぐに なる。" },
+    { q: "足は 地面に どう つく？", a: ["足の 指の つけねの あたりで、地面を うしろへ おす", "かかとから ドスンと つく", "つま先の 先っぽだけで そっと つく", "足の うら ぜんぶで ペタッと つく"],
+      d: "指の つけね あたりで ついて、地面を うしろへ おす と 前に 進む 力に なる。かかとから ドスンは ブレーキに なる。" },
+    { q: "スタートで 大事なのは？", a: ["前の 足に 体重を のせて、1歩目を 低く すばやく", "まっすぐ 立って から 走りだす", "大きく とびあがって 1歩目", "まわりを 見て から ゆっくり"],
+      d: "50m 走は スタートで 差が つきやすい。「よーい」で 前の 足に 体重、体は 少し 前に かたむけて、1歩目は 低く すばやく。" },
+    { q: "はやく なる 練習の しかたで よいのは？", a: ["短い きょりを 全力で、あいだに しっかり 休む", "長い きょりを ゆっくり 毎日 たくさん", "つかれて いても 休まず 走りつづける", "いたい ところが あっても がまんする"],
+      d: "はやさの 練習は「短く・全力・しっかり 休む」。10〜20m の ダッシュを 3〜5本。けがを しない ことが いちばん 大事。" }
+  ];
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  var ord = [];
+  function runner() {
+    return '<svg viewBox="0 0 320 150" role="img" aria-label="はやく 走る フォームの 図"><rect width="320" height="150" fill="#f0fdf4" rx="12"/>' +
+      '<line x1="20" y1="132" x2="300" y2="132" stroke="#86efac" stroke-width="4"/>' +
+      // 体（前かたむき）。人は 左に よせて、説明は 右に
+      '<g transform="translate(-70,0)"><circle cx="150" cy="34" r="12" fill="#fde68a" stroke="#3b2f52" stroke-width="2.5"/>' +
+      '<line x1="146" y1="46" x2="136" y2="84" stroke="#3b2f52" stroke-width="5" stroke-linecap="round"/>' +
+      // うで：前うで・うしろうで（ひじ 90度）
+      '<polyline points="143,56 158,66 166,52" fill="none" stroke="#db2777" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<polyline points="142,56 124,62 116,48" fill="none" stroke="#db2777" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      // 足：前の 足（もも上げ）・うしろの 足（地面を おす）
+      '<polyline points="136,84 158,96 152,118" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<polyline points="136,84 122,108 104,128" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+      '<text x="122" y="24" font-size="11" fill="#166534">↗ 体は 少し 前に かたむける</text>' +
+      '<text x="122" y="44" font-size="11" fill="#3b2f52">👀 目線は まっすぐ 前</text>' +
+      '<text x="122" y="66" font-size="11" fill="#db2777">💪 ひじ 90度・前後に ふる</text>' +
+      '<text x="122" y="90" font-size="11" fill="#2563eb">🦵 もも を 前へ</text>' +
+      '<text x="122" y="114" font-size="11" fill="#2563eb">👣 地面を うしろへ おす</text></svg>';
+  }
+  function viewForm() {
+    if (done) return '<div class="card">' + runner() + '<div class="big">' + qok + ' / ' + QS.length + ' せいかい</div><div>ためして みよう：うでふりだけ 10回 → その場 もも上げ 10回 → 10m ダッシュ 1本。どこが いちばん かわった？</div><div class="row" style="margin-top:8px"><button class="act" id="again">もう一度</button><button class="sub" id="go2">📐 はやさの しくみへ</button></div></div>';
+    var q = QS[qi]; if (!ord.length) ord = shuffle([0, 1, 2, 3]);
+    return '<div class="card">' + runner() + '</div><div class="card"><div>Q' + (qi + 1) + '. ' + esc(q.q) + '</div><div class="ch" id="ch">' +
+      ord.map(function (j) { return '<button type="button" data-j="' + j + '">' + esc(q.a[j]) + '</button>'; }).join("") + '</div><div class="msg" id="msg"></div></div>';
+  }
+  function bindForm() {
+    if (done) { $("again").onclick = function () { qi = 0; qok = 0; done = false; ord = []; render(); }; $("go2").onclick = function () { setTab(1); }; return; }
+    var q = QS[qi], answered = false;
+    document.querySelectorAll("#ch button").forEach(function (b) {
+      b.onclick = function () {
+        if (answered) return; answered = true;
+        var j = Number(b.getAttribute("data-j")), ok = j === 0; if (ok) qok++;
+        document.querySelectorAll("#ch button").forEach(function (x) { if (Number(x.getAttribute("data-j")) === 0) x.classList.add("ok"); else if (x === b) x.classList.add("ng"); });
+        $("msg").innerHTML = (ok ? "⭕ <b>そのとおり！</b> " : "❌ <b>おしい！</b> ") + esc(q.d) + '<div style="margin-top:8px"><button class="next" id="nx">' + (qi < QS.length - 1 ? "つぎへ" : "けっか") + '</button></div>';
+        $("nx").onclick = function () { qi++; ord = []; if (qi >= QS.length) done = true; render(); };
+      };
+    });
+  }
+
+  // ② はやさの しくみ：1秒に 進む きょり ＝ 歩はば × 1秒の 歩数
+  var sim = { stride: 120, pitch: 4.0 };
+  function speed(s, p) { return s * p / 100; } // m/秒
+  function t50(v) { return 50 / v; }
+  function viewSim() {
+    var v = speed(sim.stride, sim.pitch), vA = speed(sim.stride + 10, sim.pitch), vB = speed(sim.stride, Math.round((sim.pitch + 0.2) * 10) / 10);
+    return '<div class="card"><div>走る はやさは「<b style="color:#db2777">1歩の 長さ（歩はば）</b> × <b style="color:#2563eb">1秒に 何歩</b>」で きまる。つまみを 動かして みよう。</div>' +
+      '<label class="sl">👣 歩はば：<b>' + sim.stride + 'cm</b><input type="range" id="sS" min="80" max="180" step="5" value="' + sim.stride + '" aria-label="歩はば"></label>' +
+      '<label class="sl">⏱ 1秒の 歩数：<b>' + sim.pitch.toFixed(1) + '歩</b><input type="range" id="sP" min="2.5" max="5" step="0.1" value="' + sim.pitch + '" aria-label="1秒の 歩数"></label>' +
+      '<div class="big">1秒で <b>' + v.toFixed(2) + 'm</b> 進む</div>' +
+      '<div style="text-align:center">式：' + (sim.stride / 100).toFixed(2) + 'm × ' + sim.pitch.toFixed(1) + ' ＝ ' + v.toFixed(2) + 'm</div>' +
+      '<div style="text-align:center">50m なら だいたい <b style="color:#db2777;font-size:18px">' + t50(v).toFixed(1) + '秒</b>（50 ÷ ' + v.toFixed(2) + '。スタートの 分 じっさいは 少し おそい）</div></div>' +
+      '<div class="card"><div>🤔 どっちが はやく なる？</div><table><tr><th></th><th>1秒で</th><th>50m</th></tr>' +
+      '<tr><td>いまの きみ</td><td>' + v.toFixed(2) + 'm</td><td>' + t50(v).toFixed(1) + '秒</td></tr>' +
+      '<tr><td>A：歩はばを <b>10cm</b> のばす</td><td>' + vA.toFixed(2) + 'm</td><td>' + t50(vA).toFixed(1) + '秒</td></tr>' +
+      '<tr><td>B：1秒の 歩数を <b>0.2</b> ふやす</td><td>' + vB.toFixed(2) + 'm</td><td>' + t50(vB).toFixed(1) + '秒</td></tr></table>' +
+      '<div class="note" style="margin-top:6px">歩はばを むりに のばすと、かかとから つく ブレーキに なりやすい。うでふりを 速く → 足の 回転（歩数）も 上がる。もも上げ・スキップ・なわとびで 両方 きたえられるよ。</div></div>' +
+      '<div class="card"><div>🔬 じっけん：10m を 走って、何歩 だったか 数えて みよう。</div><div class="row"><input id="eSteps" type="number" min="3" max="30" placeholder="歩数" aria-label="10mの 歩数" style="width:90px"> 歩 で 10m <button class="sub" id="eGo">歩はばを 出す</button></div><div class="msg" id="eMsg"></div></div>';
+  }
+  function bindSim() {
+    $("sS").oninput = function () { sim.stride = Number(this.value); render(); $("sS").focus(); };
+    $("sP").oninput = function () { sim.pitch = Number(this.value); render(); $("sP").focus(); };
+    $("eGo").onclick = function () {
+      var n = Number($("eSteps").value); if (!(n > 0)) { $("eMsg").textContent = "歩数を 入れてね"; return; }
+      var s = Math.round(1000 / n); sim.stride = Math.max(80, Math.min(180, Math.round(s / 5) * 5));
+      $("eMsg").innerHTML = "10m ＝ 1000cm。1000 ÷ " + n + " ＝ やく <b>" + s + "cm</b> が きみの 歩はば。上の つまみに 入れたよ。";
+      var m = $("eMsg").innerHTML; render(); $("eMsg").innerHTML = m;
+    };
+  }
+
+  // ③ 記録ノート
+  var MENU = ["スキップ・もも上げ", "なわとび", "10〜20m ダッシュ 3本", "スタート 練習", "おにごっこ・ボールあそび"];
+  function graph() {
+    var r = st.rec.filter(function (x) { return x.d === "50m"; }).slice(-8);
+    if (r.length < 2) return '<div class="note">50m の 記録が 2つ いじょう に なると 折れ線グラフが 出るよ。</div>';
+    var ts = r.map(function (x) { return x.t; }), mx = Math.ceil(Math.max.apply(null, ts) + 0.5), mn = Math.floor(Math.min.apply(null, ts) - 0.5), W = 300, H = 150, out = "";
+    function X(i) { return 36 + i * ((W - 50) / (r.length - 1)); } function Y(t) { return 14 + (t - mn) / (mx - mn) * (H - 44); }
+    for (var g = mn; g <= mx; g++) out += '<line x1="34" y1="' + Y(g) + '" x2="' + (W - 8) + '" y2="' + Y(g) + '" stroke="#e5e7eb"/><text x="30" y="' + (Y(g) + 4) + '" font-size="10" text-anchor="end" fill="#6b5d7a">' + g + '</text>';
+    out += '<polyline points="' + r.map(function (x, i) { return X(i) + "," + Y(x.t); }).join(" ") + '" fill="none" stroke="#16a34a" stroke-width="3"/>';
+    r.forEach(function (x, i) { out += '<circle cx="' + X(i) + '" cy="' + Y(x.t) + '" r="4" fill="#16a34a"/><text x="' + X(i) + '" y="' + (H - 12) + '" font-size="9" text-anchor="middle" fill="#6b5d7a">' + esc(x.day.slice(5)) + '</text>'; });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="50mの 記録の 折れ線グラフ（下に 行くほど はやい）">' + out + '<text x="6" y="10" font-size="9" fill="#6b5d7a">秒（下ほど はやい）</text></svg>';
+  }
+  function viewRec() {
+    var t = today(), c = st.chk[t] || [], best = {};
+    st.rec.forEach(function (x) { if (!best[x.d] || x.t < best[x.d]) best[x.d] = x.t; });
+    return '<div class="card"><div>⏱ タイムを 書こう（おうちの 人と はかる）</div><div class="row" style="margin-top:6px"><select id="rD" aria-label="きょり" style="font:inherit;font-weight:800;min-height:44px;border-radius:10px;border:2px solid #e9d5ff"><option>50m</option><option>20m</option></select>' +
+      '<input id="rT" type="number" step="0.1" min="2" max="20" placeholder="秒" aria-label="タイム（秒）" style="width:90px"> 秒 <button class="act" id="rAdd">記録する</button></div>' +
+      '<div class="msg" id="rMsg"></div>' + graph() +
+      (st.rec.length ? '<table style="margin-top:6px"><tr><th>日</th><th>きょり</th><th>タイム</th></tr>' + st.rec.slice(-6).reverse().map(function (x) { return '<tr><td>' + esc(x.day) + '</td><td>' + esc(x.d) + '</td><td>' + x.t.toFixed(1) + '秒' + (best[x.d] === x.t ? ' 🏅' : '') + '</td></tr>'; }).join("") + '</table>' : "") +
+      '</div><div class="card"><div>✅ きょうの 練習（できた ものに ✓）</div><div class="chk">' +
+      MENU.map(function (m, i) { return '<label><input type="checkbox" data-c="' + i + '"' + (c.indexOf(i) >= 0 ? " checked" : "") + '> ' + esc(m) + '</label>'; }).join("") +
+      '</div><div class="note">ぜんぶ やらなくて OK。2つ できたら じゅうぶん。</div></div>' +
+      '<div class="card note">📓 自学ノートに：「足が はやく なる ほうほう しらべ」で、しらべた こと・ためした こと・記録の グラフ を 書こう。</div>';
+  }
+  function bindRec() {
+    $("rAdd").onclick = function () {
+      var tt = Number($("rT").value), d = $("rD").value; if (!(tt > 0)) { $("rMsg").textContent = "タイムを 入れてね"; return; }
+      var prev = st.rec.filter(function (x) { return x.d === d; }), pb = prev.length ? Math.min.apply(null, prev.map(function (x) { return x.t; })) : null;
+      st.rec.push({ day: today(), d: d, t: Math.round(tt * 10) / 10 }); if (st.rec.length > 60) st.rec.shift(); save();
+      render(); $("rMsg").innerHTML = pb == null ? "はじめての 記録！ これが スタート。" : tt < pb ? "🏅 <b>自己ベスト！</b> " + (pb - tt).toFixed(1) + "秒 はやく なったよ" : "記録したよ。ベストは " + pb.toFixed(1) + "秒。くらべて みよう";
+    };
+    document.querySelectorAll("[data-c]").forEach(function (b) {
+      b.onchange = function () { var t = today(), c = st.chk[t] || [], i = Number(b.getAttribute("data-c")); if (b.checked) { if (c.indexOf(i) < 0) c.push(i); } else c = c.filter(function (x) { return x !== i; }); st.chk[t] = c; var ks = Object.keys(st.chk).sort(); while (ks.length > 60) delete st.chk[ks.shift()]; save(); };
+    });
+  }
+
+  function render() { var v = $("view"); if (tab === 0) { v.innerHTML = viewForm(); bindForm(); } else if (tab === 1) { v.innerHTML = viewSim(); bindSim(); } else { v.innerHTML = viewRec(); bindRec(); } }
+  function setTab(n) { tab = n; document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-pressed", String(Number(b.getAttribute("data-t")) === n)); }); render(); window.scrollTo(0, 0); }
+  document.querySelectorAll("#tabs button").forEach(function (b) { b.onclick = function () { setTab(Number(b.getAttribute("data-t"))); }; });
+  render();
+})();
+</script>
+</body>
+</html>
